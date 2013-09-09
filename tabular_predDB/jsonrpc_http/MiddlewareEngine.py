@@ -27,8 +27,8 @@ import numpy
 import psycopg2
 import matplotlib.cm
 #
-import tabular_predDB.python_utils.api_utils as au
-import tabular_predDB.python_utils.data_utils as du
+import tabular_predDB.utils.api_utils as au
+import tabular_predDB.utils.data_utils as du
 import tabular_predDB.settings as S
 
 # For testing

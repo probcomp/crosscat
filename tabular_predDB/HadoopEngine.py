@@ -16,10 +16,10 @@
 import os
 import inspect
 #
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.general_utils as gu
-import tabular_predDB.python_utils.xnet_utils as xu
-import tabular_predDB.python_utils.hadoop_utils as hu
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.general_utils as gu
+import tabular_predDB.utils.xnet_utils as xu
+import tabular_predDB.utils.hadoop_utils as hu
 from tabular_predDB.settings import Hadoop as hs
 
 
@@ -213,7 +213,7 @@ class HadoopEngine(object):
 if __name__ == '__main__':
     import argparse
     #
-    import tabular_predDB.python_utils.data_utils as du
+    import tabular_predDB.utils.data_utils as du
     #
     parser = argparse.ArgumentParser()
     parser.add_argument('command', type=str)

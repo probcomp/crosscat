@@ -2,8 +2,8 @@
 # 1. Import packages/modules needed
 import numpy 
 #
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.plot_utils as pu
+import tabular_predDB.utils.data_utils as du
+import tabular_predDB.utils.plot_utils as pu
 import tabular_predDB.CrossCatClient as ccc
 
 

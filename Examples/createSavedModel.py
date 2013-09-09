@@ -1,8 +1,8 @@
 # Creating a model and saving the state
 
 # 1. Import packages/modules needed
-import tabular_predDB.python_utils.file_utils as f_utils
-import tabular_predDB.python_utils.data_utils as du
+import tabular_predDB.utils.file_utils as f_utils
+import tabular_predDB.utils.data_utils as du
 import tabular_predDB.CrossCatClient as ccc
 
 # 2. Load a data table from csv file. In this example, we use synthetic data

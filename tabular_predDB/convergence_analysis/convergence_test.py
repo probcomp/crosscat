@@ -2,10 +2,10 @@ import argparse
 import csv
 import time
 #
-import tabular_predDB.python_utils.data_utils as du
+import tabular_predDB.utils.data_utils as du
 import tabular_predDB.CrossCatClient as ccc
-import tabular_predDB.python_utils.file_utils as f_utils
-import tabular_predDB.python_utils.convergence_test_utils as ctu
+import tabular_predDB.utils.file_utils as f_utils
+import tabular_predDB.utils.convergence_test_utils as ctu
 
 
 # Parse input arguments

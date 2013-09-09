@@ -37,7 +37,7 @@ done
 # determine if VPN exists
 get_vpn_status() {
     this_dir="$(dirname $0)"
-    rel_dir="$this_dir/../python_utils/"
+    rel_dir="$this_dir/../utils/"
     echo "$(python ${rel_dir}/xnet_utils.py assert_vpn_is_connected)"
 }
 

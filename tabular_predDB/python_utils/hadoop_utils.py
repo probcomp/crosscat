@@ -1,7 +1,7 @@
 import os
 #
-import tabular_predDB.python_utils.xnet_utils as xu
-import tabular_predDB.python_utils.file_utils as fu
+import tabular_predDB.utils.xnet_utils as xu
+import tabular_predDB.utils.file_utils as fu
 
 
 def rm_hdfs(hdfs_uri, path, hdfs_base_dir='', DEBUG=False):

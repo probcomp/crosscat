@@ -15,7 +15,7 @@
 #
 import inspect
 #
-import tabular_predDB.python_utils.general_utils as gu
+import tabular_predDB.utils.general_utils as gu
 
 
 class EngineTemplate(object):

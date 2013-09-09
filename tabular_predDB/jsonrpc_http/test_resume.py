@@ -15,8 +15,8 @@
 #
 import argparse
 #
-import tabular_predDB.python_utils.api_utils as au
-import tabular_predDB.python_utils.file_utils as fu
+import tabular_predDB.utils.api_utils as au
+import tabular_predDB.utils.file_utils as fu
 
 
 # parse some arguments

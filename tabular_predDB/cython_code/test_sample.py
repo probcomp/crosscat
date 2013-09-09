@@ -22,10 +22,10 @@ import pylab
 pylab.ion()
 pylab.show()
 #
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.sample_utils as su
-import tabular_predDB.python_utils.plot_utils as pu
-import tabular_predDB.python_utils.api_utils as au
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.sample_utils as su
+import tabular_predDB.utils.plot_utils as pu
+import tabular_predDB.utils.api_utils as au
 
 
 # parse some arguments

@@ -65,8 +65,8 @@ import pdb
 import psycopg2
 import numpy
 #
-import tabular_predDB.python_utils.api_utils as au
-import tabular_predDB.python_utils.data_utils as du
+import tabular_predDB.utils.api_utils as au
+import tabular_predDB.utils.data_utils as du
 #import tabular_predDB.jsonrpc_http.Engine as E
 #from tabular_predDB.jsonrpc_http.Engine import Engine
 import tabular_predDB.jsonrpc_http.MiddlewareEngine as ME

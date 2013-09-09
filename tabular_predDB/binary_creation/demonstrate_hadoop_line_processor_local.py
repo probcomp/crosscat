@@ -1,6 +1,6 @@
 import os
 #
-import tabular_predDB.python_utils.xnet_utils as xu
+import tabular_predDB.utils.xnet_utils as xu
 import tabular_predDB.settings as S
 from tabular_predDB.settings import Hadoop as hs
 

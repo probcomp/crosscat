@@ -7,8 +7,8 @@ import base64
 #
 import tabular_predDB.settings as S
 from tabular_predDB.settings import Hadoop as hs
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.data_utils as du
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.data_utils as du
 
 
 default_table_data_filename = hs.default_table_data_filename
