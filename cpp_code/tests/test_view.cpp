@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 
   // load some data
   matrixD data;
-  LoadData("SynData2.csv", data);
+  LoadData("T.csv", data);
   int num_cols = data.size2();
   int num_rows = data.size1();
   //
@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
   cout << "crp score: " << crp_score << endl;
   cout << "sum cluster scores and crp score: " << crp_plus_data_score << endl;
   cout << "view score: " << v.get_score() << endl;
-  assert(is_almost(v.get_score(), crp_plus_data_score, 1E-10));
+  assert(is_almost(v.get_score(), crp_plus_data_score, 1E-6));
 
   // test crp alpha hyper inference
   vector<double> test_alphas;

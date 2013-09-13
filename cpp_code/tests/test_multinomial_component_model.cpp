@@ -88,11 +88,11 @@ int main() {
   insert_elements(mcm, values_to_test);
   cout << mcm << endl;
   assert(is_almost(mcm.calc_marginal_logp(), -49.9364531937, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(0), 3.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(1), 7.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(2), 10.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(3), 6.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(4), 9.0/35, precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(0), log(3.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(1), log(7.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(2), log(10.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(3), log(6.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(4), log(9.0/35), precision));
   remove_elements(mcm, values_to_test);
   cout << mcm << endl;
   //
@@ -100,11 +100,11 @@ int main() {
   insert_elements(mcm, values_to_test);
   cout << mcm << endl;
   assert(is_almost(mcm.calc_marginal_logp(), -49.9364531937, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(0), 3.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(1), 7.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(2), 10.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(3), 6.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(4), 9.0/35, precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(0), log(3.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(1), log(7.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(2), log(10.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(3), log(6.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(4), log(9.0/35), precision));
   remove_elements(mcm, values_to_test_reversed);
   cout << mcm << endl;
   //
@@ -112,11 +112,11 @@ int main() {
   insert_elements(mcm, values_to_test);
   cout << mcm << endl;
   assert(is_almost(mcm.calc_marginal_logp(), -49.9364531937, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(0), 3.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(1), 7.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(2), 10.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(3), 6.0/35, precision));
-  assert(is_almost(mcm.calc_element_predictive_logp(4), 9.0/35, precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(0), log(3.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(1), log(7.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(2), log(10.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(3), log(6.0/35), precision));
+  assert(is_almost(mcm.calc_element_predictive_logp(4), log(9.0/35), precision));
   remove_elements(mcm, values_to_test_shuffled);
   cout << mcm << endl;
 

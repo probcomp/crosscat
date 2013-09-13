@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 
   // load some data
   matrixD data;
-  LoadData("SynData2.csv", data);
+  LoadData("T.csv", data);
   int num_cols = data.size2();
   int num_rows = data.size1();
   //
