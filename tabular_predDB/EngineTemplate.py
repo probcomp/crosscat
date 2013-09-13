@@ -13,9 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import inspect
-#
-import tabular_predDB.python_utils.general_utils as gu
+import tabular_predDB.utils.general_utils as gu
 
 
 class EngineTemplate(object):

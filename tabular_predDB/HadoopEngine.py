@@ -14,25 +14,12 @@
 #   limitations under the License.
 #
 import os
-import inspect
 #
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.general_utils as gu
-import tabular_predDB.python_utils.xnet_utils as xu
-import tabular_predDB.python_utils.hadoop_utils as hu
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.general_utils as gu
+import tabular_predDB.utils.xnet_utils as xu
+import tabular_predDB.utils.hadoop_utils as hu
 from tabular_predDB.settings import Hadoop as hs
-
-
-default_hadoop_binary = hs.default_hadoop_binary
-default_engine_binary = hs.default_engine_binary
-default_hdfs_dir = hs.default_hdfs_dir
-default_output_path = hs.default_output_path
-default_input_filename = hs.default_input_filename
-default_table_data_filename = hs.default_table_data_filename
-default_hdfs_uri = hs.default_hdfs_uri
-default_jobtracker_uri = hs.default_jobtracker_uri
-default_hadoop_jar = hs.default_hadoop_jar
-default_command_dict_filename = hs.default_command_dict_filename
 
 
 class HadoopEngine(object):
@@ -47,15 +34,15 @@ class HadoopEngine(object):
     """
 
     def __init__(self, seed=0,
-                 which_engine_binary=default_engine_binary,
-                 hdfs_dir=default_hdfs_dir,
-                 jobtracker_uri=default_jobtracker_uri,
-                 hdfs_uri=default_hdfs_uri,
-                 which_hadoop_jar=default_hadoop_jar,
-		 which_hadoop_binary=default_hadoop_binary,
-                 output_path=default_output_path,
-                 input_filename=default_input_filename,
-                 table_data_filename=default_table_data_filename,
+                 which_engine_binary=hs.default_engine_binary,
+                 hdfs_dir=hs.default_hdfs_dir,
+                 jobtracker_uri=hs.default_jobtracker_uri,
+                 hdfs_uri=hs.default_hdfs_uri,
+                 which_hadoop_jar=hs.default_hadoop_jar,
+                 which_hadoop_binary=hs.default_hadoop_binary,
+                 output_path=hs.default_output_path,
+                 input_filename=hs.default_input_filename,
+                 table_data_filename=hs.default_table_data_filename,
                  command_dict_filename=hs.default_command_dict_filename,
                  one_map_task_per_line=True,
                  ):
@@ -213,19 +200,19 @@ class HadoopEngine(object):
 if __name__ == '__main__':
     import argparse
     #
-    import tabular_predDB.python_utils.data_utils as du
+    import tabular_predDB.utils.data_utils as du
     #
     parser = argparse.ArgumentParser()
     parser.add_argument('command', type=str)
     parser.add_argument('--base_uri', type=str, default=None)
-    parser.add_argument('--hdfs_uri', type=str, default=default_hdfs_uri)
+    parser.add_argument('--hdfs_uri', type=str, default=hs.default_hdfs_uri)
     parser.add_argument('--jobtracker_uri', type=str,
-                        default=default_jobtracker_uri)
-    parser.add_argument('--hdfs_dir', type=str, default=default_hdfs_dir)
+                        default=hs.default_jobtracker_uri)
+    parser.add_argument('--hdfs_dir', type=str, default=hs.default_hdfs_dir)
     parser.add_argument('-DEBUG', action='store_true')
-    parser.add_argument('--which_engine_binary', type=str, default=default_engine_binary)
-    parser.add_argument('--which_hadoop_binary', type=str, default=default_hadoop_binary)
-    parser.add_argument('--which_hadoop_jar', type=str, default=default_hadoop_jar)
+    parser.add_argument('--which_engine_binary', type=str, default=hs.default_engine_binary)
+    parser.add_argument('--which_hadoop_binary', type=str, default=hs.default_hadoop_binary)
+    parser.add_argument('--which_hadoop_jar', type=str, default=hs.default_hadoop_jar)
     parser.add_argument('--n_chains', type=int, default=4)
     parser.add_argument('--n_steps', type=int, default=1)
     parser.add_argument('--chunk_size', type=int, default=1)

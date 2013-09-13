@@ -5,9 +5,9 @@ import pylab
 import numpy
 #
 import tabular_predDB.cython_code.State as State
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.general_utils as gu
+import tabular_predDB.utils.data_utils as du
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.general_utils as gu
 
 
 # parse input

@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import tabular_predDB.python_utils.api_utils as au
+import tabular_predDB.utils.api_utils as au
 import inspect
 import pickle
 import gzip

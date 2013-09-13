@@ -2,7 +2,7 @@ import numpy as np
 import random
 import sys
 
-import tabular_predDB.python_utils.enumerate_utils as eu
+import tabular_predDB.utils.enumerate_utils as eu
 import tabular_predDB.cython_code.State as State
 import pylab
 from scipy.stats import pearsonr as pearsonr

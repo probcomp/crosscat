@@ -53,7 +53,7 @@ def get_CrossCatClient(client_type, **kwargs):
 
 
 if __name__ == '__main__':
-    import tabular_predDB.python_utils.data_utils as du
+    import tabular_predDB.utils.data_utils as du
     ccc = get_CrossCatClient('local', seed=0)
     #
     gen_seed = 0

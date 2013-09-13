@@ -22,8 +22,8 @@ import pylab
 pylab.ion()
 pylab.show()
 #
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.sample_utils as su
+import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.sample_utils as su
 
 
 # parse some arguments

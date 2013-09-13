@@ -23,8 +23,8 @@ import psycopg2
 import pickle
 import os
 
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.api_utils as au
+import tabular_predDB.utils.data_utils as du
+import tabular_predDB.utils.api_utils as au
 from tabular_predDB.jsonrpc_http.MiddlewareEngine import MiddlewareEngine
 middleware_engine = MiddlewareEngine()
 

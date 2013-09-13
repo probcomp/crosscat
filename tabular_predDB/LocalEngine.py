@@ -15,8 +15,8 @@
 #
 import tabular_predDB.cython_code.State as State
 import tabular_predDB.EngineTemplate as EngineTemplate
-import tabular_predDB.python_utils.sample_utils as su
-import tabular_predDB.python_utils.xnet_utils as xu
+import tabular_predDB.utils.sample_utils as su
+import tabular_predDB.utils.xnet_utils as xu
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):
@@ -250,9 +250,9 @@ def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
 
 
 if __name__ == '__main__':
-    import tabular_predDB.python_utils.data_utils as du
-    import tabular_predDB.python_utils.convergence_test_utils as ctu
-    import tabular_predDB.python_utils.timing_test_utils as ttu
+    import tabular_predDB.utils.data_utils as du
+    import tabular_predDB.utils.convergence_test_utils as ctu
+    import tabular_predDB.utils.timing_test_utils as ttu
 
 
     # settings

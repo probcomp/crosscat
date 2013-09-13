@@ -1,7 +1,7 @@
 import sys
 import csv
 #
-import tabular_predDB.python_utils.xnet_utils as xu
+import tabular_predDB.utils.xnet_utils as xu
 
 
 def get_line_label(parsed_line):

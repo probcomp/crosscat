@@ -17,9 +17,9 @@ import argparse
 import time
 #
 import tabular_predDB.LocalEngine as LE
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.api_utils as au
-import tabular_predDB.python_utils.general_utils as gu
+import tabular_predDB.utils.data_utils as du
+import tabular_predDB.utils.api_utils as au
+import tabular_predDB.utils.general_utils as gu
 
 
 # parse some arguments

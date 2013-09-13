@@ -20,8 +20,8 @@ import os
 import numpy
 #
 import tabular_predDB.settings as S
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.file_utils as fu
+import tabular_predDB.utils.data_utils as du
+import tabular_predDB.utils.file_utils as fu
 import tabular_predDB.LocalEngine as LE
 import tabular_predDB.jsonrpc_http.MiddlewareEngine as MiddlewareEngine 
 

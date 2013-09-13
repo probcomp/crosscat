@@ -1,6 +1,6 @@
 # Loading a saved model for further analysis
-import tabular_predDB.python_utils.file_utils as f_utils
-import tabular_predDB.python_utils.plot_utils as pu
+import tabular_predDB.utils.file_utils as f_utils
+import tabular_predDB.utils.plot_utils as pu
 import tabular_predDB.CrossCatClient as ccc
 
 

@@ -6,7 +6,7 @@ from collections import defaultdict
 import pylab
 import numpy
 #
-import tabular_predDB.python_utils.file_utils as fu
+import tabular_predDB.utils.file_utils as fu
 
 
 parser = argparse.ArgumentParser()

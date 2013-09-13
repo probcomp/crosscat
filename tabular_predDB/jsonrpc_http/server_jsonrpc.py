@@ -54,7 +54,7 @@ from twisted.web import server
 from jsonrpc.server import ServerEvents, JSON_RPC
 #
 import tabular_predDB.LocalEngine as LE
-import tabular_predDB.python_utils.general_utils as gu
+import tabular_predDB.utils.general_utils as gu
 
 
 class ExampleServer(ServerEvents):

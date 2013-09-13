@@ -6,11 +6,11 @@ from collections import Counter
 import numpy
 import pylab
 
-# import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.enumerate_utils as eu
-import tabular_predDB.python_utils.sample_utils as su
-import tabular_predDB.python_utils.plot_utils as pu
-import tabular_predDB.python_utils.data_utils as du
+# import tabular_predDB.utils.file_utils as fu
+import tabular_predDB.utils.enumerate_utils as eu
+import tabular_predDB.utils.sample_utils as su
+import tabular_predDB.utils.plot_utils as pu
+import tabular_predDB.utils.data_utils as du
 
 import tabular_predDB.cython_code.State as State
 
