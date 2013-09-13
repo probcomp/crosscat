@@ -13,7 +13,7 @@ usage() {
     cat <<EOF
 usage: $0 options
     
-    Set up postgres database
+    Set up VPN connection
     
     OPTIONS:
     -h      Show this message

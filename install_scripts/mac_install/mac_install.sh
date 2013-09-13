@@ -22,11 +22,6 @@ then
 	chmod +x compile_cython_mac.sh
 fi
 
-if [ ! -x init_postgres_mac.sh ]
-then
-	chmod +x init_postgres_mac.sh
-fi
-
 # Check for OSX version
 OSX_VERSION=`sw_vers -productVersion | grep -o '[0-9]' | awk '{i++}i==3'`
 if [ "$OSX_VERSION" -lt 7 ]
@@ -72,9 +67,6 @@ case "$user_input" in
 	2) 
 		sudo ./compile_cython_mac.sh
 		;;
-	# 3)
-	# 	./init_postgres_mac.sh
-	# 	;;
 	*) 
 		echo "Invalid input."
 		exit

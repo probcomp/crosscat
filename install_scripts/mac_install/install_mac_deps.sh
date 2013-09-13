@@ -46,28 +46,6 @@ else
 	echo "done."
 fi
 
-# echo -ne "Installing postgres. "
-# sudo port install postgresql92 1>> /dev/null 2>> $ERR_FILE
-# if [ $? = 1 ]
-# then
-# 	echo Failed.
-# 	echo "Installation of postgres failed. Check $ERR_FILE."
-# 	exit
-# else
-# 	echo "done."
-# fi
-
-# echo -ne "Installing postgres server. "
-# sudo port install postgresql92-server 1>> /dev/null 2>> $ERR_FILE
-# if [ $? = 1 ]
-# then
-# 	echo Failed.
-# 	echo "Installation of postgres server failed. Check $ERR_FILE."
-# 	exit
-# else
-# 	echo "done."
-# fi
-
 echo -ne "Installing valgrind. "
 sudo port install valgrind 1>> /dev/null 2>> $ERR_FILE
 if [ $? = 1 ]

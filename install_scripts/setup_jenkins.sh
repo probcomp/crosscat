@@ -50,8 +50,6 @@ chmod 777 $jenkins_project
 chmod 777 ${jenkins_project}/jenkins_script.sh
 
 # run some helper scripts
-# let anyone access DB as anyone
-bash ${source_dir}/install_scripts/set_postgres_trust.sh
 # set up headless matplotlib
 mkdir -p ${jenkins_home}/.matplotlib
 echo backend: Agg > ${jenkins_home}/.matplotlib/matplotlibrc

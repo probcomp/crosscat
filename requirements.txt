@@ -18,8 +18,6 @@ scipy>=0.11.0
 # sudo apt-get install -y libpng12-dev
 freetype-py==0.4.1
 matplotlib==1.2.0
-# for middleware
-psycopg2==2.4.6
 # hcluster==0.2.0 install must be modified
 # pip install --download ./ hcluster==0.2.0
 # tar xvfz hcluster-0.2.0.tar.gz 
