@@ -23,7 +23,6 @@ import tabular_predDB.settings as S
 import tabular_predDB.utils.data_utils as du
 import tabular_predDB.utils.file_utils as fu
 import tabular_predDB.LocalEngine as LE
-import tabular_predDB.jsonrpc_http.MiddlewareEngine as MiddlewareEngine 
 
 
 default_table_filename = os.path.join(S.path.web_resources_data_dir,
@@ -125,7 +124,6 @@ else:
 
 # visualize the column cooccurence matrix    
 X_L_list, X_D_list = map(list, zip(*chain_tuples))
-MiddlewareEngine.do_gen_feature_z(X_L_list, X_D_list, M_c, 'feature_z')
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
