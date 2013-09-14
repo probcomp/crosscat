@@ -17,12 +17,14 @@
 import os
 
 
+project_name = 'crosscat'
+
 class path():
     user_home_dir = os.environ['HOME']
     if 'WORKSPACE' in os.environ:
         user_home_dir = os.environ['WORKSPACE']
     # target installation for deployment
-    remote_code_dir = os.path.join('/home/sgeadmin', 'tabular_predDB')
+    remote_code_dir = os.path.join('/home/sgeadmin', project_name)
     # where we actually are right now
     this_dir = os.path.dirname(os.path.abspath(__file__))
     this_repo_dir = os.path.abspath(os.path.join(this_dir, '..'))
@@ -119,6 +121,6 @@ class git():
     # repo_prefix = 'https://github.com/'
     # repo_prefix = 'git://github.com/'
     repo_prefix = 'git@github.com:'
-    repo_suffix = 'mit-probabilistic-computing-project/tabular-predDB.git'
+    repo_suffix = 'mit-probabilistic-computing-project/' + project_name + '.git'
     repo = repo_prefix + repo_suffix
     branch = 'master'
