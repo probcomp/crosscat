@@ -19,10 +19,10 @@ import os
 #
 import numpy
 #
-import tabular_predDB.settings as S
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.LocalEngine as LE
+import crosscat.settings as S
+import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
+import crosscat.LocalEngine as LE
 
 
 default_table_filename = os.path.join(S.path.web_resources_data_dir,
@@ -90,7 +90,7 @@ if do_remote:
     dview.apply_sync(lambda: sys.path.append('/usr/local/'))
     #
     with dview.sync_imports(): 
-        import tabular_predDB.LocalEngine as LE
+        import crosscat.LocalEngine as LE
     dview.push(dict(
             M_c=M_c,
             M_r=M_r,

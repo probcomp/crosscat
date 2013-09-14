@@ -1,9 +1,9 @@
 # Creating a model and saving the state
 
 # 1. Import packages/modules needed
-import tabular_predDB.utils.file_utils as f_utils
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.CrossCatClient as ccc
+import crosscat.utils.file_utils as f_utils
+import crosscat.utils.data_utils as du
+import crosscat.CrossCatClient as ccc
 
 # 2. Load a data table from csv file. In this example, we use synthetic data
 filename = 'flight_data_subset_missing_data.csv'

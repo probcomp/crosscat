@@ -1,8 +1,8 @@
 CPP_DIR=cpp_code
-CYT=tabular_predDB/cython_code
+CYT=crosscat/cython_code
 DOC=docs
-TEST=tabular_predDB/tests
-XNET=tabular_predDB/binary_creation
+TEST=crosscat/tests
+XNET=crosscat/binary_creation
 
 
 all: cython doc

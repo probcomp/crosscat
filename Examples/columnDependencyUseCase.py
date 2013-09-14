@@ -2,9 +2,9 @@
 # 1. Import packages/modules needed
 import numpy 
 #
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.plot_utils as pu
-import tabular_predDB.CrossCatClient as ccc
+import crosscat.utils.data_utils as du
+import crosscat.utils.plot_utils as pu
+import crosscat.CrossCatClient as ccc
 
 
 # 2. Load a data table from csv file. In this example, we use synthetic data

@@ -20,7 +20,7 @@ import tempfile
 from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 #
-import tabular_predDB.settings as S
+import crosscat.settings as S
 
 # maybe should prefix the command with "source /etc/profile"
 # as starclusters' sshutils.ssh.execute(..., source_profile=True) does
@@ -66,7 +66,7 @@ def update_remote_repo_working_tree(remote_code_dir, node, user):
      cmd_str = 'cd %s && git reset --hard'
      cmd_str %= remote_code_dir
      node.ssh.execute(cmd_str)
-     # set remote origin to tabular_predDB github
+     # set remote origin to crosscat github
      cmd_str = 'bash -c "cd %s && git remote set-url origin https://github.com/%s"'
      cmd_str %= (remote_code_dir, S.git.repo_suffix)
      run_as_user(node, user, cmd_str)
@@ -116,7 +116,7 @@ def copy_this_repo(remote_code_dir, node, user, branch='master',
      os.system(cmd_str)
      update_remote_repo_working_tree(remote_code_dir, node, user)
 
-class tabular_predDBSetup(ClusterSetup):
+class crosscatSetup(ClusterSetup):
      def __init__(self):
          # TODO: Could be generalized to "install a python package plugin"
          pass
@@ -125,13 +125,13 @@ class tabular_predDBSetup(ClusterSetup):
           # NOTE: nodes includes master
           remote_home_dir = os.path.join('/home/', user)
           for node in nodes:
-               log.info("Installing tabular_predDB (part 1) on %s"
+               log.info("Installing crosscat (part 1) on %s"
                         % node.alias)
                # push code up
                copy_this_repo(S.path.remote_code_dir, node, user,
                               S.git.branch)
           for node in nodes:
-               log.info("Installing tabular_predDB (part 2) on %s"
+               log.info("Installing crosscat (part 2) on %s"
                         % node.alias)
                # install ubuntu packages
                log.info("Installing ubuntu packages on %s" % node.alias)
@@ -164,7 +164,7 @@ class tabular_predDBSetup(ClusterSetup):
                node.ssh.execute(cmd_str)
                # compile cython
                log.info("Installing engine (compiling cython) on %s" % node.alias)
-               cmd_str = 'bash -c -i "workon tabular_predDB && make cython"'
+               cmd_str = 'bash -c -i "workon crosscat && make cython"'
                run_as_user(node, user, cmd_str)
                # run server
                cmd_str = 'bash -i %s'

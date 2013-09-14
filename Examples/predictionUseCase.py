@@ -1,11 +1,11 @@
 # Using CrossCat to Examine Column Dependencies
 # 1. Import packages/modules needed
 import numpy
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.sample_utils as su
-import tabular_predDB.utils.plot_utils as pu
-import tabular_predDB.CrossCatClient as ccc
-import tabular_predDB.utils.useCase_utils as uc_utils
+import crosscat.utils.data_utils as du
+import crosscat.utils.sample_utils as su
+import crosscat.utils.plot_utils as pu
+import crosscat.CrossCatClient as ccc
+import crosscat.utils.useCase_utils as uc_utils
 
 
 # 2. Load a data table from csv file. In this example, we use synthetic data

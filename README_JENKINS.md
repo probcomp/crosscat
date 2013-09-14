@@ -3,11 +3,11 @@ Instructions to setup a Jenkins server
 
 This README describes the manual process to start a Jenkins server.
 
-[**Scripts**](https://github.com/mit-probabilistic-computing-project/tabular-predDB/blob/master/install_scripts/VM_install/README.md#installing-jenkins) have since been generated to mostly automate the process.
+[**Scripts**](https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/install_scripts/VM_install/README.md#installing-jenkins) have since been generated to mostly automate the process.
 
 -----
 
-* Boot up a new starcluster instance with tabular_predDB plugin. Preferably use on-demand m1.small to save money (needs to be on-demand so CI works).
+* Boot up a new starcluster instance with crosscat plugin. Preferably use on-demand m1.small to save money (needs to be on-demand so CI works).
 
 * Ssh in as root.  **All the rest of the commands in this section (Instructions to setup a Jenkins server) will be run as root**
 
@@ -70,7 +70,7 @@ This README describes the manual process to start a Jenkins server.
 
 * Put the jenkins script (jenkins_script.sh) in /var/lib/jenkins/workspace/PredictiveDB. The easiest way is to do this:
 
-        cp /home/sgeadmin/tabular_predDB/jenkins_script.sh /var/lib/jenkins/workspace/PredictiveDB/
+        cp /home/sgeadmin/crosscat/jenkins_script.sh /var/lib/jenkins/workspace/PredictiveDB/
         chown -R jenkins:nogroup /var/lib/jenkins
         chmod 777 /var/lib/jenkins/workspace/PredictiveDB
         chmod 777 /var/lib/jenkins/workspace/PredictiveDB/jenkins_script.sh
@@ -103,7 +103,7 @@ This README describes the manual process to start a Jenkins server.
   
         su jenkins
         source ~/.bashrc
-        workon tabular_predDB
+        workon crosscat
         pip install --download ./ hcluster==0.2.0
         tar xvfz hcluster-0.2.0.tar.gz 
         cd hcluster-0.2.0
@@ -134,16 +134,16 @@ This README describes the manual process to start a Jenkins server.
 
 * If it isn't already installed, install hcluster as follows (as user jenkins):
 
-        jenkins> sgeadmin >workon tabular_predDB
+        jenkins> sgeadmin >workon crosscat
         jenkins> pip install hcluster (once downloaded, cancel - it will fail eventually).
-        jenkins> cd /home/sgeadmin/.virtualenvs/tabular_predDB/build/hcluster
+        jenkins> cd /home/sgeadmin/.virtualenvs/crosscat/build/hcluster
         jenkins> python setup.py install
         jenkins> choose option 2
 
 * Run table_setup, if you haven't already. (This shouldn't be necessary, but maybe it's worth a try?)
 
         root> su sgeadmin
-        sgeadmin> psql -f /var/lib/jenkins/workspace/PredictiveDB/tabular_predDB/table_setup.sql
+        sgeadmin> psql -f /var/lib/jenkins/workspace/PredictiveDB/crosscat/table_setup.sql
 
 
 #TODO/Needed features: 
