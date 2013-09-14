@@ -20,7 +20,7 @@ import pylab
 pylab.ion()
 import hcluster
 #
-import tabular_predDB.utils.general_utils as gu
+import crosscat.utils.general_utils as gu
 
 
 def my_savefig(filename, dir='', close=True):

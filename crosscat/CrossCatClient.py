@@ -36,15 +36,15 @@ class CrossCatClient(object):
 def get_CrossCatClient(client_type, **kwargs):
     client = None
     if client_type == 'local':
-        import tabular_predDB.LocalEngine as LocalEngine
+        import crosscat.LocalEngine as LocalEngine
         le = LocalEngine.LocalEngine(**kwargs)
         client = CrossCatClient(le)
     elif client_type == 'hadoop':
-        import tabular_predDB.HadoopEngine as HadoopEngine
+        import crosscat.HadoopEngine as HadoopEngine
         he = HadoopEngine.HadoopEngine(**kwargs)
         client = CrossCatClient(he)
     elif client_type == 'jsonrpc':
-        import tabular_predDB.JSONRPCEngine as JSONRPCEngine
+        import crosscat.JSONRPCEngine as JSONRPCEngine
         je = JSONRPCEngine.JSONRPCEngine(**kwargs)
         client = CrossCatClient(je)
     else:
@@ -53,7 +53,7 @@ def get_CrossCatClient(client_type, **kwargs):
 
 
 if __name__ == '__main__':
-    import tabular_predDB.utils.data_utils as du
+    import crosscat.utils.data_utils as du
     ccc = get_CrossCatClient('local', seed=0)
     #
     gen_seed = 0

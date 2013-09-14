@@ -1,5 +1,5 @@
 import numpy, pylab, os, csv
-import tabular_predDB.utils.sample_utils as su
+import crosscat.utils.sample_utils as su
 from copy import copy
 
 def isnan_mixedtype(input_list):

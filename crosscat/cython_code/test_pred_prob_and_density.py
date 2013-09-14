@@ -6,13 +6,13 @@ from collections import Counter
 import numpy
 import pylab
 
-# import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.enumerate_utils as eu
-import tabular_predDB.utils.sample_utils as su
-import tabular_predDB.utils.plot_utils as pu
-import tabular_predDB.utils.data_utils as du
+# import crosscat.utils.file_utils as fu
+import crosscat.utils.enumerate_utils as eu
+import crosscat.utils.sample_utils as su
+import crosscat.utils.plot_utils as pu
+import crosscat.utils.data_utils as du
 
-import tabular_predDB.cython_code.State as State
+import crosscat.cython_code.State as State
 
 random.seed(None)
 inf_seed = random.randrange(32767)

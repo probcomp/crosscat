@@ -1,9 +1,9 @@
 import numpy
 from sklearn import metrics
 #
-import tabular_predDB.cython_code.State as State
-import tabular_predDB.utils.general_utils as gu
-import tabular_predDB.utils.sample_utils as su
+import crosscat.cython_code.State as State
+import crosscat.utils.general_utils as gu
+import crosscat.utils.sample_utils as su
 
 
 def determine_synthetic_column_ground_truth_assignments(num_cols, num_views):

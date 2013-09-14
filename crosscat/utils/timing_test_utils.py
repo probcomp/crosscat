@@ -1,9 +1,9 @@
 import numpy
 
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.xnet_utils as xu
-import tabular_predDB.LocalEngine as LE
-import tabular_predDB.cython_code.State as State
+import crosscat.utils.data_utils as du
+import crosscat.utils.xnet_utils as xu
+import crosscat.LocalEngine as LE
+import crosscat.cython_code.State as State
 
 
 def get_generative_clustering(M_c, M_r, T,

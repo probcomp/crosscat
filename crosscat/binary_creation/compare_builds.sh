@@ -2,14 +2,14 @@
 
 
 # set deafults
-# export PYTHONPATH=~/tabular_predDB:$PYTHONPATH
+# export PYTHONPATH=~/crosscat:$PYTHONPATH
 # make sure environment is correct
 first_branch="pre-optimization"
 second_branch="optimized-v0.1"
-HDFS_DIR="$(python -c 'import tabular_predDB.settings as S; print S.Hadoop.default_hdfs_dir')"
-HDFS_URI="$(python -c 'import tabular_predDB.settings as S; print S.Hadoop.default_hdfs_uri')"
+HDFS_DIR="$(python -c 'import crosscat.settings as S; print S.Hadoop.default_hdfs_dir')"
+HDFS_URI="$(python -c 'import crosscat.settings as S; print S.Hadoop.default_hdfs_uri')"
 #
-repo_dir=$(python -c 'import tabular_predDB.settings as S; print S.path.this_repo_dir')
+repo_dir=$(python -c 'import crosscat.settings as S; print S.path.this_repo_dir')
 cd $repo_dir
 # sudo bash install_scripts/my_vpnc_connect.sh
 
@@ -61,7 +61,7 @@ for which_branch in $first_branch $second_branch; do
 	git pull
 	make clean && make cython
 	# FIXME: should break here if build fails
-	cd tabular_predDB/binary_creation
+	cd crosscat/binary_creation
 	which_engine_binary=$(make_binary_name $which_branch)
         binary_basename=$(basename $which_engine_binary)
 	bash build_and_push.sh -b ${binary_basename%.jar} -d $HDFS_DIR -u $HDFS_URI
@@ -71,7 +71,7 @@ done
 # runtime analysis
 cd $repo_dir
 git checkout master
-cd tabular_predDB/timing_analysis
+cd crosscat/timing_analysis
 for which_branch in $first_branch $second_branch; do
 	which_engine_binary=$(make_binary_name $which_branch)
 	python automated_runtime_tests.py -do_remote --which_engine_binary $which_engine_binary \
@@ -84,7 +84,7 @@ wait
 # convergence analysis
 cd $repo_dir
 git checkout master
-cd tabular_predDB/convergence_analysis
+cd crosscat/convergence_analysis
 for which_branch in $first_branch $second_branch; do
 	which_engine_binary=$(make_binary_name $which_branch)
 	python automated_convergence_tests.py -do_remote \

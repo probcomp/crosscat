@@ -15,7 +15,7 @@
 #
 import os
 import subprocess
-import tabular_predDB.jsonrpc_http.middleware_stub_client as msc
+import crosscat.jsonrpc_http.middleware_stub_client as msc
 import time
 
 def test_middleware():

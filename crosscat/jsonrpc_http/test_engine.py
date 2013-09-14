@@ -17,9 +17,9 @@ import argparse
 #
 import numpy
 #
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.cython_code.State as State
-from tabular_predDB.jsonrpc_http.Engine import Engine
+import crosscat.utils.data_utils as du
+import crosscat.cython_code.State as State
+from crosscat.jsonrpc_http.Engine import Engine
 
 
 # parse input

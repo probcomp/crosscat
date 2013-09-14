@@ -4,7 +4,7 @@ import os
 #
 import numpy
 #
-import tabular_predDB.utils.xnet_utils as xu
+import crosscat.utils.xnet_utils as xu
 
 
 def assert_row_clustering_count_same(row_cluster_counts):

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-HDFS_DIR="$(python -c 'import tabular_predDB.settings as S; print S.Hadoop.default_hdfs_dir')"
-HDFS_URI="$(python -c 'import tabular_predDB.settings as S; print S.Hadoop.default_hdfs_uri')"
+HDFS_DIR="$(python -c 'import crosscat.settings as S; print S.Hadoop.default_hdfs_dir')"
+HDFS_URI="$(python -c 'import crosscat.settings as S; print S.Hadoop.default_hdfs_uri')"
 WHICH_BINARY="hadoop_line_processor"
 
 # print script usage
@@ -68,7 +68,7 @@ CODE_REL_DIR="$this_dir/../.."
 export PYTHONPATH=$CODE_REL_DIR:$PYTHONPATH
 
 # create binary
-cd $CODE_REL_DIR/tabular_predDB/binary_creation
+cd $CODE_REL_DIR/crosscat/binary_creation
 rm -rf build
 mkdir build
 python setup.py build >build/build.out 2>build/build.err

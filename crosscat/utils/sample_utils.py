@@ -24,9 +24,9 @@ from collections import Counter
 from scipy.misc import logsumexp
 import numpy
 #
-import tabular_predDB.cython_code.ContinuousComponentModel as CCM
-import tabular_predDB.cython_code.MultinomialComponentModel as MCM
-import tabular_predDB.utils.general_utils as gu
+import crosscat.cython_code.ContinuousComponentModel as CCM
+import crosscat.cython_code.MultinomialComponentModel as MCM
+import crosscat.utils.general_utils as gu
 
 class Bunch(dict):
     def __getattr__(self, key):

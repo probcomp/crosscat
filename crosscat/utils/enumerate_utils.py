@@ -27,8 +27,8 @@ import itertools
 
 from scipy.special import binom
 
-import tabular_predDB.cython_code.State as State
-import tabular_predDB.utils.data_utils as du
+import crosscat.cython_code.State as State
+import crosscat.utils.data_utils as du
 
 
 # generates from a state with the columns to views partition col_parts, and 

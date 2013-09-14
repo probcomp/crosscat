@@ -22,9 +22,9 @@ cimport numpy as np
 #
 import numpy
 #
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.general_utils as gu
-# import tabular_predDB.utils.plot_utils as pu
+import crosscat.utils.file_utils as fu
+import crosscat.utils.general_utils as gu
+# import crosscat.utils.plot_utils as pu
 
 
 cdef double set_double(double& to_set, double value):

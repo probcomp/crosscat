@@ -15,7 +15,7 @@
 #
 from collections import Counter
 #
-import tabular_predDB.utils.file_utils as fu
+import crosscat.utils.file_utils as fu
 
 
 modeltypes = set(["asymmetric_beta_bernoulli", "normal_inverse_gamma", "pitmanyor_atom", "symmetric_dirichlet_discrete", "poisson_gamma"])

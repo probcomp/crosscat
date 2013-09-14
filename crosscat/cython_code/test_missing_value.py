@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 import numpy
-import tabular_predDB.cython_code.ContinuousComponentModel as CCM
-import tabular_predDB.cython_code.MultinomialComponentModel as MCM
-import tabular_predDB.cython_code.State as State
+import crosscat.cython_code.ContinuousComponentModel as CCM
+import crosscat.cython_code.MultinomialComponentModel as MCM
+import crosscat.cython_code.State as State
 
 c_hypers = dict(r=10,nu=10,s=10,mu=10)
 ccm = CCM.p_ContinuousComponentModel(c_hypers)

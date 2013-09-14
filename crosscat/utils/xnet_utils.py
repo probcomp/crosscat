@@ -5,10 +5,10 @@ import cPickle
 import zlib
 import base64
 #
-import tabular_predDB.settings as S
-from tabular_predDB.settings import Hadoop as hs
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.data_utils as du
+import crosscat.settings as S
+from crosscat.settings import Hadoop as hs
+import crosscat.utils.file_utils as fu
+import crosscat.utils.data_utils as du
 
 
 default_table_data_filename = hs.default_table_data_filename

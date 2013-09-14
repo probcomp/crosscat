@@ -8,12 +8,12 @@ import pdb
 import numpy
 import pylab
 
-import tabular_predDB.python_utils.enumerate_utils as eu
-import tabular_predDB.python_utils.sample_utils as su
-import tabular_predDB.python_utils.plot_utils as pu
-import tabular_predDB.python_utils.data_utils as du
+import crosscat.python_utils.enumerate_utils as eu
+import crosscat.python_utils.sample_utils as su
+import crosscat.python_utils.plot_utils as pu
+import crosscat.python_utils.data_utils as du
 
-import tabular_predDB.cython_code.State as State
+import crosscat.cython_code.State as State
 
 
 def get_next_seed(max_val=32767):

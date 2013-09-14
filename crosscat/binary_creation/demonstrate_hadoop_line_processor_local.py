@@ -1,8 +1,8 @@
 import os
 #
-import tabular_predDB.utils.xnet_utils as xu
-import tabular_predDB.settings as S
-from tabular_predDB.settings import Hadoop as hs
+import crosscat.utils.xnet_utils as xu
+import crosscat.settings as S
+from crosscat.settings import Hadoop as hs
 
 
 # settings

@@ -8,13 +8,13 @@ import itertools
 #
 import numpy
 #
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.hadoop_utils as hu
-import tabular_predDB.utils.xnet_utils as xu
-import tabular_predDB.LocalEngine as LE
-import tabular_predDB.HadoopEngine as HE
-import tabular_predDB.cython_code.State as State
+import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
+import crosscat.utils.hadoop_utils as hu
+import crosscat.utils.xnet_utils as xu
+import crosscat.LocalEngine as LE
+import crosscat.HadoopEngine as HE
+import crosscat.cython_code.State as State
 import parse_timing
 
 def generate_hadoop_dicts(which_kernels, timing_run_parameters, args_dict):

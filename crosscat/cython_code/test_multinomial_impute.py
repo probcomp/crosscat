@@ -22,15 +22,15 @@ import pylab
 pylab.ion()
 pylab.show()
 #
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.sample_utils as su
+import crosscat.utils.file_utils as fu
+import crosscat.utils.sample_utils as su
 
 
 # parse some arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('pkl_name', type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
-args = parser.parse_args(['/usr/local/tabular_predDB/cython_code/iter_90_pickled_state.pkl.gz'])
+args = parser.parse_args(['/usr/local/crosscat/cython_code/iter_90_pickled_state.pkl.gz'])
 pkl_name = args.pkl_name
 inf_seed = args.inf_seed
 

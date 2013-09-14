@@ -15,10 +15,10 @@
 #
 from functools import partial
 #
-import tabular_predDB.EngineTemplate as EngineTemplate
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.api_utils as au
-import tabular_predDB.utils.general_utils as gu
+import crosscat.EngineTemplate as EngineTemplate
+import crosscat.utils.data_utils as du
+import crosscat.utils.api_utils as au
+import crosscat.utils.general_utils as gu
 
 
 method_name_to_args = gu.get_method_name_to_args(EngineTemplate.EngineTemplate)

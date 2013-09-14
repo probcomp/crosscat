@@ -3,11 +3,11 @@ import argparse
 #
 from pyspark import SparkContext
 #
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.xnet_utils as xu
-import tabular_predDB.utils.general_utils as gu
-import tabular_predDB.LocalEngine as LE
+import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
+import crosscat.utils.xnet_utils as xu
+import crosscat.utils.general_utils as gu
+import crosscat.LocalEngine as LE
 
 
 def initialize_helper(table_data, dict_in):

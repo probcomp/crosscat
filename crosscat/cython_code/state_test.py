@@ -18,8 +18,8 @@ import argparse
 import pylab
 import numpy
 #
-import tabular_predDB.cython_code.State as State
-import tabular_predDB.utils.data_utils as du
+import crosscat.cython_code.State as State
+import crosscat.utils.data_utils as du
 
 
 # parse input

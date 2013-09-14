@@ -19,16 +19,16 @@ import os
 import numpy
 import sys
 #
-import tabular_predDB.utils.data_utils as du
-import tabular_predDB.utils.file_utils as fu
-import tabular_predDB.utils.hadoop_utils as hu
-import tabular_predDB.utils.xnet_utils as xu
-import tabular_predDB.utils.general_utils as gu
-import tabular_predDB.utils.timing_test_utils as ttu
-import tabular_predDB.utils.convergence_test_utils as ctu
-import tabular_predDB.LocalEngine as LE
-import tabular_predDB.HadoopEngine as HE
-from tabular_predDB.settings import Hadoop as hs
+import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
+import crosscat.utils.hadoop_utils as hu
+import crosscat.utils.xnet_utils as xu
+import crosscat.utils.general_utils as gu
+import crosscat.utils.timing_test_utils as ttu
+import crosscat.utils.convergence_test_utils as ctu
+import crosscat.LocalEngine as LE
+import crosscat.HadoopEngine as HE
+from crosscat.settings import Hadoop as hs
 
 
 def initialize_helper(table_data, data_dict, command_dict):

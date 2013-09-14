@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import tabular_predDB.utils.general_utils as gu
+import crosscat.utils.general_utils as gu
 
 
 class EngineTemplate(object):
