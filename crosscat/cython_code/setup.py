@@ -18,13 +18,14 @@ import os
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+#
+import crosscat.settings as S
 
 
 virtual_env_dirs = [
 	'/opt/anaconda/',
-	'/var/lib/jenkins/.virtualenvs/tabular_predDB/',
-	'~/.virtualenvs/tabular_predDB/',
-	'~/.virtualenvs/tabular-predDB/',
+	'/var/lib/jenkins/.virtualenvs/' + S.project_name,
+	'~/.virtualenvs/' + S.project_name
 	]
 numpy_rel_dir = "lib/python2.7/site-packages/numpy/core/include/"
 numpy_include_full_dirs = [
