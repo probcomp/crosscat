@@ -1,8 +1,18 @@
-# for git with credentials caching (optional)
-sudo add-apt-repository ppa:git-core/ppa
-sudo apt-get update
-sudo apt-get install -y git
-#
-pip install virtualenv
-pip install virtualenvwrapper
-apt-get install -y python-dev libfreetype6-dev tk-dev libpng12-dev valgrind
+#!/usr/bin/env bash
+
+
+# test for root
+if [[ "$USER" != "root" ]]; then
+	echo "$0 must be executed as root"
+	exit;
+fi
+
+
+bash update_git.sh
+bash install_cx_freeze.sh
+bash install_boost.sh
+
+pip install virtualenv virtualenvwrapper
+
+apt-get build-dep -y python-numpy python-matplotlib python-scipy
+

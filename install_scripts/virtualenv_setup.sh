@@ -1,89 +1,102 @@
+#!/bin/bash
+
+
+# set default values
+CACHED_PACKAGES_DIR=/tmp/CachedPythonPackages
 
 
 # print script usage
 usage() {
-    cat <<EOF
-usage: $0 options
-    
-    VMware automation functions
-    
-    OPTIONS:
-    -h      Show this message
-    -u      USER=$USER
-    -d      HOME=$HOME
-    -p      CACHED_PACAKGES_DIR=$CACHED_PACKAGES_DIR
+	cat <<EOF
+usage: $0 options	
+	Set up postgres database
+	OPTIONS:
+
+	-h      Show this message
+	-d      HOME=$HOME
+	-c      CACHED_PACKAGES_DIR=$CACHED_PACKAGES_DIR
 EOF
 exit
 }
 
 
 #Process the arguments
-while getopts hu:d:p: opt
+while getopts hd:c: opt
 do
-    case "$opt" in
-        h) usage;;
-	u) USER=$OPTARG;;
-    	d) HOME=$OPTARG;;
-    	p) CACHED_PACAKGES_DIR=$OPTARG;;
-    esac
+	case "$opt" in
+		h) usage;;
+		d) HOME=$OPTARG;;
+		c) CACHED_PACKAGES_DIR=$OPTARG;;
+	esac
 done
 
 
-# BEWARE: readlink doesn't work on macs
 my_abs_path=$(readlink -f "$0")
-project_location=$(readlink -f "$(dirname $my_abs_path)/..")
-project_name=$(basename $project_location)
+my_dirname=$(dirname $my_abs_path)
+project_location=$(dirname $(cd $my_dirname && git rev-parse --git-dir))
+project_name=$(basename "$project_location")
+requirements_filename="${project_location}/requirements.txt"
 
 
 options=
-if [[ ! -z $CACHED_PACKAGES_DIR ]]; then
-    # argument must be the full path
-    full_path=$(readlink -f $CACHED_PACKAGES_DIR)
-    options=" --no-index --find-links file://${full_path}"
+if [[ ! -z "$CACHED_PACKAGES_DIR" ]]; then
+    full_path=$(readlink -f "$CACHED_PACKAGES_DIR")
+    mkdir -p $full_path
+    options=" --download-cache $full_path"
 fi
 echo "using options=$options"
 sleep 5
 
-
-# ensure virtualenvwrapper is available
-bashrc_has_virtualenvwrapper=$(grep WORKON_HOME ${HOME}/.bashrc)
-if [[ -z $bashrc_has_virtualenvwrapper ]]; then
+# ensure virtualenvwrapper is loaded
+bashrc_has_virtualenvwrapper=$(grep WORKON_HOME "${HOME}/.bashrc")
+if [[ -z "$bashrc_has_virtualenvwrapper" ]]; then
     echo "Setting up virtualenv via ~/.bashrc"  
-    WORKON_HOME=${HOME}/.virtualenvs
+    WORKON_HOME="${HOME}/.virtualenvs"
     wrapper_script=/usr/local/bin/virtualenvwrapper.sh
-    # FIXME: unclear if this will work for jenkins
-    cat -- >> ${HOME}/.bashrc <<EOF
-export PYTHONPATH=\${PYTHONPATH}:${project_location}
-export WORKON_HOME=$WORKON_HOME
-source $wrapper_script
+    cat -- >> "${HOME}/.bashrc" <<EOF
+export WORKON_HOME="$WORKON_HOME"
+source "$wrapper_script"
 EOF
+    # source so we can work with virtualenv below
+    source "${HOME}/.bashrc"
 fi
 
-# source what we wrote above so we can work with virtualenv below
-source ${HOME}/.bashrc
+>virtualenv_setup.out
+>virtualenv_setup.err
 
-# ensure ${project_name}/requirements.txt is satisfied for virtualenv 
-has_project=$(workon | grep $project_name)
+# ensure virtualenv exists for $project_name
+has_project=$(workon | grep "$project_name")
 if [[ -z $has_project ]]; then
     mkvirtualenv $project_name
     cdvirtualenv
     echo "cd $project_location" >> bin/postactivate
-    # make sure yolk exists
-    pip install yolk
-    # numpy is problematic: must exist beforehand
-    WHICH_NUMPY=$(grep numpy== $project_location/requirements.txt | awk '{print $NF}')
-    pip install $options -r <(echo $WHICH_NUMPY)
+    cat -- >> ~/.bashrc <<EOF
+export PYTHONPATH=\$PYTHONPATH:$project_location
+EOF
 fi
 
-# always install requirements.txt in case new dependencies have been added
+
 workon $project_name
-pip install $options -r requirements.txt
+
+pip_install() {
+	which_requirement=$1
+	if [[ -z $which_requirement ]]; then
+		echo pip_install received no arguments!
+		echo exiting script
+	fi
+	pip install $options -r <(grep ^$which_requirement $requirements_filename | awk '{print $NF}') \
+		>>virtualenv_setup.out 2>>virtualenv_setup.err
+}
+
+# install problematic packages
+pip_install numpy
+pip_install scipy
+pip_install pandas
+pip_install patsy
+
+# always install requirements.txt in case new dependencies have been added
+pip install $options -r requirements.txt \
+	>>virtualenv_setup.out 2>>virtualenv_setup.err
 
 bash install_hcluster.sh
-
-# consider always using CACHED_PACAKGES_DIR and defaulting to /tmp/
-# how to set up CACHED_PACKAGES_DIR
-# CACHED_PACKAGES_DIR=~/CachedPythonPackages
-# mkdir -p $CACHED_PACKAGES_DIR
-# pip install --download --no-install $CACHED_PACKAGES_DIR -r requirements.txt
-# pip install --no-index --find-links=file://$CACHED_PACKAGES_DIR -r requirements.txt
+bash -i install_cx_freeze.sh
