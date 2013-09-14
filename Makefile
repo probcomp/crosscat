@@ -1,7 +1,7 @@
 CPP_DIR=cpp_code
 CYT=crosscat/cython_code
 DOC=docs
-TEST=crosscat/tests
+TEST=$(CPP_DIR)/tests
 XNET=crosscat/binary_creation
 
 
@@ -24,10 +24,10 @@ doc:
 	cd $(DOC) && make
 
 runtests:
-	cd $(TEST) && make runtests
+	cd $(CPP_DIR) && make runtests
 
 tests:
-	cd $(TEST) && make tests
+	cd $(CPP_DIR) && make tests
 
 xnet:
 	cd $(XNET) && make
