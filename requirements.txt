@@ -23,6 +23,9 @@ matplotlib==1.2.0
 # must manually install per https://github.com/pypa/pip/issues/537
 # cx_freeze==4.3.1
 
+# for documentation generation
+Sphinx==1.2b1
+
 # starcluster, only necessary on local computer spinning up a cluster
 # Jinja2==2.6
 # StarCluster==0.93.3

@@ -20,4 +20,5 @@ bash install_boost.sh
 pip install virtualenv virtualenvwrapper
 
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
+apt-get build-dep -y python-sphinx
 
