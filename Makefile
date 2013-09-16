@@ -10,9 +10,11 @@ all: cython doc
 clean:
 	cd $(CPP_DIR) && make clean
 	cd $(CYT) && make clean
-	cd $(DOC) && make clean
-	cd $(TEST) && make clean
 	cd $(XNET) && make clean
+	#
+	cd $(DOC)/sphinx && rm -rf _build
+	cd $(DOC)/latex && make clean
+	cd $(DOC)/doxygen && rm -rf html latex
 
 cpp:
 	cd $(CPP_DIR) && make
@@ -21,7 +23,9 @@ cython:
 	cd $(CYT) && make
 
 doc:
-	cd $(DOC) && make
+	cd $(DOC)/sphinx && make -f Makefile.sphinx
+	cd $(DOC)/latex && make
+	cd $(DOC)/doxygen && doxygen Doxyfile
 
 runtests:
 	cd $(CPP_DIR) && make runtests
