@@ -8,6 +8,11 @@ if [[ "$USER" != "root" ]]; then
 fi
 
 
+my_abs_path=$(readlink -f "$0")
+my_dirname=$(dirname $my_abs_path)
+cd "$my_dirname"
+
+
 bash update_git.sh
 bash install_cx_freeze.sh
 bash install_boost.sh
