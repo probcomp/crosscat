@@ -98,5 +98,6 @@ pip_install patsy
 pip install $options -r requirements.txt \
 	>>virtualenv_setup.out 2>>virtualenv_setup.err
 
-bash $project_location/install_scripts/install_hcluster.sh
-bash $project_location/install_scripts/install_cx_freeze.sh
+cd "$my_dirname"
+bash install_hcluster.sh
+bash install_cx_freeze.sh
