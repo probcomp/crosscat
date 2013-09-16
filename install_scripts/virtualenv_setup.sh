@@ -99,4 +99,4 @@ pip install $options -r requirements.txt \
 	>>virtualenv_setup.out 2>>virtualenv_setup.err
 
 bash $project_location/install_scripts/install_hcluster.sh
-bash -i $project_location/install_scripts/install_cx_freeze.sh
+bash $project_location/install_scripts/install_cx_freeze.sh
