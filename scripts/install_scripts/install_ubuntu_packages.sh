@@ -21,4 +21,4 @@ pip install virtualenv virtualenvwrapper
 
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
 apt-get build-dep -y python-sphinx
-
+apt-get install doxygen
