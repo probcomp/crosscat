@@ -20,7 +20,7 @@ const static double s0_0 = 2.0;
 const static double mu0_0 = 0.0;
 
 /**
- * A full CrossCat state.
+ * A full CrossCat state.  This class is sufficient to draw a posterior sample.
  */
 class State {
  public:
