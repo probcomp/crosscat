@@ -14,6 +14,7 @@ import crosscat.utils.hadoop_utils as hu
 import crosscat.utils.xnet_utils as xu
 import crosscat.LocalEngine as LE
 import crosscat.HadoopEngine as HE
+import crosscat.settings as S
 import crosscat.cython_code.State as State
 import parse_timing
 
@@ -103,7 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('--gen_seed', type=int, default=0)
     parser.add_argument('--n_steps', type=int, default=10)
     parser.add_argument('--which_engine_binary', type=str,
-            default=HE.default_engine_binary)
+            default=S.Hadoop.default_engine_binary)
     parser.add_argument('-do_local', action='store_true')
     parser.add_argument('-do_remote', action='store_true')
     parser.add_argument('--num_rows_list', type=int, nargs='*',
