@@ -1,3 +1,22 @@
+#
+#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#
+#   Lead Developers: Dan Lovell and Jay Baxter
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Research Leads: Vikash Mansinghka, Patrick Shafto
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
 import os
 import csv
 import argparse
@@ -14,6 +33,7 @@ import crosscat.utils.hadoop_utils as hu
 import crosscat.utils.xnet_utils as xu
 import crosscat.LocalEngine as LE
 import crosscat.HadoopEngine as HE
+import crosscat.settings as S
 import crosscat.cython_code.State as State
 import parse_timing
 
@@ -103,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--gen_seed', type=int, default=0)
     parser.add_argument('--n_steps', type=int, default=10)
     parser.add_argument('--which_engine_binary', type=str,
-            default=HE.default_engine_binary)
+            default=S.Hadoop.default_engine_binary)
     parser.add_argument('-do_local', action='store_true')
     parser.add_argument('-do_remote', action='store_true')
     parser.add_argument('--num_rows_list', type=int, nargs='*',
