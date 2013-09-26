@@ -11,17 +11,15 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: crosscat
-
 .. automodule:: crosscat.LocalEngine
    :members:
    :private-members:
 
-.. automodule:: crosscat.HadoopEngine
+.. automodule:: crosscat.JSONRPCEngine
    :members:
    :private-members:
 
-.. automodule:: crosscat.JSONRPCEngine
+.. automodule:: crosscat.HadoopEngine
    :members:
    :private-members:
 
