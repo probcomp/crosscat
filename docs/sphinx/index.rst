@@ -4,25 +4,14 @@
    contain the root `toctree` directive.
 
 Welcome to crosscat's documentation!
-===================================
-
-Contents:
+====================================
 
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: crosscat.LocalEngine
-   :members:
-   :private-members:
-
-.. automodule:: crosscat.JSONRPCEngine
-   :members:
-   :private-members:
-
-.. automodule:: crosscat.HadoopEngine
-   :members:
-   :private-members:
-
+   intro.rst
+   engines.rst
+   client.rst
 
 Indices and tables
 ==================
