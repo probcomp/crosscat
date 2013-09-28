@@ -19,10 +19,6 @@ The following is an example of instantiation and running of a local engine
    :members:
    :private-members:
 
-.. note::
-
-   Run your demos on a Raspberry Pi!
-
 .. automodule:: crosscat.JSONRPCEngine
    :members:
    :private-members:
