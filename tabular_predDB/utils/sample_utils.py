@@ -345,6 +345,54 @@ def simple_predictive_probability_unobserved_discrete(M_c, X_L, X_D, Y, query_ro
     
     return answer
 
+##############################################################################
+
+def row_structural_typicality(X_L_list, X_D_list, row_id):
+    """
+    Returns how typical the row is (opposite of how anomalous the row is).
+    """
+    count = 0
+    assert len(X_L_list) == len(X_D_list)
+    for X_L, X_D in zip(X_L_list, X_D_list):
+        for r in range(len(X_D[0])):
+            for c in range(len(X_L['column_partition']['assignments'])):
+                if X_D[X_L['column_partition']['assignments'][c]][r] == X_D[X_L['column_partition']['assignments'][c]][row_id]:
+                    count += 1
+    return float(count) / (len(X_D_list) * len(X_D[0]) * len(X_L_list[0]['column_partition']['assignments']))
+                
+
+def column_structural_typicality(X_L_list, col_id):
+    """
+    Returns how typical the column is (opposite of how anomalous the column is).
+    """
+    count = 0
+    for X_L in X_L_list:
+        for c in range(len(X_L['column_partition']['assignments'])):
+            if X_L['column_partition']['assignments'][col_id] == X_L['column_partition']['assignments'][c]:
+                count += 1
+    return float(count) / (len(X_L_list) * len(X_L_list[0]['column_partition']['assignments']))
+
+## TODO
+def predictive_probability(M_c, X_L_list, X_D_list, T, q, n=1):
+    pass
+    # Q is a list of three element tuples where each typle, (r,c,x) is contains a
+    # row, r; a column, c; and a value x. The contraints, Y follow an indentical format.
+    # Epsilon is the interval over which to evaluate the probability.
+    # Returns a numpy array where each entry, A[i] is the probability for query i given
+    # the contraints in Y.
+    #simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon=.001):
+
+def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon=.001):
+    """
+    Returns the simple predictive probability, averaged over each sample.
+    """
+    avg_prob = 0
+    for X_L, X_D in zip(X_L_list, X_D_list):
+        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon=.001)
+    return float(avg_prob)/len(X_L_list)
+
+
+#############################################################################
 
 def similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_column=None):
     """

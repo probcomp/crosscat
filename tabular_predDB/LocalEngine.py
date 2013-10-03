@@ -140,6 +140,33 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         samples = _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return samples
 
+    def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon=.001):
+        """
+        Returns the simple predictive probability averaged over each latent state.
+        See simple_predicitive_probability.
+
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L: the latent variables associated with the latent state
+        :type X_L: dict
+        :param X_D: the particular cluster assignments of each row in each view
+        :type X_D: list of lists
+        :param Y: A list of constraints to apply when sampling.  Each constraint
+                  is a triplet of (r, d, v): r is the row index, d is the column
+                  index and v is the value of the constraint
+        :type Y: list of lists
+        :param Q: A list of values to sample.  Each value is doublet of (r, d):
+                  r is the row index, di is the column index
+        :type Q: list of lists
+        :param epsilon: the window around the specified value to take the delta
+                        in cdf of
+        :type epsilon: float
+        :returns: list of floats -- probabilities of the values specified by Q
+
+        """
+        return su.simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon)
+        
+
     def simple_predictive_probability(self, M_c, X_L, X_D, Y, Q, epsilon=0.001):
         """Calculate the probability of a cell taking a value within epsilon of 
         the specified values given a latent state
