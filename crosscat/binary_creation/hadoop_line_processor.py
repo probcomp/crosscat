@@ -25,18 +25,18 @@ import sys
 import itertools
 import random
 #
-import tabular_predDB.python_utils.data_utils as du
-import tabular_predDB.python_utils.file_utils as fu
-import tabular_predDB.python_utils.hadoop_utils as hu
-import tabular_predDB.python_utils.xnet_utils as xu
-import tabular_predDB.python_utils.general_utils as gu
-import tabular_predDB.python_utils.inference_utils as iu
-import tabular_predDB.python_utils.timing_test_utils as ttu
-import tabular_predDB.python_utils.mutual_information_test_utils as mitu
-import tabular_predDB.python_utils.convergence_test_utils as ctu
-import tabular_predDB.LocalEngine as LE
-import tabular_predDB.HadoopEngine as HE
-from tabular_predDB.settings import Hadoop as hs
+import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
+import crosscat.utils.hadoop_utils as hu
+import crosscat.utils.xnet_utils as xu
+import crosscat.utils.general_utils as gu
+import crosscat.utils.inference_utils as iu
+import crosscat.utils.timing_test_utils as ttu
+import crosscat.utils.mutual_information_test_utils as mitu
+import crosscat.utils.convergence_test_utils as ctu
+import crosscat.utils.LocalEngine as LE
+import crosscat.utils.HadoopEngine as HE
+from crosscat.settings import Hadoop as hs
 
 
 def initialize_helper(table_data, data_dict, command_dict):
