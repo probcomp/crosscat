@@ -187,6 +187,9 @@ double ContinuousComponentModel::get_draw(int random_seed) const {
   get_hyper_doubles(r, nu, s, mu);
   get_suffstats(count, sum_x, sum_x_squared);
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
+
+  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  s /= 2; 
   //
   boost::mt19937  _engine(random_seed);
   boost::uniform_01<boost::mt19937> _dist(_engine);
@@ -214,6 +217,9 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed, vector<do
 					     constraint);
   }
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
+
+  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  s /= 2; 
   //
   boost::mt19937  _engine(random_seed);
   boost::uniform_01<boost::mt19937> _dist(_engine);
@@ -239,6 +245,9 @@ double ContinuousComponentModel::get_predictive_cdf(double element, vector<doubl
                constraint);
   }
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
+
+  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  s /= 2; 
 
   boost::math::students_t dist(nu);
   double coeff = sqrt((s * (r+1)) / (nu / 2. * r));
@@ -266,6 +275,9 @@ double ContinuousComponentModel::get_predictive_pdf(double element, vector<doubl
                constraint);
   }
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
+
+  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  s /= 2; 
 
   double coeff = sqrt((s * (r+1)) / (nu / 2. * r));
 

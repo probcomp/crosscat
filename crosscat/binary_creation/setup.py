@@ -22,6 +22,11 @@
 # If everything works well you should find a subdirectory in the build
 # subdirectory that contains the files needed to run the application
 
+# Run the build process by running the command 'python setup.py build'
+#
+# If everything works well you should find a subdirectory in the build
+# subdirectory that contains the files needed to run the application
+
 
 import sys
 #
@@ -36,6 +41,8 @@ excludes = [
 includes = [
     'crosscat.utils.data_utils',
     'crosscat.utils.file_utils',
+    'crosscat.utils.inference_utils',
+    'crosscat.utils.mutual_information_test_utils',
     'crosscat.utils.timing_test_utils',
     'crosscat.utils.convergence_test_utils',
     'crosscat.LocalEngine',
