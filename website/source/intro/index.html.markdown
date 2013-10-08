@@ -1,7 +1,6 @@
 ---
 layout: "intro"
 page_title: "Introduction"
-prev_url: "#"
 ---
 
 # Introduction to website-archetype

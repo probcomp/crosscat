@@ -1,7 +1,6 @@
 ---
 layout: "docs"
 page_title: "Documentation"
-prev_url: "#"
 ---
 
 # Documentation for website-archetype

@@ -1,7 +1,6 @@
 ---
 layout: "intro"
 page_title: "How to use website-archetype"
-prev_url: "#"
 ---
 
 # How to use website-archetype

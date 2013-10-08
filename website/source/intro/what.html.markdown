@@ -1,7 +1,6 @@
 ---
 layout: "intro"
 page_title: "What is website-archetype"
-prev_url: "#"
 ---
 
 ## What is website-archetype?

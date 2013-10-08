@@ -1,7 +1,6 @@
 ---
 layout: "intro"
 page_title: "Why use website-archetype?"
-prev_url: "#"
 ---
 
 # Why use website-archetype?
