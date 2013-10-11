@@ -2,32 +2,66 @@
 title: Welcome to CrossCat
 ---
 
+<p class="lead">
+	A fully Bayesian nonparametric method for analyzing heterogenous, high dimensional data.
+</p>
+
 <div class="row">
 	<div class="col-md-12">
-		<p class="lead">CrossCat is a fully Bayesian nonparametric method for analyzing heterogenous, high dimensional data. It yields an estimate of the underlying full joint distribution, including the dependencies between variables, along with efficient samplers for every conditional distribution. The method is domain general, unsupervised and has no free parameters that require tuning. Thus, CrossCat provides a generic method for analyzing these data, where the output can be queried to answer an extremely wide array questions about the rows and attributes. Unlike standard statistical approaches, CrossCat does not make restrictive assumptions---such as linearity---and therefore provides reliable inferences without specific training in statistics. </p>
+		<a id="Overview"></a><!-- <h1>Overview</h1> -->
+		<p>CrossCat is a fully Bayesian nonparametric method for analyzing heterogenous, high dimensional data. It yields an estimate of the underlying full joint distribution, including the dependencies between variables, along with efficient samplers for every conditional distribution. The method is domain general, unsupervised and has no free parameters that require tuning. Thus, CrossCat provides a generic method for analyzing these data, where the output can be queried to answer an extremely wide array questions about the rows and attributes. Unlike standard statistical approaches, CrossCat does not make restrictive assumptions---such as linearity---and therefore provides reliable inferences without specific training in statistics. </p>
 
-		<p class="lead">The ability to analyze large, heterogenous high-dimensional datasets is critical across fields. Typically these datasets take the form of tables with rows representing entities and columns representing entity attributes and can be as large as millions of rows and hundreds of columns. One such data source may be a medical records database, the entities are individual persons and their attributes are health/medical related information about them such as height, weight, bmi, common complaints, etc.</p>
-
-		<div class="col-md-3">
-			<h2 class="text-center">Exemplar dataset</h2>
-			A dataset of variables related to airline flights
-		</div>
-		<div class="col-md-9" style="height: 136px;">
-			<img src="/images/Flight_data_subset.png" height=66px width=660px>
-		</div>
-
-		<p class="lead">One may be interested querying such data to get answers regarding which attributes are dependent, which rows are similar, likely values of unobserved cells, probable but not-previously-observed instances, and more.</p>
-	       
-		<div class="col-md-6">
-			<img src="/images/Flight_data_subset_feature_z.png" height=160px width=213px>
-		</div>
-		<div class="col-md-6" style="height: 160px;">
-			<h2 class="text-center">Visualization of attribute dependencies</h2>
-			Aggregating statistics on the models CrossCat generates of the underlying data, we can draw conclusions about the likelihood of dependence between data table columns	
-		</div>
+		<p>The ability to analyze large, heterogenous high-dimensional datasets is critical across fields. Typically these datasets take the form of tables with rows representing entities and columns representing entity attributes and can be as large as millions of rows and hundreds of columns. One such data source may be a medical records database, the entities are individual persons and their attributes are health/medical related information about them such as height, weight, bmi, common complaints, etc.</p>
 	</div>
+</div>
 
-        <div class="col-md-12" style="margin-top: 140px; padding-top: 140px;">
+<hr>
+
+<div class="row">
+	<div class="col-md-3">
+		<h2 class="text-center">Exemplar dataset</h2>
+		A dataset of variables related to airline flights
+	</div>
+	<div class="col-md-9" >
+		<img src="/images/Flight_data_subset.png" height=66px width=660px>
+	</div>
+</div>
+	
+<hr>
+	
+<div class="row">	
+	<div class="col-md-3">
+		<img src="/images/Flight_data_subset_feature_z.png" height=160px width=213px>
+	</div>
+	<div class="col-md-9">
+		<h2 class="text-center">Visualization of attribute dependencies</h2>
+		<p>One may be interested querying such data to get answers regarding which attributes are dependent, which rows are similar, likely values of unobserved cells, probable but not-previously-observed instances, and more.</p>
+		<p>Aggregating statistics on the models CrossCat generates of the underlying data, we can draw conclusions about the likelihood of dependence between data table columns.</p>
+	</div>
+</div>
+
+<hr>
+
+<div class="row">
+	<div class="col-md-12">
+		<a id="Download"></a><h1>Get it</h1>
+		<p>Information about how to get [download] crosscat goes here.</p>
+	
+		<hr>
+		
+		<a id="Publications"></a><h1>Publications</h1>
+		<p>Publications information goes here.</p>
+		
+		<hr>
+		
+		<a id="About"></a><h1>About</h1>
+		<p>About information goes here</p>
+	</div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12" style="margin-top: 140px; padding-top: 140px;">
 		<p class="text-center">Don't forget to check out these other great ProbComp projects!</p>
 		<div class="col-md-4">
 			<p class="well text-center"><a href="http://venture.csail.mit.edu/wiki/index.php5?title=Venture">Venture</a></p>

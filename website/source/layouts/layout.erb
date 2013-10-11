@@ -12,7 +12,7 @@
     <!-- Use title if it's in the page YAML frontmatter -->
     <title><%= data.page.title || "CrossCat" %></title>
     
-    <%= stylesheet_link_tag "bootstrap" %>
+    <%= stylesheet_link_tag "bootstrap", "all" %>
 
     <!-- Add custom CSS here -->
     <style>
@@ -46,11 +46,16 @@
       </div><!-- /.container -->
     </nav>
 
-    <img src="http://www.csail.mit.edu/images/csaillogomed.gif" alt="CrossCat"> 
-    <img src="images/figure_crosscat_schematic_a.png" alt="CrossCat" height="162px"> 
-    <img src="http://bcs.mit.edu/images/logo_off.gif" alt="CrossCat" height="162px"> 
-    <div id="container">
-      <%= yield %>
+	<div class="container">
+		<center>
+		    <img class="logo" src="http://www.csail.mit.edu/images/csaillogomed.gif" alt="CrossCat"> 
+		    <img class="logo-large" src="images/Logo_1.png" alt="CrossCat"> 
+		    <img class="logo" src="http://bcs.mit.edu/images/logo_off.gif" alt="CrossCat"> 
+		</center>
+	</div>
+	<br>
+    <div class="container">
+    	<%= yield %>
     </div>
 
     <!-- Bootstrap core JavaScript -->
