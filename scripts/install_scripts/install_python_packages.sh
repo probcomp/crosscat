@@ -66,4 +66,3 @@ pip install $options -r $requirements_filename
 
 cd "$my_dirname"
 bash install_hcluster.sh
-bash install_cx_freeze.sh
