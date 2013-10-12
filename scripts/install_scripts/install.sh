@@ -28,10 +28,9 @@ requirements_filename=$project_location/requirements.txt
 
 
 # install system dependencies
-apt-get install -y --force-yes git python-pip
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
 apt-get build-dep -y python-sphinx
-apt-get install -y doxygen
+apt-get install -y doxygen python-pip
 
 # 
 pip install $options -r $requirements_filename
