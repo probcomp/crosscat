@@ -40,6 +40,7 @@ numpy_include_full_dirs = [
 	os.path.expanduser(numpy_include_full_dir)
 	for numpy_include_full_dir in numpy_include_full_dirs
 	]
+numpy_include_full_dirs.append('/usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy/')
 valid_dirs = filter(os.path.isdir, numpy_include_full_dirs)
 if len(valid_dirs) == 0:
     error_message = 'none of numpy_include_full_dirs exist: %s\n' \
