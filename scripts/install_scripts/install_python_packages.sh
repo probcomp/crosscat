@@ -62,7 +62,7 @@ pip_install pandas
 pip_install patsy
 
 # always install requirements.txt in case new dependencies have been added
-pip install $options -r requirements.txt
+pip install $options -r $requirements_filename
 
 cd "$my_dirname"
 bash install_hcluster.sh
