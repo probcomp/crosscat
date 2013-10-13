@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title><%= data.page.title || "CrossCat" %></title>
+    
+    <%= stylesheet_link_tag "bootstrap", "all" %>
+
+    <!-- Add custom CSS here -->
+    <style>
+	body {margin-top: 60px;}
+    </style>
+
+  </head>
+  
+  <body class="<%= page_classes %>" >
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+	  <a class="navbar-brand" href="index.html" style="font-size: 26px; color: #FFFFFF;">CrossCat</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#Overview">Overview</a></li>
+            <li><a href="#Download">Download</a></li>
+            <li><a href="#Publications">Publications</a></li>
+            <li><a href="#About">About</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container -->
+    </nav>
+
+	<div class="container">
+		<center>
+		    <img class="logo" src="http://www.csail.mit.edu/images/csaillogomed.gif" alt="CrossCat"> 
+		    <img class="logo-large" src="images/Logo_1.png" alt="CrossCat"> 
+		    <img class="logo" src="http://bcs.mit.edu/images/logo_off.gif" alt="CrossCat"> 
+		</center>
+	</div>
+	<br>
+    <div class="container">
+    	<%= yield %>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="javascripts/jquery.js"></script>
+    <script src="javascripts/bootstrap.js"></script>
+    <!-- Put this into a custom JavaScript file to make things more organized -->
+    <%= javascript_include_tag  "all" %>
+    <script>
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("active");
+    });
+    </script>
+
+  </body>
+</html>
