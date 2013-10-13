@@ -38,15 +38,6 @@ project_name=$(basename "$project_location")
 requirements_filename="${project_location}/requirements.txt"
 
 
-options=
-if [[ ! -z "$CACHED_PACKAGES_DIR" ]]; then
-    full_path=$(readlink -f "$CACHED_PACKAGES_DIR")
-    mkdir -p $full_path
-    options=" --download-cache $full_path"
-fi
-echo "using options=$options"
-sleep 5
-
 # ensure virtualenvwrapper is loaded
 bashrc_has_virtualenvwrapper=$(grep WORKON_HOME "${HOME}/.bashrc")
 if [[ -z "$bashrc_has_virtualenvwrapper" ]]; then
@@ -61,8 +52,6 @@ EOF
     source "${HOME}/.bashrc"
 fi
 
->virtualenv_setup.out
->virtualenv_setup.err
 
 # ensure virtualenv exists for $project_name
 has_project=$(workon | grep "$project_name")
@@ -73,31 +62,11 @@ if [[ -z $has_project ]]; then
     cat -- >> ~/.bashrc <<EOF
 export PYTHONPATH=\$PYTHONPATH:$project_location
 EOF
+    # source so we can work with virtualenv below
+    source "${HOME}/.bashrc"
 fi
 
 
 workon $project_name
-
-pip_install() {
-	which_requirement=$1
-	if [[ -z $which_requirement ]]; then
-		echo pip_install received no arguments!
-		echo exiting script
-	fi
-	pip install $options -r <(grep ^$which_requirement $requirements_filename | awk '{print $NF}') \
-		>>virtualenv_setup.out 2>>virtualenv_setup.err
-}
-
-# install problematic packages
-pip_install numpy
-pip_install scipy
-pip_install pandas
-pip_install patsy
-
-# always install requirements.txt in case new dependencies have been added
-pip install $options -r requirements.txt \
-	>>virtualenv_setup.out 2>>virtualenv_setup.err
-
 cd "$my_dirname"
-bash install_hcluster.sh
-bash install_cx_freeze.sh
+bash install_python_packages.sh >virtualenv_setup.out 2>virtualenv_setup.err
