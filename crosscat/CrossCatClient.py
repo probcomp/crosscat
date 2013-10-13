@@ -23,8 +23,20 @@ import inspect
 
 
 class CrossCatClient(object):
+    """ A client interface that gives a singular interface to all the different
+    engines
+
+    Depending on the client_type, dispatch to the appropriate engine constructor
+
+    """
 
     def __init__(self, engine):
+        """Initialize client with given engine
+
+        Not to be called directly!
+
+        """
+
         self.engine = engine
         return
 
@@ -38,6 +50,12 @@ class CrossCatClient(object):
         return attr
 
 def get_CrossCatClient(client_type, **kwargs):
+    """Helper which instantiates the appropriate Engine and returns a Client
+
+    Maybe this should be in CrossCatClient.__init__
+
+    """
+
     client = None
     if client_type == 'local':
         import crosscat.LocalEngine as LocalEngine
