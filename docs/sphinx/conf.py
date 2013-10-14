@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CrossCat'
-copyright = u'2013, MIT Probabilistic Computing Project'
+copyright = u'2013, MIT Probabilistic Computing Project + Univ. of Louisville'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -208,7 +208,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'CrossCat.tex', u'CrossCat Documentation',
-   u'MIT Probabilistic Computing Project', 'manual'),
+   u'MIT Probabilistic Computing Project + Univ. of Louisville', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -238,7 +238,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'bayesdb', u'CrossCat Documentation',
-     [u'MIT Probabilistic Computing Project'], 1)
+     [u'MIT Probabilistic Computing Project + Univ. of Louisville'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -252,7 +252,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'CrossCat', u'CrossCat Documentation',
-   u'MIT Probabilistic Computing Project', 'CrossCat', 'One line description of project.',
+   u'MIT Probabilistic Computing Project + Univ. of Louisville', 'CrossCat', 'One line description of project.',
    'Miscellaneous'),
 ]
 

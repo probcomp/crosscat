@@ -49,10 +49,9 @@ class CrossCatClient(object):
             attr = object.__getattribute__(self, name)
         return attr
 
+# Maybe this should be in CrossCatClient.__init__
 def get_CrossCatClient(client_type, **kwargs):
     """Helper which instantiates the appropriate Engine and returns a Client
-
-    Maybe this should be in CrossCatClient.__init__
 
     """
 

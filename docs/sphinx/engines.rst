@@ -1,7 +1,7 @@
 CrossCat Engines
 ================
 
-A CrossCat engine can be local or remote.  A remote engine may be a JSONRPC engine or a Hadoop engine.  A CrssCatClient can be used to dispatch importing and constructing the desired engine type.
+A CrossCat engine can be local or remote.  A remote engine may be a JSONRPC engine or a Hadoop engine.  A CrossCatClient can be used to dispatch importing and constructing the desired engine type.
 
 .. warning::
 
