@@ -11,3 +11,4 @@ sudo bash install_heroku_cli.sh
 sudo apt-get install -y curl
 # can't run this as root, else have difficulties with 'rvm install ruby'
 bash install_ruby.sh
+sudo apt-get install -y ruby-bundler rubygems
