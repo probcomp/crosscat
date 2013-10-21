@@ -1,3 +1,10 @@
+# must NOT be root!
+if [[ $(whoami) == "root" ]]; then
+	echo "$0: Can't be root to run!"
+	exit
+fi
+
+
 # get rvm
 \curl -L https://get.rvm.io | bash
 source ~/.rvm/scripts/rvm
