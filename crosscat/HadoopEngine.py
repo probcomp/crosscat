@@ -2,7 +2,7 @@
 #   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
 #   Research Leads: Vikash Mansinghka, Patrick Shafto
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +89,8 @@ class HadoopEngine(object):
         :type M_c: dict
         :param M_r: The row metadata
         :type M_r: dict
-        :param T: The data table in mapped representation (all floats)
+        :param T: The data table in mapped representation (all floats, generated
+                  by data_utils.read_data_objects)
         :type T: list of lists
         :returns: X_L, X_D -- the latent state
 
@@ -121,29 +122,32 @@ class HadoopEngine(object):
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1, **kwargs):  
-        """Evolve the latent state by running transition kernels
+        """Evolve the latent state by running MCMC transition kernels
 
         :param M_c: The column metadata
         :type M_c: dict
-        :param T: The data table in mapped representation (all floats)
+        :param T: The data table in mapped representation (all floats, generated
+                  by data_utils.read_data_objects)
         :type T: list of lists
         :param X_L: the latent variables associated with the latent state
         :type X_L: dict
         :param X_D: the particular cluster assignments of each row in each view
         :type X_D: list of lists
-        :param kernel_list: names of the transition kernels to run
+        :param kernel_list: names of the MCMC transition kernels to run
         :type kernel_list: list of strings
-        :param n_steps: the number of times to run each transition kernel
+        :param n_steps: the number of times to run each MCMC transition kernel
         :type n_steps: int
-        :param c: the (global) column indices to run transitions on
+        :param c: the (global) column indices to run MCMC transition kernels on
         :type c: list of ints
-        :param r: the (global) row indices to run transitions on
+        :param r: the (global) row indices to run MCMC transition kernels on
         :type r: list of ints
-        :param max_iterations: the maximum number of times ot run each transition
-                               kernel. Applicable only if max_time != -1.
+        :param max_iterations: the maximum number of times ot run each MCMC
+                               transition kernel. Applicable only if
+                               max_time != -1.
         :type max_iterations: int
-        :param max_time: the maximum amount of time (seconds) to run transitions
-                         for before stopping to return progress
+        :param max_time: the maximum amount of time (seconds) to run MCMC
+                         transition kernels for before stopping to return
+                         progress
         :type max_time: float
         :param kwargs: optional arguments to pass to hadoop_line_processor.jar.
                        Currently, presence of a 'chunk_size' kwarg causes

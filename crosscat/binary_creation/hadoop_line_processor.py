@@ -4,7 +4,7 @@
 #   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
 #   Research Leads: Vikash Mansinghka, Patrick Shafto
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
