@@ -5,20 +5,23 @@ CrossCat is a fully Bayesian nonparametric method for analyzing heterogenous, hi
 
 # Installation
 
+### VM
+
 We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_CtKGJ4pH2TX2VaTXRkMWFOeGM/edit?usp=drive_web) ([VM_README](https://github.com/mit-probabilistic-computing-project/vm-install-crosscat/blob/master/VM_README.md)) for small scale testing of CrossCat.
 
 **Note**: The VM is only meant to provide an out-of-the-box usable system setup.  Its resources are limited and large jobs will fail due to memory errors.  TO run larger jobs, increase the VM resources or install directly to your system.
 
+### Local (Ubuntu)
 CrossCat can be installed locally on Ubuntu systems with
 
     git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
     sudo bash crosscat/scripts/install_scripts/install.sh
     cd crosscat && PYTHONPATH=$PYTHONPATH:$(pwd) make cython
 
-Don't forget to add crosscat to your python path.  For bash, this can be accomplished with
+Don't forget to add crosscat to your python path.  For bash, this can be accomplished by substituting the correct value for <CROSSCAT_DIR> and running
 
     cat -- >> ~/.bashrc <<EOF
-    export PYTHONPATH=\$PYTHONPATH:$crosscat_dir
+    export PYTHONPATH=\$PYTHONPATH:<CROSSCAT_DIR>
     EOF
 
 # Documentation
