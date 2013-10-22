@@ -279,7 +279,7 @@ def convert_value_to_code(M_c, cidx, value):
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
         return float(value)
     else:
-        return M_c['column_metadata'][cidx]['code_to_value'][value] 
+        return M_c['column_metadata'][cidx]['code_to_value'][str(int(value))] 
 
 def map_from_T_with_M_c(coordinate_value_tuples, M_c):
     coordinate_code_tuples = []
@@ -326,7 +326,7 @@ def remove_ignore_cols(T, cctypes, header):
 def read_data_objects(filename, max_rows=None, gen_seed=0,
                       cctypes=None, colnames=None):
     header, raw_T = read_csv(filename, has_header=True)
-    header = [h.lower() for h in header]
+    header = [h.lower().strip() for h in header]
     # FIXME: why both accept colnames argument and read header?
     if colnames is None:
         colnames = header
