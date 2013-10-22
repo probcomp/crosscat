@@ -11,6 +11,7 @@ This package is configured to be installed as a StarCluster plugin.  Roughly, th
     * The package directory must be renamed to tabular\_predDB from tabular-predDB
     * if not on the PYTHONPATH, all starcluster commands must be run one level above the package directory
 
+# **NOTE**: starcluster_plugin.py is currently broken.
 A starcluster_plugin.py file in included in this repo.  Assuming the above prerequisites are fulfilled,
 
     local> starcluster start -c crosscat [CLUSTER_NAME]
