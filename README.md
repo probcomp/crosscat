@@ -9,7 +9,7 @@ CrossCat is a fully Bayesian nonparametric method for analyzing heterogenous, hi
 
 We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_CtKGJ4pH2TX2VaTXRkMWFOeGM/edit?usp=drive_web) ([VM_README](https://github.com/mit-probabilistic-computing-project/vm-install-crosscat/blob/master/VM_README.md)) for small scale testing of CrossCat.
 
-**Note**: The VM is only meant to provide an out-of-the-box usable system setup.  Its resources are limited and large jobs will fail due to memory errors.  TO run larger jobs, increase the VM resources or install directly to your system.
+**Note**: The VM is only meant to provide an out-of-the-box usable system setup.  Its resources are limited and large jobs will fail due to memory errors.  To run larger jobs, increase the VM resources or install directly to your system.
 
 ### Local (Ubuntu)
 CrossCat can be installed locally on Ubuntu systems with
@@ -32,7 +32,7 @@ Don't forget to add crosscat to your python path.  For bash, this can be accompl
 
 # Example
 
-/path/to/crosscat/examples/dha\_example.py ([github](https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/examples/dha_example.py)) is a basic example of analysis using CrossCat.  For a first test, run it with
+dha\_example.py ([github](https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/examples/dha_example.py)) is a basic example of analysis using CrossCat.  For a first test, run the following from inside the top level crosscat dir
 
     python crosscat/examples/dha_example.py --num_chains 2 --num_transitions 2
 
