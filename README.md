@@ -26,7 +26,8 @@ Don't forget to add crosscat to your python path.  For bash, this can be accompl
 
 # Documentation
 
-[Python Client](https://docs.google.com/file/d/1B_CtKGJ4pH2TdmNRZkhmamg5aVU/edit?usp=drive_web)
+
+[Python Client](https://docs.google.com/file/d/0B_CtKGJ4pH2TdmNRZkhmamg5aVU/edit?usp=drive_web)
 
 [C++ backend](https://docs.google.com/file/d/0B_CtKGJ4pH2TeVo0Zk5IT3V6S0E/edit?usp=drive_web)
 
