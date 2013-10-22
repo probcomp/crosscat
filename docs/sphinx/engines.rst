@@ -30,16 +30,3 @@ Workings with samples
 
 Once you have samples from the posterior, engines provide functionality to impute missing values in observed rows, sample values from unobserved rows, and determine probabilities of values in both observed and unobserved rows.
 
-.. automodule:: crosscat.LocalEngine
-   :members:
-   :private-members:
-
-.. automodule:: crosscat.JSONRPCEngine
-   :members:
-   :private-members:
-
-.. automodule:: crosscat.HadoopEngine
-   :members:
-   :private-members:
-
-
