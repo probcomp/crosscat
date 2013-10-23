@@ -6,7 +6,7 @@ What is CrossCat?
 
 CrossCat is a domain-general, Bayesian method for analyzing high-dimensional data tables. CrossCat estimates the full joint distribution over the variables in the table from the data, via approximate inference in a hierarchical, nonparametric Bayesian model, and provides efficient samplers for every conditional distribution. CrossCat combines strengths of nonparametric mixture modeling and Bayesian network structure learning: it can model any joint distribution given enough data by positing latent variables, but also discovers independencies between the observable variables.
 
-CrossCat contains an optimized C++ backend and Python client.  This document references the Python client.
+CrossCat contains an optimized C++ backend and a Python client.  This document references the Python client.
 
 Why CrossCat?
 -------------
