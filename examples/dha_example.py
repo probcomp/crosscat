@@ -2,7 +2,7 @@
 #   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
 #   Research Leads: Vikash Mansinghka, Patrick Shafto
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,8 @@ parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=25, type=int)
 parser.add_argument('--num_transitions', default=200, type=int)
+parser.add_argument('--ipython_parallel_sshserver', default=None, type=str)
+parser.add_argument('--sshserver_path_append', default=None, type=str)
 args = parser.parse_args()
 #
 filename = args.filename
@@ -45,6 +47,8 @@ inf_seed = args.inf_seed
 gen_seed = args.gen_seed
 num_chains = args.num_chains
 num_transitions = args.num_transitions
+ipython_parallel_sshserver = args.ipython_parallel_sshserver
+sshserver_path_append = args.sshserver_path_append
 #
 pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
 
@@ -84,14 +88,14 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 engine = LE.LocalEngine(inf_seed)
 
 
-do_remote = False
-if do_remote:
+if ipython_parallel_sshserver is not None:
     ## set up parallel
     from IPython.parallel import Client
-    c = Client(profile='ssh', sshserver='dlovell@secretasiandan.dyndns.org')
+    c = Client(profile='ssh', sshserver=ipython_parallel_sshserver)
     dview = c[:]
     dview.execute('import sys')
-    dview.apply_sync(lambda: sys.path.append('/usr/local/'))
+    if sshserver_path_append is not None:
+        dview.apply_sync(lambda: sys.path.append(sshserver_path_append))
     #
     with dview.sync_imports(): 
         import crosscat.LocalEngine as LE

@@ -1,0 +1,24 @@
+.container{
+	width:90%;
+	max-width: 960px;
+	margin: 0 auto;
+}
+
+a:hover{
+	text-decoration: none;
+}
+img{
+	max-width: 100%;
+	margin:0 auto;
+}
+img.logo{
+	height: 160px;
+	max-width:100%;
+	margin:10px;
+}
+
+img.logo-large{
+	height: 200px;
+	max-width:100%;
+	margin:10px;
+}

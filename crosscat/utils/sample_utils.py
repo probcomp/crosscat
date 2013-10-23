@@ -2,7 +2,7 @@
 #   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
 #   Research Leads: Vikash Mansinghka, Patrick Shafto
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -411,6 +411,8 @@ def similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_colu
     if target_column:
         if type(target_column) == str:
             col_idxs = [M_c['name_to_idx'][target_column]]
+        elif type(target_column) == list:
+            col_idxs = target_column
         else:
             col_idxs = [target_column]
     else:

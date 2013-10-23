@@ -2,7 +2,7 @@
 #   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka, Avinash Gandhe
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
 #   Research Leads: Vikash Mansinghka, Patrick Shafto
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,9 @@ class EngineTemplate(object):
     def simple_predictive_probability(self, M_c, X_L, X_D, Y, Q, n):
         p = None
         return p
+
+    def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
+        return None
 
     def impute(self, M_c, X_L, X_D, Y, Q, n):
         e = None
