@@ -20,6 +20,7 @@
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
+import crosscat.utils.inference_utils as iu
 import crosscat.utils.xnet_utils as xu
 
 
@@ -198,6 +199,76 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
         return su.simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon)
+
+    def simple_predictive_probability_multistate(self, M_c, X_L_list, X_D_list, Y, Q, epsilon=0.001):
+        """Calculate the probability of a cell taking a value within epsilon of 
+        the specified values given a latent state
+
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L_list: list of the latent variables associated with the latent state
+        :type X_L_list: list of dict
+        :param X_D_list: list of the particular cluster assignments of each row in each view
+        :type X_D_list: list of list of lists
+        :param Y: A list of constraints to apply when sampling.  Each constraint
+                  is a triplet of (r, d, v): r is the row index, d is the column
+                  index and v is the value of the constraint
+        :type Y: list of lists
+        :param Q: A list of values to sample.  Each value is doublet of (r, d):
+                  r is the row index, d is the column index
+        :type Q: list of lists
+        :param epsilon: the window around the specified value to take the delta
+                        in cdf of
+        :type epsilon: float
+        :returns: list of floats -- probabilities of the values specified by Q
+
+        """
+        return su.simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon)
+
+    def mutual_information(self, M_c, X_L_list, X_D_list, Q, n_samples=1000):
+        """
+        Return the estimated mutual information for each pair of columns on Q given
+        the set of samples.
+        
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L_list: list of the latent variables associated with the latent state
+        :type X_L_list: list of dict
+        :param X_D_list: list of the particular cluster assignments of each row in each view
+        :type X_D_list: list of list of lists
+        :param Q: List of tuples where each tuple contains the two column indexes to compare
+        :type Q: list of two-tuples of ints
+        :param n_samples: the number of simple predictive samples to use
+        :type n_samples: int
+        :returns: list of list, where each sublist is a set of MIs and Linfoots from each crosscat sample.
+        """
+        return iu.mutual_information(M_c, X_L_list, X_D_list, Q, n_samples)
+
+    def row_structural_typicality(self, X_L_list, X_D_list, row_id):
+        """
+        Returns the typicality (opposite of anomalousness) of the given row.
+        
+        :param X_L_list: list of the latent variables associated with the latent state
+        :type X_L_list: list of dict
+        :param X_D_list: list of the particular cluster assignments of each row in each view
+        :type X_D_list: list of list of lists
+        :param row_id: id of the target row
+        :type row_id: int
+        :returns: float, the typicality, from 0 to 1
+        """        
+        return su.row_structural_typicality(X_L_list, X_D_list, row_id)
+
+    def column_structural_typicality(self, X_L_list, col_id):
+        """
+        Returns the typicality (opposite of anomalousness) of the given column.
+        
+        :param X_L_list: list of the latent variables associated with the latent state
+        :type X_L_list: list of dict
+        :param col_id: id of the target col
+        :type col_id: int
+        :returns: float, the typicality, from 0 to 1
+        """        
+        return su.column_structural_typicality(X_L_list, col_id)
 
     def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
         """Computes the similarity of the given row to the target row, averaged over all the
