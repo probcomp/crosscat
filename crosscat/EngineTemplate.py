@@ -45,6 +45,9 @@ class EngineTemplate(object):
         p = None
         return p
 
+    def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
+        return None
+
     def impute(self, M_c, X_L, X_D, Y, Q, n):
         e = None
         return e

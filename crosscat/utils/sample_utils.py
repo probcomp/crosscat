@@ -363,6 +363,8 @@ def similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_colu
     if target_column:
         if type(target_column) == str:
             col_idxs = [M_c['name_to_idx'][target_column]]
+        elif type(target_column) == list:
+            col_idxs = target_column
         else:
             col_idxs = [target_column]
     else:

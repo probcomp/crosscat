@@ -172,6 +172,27 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         return su.simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon)
 
+    def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
+        """Computes the similarity of the given row to the target row, averaged over all the
+        column indexes given by target_columns.
+
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L: list of the latent variables associated with the latent state
+        :type X_L: list of dicts
+        :param X_D: list of the particular cluster assignments of each row in each view
+        :type X_D: list of list of lists
+        :param given_row_id: the id of one of the rows to measure similarity between
+        :type given_row_id: int
+        :param target_row_id: the id of the other row to measure similarity between
+        :type target_row_id: int
+        :param target_columns: the columns to average the similarity over. defaults to all columns.
+        :type target_columns: int, string, or list of ints
+        :returns: float
+
+        """
+        return su.similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns)
+
     def impute(self, M_c, X_L, X_D, Y, Q, n):
         """Impute values from the predictive distribution of the given latent state
 
