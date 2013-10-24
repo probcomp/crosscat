@@ -11,7 +11,6 @@ Welcome to crosscat's documentation!
 
    intro.rst
    engines.rst
-   client.rst
 
 Indices and tables
 ==================
