@@ -144,5 +144,59 @@ int main() {
   // cout << "draws are: " << draws << endl;
   cout << "draw_counts is: " << draw_counts << endl;
 
+
+  cout << endl << endl << "test constructor with sparse input" << endl;
+  // elements to add
+  values_to_test.clear();
+  map<string, double> counts_to_use;
+  for(int i=0; i<NUM_BUCKETS; i++) {
+	  counts_to_use[stringify(i)] = 0.;
+  }
+  int ignore_value = 0;
+  for(int i=0; i<num_values_to_test; i++) {
+    int rand_i = rng.nexti(NUM_BUCKETS);
+    if(rand_i==ignore_value) {
+	    continue;
+    }
+    values_to_test.push_back(rand_i);
+    counts_to_use[stringify(rand_i)]++;
+  }
+  counts_to_use.erase(stringify(ignore_value));
+  //
+  cout << "values_to_test: " << values_to_test << endl;
+  cout << "counts_to_use: " << counts_to_use << endl;
+
+  // print generated values
+  //
+  cout << endl << "initial parameters: " << endl;
+  cout << "values_to_test: " << values_to_test << endl;
+
+  hypers["dirichlet_alpha"] = 1.;
+  hypers["K"] = NUM_BUCKETS;
+  MCM mcm2(hypers, values_to_test.size(), counts_to_use);
+
+  cout << "component model: " << mcm2 << endl;
+
+  draws.clear();
+  draw_counts.clear();
+  num_draws = 10000;
+  for(int i=0; i<num_draws; i++) {
+    int rand_int = rng.nexti();
+    double draw = mcm2.get_draw(rand_int);
+    draws.push_back(draw);
+    if(in(draw_counts, draw)) {
+      draw_counts[draw]++;
+    } else {
+      draw_counts[draw] = 1;
+    }
+  }
+  // cout << "draws are: " << draws << endl;
+  cout << "draw_counts is: " << draw_counts << endl;
+
+  double sum_p = 0;
+  for(int element=0; element<NUM_BUCKETS; element++) {
+	  double element_p = exp(mcm2.calc_element_predictive_logp(element));
+  }
+
   cout << endl << "End:: test_multinomial_component_model" << endl;
 }
