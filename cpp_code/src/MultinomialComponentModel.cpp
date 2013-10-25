@@ -43,6 +43,7 @@ MultinomialComponentModel::MultinomialComponentModel(CM_Hypers &in_hypers,
   // set suffstats
   count = count_in;
   suffstats = counts;
+  init_suffstats();
   score = calc_marginal_logp();
 }
 
@@ -149,8 +150,11 @@ void MultinomialComponentModel::init_suffstats() {
   int K = hyper_K;
   double dirichlet_alpha = hyper_dirichlet_alpha;
   for(int key=0; key<K; key++) {
-    suffstats[stringify(key)] = 0;
-  }    
+	  string key_str = stringify(key);
+	  if(suffstats.find(key_str)==suffstats.end()) {
+		  suffstats[stringify(key)] = 0;
+	  }
+  }
 }
 
 void MultinomialComponentModel::get_keys_counts_for_draw(vector<string> &keys, vector<double> &log_counts_for_draw, map<string, double> counts) const {
