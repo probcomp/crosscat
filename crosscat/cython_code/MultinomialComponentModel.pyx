@@ -69,7 +69,7 @@ cdef class p_MultinomialComponentModel:
     def get_draw(self, seed):
         return self.thisptr.get_draw(seed)
     def get_draw_constrained(self, seed, constraints):
-        return self.thisptr.get_draw_constrained(seed, constraints)g
+        return self.thisptr.get_draw_constrained(seed, constraints)
     def get_suffstats(self):
         cdef int count_out
         count_out = 0
