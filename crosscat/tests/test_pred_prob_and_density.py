@@ -22,18 +22,15 @@ import argparse
 import sys
 from collections import Counter
 
-import pdb
-
 import numpy
 import pylab
 
-import crosscat.python_utils.enumerate_utils as eu
-import crosscat.python_utils.sample_utils as su
-import crosscat.python_utils.plot_utils as pu
-import crosscat.python_utils.data_utils as du
+import crosscat.utils.enumerate_utils as eu
+import crosscat.utils.sample_utils as su
+import crosscat.utils.plot_utils as pu
+import crosscat.utils.data_utils as du
 
 import crosscat.cython_code.State as State
-
 
 def get_next_seed(max_val=32767):
     return random_state.randint(max_val)
@@ -44,6 +41,33 @@ def run_test(n=1000, d_type='continuous', observed=False):
 		run_test_continuous(n, observed)
 	elif d_type == 'multinomial':
 		run_test_multinomial(n, observed)
+
+def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
+	# generate the partitions
+	random.seed(next_seed)
+	
+	cols_to_views = [0 for _ in range(n_cols)]
+	rows_in_views_to_cols = []
+	for view in range(n_views):
+		partition = eu.CRP(n_rows,2.0)
+		random.shuffle(partition)
+		rows_in_views_to_cols.append(partition)
+
+	# generate the data
+	data = numpy.zeros((n_rows,n_cols),dtype=float)
+	for col in range(n_cols):
+		view = cols_to_views[col]
+		for row in range(n_rows):
+			cluster = rows_in_views_to_cols[view][row]
+			data[row,col] = cluster
+
+	T = data.tolist()
+	M_r = du.gen_M_r_from_T(T)
+	M_c = du.gen_M_c_from_T(T)
+
+	T, M_c = du.convert_columns_to_multinomial(T, M_c, range(n_cols))
+
+	return T, M_r, M_c
 
 def run_test_continuous(n, observed):
 	n_rows = 40
@@ -159,16 +183,8 @@ def run_test_multinomial(n, observed):
 	Q = [(query_row, query_column)]
 
 	# do the test with multinomial data
-	T, M_r, M_c= du.gen_factorial_data_objects(get_next_seed(),2,2,n_rows,1)
-
-	T = numpy.array(T,dtype=int)
-	T = numpy.array(T,dtype=float)
-	if numpy.min(T) < 0:
-		T = T - numpy.min(T)
-
-	T, M_c = du.convert_columns_to_multinomial(T, M_c, [0,1])
-	T = T.tolist()
-
+	T, M_r, M_c = generate_multinomial_data(get_next_seed(),2,n_rows,1)
+	
 	state = State.p_State(M_c, T)
 
 	X_L = state.get_X_L()
@@ -179,13 +195,14 @@ def run_test_multinomial(n, observed):
 	# pull n samples
 	samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
 	X_array = numpy.sort(numpy.array(samples))
-	X = X_array.tolist()
+	X = numpy.unique(X_array)
+	X = X.tolist()
 
 	# build the queries
-	# pdb.set_trace()
 	Qs = [];
 	for x in X:
-	    Qtmp = (query_row, query_column, x[0])
+	    # Qtmp = (query_row, query_column, x[0])
+	    Qtmp = (query_row, query_column, x)
 	    Qs.append(Qtmp)
 
 	# get probabilities 
@@ -193,9 +210,8 @@ def run_test_multinomial(n, observed):
 	# get pdf values
 	densities = numpy.exp(su.simple_predictive_probability_density(M_c, X_L, X_D, Y, Qs))
 
-	max_probability_value = max(probabilities)
-	max_density_value = max(densities)
-
+	print "Sum of probabilities (should be 1): %f" % (numpy.sum(probabilities))
+	print "Sum of densities (should be 1): %f" % (numpy.sum(densities))
 
 	pylab.clf()
 
@@ -211,9 +227,8 @@ def run_test_multinomial(n, observed):
 
 	pdf = pdf/float(numpy.sum(pdf))
 	pylab.bar(mbins[0:-1],pdf,label="samples",alpha=.5)
-	# pdb.set_trace()
-	pylab.scatter(X,probabilities, c='red',label="p from cdf", edgecolor='none')
 
+	pylab.scatter(X,probabilities, c='red',label="p from cdf", edgecolor='none')
 	pylab.legend(loc='upper left',fontsize='x-small')
 	pylab.xlabel('value') 
 	pylab.ylabel('frequency/scaled probability')
@@ -238,7 +253,7 @@ inf_seed = random.randrange(32767)
 random_state = numpy.random.RandomState(inf_seed)
 
 
-run_test(n=1000, d_type='continuous', observed=False)
-run_test(n=1000, d_type='continuous', observed=True)
-run_test(n=1000, d_type='multinomial', observed=False)
-run_test(n=1000, d_type='multinomial', observed=True)
+run_test(n=5000, d_type='continuous', observed=False)
+run_test(n=5000, d_type='continuous', observed=True)
+run_test(n=5000, d_type='multinomial', observed=False)
+run_test(n=5000, d_type='multinomial', observed=True)
