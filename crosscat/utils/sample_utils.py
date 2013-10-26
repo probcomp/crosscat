@@ -21,8 +21,6 @@ import sys
 import copy
 import math
 
-import pdb
-
 from collections import Counter
 #
 from scipy.misc import logsumexp
@@ -112,7 +110,7 @@ def simple_predictive_probability_density_observed(M_c, X_L, X_D, Y, which_row,
             p_x = component_model.get_predictive_pdf(elements[q],draw_constraints)
             logp = p_x
         elif is_discrete_variable:
-            logp = component_model.get_predictive_probability(elements[q],draw_constraints)
+            logp = component_model.calc_element_predictive_logp_constrained(elements[q],draw_constraints)
         else:
             sys.err('error: simple_predictive_probability_density_observed: Could not determine discreteness')
         
@@ -325,7 +323,7 @@ def simple_predictive_probability_unobserved_discrete(M_c, X_L, X_D, Y, query_ro
     # get the logps for all the clusters (plus a new one) in this view
     cluster_logps = determine_cluster_logps(M_c, X_L, X_D, Y, query_row, view_idx)
 
-    # cluster_logps should logsumexp to log(1)
+    # cluster_logps should logsumexp to log(1)=0
     assert(numpy.abs(logsumexp(cluster_logps)) < .0000001)
 
     x = element
@@ -344,7 +342,7 @@ def simple_predictive_probability_unobserved_discrete(M_c, X_L, X_D, Y, query_ro
         px = component_model.calc_element_predictive_logp_constrained(x, draw_constraints)
 
         answers[cluster_idx] = px+cluster_logps[cluster_idx]
-
+        
     answer = logsumexp(answers);
     
     return answer
@@ -500,14 +498,13 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
             cluster_model = view_to_cluster_model[which_view]
             # get the component model for this column
             component_model = cluster_model[which_column]
-            # ?
+            # 
             draw_constraints = get_draw_constraints(X_L, X_D, Y,
                                                     which_row, which_column)
             # get a random int for seeding the rng
             SEED = get_next_seed()
             # draw
-            draw = component_model.get_draw_constrained(SEED,
-                                                        draw_constraints)            
+            draw = component_model.get_draw_constrained(SEED,draw_constraints)
             this_sample_draws.append(draw)
         samples_list.append(this_sample_draws)
     return samples_list
