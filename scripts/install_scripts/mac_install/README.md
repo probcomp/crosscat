@@ -2,36 +2,48 @@
 
 ## Notes
 
-- Works only on OS 10.7 and 10.8.
-- Requires XCode with command line utilities
-- Requires [MacPorts](http://www.macports.org/)
-- Assumes that MacPorts uses the default directory `/opt/local/`
-- Uses `bash` instead of default login shell (see below)
+- Tested only on OSX 10.7, 10.8, and 10.9
+- Requires XCode with command line tools
+- Requires [Homebrew](http://brew.sh/)
 
 ## Installation Instructions
 
 Make the installation script executable
 
-     chmod +x mac_install.sh
+     chmod +x install_mac.sh
 
-Run the script
+Run the script.
 
-     ./mac_install.sh
+     ./install_mac.sh
 
-Select 1 to install the backend dependencies.
-This will install all necessary libraries, create a virtual environment, and update `.bashrc`
+ **Note:** The installation takes a while to complete. You will be prompted for your password multiple times.
+ 
+The script installs all python dependencies in a virtual environment called `crosscat`. If the installer detects an existing `crosscat` virtual environment, you have the option to delete and reinstall or to create a new virtual environment. 
 
-Once this has completed, run the script again and select 2 to compile the code.
-Any time you wish to compile the code, simply run the script and select 2.
+##Recompiling the Cython/C++ code
 
-There is also the makefile in the `tabular_predDB/cython_code` directory which can be run with
+The install script will compile the code for you, but if you wish to compile it yourself there is a makefile in `crosscat/cython_code` that will allow you to do so. Run it with the following command
 
 	make -f Makefile.mac
 
+The makefile requires that the environmental variable `CROSSCAT_BOOST_ROOT` exists and is set to the path that houses your Boost headers. If you have run the install script, you are set; the following line (or similar) has been added to you `bash_profile`:
+
+	export CROSSCAT_BOOST_ROOT=/usr/local/Cellar/boost/1.54.0/include
+
+If you run the makefile and are told that everything is up-to-date run
+
+	make -f Makefile.mac clean
+
+to remove the compiled files and then run the makefile to compile.
+
 ## Running code
 
-**At this time all code must be run from bash.**
+You will need to either source your `bash_profile`
 
-1. Enter a bash session by entering `bash` in terminal.
-2. To access the virtual environment enter `workon tabular_predDB`
-3. You are now in the `tabular-predDB` directory and ready to run code!
+	source ~/.bash_profile	
+
+or reopen terminal. Then enter your virtual environment
+
+	workon crosscat
+
+At this point you should be good to go.

@@ -9,7 +9,7 @@ all: sos
 sos: $(SOS)
 
 $(SOS): $(PYXS)
-	python setup.py build_ext --inplace -I/opt/local/include
+	python setup.py build_ext --inplace -I$(CROSSCAT_BOOST_ROOT)
 
 clean:
 	rm -rf build $(SOS) $(INTERMEDIATE)
