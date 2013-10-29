@@ -18,15 +18,16 @@
 #   limitations under the License.
 #
 import itertools
+import functools
 import multiprocessing
 #
 import crosscat.cython_code.State as State
-import crosscat.EngineTemplate as EngineTemplate
+import crosscat.LocalEngine as LocalEngine
 import crosscat.utils.sample_utils as su
 import crosscat.utils.xnet_utils as xu
 
 
-class MultiprocessingEngine(EngineTemplate.EngineTemplate):
+class MultiprocessingEngine(LocalEngine.LocalEngine):
     """A simple interface to the Cython-wrapped C++ engine
 
     MultiprocessingEngine holds no state other than a seed generator.
@@ -65,10 +66,15 @@ class MultiprocessingEngine(EngineTemplate.EngineTemplate):
             X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
             return X_L, X_D
         else:
-            import functools
-            helper = functools.partial(_do_initialize, M_c, M_r, T,
-                initialization)
-            result = self.pool.map_async(helper, range(n_chains))
+            seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+            args = itertools.izip(
+                    itertools.cycle([M_c]),
+                    itertools.cycle([M_r]),
+                    itertools.cycle([T]),
+                    itertools.cycle([initialization]),
+                    seeds,
+                    )
+            result = self.pool.map_async(_do_initialize2, args)
             X_L_list, X_D_list = zip(*result.get())
             return X_L_list, X_D_list
 
@@ -123,7 +129,8 @@ class MultiprocessingEngine(EngineTemplate.EngineTemplate):
                     itertools.cycle([r]),
                     itertools.cycle([max_iterations]),
                     itertools.cycle([max_time]),
-                    seeds)
+                    seeds,
+                    )
             result = self.pool.map_async(_do_analyze2, args)
             X_L_prime_list, X_D_prime_list = zip(*result.get())
             return X_L_prime_list, X_D_prime_list
@@ -237,6 +244,12 @@ class MultiprocessingEngine(EngineTemplate.EngineTemplate):
 
 
 def _do_initialize(M_c, M_r, T, initialization, SEED):
+    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
+    X_L = p_State.get_X_L()
+    X_D = p_State.get_X_D()
+    return X_L, X_D
+
+def _do_initialize2((M_c, M_r, T, initialization, SEED)):
     p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
