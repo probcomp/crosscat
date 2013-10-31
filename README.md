@@ -9,7 +9,7 @@ A range of exploratory analysis and predictive modeling tasks can be addressed v
 
 ### VM
 
-We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_CtKGJ4pH2TX2VaTXRkMWFOeGM/edit?usp=drive_web) ([VM_README](https://github.com/mit-probabilistic-computing-project/vm-install-crosscat/blob/master/VM_README.md)) for small scale testing of CrossCat.
+We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_x0H2s37jOVanBmYVJMWElPQWM/edit?usp=drive_web) ([VM_README](https://github.com/mit-probabilistic-computing-project/vm-install-crosscat/blob/master/VM_README.md)) for small scale testing of CrossCat.
 
 **Note**: The VM is only meant to provide an out-of-the-box usable system setup.  Its resources are limited and large jobs will fail due to memory errors.  To run larger jobs, increase the VM resources or install directly to your system.
 
