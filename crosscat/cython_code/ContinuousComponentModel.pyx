@@ -73,8 +73,6 @@ cdef class p_ContinuousComponentModel:
     # simple predictive probability (BAX)
     def get_predictive_cdf(self, element, constraints):
         return self.thisptr.get_predictive_cdf(element, constraints)
-    def get_predictive_pdf(self, element, constraints):
-        return self.thisptr.get_predictive_pdf(element, constraints)
     def insert_element(self, element):
         return self.thisptr.insert_element(element)
     def remove_element(self, element):

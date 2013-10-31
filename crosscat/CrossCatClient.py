@@ -68,6 +68,10 @@ def get_CrossCatClient(client_type, **kwargs):
         import crosscat.JSONRPCEngine as JSONRPCEngine
         je = JSONRPCEngine.JSONRPCEngine(**kwargs)
         client = CrossCatClient(je)
+    elif client_type == 'multiprocessing':
+        import crosscat.MultiprocessingEngine as MultiprocessingEngine
+        me =  MultiprocessingEngine.MultiprocessingEngine(**kwargs)
+        client = CrossCatClient(me)
     else:
         raise Exception('unknown client_type: %s' % client_type)
     return client
