@@ -70,103 +70,82 @@ def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
 	return T, M_r, M_c
 
 def run_test_continuous(n, observed):
-	n_rows = 40
-	n_cols = 40
+    n_rows = 40
+    n_cols = 40
 
-	if observed:
-		query_row = 10
-	else:
-		query_row = n_rows
+    if observed:
+    	query_row = 10
+    else:
+    	query_row = n_rows
 
-	query_column = 1
+    query_column = 1
 
-	Q = [(query_row, query_column)]
+    Q = [(query_row, query_column)]
 
-	# do the test with multinomial data
-	T, M_r, M_c= du.gen_factorial_data_objects(get_next_seed(),2,2,n_rows,1)
+    # do the test with multinomial data
+    T, M_r, M_c= du.gen_factorial_data_objects(get_next_seed(),2,2,n_rows,1)
 
-	state = State.p_State(M_c, T)
+    state = State.p_State(M_c, T)
 
-	T_array = numpy.array(T)
+    T_array = numpy.array(T)
 
-	X_L = state.get_X_L()
-	X_D = state.get_X_D()
+    X_L = state.get_X_L()
+    X_D = state.get_X_D()
 
-	Y = [] # no constraints
-	
-	# pull n samples
-	samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
+    Y = [] # no constraints
 
-	X_array = numpy.sort(numpy.array(samples))
+    # pull n samples
+    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
 
-	std_X = numpy.std(X_array)
-	mean_X = numpy.mean(X_array)
+    X_array = numpy.sort(numpy.array(samples))
 
-	# filter out extreme values
-	X_filter_low = numpy.nonzero(X_array < mean_X-2.*std_X)[0]
-	X_filter_high = numpy.nonzero(X_array > mean_X+2.*std_X)[0]
-	X_filter = numpy.hstack((X_filter_low, X_filter_high))
-	X_array = numpy.delete(X_array, X_filter)
+    std_X = numpy.std(X_array)
+    mean_X = numpy.mean(X_array)
 
-	# sort for area calculation later on
-	X_array = numpy.sort(X_array)
+    # filter out extreme values
+    X_filter_low = numpy.nonzero(X_array < mean_X-2.*std_X)[0]
+    X_filter_high = numpy.nonzero(X_array > mean_X+2.*std_X)[0]
+    X_filter = numpy.hstack((X_filter_low, X_filter_high))
+    X_array = numpy.delete(X_array, X_filter)
 
-	X = X_array.tolist()
+    # sort for area calculation later on
+    X_array = numpy.sort(X_array)
 
-	# build the queries
-	Qs = [];
-	for x in X:
-	    Qtmp = (query_row, query_column, x)
-	    Qs.append(Qtmp)
+    X = X_array.tolist()
 
-	# get probabilities 
-	probabilities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs, epsilon=.001))
-	# get pdf values
-	densities = numpy.exp(su.simple_predictive_probability_density(M_c, X_L, X_D, Y, Qs))
+    # build the queries
+    Qs = [];
+    for x in X:
+        Qtmp = (query_row, query_column, x)
+        Qs.append(Qtmp)
 
-	max_probability_value = max(probabilities)
-	max_density_value = max(densities)
+    # get pdf values
+    densities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs))
 
-	# scale the probability values to the pdf for fit purposes. 
-	# the shape should be the same, but the probability values are based on
-	# epsilon. Density should not need to be scaled
-	probabilities = (probabilities/max_probability_value)*max_density_value
+    # test that the area under Ps2 and pdfs is about 1 
+    # calculated using the trapezoid rule
+    area_density = 0;
+    for i in range(len(X)-1):
+    	area_density += (X[i+1]-X[i])*(densities[i+1]+densities[i])/2.0
 
-	# test that the area under Ps2 and pdfs is about 1 
-	# calculated using the trapezoid rule
-	area_density = 0;
-	for i in range(len(X)-1):
-		area_density += (X[i+1]-X[i])*(densities[i+1]+densities[i])/2.0
+    print "Area of PDF (should be close to, but not greater than, 1): " + str(area_density)
+    print "*Note: The area will be less than one because the range (integral) is truncated."
 
-	print "Area of PDF (should be close to, but not greater than, 1): " + str(area_density)
+    pylab.figure(facecolor='white')
 
-	pylab.figure(facecolor='white')
+    # PLOT: probability vs samples distribution
+    # scale all histograms to be valid PDFs (area=1)
+    pdf, bins, patches = pylab.hist(X,100,normed=1, histtype='stepfilled',label='samples', alpha=.5, color=[.5,.5,.5])
+    pylab.scatter(X,densities, c="red", label="pdf", edgecolor='none')
 
-	# PLOT: probability vs samples distribution
-	# scale all histograms to be valid PDFs (area=1)
-	pylab.subplot(1,2,1)
+    pylab.legend(loc='upper left',fontsize='x-small')
+    pylab.xlabel('value') 
+    pylab.ylabel('frequency/density')
+    pylab.title('TEST: PDF (not scaled)')
 
-	pdf, bins, patches = pylab.hist(X,100,normed=1, histtype='stepfilled',label='samples',alpha=.5,color=[.5,.5,.5])
-	pylab.scatter(X,probabilities, c='red',label="p from cdf", edgecolor='none')
+    pylab.show()
 
-	pylab.legend(loc='upper left',fontsize='x-small')
-	pylab.xlabel('value') 
-	pylab.ylabel('frequency/scaled probability')
-	pylab.title('simple_predictive_probability (scaled to max(pdf))')
-
-	# PLOT: desnity vs samples distribution
-	pylab.subplot(1,2,2)
-	pdf, bins, patches = pylab.hist(X,100,normed=1, histtype='stepfilled',label='samples', alpha=.5, color=[.5,.5,.5])
-	pylab.scatter(X,densities, c="red", label="pdf", edgecolor='none')
-
-	pylab.legend(loc='upper left',fontsize='x-small')
-	pylab.xlabel('value') 
-	pylab.ylabel('frequency/density')
-	pylab.title('TEST: PDF (not scaled)')
-
-	pylab.show()
-
-	raw_input("Press Enter when finished...")
+    raw_input("Press Enter when finished...")
 
 
 def run_test_multinomial(n, observed):
@@ -205,37 +184,22 @@ def run_test_multinomial(n, observed):
 	    Qtmp = (query_row, query_column, x)
 	    Qs.append(Qtmp)
 
-	# get probabilities 
-	probabilities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs, epsilon=.001))
 	# get pdf values
-	densities = numpy.exp(su.simple_predictive_probability_density(M_c, X_L, X_D, Y, Qs))
+	densities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs))
 
-	print "Sum of probabilities (should be 1): %f" % (numpy.sum(probabilities))
 	print "Sum of densities (should be 1): %f" % (numpy.sum(densities))
 
 	pylab.clf()
 
 	# PLOT: probability vs samples distribution
 	# scale all histograms to be valid PDFs (area=1)
-	pylab.subplot(1,2,1)
 	mbins = numpy.unique(X_array)
 
 	mbins = numpy.append(mbins,max(mbins)+1)
 
 	pdf, bins = numpy.histogram(X_array,mbins)
-	p_unique = numpy.unique(probabilities)
 
 	pdf = pdf/float(numpy.sum(pdf))
-	pylab.bar(mbins[0:-1],pdf,label="samples",alpha=.5)
-
-	pylab.scatter(X,probabilities, c='red',label="p from cdf", edgecolor='none')
-	pylab.legend(loc='upper left',fontsize='x-small')
-	pylab.xlabel('value') 
-	pylab.ylabel('frequency/scaled probability')
-	pylab.title('simple_predictive_probability (scaled to max(pdf))')
-
-	# PLOT: desnity vs samples distribution
-	pylab.subplot(1,2,2)
 	pylab.bar(mbins[0:-1],pdf,label="samples",alpha=.5)
 	pylab.scatter(X,densities, c="red", label="pdf", edgecolor='none')
 

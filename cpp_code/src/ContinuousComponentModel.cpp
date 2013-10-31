@@ -260,34 +260,6 @@ double ContinuousComponentModel::get_predictive_cdf(double element, vector<doubl
   return cdfval;
 }
 
-// For simple predictive probability
-double ContinuousComponentModel::get_predictive_pdf(double element, vector<double> constraints) const {
-  // get modified suffstats
-  double r, nu, s, mu;
-  int count;
-  double sum_x, sum_x_squared;
-  get_hyper_doubles(r, nu, s, mu);
-  get_suffstats(count, sum_x, sum_x_squared);
-  for(int constraint_idx=0; constraint_idx<constraints.size();
-      constraint_idx++) {
-    double constraint = constraints[constraint_idx];
-    numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
-               constraint);
-  }
-  numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
-  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
-  s /= 2; 
-
-  double coeff = sqrt((s * (r+1)) / (nu / 2. * r));
-
-  // non-standard T-distribution
-  double pdfval = boost::math::lgamma((nu+1)/2) - (.5*log(nu*M_PI)+log(coeff)+boost::math::lgamma(nu/2));
-  pdfval -= ((nu+1)/2)*log(1+(1/nu)*(pow((element-mu)/coeff,2)));
-
-  return pdfval;
-}
-
 map<string, double> ContinuousComponentModel::_get_suffstats() const {
 	map<string, double> suffstats;
 	suffstats["sum_x"] = sum_x;
