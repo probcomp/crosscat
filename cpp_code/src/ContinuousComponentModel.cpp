@@ -189,15 +189,14 @@ double ContinuousComponentModel::get_draw(int random_seed) const {
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
 
   // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
+  // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
   s /= 2; 
   //
   boost::mt19937  _engine(random_seed);
   boost::uniform_01<boost::mt19937> _dist(_engine);
   boost::random::student_t_distribution<double> student_t(nu);
-  double student_t_draw = student_t(_dist);
-  // FIXME: should 's' be divided by 2 as well here to reconcile Murphy with Teh?
-  // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
-  // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
+  double student_t_draw = student_t(_dist);  
   double coeff = sqrt((s * (r+1)) / (nu / 2. * r));
   double draw = student_t_draw * coeff + mu;
   return draw;
