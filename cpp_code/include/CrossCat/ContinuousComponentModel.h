@@ -34,6 +34,7 @@ class ContinuousComponentModel : public ComponentModel {
   // getters
   void get_suffstats(int &count_out, double &sum_x, double &sum_x_sq) const;
   void get_hyper_doubles(double &r, double &nu, double &s, double &mu) const;
+  std::map<std::string, double> get_hypers() const;
   std::map<std::string, double> get_suffstats() const;
   std::map<std::string, double> _get_suffstats() const;
   double get_draw(int random_seed) const;
@@ -51,6 +52,7 @@ class ContinuousComponentModel : public ComponentModel {
   double insert_element(double element);
   double remove_element(double element);
   double incorporate_hyper_update();
+  
  protected:
   void set_log_Z_0();
   void init_suffstats();
