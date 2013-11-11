@@ -2,12 +2,16 @@ import crosscat.cython_code.ContinuousComponentModel as ccm
 import math
 import random
 import sys
-import pdb
+import numpy
 
 from scipy.misc import logsumexp as logsumexp
 from scipy.stats import norm as norm
 
+next_seed = lambda : random.randrange(2147483647)
+
 LOG_2 = math.log(2.0)
+default_hyperparameters = dict(nu=1.0, mu=0.0, s=1.0, r=1.0)
+default_data_parameters = dict(mu=0.0, sigma=1.0)
 
 def check_type_force_float(x, name):
     """
@@ -16,31 +20,48 @@ def check_type_force_float(x, name):
     """
     if type(x) is int:
         return float(x)
-    elif type(x) is not float:
+    elif type(x) is not float and type(x) is not numpy.float64:
         raise TypeError("%s should be a float" % name)
     else:
         return x
 
+def check_data_type_column_data(X):
+    """
+    Makes sure that X is a numpy array and that it is a column vector
+    """
+    if type(X) is not numpy.ndarray:
+        raise TypeError("X should be type numpy.ndarray")
+
+    # if len(X.shape) == 1:
+    #     raise TypeError("X should be a column vector, not a row vector")
+
+    if len(X.shape) == 2 and X.shape[1] > 1:
+        raise TypeError("X should have a single column.")
 
 class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
     
-    type = "Normal Normal-Gamma"
+    model_type = "normal_inverse_gamma"
     
     @classmethod
-    def from_parameters(cls, N, data_mean=0.0, data_std=1.0, m=0.0, s=1.0, r=1.0, nu=1.0, gen_seed=0):
+    def from_parameters(cls, N, data_params=default_data_parameters, hypers=None, gen_seed=0):
         """
         Initialize a continuous component model with sufficient statistics
         generated from random data.
         Inputs:
           N: the number of data points
-          data_mean: the mean of the data
-          data_std: the standard deviation of the data
-          m: the prior mean of the data
-          s: hyperparameter
-          r: hyperparameter
-          nu: hyperparameter
+          data_params: a dict with the following keys
+              mu: the mean of the data
+              sigma: the standard deviation of the data
+          hypers: a dict with the following keys
+              mu: the prior mean of the data
+              s: hyperparameter
+              r: hyperparameter
+              nu: hyperparameter
           gen_seed: an integer from which the rng is seeded
         """
+        
+        data_mean = data_params['mu']
+        data_std = data_params['sigma']
         
         if type(N) is not int:
             raise TypeError("N should be an int")
@@ -50,24 +71,73 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         data_std = check_type_force_float(data_std, "data_std")
         if data_std <= 0.0:
             raise ValueError("data_std should be greater than 0")
-        m = check_type_force_float(m, "m")
-        s = check_type_force_float(s, "s")
-        if s <= 0.0:
-            raise ValueError("s should be greater than 0")
-        r = check_type_force_float(r, "r")
-        nu = check_type_force_float(nu, "nu")
-        if nu <= 0.0:
-            raise ValueError("nu should be greater than 0")
+        
             
         random.seed(gen_seed)
-        X = [random.normalvariate(data_mean, data_std) for i in range(N)]
-        sum_x = 0
-        sum_x_squared = 0
-        for n in range(N):
-            sum_x += X[n]
-            sum_x_squared += X[n]*X[n]
+        X = [ [random.normalvariate(data_mean, data_std)] for i in range(N)]
+        X = numpy.array(X)
+        check_data_type_column_data(X)
+
+        if hypers is None:
+            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed())[0]
+
+        hypers['mu'] = check_type_force_float(hypers['mu'], "hypers_mu")
+        hypers['s'] = check_type_force_float(hypers['s'], "hypers_s")
+        if hypers['s'] <= 0.0:
+            raise ValueError("hypers_s should be greater than 0")
+        hypers['r'] = check_type_force_float(hypers['r'], "hypers_r")
+        hypers['nu'] = check_type_force_float(hypers['nu'], "hypers_nu")
+        if hypers['nu'] <= 0.0:
+            raise ValueError("nu should be greater than 0")
         
-        hypers = {'mu': m, 's':s, 'r':r, 'nu':nu, 'fixed': 0.0}           
+        if hypers is None:
+            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
+        
+        sum_x = numpy.sum(X)
+        sum_x_squared = numpy.sum(X**2.0)
+        
+        hypers['fixed'] = 0.0
+                        
+        return cls(hypers, float(N), sum_x, sum_x_squared)
+        
+    @classmethod
+    def from_data(cls, X, hypers=None, gen_seed=0):
+        """
+        Initialize a continuous component model with sufficient statistics
+        generated from data X
+        Inputs:
+            X: a column of data (numpy)
+            hypers: dict with the following entries
+                mu: the prior mean of the data
+                s: hyperparameter
+                r: hyperparameter
+                nu: hyperparameter
+            gen_seed: a int to seed the rng
+        """
+        check_data_type_column_data(X)
+        if type(gen_seed) is not int:
+            raise TypeError("gen_seed should be an int")
+
+        random.seed(gen_seed)
+            
+        if hypers is None:
+            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
+            
+        hypers['mu'] = check_type_force_float(hypers['mu'], "hypers_mu")
+        hypers['s'] = check_type_force_float(hypers['s'], "hypers_s")
+        if hypers['s'] <= 0.0:
+            raise ValueError("hypers_s should be greater than 0")
+        hypers['r'] = check_type_force_float(hypers['r'], "hypers_r")
+        hypers['nu'] = check_type_force_float(hypers['nu'], "hypers_nu")
+        if hypers['nu'] <= 0.0:
+            raise ValueError("nu should be greater than 0")
+            
+        N = len(X)
+
+        sum_x = numpy.sum(X)
+        sum_x_squared = numpy.sum(X**2.0)
+        
+        hypers['fixed'] = 0.0
                         
         return cls(hypers, float(N), sum_x, sum_x_squared)
         
@@ -100,19 +170,19 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         
         return params
         
-    def uncollapsed_likelihood(self, X, mu, rho):
+    def uncollapsed_likelihood(self, X, parameters):
         """
         Calculates the score of the data X under this component model with mean 
         mu and precision rho. 
         Inputs:
-            X: A list of data
-            mu: the component model mean
-            rho: the component model precision
+            X: A column of data (numpy)
+            parameters: a dict with the following keys
+                mu: the Gaussian mean
+                rho: the precision of the Gaussian
         """
-        if type(X) is not list:
-            raise TypeError("X should be a list")
-        mu = check_type_force_float(mu, "mu")
-        rho = check_type_force_float(rho, "rho")
+        check_data_type_column_data(X)
+        mu = check_type_force_float(parameters['mu'], "mu")
+        rho = check_type_force_float(parameters['rho'], "rho")
         if rho <= 0.0:
             raise ValueError("rho should be greater than 0")
     
@@ -124,11 +194,9 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         nu = hypers['nu']
         m = hypers['mu']
         
-        sum_err = 0
-        for i in range(N):
-            sum_err += (mu-X[i])**2.0
+        sum_err = numpy.sum((mu-X)**2.0)
             
-        log_likelihood = log_likelihood(self, X, mu, rho)   
+        log_likelihood = self.log_likelihood(X, {'mu':mu, 'rho':rho})   
         log_prior_mu = norm.logpdf(m, (r/rho)**.5)
         log_prior_rho = -(nu/2.0)*LOG_2+(nu/2.0)*math.log(s)+ \
             (nu/2.0-1.0)*math.log(rho)-.5*s*rho-math.lgamma(nu/2.0)
@@ -138,27 +206,50 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         return log_p
                 
     @staticmethod
-    def log_likelihood(X, mu, rho):
+    def log_likelihood(X, parameters):
         """
         Calculates the log likelihood of the data X given mean mu and precision
         rho.
         Inputs:
-            X: a list of data
-            mu: the Gaussian mean
-            rho: the precision of the Gaussian
+            X: a column of data (numpy)
+            parameters: a dict with the following keys
+                mu: the Gaussian mean
+                rho: the precision of the Gaussian
         """
-        if type(X) is not list:
-            raise TypeError("X should be a list")
-                        
-        mu = check_type_force_float(mu, "mu")
-        rho = check_type_force_float(rho, "rho")
+        check_data_type_column_data(X)
+        mu = check_type_force_float(parameters['mu'], "mu")
+        rho = check_type_force_float(parameters['rho'], "rho")
+        
+        if rho <= 0.0:
+            raise ValueError("rho should be greater than 0")
+        
+        sigma = (1.0/rho)**.5
+
+        log_likelihood = numpy.sum(norm.logpdf(X,mu,sigma))
+        
+        return log_likelihood
+        
+    @staticmethod
+    def log_pdf(X, parameters):
+        """
+        Calculates the pdf for each point in the data X given mean mu and 
+        precision rho.
+        Inputs:
+            X: a column of data (numpy)
+            parameters: a dict with the following keys
+                mu: the Gaussian mean
+                rho: the precision of the Gaussian
+        """
+        check_data_type_column_data(X)
+        mu = check_type_force_float(parameters['mu'], "mu")
+        rho = check_type_force_float(parameters['rho'], "rho")
         
         if rho <= 0.0:
             raise ValueError("rho should be greater than 0")
         
         sigma = (1.0/rho)**.5
         
-        return sum(norm.logpdf(X,mu,sigma))
+        return norm.logpdf(X,mu,sigma)
         
     def brute_force_marginal_likelihood(self, X, n_samples=10000, gen_seed=0):
         """
@@ -167,12 +258,12 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         likelihood is calculated for each set of parameters, then the average is
         taken.
         Inputs:
-            X: A list of data
+            X: A column of data (numpy)
             n_samples: the number of draws
             gen_Seed: seed for the rng
         """
-        if type(X) is not list:
-            raise TypeError("X should be a list")
+        check_data_type_column_data(X)
+
         if type(n_samples) is not int:
             raise TypeError("n_samples should be an int")
         if n_samples <= 0:
@@ -183,12 +274,9 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         N = float(len(X))
         random.seed(gen_seed)
         log_likelihoods = [0]*n_samples        
-        next_seed = lambda : random.randrange(2147483647)
         for i in range(n_samples):
-            params = self.sample_parameter_given_hyper(next_seed())
-            mu = params['mu']
-            rho = params['rho']
-            log_likelihoods[i] = self.log_likelihood(X, mu, rho)
+            params = self.sample_parameters_given_hyper(gen_seed=next_seed())
+            log_likelihoods[i] = self.log_likelihood(X, params)
             
         log_marginal_likelihood = logsumexp(log_likelihoods) - math.log(N)
         
@@ -200,6 +288,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         returns a set of intervals over which the component model pdf is 
         supported. 
         Inputs:
+            params: a dict with entries 'mu' and 'rho'
             nbins: cardinality of the set or the number of grid points in the 
                 approximation
             support: a float in (0,1) that describes the amount of probability 
@@ -244,23 +333,22 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         return bins
     
     @staticmethod
-    def draw_hyperparameters(X, n_draws, gen_seed=0):
+    def draw_hyperparameters(X, n_draws=1, gen_seed=0):
         """
         Draws hyperparameters r, nu, mu, and s from the same distribution that 
         generates the grid in the C++ code.
         Inputs:
-             X: a list of data
+             X: a column of data (numpy)
              n_draws: the number of draws
              gen_seed: seed the rng
         Output:
             A list of dicts of draws where each entry has keys 'mu', 'r', 'nu', 
             and 's'
         """
-        if type(X) is not list:
-            raise TypeError("X should be a list")
+        check_data_type_column_data(X)
         if type(n_draws) is not int:
             raise TypeError("n_draws should be an int")
-        if type(gen_seed) is not list:
+        if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
         
         random.seed(gen_seed)
@@ -268,14 +356,12 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         samples = []
         
         N = float(len(X))
-        data_mean = sum(X)/N
+        data_mean = numpy.sum(X)/N
         
-        sum_sq_deviation = 0
-        for i in range(N):
-            sum_sq_deviation += (data_mean-X[i])**2.0
+        sum_sq_deviation = numpy.sum((data_mean-X)**2.0)
             
         nu_r_draw_range = (0.0, math.log(N))
-        mu_draw_range = (min(X), max(X))
+        mu_draw_range = (numpy.min(X), numpy.max(X))
         s_draw_range = (sum_sq_deviation/100.0, sum_sq_deviation)
             
         for i in range(n_draws):
@@ -291,7 +377,41 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         assert len(samples) == n_draws
         
         return samples
-    
+
+    @staticmethod
+    def generate_data_from_parameters(params, N, gen_seed=0):
+        """
+        returns a set of intervals over which the component model pdf is 
+        supported. 
+        Inputs:
+            params: a dict with entries 'mu' and 'rho'
+            N: number of data points
+        """
+        if type(N) is not int:
+            raise TypeError("N should be an int")
+            
+        if N <= 0:
+            raise ValueError("N should be greater than 0")
+            
+        if type(params) is not dict:
+            raise TypeError("params should be a dict")
+            
+        for key, value in params.iteritems():
+            if key == 'mu':
+                params[key] = check_type_force_float(params[key], "mu")
+            elif key == 'rho':
+                params[key] = check_type_force_float(params[key], "rho")
+                if value <= 0.0:
+                    raise ValueError("params['rho'] should be greater than 0")
+            else:
+                raise ValueError("params should contain only the keys 'mu' and 'rho'")
+        
+        mu = params['mu']
+        sigma = (1.0/params['rho'])**.5
+
+        X = numpy.array([[random.normalvariate(mu, sigma)] for i in range(N)])
+
+        return X
     
     @staticmethod
     def get_suffstat_names():
@@ -336,7 +456,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         """
         Returns a list of the names of the model parameters
         """
-        params = ['mu', 'nu', 'r', 's']
+        params = ['mu', 'rho']
         return params
         
     @staticmethod
