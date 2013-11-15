@@ -36,6 +36,10 @@ cdef set_string_double_map(cpp_map[cpp_string, double] &out_map, in_map):
     for key in in_map:
         out_map[get_string(key)] = in_map[key]
 
+cdef get_string_double_map(to_map, cpp_map[cpp_string, double] &from_map):
+    for key, value in from_map:
+        to_map[key] = value
+
 cdef extern from "MultinomialComponentModel.h":
      cdef cppclass MultinomialComponentModel:
         double score
@@ -43,7 +47,7 @@ cdef extern from "MultinomialComponentModel.h":
         double get_draw(int seed)
         double get_draw_constrained(int seed, vector[double] constraints)
         double get_predictive_probability(double element, vector[double] constraints)
-        void get_suffstats(int count_out, cpp_map[cpp_string, double] counts)
+        void get_suffstats(int count_out, cpp_map[cpp_string, double] &counts)
         double insert_element(double element)
         double remove_element(double element)
         double incorporate_hyper_update()
@@ -73,8 +77,10 @@ cdef class p_MultinomialComponentModel:
     def get_suffstats(self):
         cdef int count_out
         count_out = 0
+        cdef cpp_map[string, double] cpp_counts
+        self.thisptr.get_suffstats(count_out, cpp_counts)
         counts = dict()
-        self.thisptr.get_suffstats(count_out, counts)
+        get_string_double_map(counts, cpp_counts)
         return count_out, counts
     def insert_element(self, element):
         return self.thisptr.insert_element(element)
