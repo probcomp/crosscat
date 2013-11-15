@@ -224,6 +224,13 @@ map<string, double> MultinomialComponentModel::_get_suffstats() const {
   	return suffstats;
 }
 
+map<string, double> MultinomialComponentModel::get_hypers() const {
+    map<string, double> hypers;
+    hypers["K"] = hyper_K;
+    hypers["dirichlet_alpha"] = hyper_dirichlet_alpha;
+    return hypers;
+}
+
 void MultinomialComponentModel::get_suffstats(int &count_out,
 					      map<string, double> &counts) const {
   count_out = count;

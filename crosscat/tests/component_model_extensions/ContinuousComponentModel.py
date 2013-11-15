@@ -13,6 +13,12 @@ LOG_2 = math.log(2.0)
 default_hyperparameters = dict(nu=1.0, mu=0.0, s=1.0, r=1.0)
 default_data_parameters = dict(mu=0.0, sigma=1.0)
 
+
+###############################################################################
+#   Input-checking and exception-handling functions
+###############################################################################
+# TODO: Add dictonary-validating functions rather than repeating large blocks
+# of code
 def check_type_force_float(x, name):
     """
     If an int is passed, convert it to a float. If some other type is passed, 
@@ -32,12 +38,12 @@ def check_data_type_column_data(X):
     if type(X) is not numpy.ndarray:
         raise TypeError("X should be type numpy.ndarray")
 
-    # if len(X.shape) == 1:
-    #     raise TypeError("X should be a column vector, not a row vector")
-
     if len(X.shape) == 2 and X.shape[1] > 1:
         raise TypeError("X should have a single column.")
 
+###############################################################################
+#   The class extension
+###############################################################################
 class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
     
     model_type = "normal_inverse_gamma"
@@ -145,10 +151,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         """
         Samples a Gaussian parameter given the current hyperparameters.
         Inputs:
-            which_parameter: either 'mu' (mean) or 'rho' (precision)
             gen_seed: integer used to seed the rng
-        Outputs:
-            The value of the sampled parameter
         """
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
@@ -342,8 +345,8 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
              n_draws: the number of draws
              gen_seed: seed the rng
         Output:
-            A list of dicts of draws where each entry has keys 'mu', 'r', 'nu', 
-            and 's'
+            A list of dicts of draws where each entry has keys 'mu', 'r', 'nu',
+            and 's'.
         """
         check_data_type_column_data(X)
         if type(n_draws) is not int:
@@ -410,6 +413,8 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         sigma = (1.0/params['rho'])**.5
 
         X = numpy.array([[random.normalvariate(mu, sigma)] for i in range(N)])
+
+        assert len(X) == N
 
         return X
     
