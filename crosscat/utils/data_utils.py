@@ -323,6 +323,7 @@ def remove_ignore_cols(T, cctypes, header):
     #
     return T_arr, cctypes_arr, header_arr
 
+bad_set = set(['null'])
 def read_data_objects(filename, max_rows=None, gen_seed=0,
                       cctypes=None, colnames=None):
     header, raw_T = read_csv(filename, has_header=True)
@@ -334,7 +335,8 @@ def read_data_objects(filename, max_rows=None, gen_seed=0,
     raw_T = at_most_N_rows(raw_T, N=max_rows, gen_seed=gen_seed)
     # convert empty strings to NAN
     def filter_empty(el):
-        if len(el) == 0:
+        el_strip = el.strip()
+        if len(el_strip) == 0 or el_strip.lower() in bad_set:
             return 'NAN'
         else:
             return el
