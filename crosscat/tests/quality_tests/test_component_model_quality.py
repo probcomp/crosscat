@@ -101,7 +101,6 @@ def test_one_feature_sampler(component_model_type):
         T_hist = T_hist/float(numpy.sum(T_hist))
         S_hist = S_hist/float(numpy.sum(S_hist))
         edges = numpy.array(discrete_support,dtype=float)
-        pdb.set_trace()
     else:
         T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)), normed=True)
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
