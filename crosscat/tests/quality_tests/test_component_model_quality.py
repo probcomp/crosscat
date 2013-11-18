@@ -3,10 +3,21 @@ import crosscat.utils.sample_utils as su
 import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
+import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
 
 import random
 import pylab
 import numpy
+
+default_data_parameters = dict(
+    symmetric_dirichlet_discrete=dict(weights=[1.0/5.0]*5),
+    normal_inverse_gamma=dict(mu=0.0, rho=1.0)
+    )
+
+is_discrete = dict(
+    symmetric_dirichlet_discrete=True,
+    normal_inverse_gamma=False
+    )
 
 def test_one_feature_sampler(component_model_type):
     """
@@ -29,8 +40,10 @@ def test_one_feature_sampler(component_model_type):
     N = 100
     
     get_next_seed = lambda : random.randrange(2147483647)
+
+    data_params = default_data_parameters[component_model_type.model_type]
     
-    X = numpy.array([[random.normalvariate(0.0, 1.0)] for i in range(N)])
+    X = component_model_type.generate_data_from_parameters(data_params, N, gen_seed=get_next_seed())
     
     hyperparameters = component_model_type.draw_hyperparameters(X)[0]
     
@@ -50,11 +63,14 @@ def test_one_feature_sampler(component_model_type):
     T1 = numpy.array(T1)
     T2 = numpy.array(T2)
     T = numpy.hstack((T1, T2))
-    # T = T.tolist()
+    T = T.tolist()
     # END hack code
-    
+
+    cctypes = [component_model_type.cctype] * 2
+
     # create a crosscat state 
-    M_c = du.gen_M_c_from_T(T)
+    M_c = du.gen_M_c_from_T(T, cctypes=cctypes)
+    
     state = State.p_State(M_c, T)
     
     # transitions
@@ -67,23 +83,52 @@ def test_one_feature_sampler(component_model_type):
     # generate samples
     predictive_samples = numpy.array(su.simple_predictive_sample(M_c, X_L, X_D, [], [(N,0)], get_next_seed, n=N))
     
-
     # get support
-    discrete_support = component_model_type.generate_discrete_support(model_parameters, support=0.95, nbins=N)
-    
+    discrete_support = component_model_type.generate_discrete_support(model_parameters)
+
     # calculate simple predictive probability for each point
     Q = [(N,0,x) for x in discrete_support]
 
     probabilities = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q,)
     
-    # plot normalized histogram of T and predictive samples
-    pylab.hist([T[:,0],predictive_samples], bins=20, normed=True, label=["Original data", "Predictive samples"], color=["blue","red"], alpha=.7)
-        
+    T = numpy.array(T)
+
+    # get histogram. Different behavior for discrete and continuous types. For some reason
+    # the normed property isn't normalizing the multinomial histogram to 1.
+    if is_discrete[component_model_type.model_type]:
+        T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)))
+        S_hist, _ =  numpy.histogram(predictive_samples, bins=edges)
+        T_hist = T_hist/float(numpy.sum(T_hist))
+        S_hist = S_hist/float(numpy.sum(S_hist))
+        edges = numpy.array(discrete_support,dtype=float)
+        pdb.set_trace()
+    else:
+        T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)), normed=True)
+        S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
+        edges = edges[0:-1]
+    
+
+    # bin widths
+    width = (numpy.max(edges)-numpy.min(edges))/len(edges)
+    pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width)
+    pylab.bar(edges, S_hist, color='red', alpha=.5, width=width)
+
     # plot actual pdf of support given data params
-    pylab.scatter(discrete_support, numpy.exp(component_model_type.log_pdf(numpy.array(discrete_support), model_parameters)), c="blue", label="true pdf", alpha=.7)
-        
+    pylab.scatter(discrete_support, 
+        numpy.exp(component_model_type.log_pdf(numpy.array(discrete_support), 
+        model_parameters)), 
+        c="blue", 
+        s=100, 
+        label="true pdf", 
+        alpha=1)
+            
     # plot predictive probability of support points
-    pylab.scatter(discrete_support, numpy.exp(probabilities), c="red", label="predictive probability", alpha=.7)
+    pylab.scatter(discrete_support, 
+        numpy.exp(probabilities), 
+        c="red", 
+        s=100, 
+        label="predictive probability", 
+        alpha=1)
         
     pylab.legend()
 
@@ -94,3 +139,4 @@ def test_one_feature_sampler(component_model_type):
 
 if __name__ == '__main__':
     test_one_feature_sampler(ccmext.p_ContinuousComponentModel)
+    test_one_feature_sampler(mcmext.p_MultinomialComponentModel)

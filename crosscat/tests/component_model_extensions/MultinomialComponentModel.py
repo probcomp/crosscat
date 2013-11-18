@@ -7,10 +7,7 @@ import numpy
 from scipy.misc import logsumexp as logsumexp
 from scipy.special import gammaln as gammaln
 
-import pdb
-
 next_seed = lambda : random.randrange(2147483647)
-
 
 ###############################################################################
 #	Input-checking and exception-handling functions
@@ -45,6 +42,7 @@ def counts_to_data(counts):
 
 	assert len(X) == N
 
+	random.shuffle(X)
 	X = numpy.array(X, dtype=float)
 
 	return X
@@ -186,7 +184,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 		counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=int)
 
 		X = counts_to_data(counts)
-		random.shuffle(X)
+		
 		check_data_type_column_data(X)
 
         # generate the sufficient statistics
@@ -205,8 +203,6 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 		hypers['fixed'] = 0.0
 
 		suffstats = {'counts':suffstats}
-
-		# pdb.set_trace()
 
 		return cls(hypers, float(N), **suffstats)
 
@@ -311,7 +307,6 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 
         log_likelihood = self.log_likelihood(X, params)
         logB = gammaln(dirichlet_alpha)*K - gammaln(dirichlet_alpha*K)
-        # pdb.set_trace()
         log_prior = -logB + numpy.sum((dirichlet_alpha-1.0)*numpy.log(weights))
 
         log_p = log_likelihood + log_prior
@@ -484,12 +479,9 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         check_model_parameters_dict(params)
         
         # multinomial draw
-        counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=float)
+        counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=int)
 
         X = counts_to_data(counts)
-        X = X.flatten(1).tolist()
-
-        random.shuffle(X)
 
         assert len(X) == N
 

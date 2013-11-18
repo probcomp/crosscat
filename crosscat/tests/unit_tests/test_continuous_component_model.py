@@ -5,6 +5,9 @@ import numpy
 
 import unittest
 
+def main():
+    unittest.main()
+
 class TestContunuousComponentModelExtensions_Constructors(unittest.TestCase):
     def setUp(self):
         N = 10
@@ -324,7 +327,5 @@ class TestContunuousComponentModelExtensions_static(unittest.TestCase):
         assert type(X) == numpy.ndarray
         assert len(X) == N
 
-
-
 if __name__ == '__main__':
-    unittest.main()
+    main()

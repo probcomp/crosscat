@@ -5,6 +5,9 @@ import numpy
 
 import unittest
 
+def main():
+    unittest.main()
+
 class TestMultinomialComponentModelExtensions_Constructors(unittest.TestCase):
     def setUp(self):
         self.N = 10
@@ -408,12 +411,10 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
         parameters = dict(weights=[1.0/3.0, 1.0/3.0, 1.0/3.0])
         X = self.component_class.generate_data_from_parameters(parameters, N, gen_seed=0)
 
-        assert type(X) is list
+        assert type(X) is numpy.ndarray
         assert len(X) == N
         assert max(X) <= 2
         assert min(X) >= 0
 
-
-
 if __name__ == '__main__':
-    unittest.main()
+    main()
