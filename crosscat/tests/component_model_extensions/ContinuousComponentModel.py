@@ -11,7 +11,7 @@ next_seed = lambda : random.randrange(2147483647)
 
 LOG_2 = math.log(2.0)
 default_hyperparameters = dict(nu=1.0, mu=0.0, s=1.0, r=1.0)
-default_data_parameters = dict(mu=0.0, sigma=1.0)
+default_data_parameters = dict(mu=0.0, rho=1.0)
 
 
 ###############################################################################
@@ -41,12 +41,60 @@ def check_data_type_column_data(X):
     if len(X.shape) == 2 and X.shape[1] > 1:
         raise TypeError("X should have a single column.")
 
+def check_hyperparams_dict(hypers):
+    if type(hypers) is not dict:
+        raise TypeError("hypers should be a dict")
+
+    keys = ['mu', 'nu', 'r', 's']
+
+    for key in keys:
+        if key not in hypers.keys():
+            raise KeyError("missing key in hypers: %s" % key)
+
+    for key, value in hypers.iteritems():
+        if key not in keys:
+            raise KeyError("invalid hypers key: %s" % key)
+
+        if type(value) is not float \
+        and type(value) is not numpy.float64:
+            raise TypeError("%s should be float" % key)
+
+        if key in ['nu', 'r', 's']:
+            if value <= 0.0:
+                raise ValueError("hypers[%s] should be greater than 0" % key)
+
+
+def check_model_params_dict(params):
+    if type(params) is not dict:
+        raise TypeError("params should be a dict")
+
+    keys = ['mu', 'rho']
+
+    for key in keys:
+        if key not in params.keys():
+            raise KeyError("missing key in params: %s" % key)
+
+    for key, value in params.iteritems():
+        if key not in keys:
+            raise KeyError("invalid params key: %s" % key)
+
+        if type(value) is not float \
+        and type(value) is not numpy.float64:
+            raise TypeError("%s should be float" % key)
+
+        if key == "rho":
+            if value <= 0.0:
+                raise ValueError("rho should be greater than 0")
+        elif key != "mu":
+            raise KeyError("Invalid params key: %s" % key)
+
 ###############################################################################
 #   The class extension
 ###############################################################################
 class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
     
-    model_type = "normal_inverse_gamma"
+    model_type = 'normal_inverse_gamma'
+    cctype = 'continuous'
     
     @classmethod
     def from_parameters(cls, N, data_params=default_data_parameters, hypers=None, gen_seed=0):
@@ -57,7 +105,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
           N: the number of data points
           data_params: a dict with the following keys
               mu: the mean of the data
-              sigma: the standard deviation of the data
+              rho: the precision of the data
           hypers: a dict with the following keys
               mu: the prior mean of the data
               s: hyperparameter
@@ -66,19 +114,13 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
           gen_seed: an integer from which the rng is seeded
         """
         
+        check_model_params_dict(data_params)
+
+        data_rho = data_params['rho']
+        
         data_mean = data_params['mu']
-        data_std = data_params['sigma']
-        
-        if type(N) is not int:
-            raise TypeError("N should be an int")
-        if type(gen_seed) is not int:
-            raise TypeError("gen_seed should be an int")
-        data_mean = check_type_force_float(data_mean, "data_mean")
-        data_std = check_type_force_float(data_std, "data_std")
-        if data_std <= 0.0:
-            raise ValueError("data_std should be greater than 0")
-        
-            
+        data_std = (1.0/data_rho)**.5
+
         random.seed(gen_seed)
         X = [ [random.normalvariate(data_mean, data_std)] for i in range(N)]
         X = numpy.array(X)
@@ -86,19 +128,9 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
 
         if hypers is None:
             hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed())[0]
+        
+        check_hyperparams_dict(hypers)
 
-        hypers['mu'] = check_type_force_float(hypers['mu'], "hypers_mu")
-        hypers['s'] = check_type_force_float(hypers['s'], "hypers_s")
-        if hypers['s'] <= 0.0:
-            raise ValueError("hypers_s should be greater than 0")
-        hypers['r'] = check_type_force_float(hypers['r'], "hypers_r")
-        hypers['nu'] = check_type_force_float(hypers['nu'], "hypers_nu")
-        if hypers['nu'] <= 0.0:
-            raise ValueError("nu should be greater than 0")
-        
-        if hypers is None:
-            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
-        
         sum_x = numpy.sum(X)
         sum_x_squared = numpy.sum(X**2.0)
         
@@ -129,14 +161,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if hypers is None:
             hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
             
-        hypers['mu'] = check_type_force_float(hypers['mu'], "hypers_mu")
-        hypers['s'] = check_type_force_float(hypers['s'], "hypers_s")
-        if hypers['s'] <= 0.0:
-            raise ValueError("hypers_s should be greater than 0")
-        hypers['r'] = check_type_force_float(hypers['r'], "hypers_r")
-        hypers['nu'] = check_type_force_float(hypers['nu'], "hypers_nu")
-        if hypers['nu'] <= 0.0:
-            raise ValueError("nu should be greater than 0")
+        check_hyperparams_dict(hypers)
             
         N = len(X)
 
@@ -184,10 +209,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
                 rho: the precision of the Gaussian
         """
         check_data_type_column_data(X)
-        mu = check_type_force_float(parameters['mu'], "mu")
-        rho = check_type_force_float(parameters['rho'], "rho")
-        if rho <= 0.0:
-            raise ValueError("rho should be greater than 0")
+        check_model_params_dict(parameters)
+
+        mu = parameters['mu']
+        rho = parameters['rho']
     
         N = float(len(X))
         
@@ -220,15 +245,11 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
                 rho: the precision of the Gaussian
         """
         check_data_type_column_data(X)
-        mu = check_type_force_float(parameters['mu'], "mu")
-        rho = check_type_force_float(parameters['rho'], "rho")
+        check_model_params_dict(parameters)
         
-        if rho <= 0.0:
-            raise ValueError("rho should be greater than 0")
-        
-        sigma = (1.0/rho)**.5
+        sigma = (1.0/parameters['rho'])**.5
 
-        log_likelihood = numpy.sum(norm.logpdf(X,mu,sigma))
+        log_likelihood = numpy.sum(norm.logpdf(X,parameters['mu'],sigma))
         
         return log_likelihood
         
@@ -244,15 +265,11 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
                 rho: the precision of the Gaussian
         """
         check_data_type_column_data(X)
-        mu = check_type_force_float(parameters['mu'], "mu")
-        rho = check_type_force_float(parameters['rho'], "rho")
+        check_model_params_dict(parameters)
         
-        if rho <= 0.0:
-            raise ValueError("rho should be greater than 0")
+        sigma = (1.0/parameters['rho'])**.5
         
-        sigma = (1.0/rho)**.5
-        
-        return norm.logpdf(X,mu,sigma)
+        return norm.logpdf(X,parameters['mu'],sigma)
         
     def brute_force_marginal_likelihood(self, X, n_samples=10000, gen_seed=0):
         """
@@ -307,18 +324,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if support <= 0.0 or support >= 1.0:
             raise ValueError("support is a float st: 0 < support < 1")
             
-        if type(params) is not dict:
-            raise TypeError("params should be a dict")
-            
-        for key, value in params.iteritems():
-            if key == 'mu':
-                params[key] = check_type_force_float(params[key], "mu")
-            elif key == 'rho':
-                params[key] = check_type_force_float(params[key], "rho")
-                if value <= 0.0:
-                    raise ValueError("params['rho'] should be greater than 0")
-            else:
-                raise ValueError("params should contain only the keys 'mu' and 'rho'")
+        check_model_params_dict(params)
         
         mu = params['mu']
         sigma = (1.0/params['rho'])**.5
@@ -396,18 +402,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if N <= 0:
             raise ValueError("N should be greater than 0")
             
-        if type(params) is not dict:
-            raise TypeError("params should be a dict")
-            
-        for key, value in params.iteritems():
-            if key == 'mu':
-                params[key] = check_type_force_float(params[key], "mu")
-            elif key == 'rho':
-                params[key] = check_type_force_float(params[key], "rho")
-                if value <= 0.0:
-                    raise ValueError("params['rho'] should be greater than 0")
-            else:
-                raise ValueError("params should contain only the keys 'mu' and 'rho'")
+        check_model_params_dict(params)
         
         mu = params['mu']
         sigma = (1.0/params['rho'])**.5

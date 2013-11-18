@@ -30,24 +30,22 @@ def check_type_force_float(x, name):
 def counts_to_data(counts):
 	"""
 	Converts a vector of counts to data.
-	FIXME: Add key so data do not have to be numerical?
 	"""
 	assert type(counts) is list or type(counts) is numpy.ndarray
 	K = len(counts)
 	N = int(sum(counts))
-	X = [0]*N
-	x = 0
+	X = []
 	for k in range(K):
 		i = 0
 		while i < counts[k]:
-			X[x] = k
-			x += 1
+			X.append([k])
 			i += 1
 
 		assert i == counts[k]
 
-	assert x == N
 	assert len(X) == N
+
+	X = numpy.array(X, dtype=float)
 
 	return X
 
@@ -90,6 +88,7 @@ def check_model_parameters_dict(model_parameters_dict):
 
 def check_hyperparameters_dict(hyperparameters_dict):
 	
+	# 'fixed' key is not necessary for user-defined hyperparameters
 	keys = ['dirichlet_alpha', 'K']
 
 	for key in keys:
@@ -112,10 +111,15 @@ def check_hyperparameters_dict(hyperparameters_dict):
 			if value <= 0.0:
 				raise ValueError("hyperparameters dict entry dirichlet_alpha should be greater than 0")
 
+		elif key == "fixed":
+			pass
 		else:
 			raise KeyError("invalid key, %s, for hyperparameters dict" % key)
 
 def check_data_vs_k(X,K):
+	if type(X) is numpy.ndarray:
+		X = X.flatten(1)
+		X = X.tolist()
 	K_data = len(set(X))
 	if K_data > K:
 		raise ValueError("the number of items in the data is greater than K")
@@ -126,6 +130,7 @@ def check_data_vs_k(X,K):
 class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
     
     model_type = 'symmetric_dirichlet_discrete'
+    cctype = 'multinomial'
 
     @classmethod
     def from_parameters(cls, N, params=None, hypers=None, gen_seed=0):
@@ -173,8 +178,9 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 			check_model_parameters_dict(params)
 		else:
 			K = len(params['weights'])
-			if K != hypers['K']:
-				raise ValueError("K in params does not match K in hypers")
+			if hypers:
+				if K != hypers['K']:
+					raise ValueError("K in params does not match K in hypers")
 	        
         # generate synthetic data
 		counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=int)
@@ -233,15 +239,17 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 			K = hypers['K']
 			check_data_vs_k(X,K)
             
-		hypers['K'] = check_type_force_float(hypers['K'], "hypers['K']")
 		hypers['dirichlet_alpha'] = check_type_force_float(hypers['dirichlet_alpha'], "hypers['dirichlet_alpha']")
             
 		N = len(X)
 		K = hypers['K']
 
-		counts = [0]*int(K)
+		counts = [0]*K
 		for x in X:
-			counts[x] += 1
+			try:
+				counts[int(x)] += 1
+			except IndexError:
+				raise IndexError
 
 		# generate the sufficient statistics
 		suffstats = dict()
@@ -301,9 +309,10 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 
         weights = numpy.array(params['weights'])
 
-        log_likelihood = log_likelihood(X, params)
+        log_likelihood = self.log_likelihood(X, params)
         logB = gammaln(dirichlet_alpha)*K - gammaln(dirichlet_alpha*K)
-        log_prior = -logB + numpy.sum((dirichlet_alpha-1.0)*math.log(weights))
+        # pdb.set_trace()
+        log_prior = -logB + numpy.sum((dirichlet_alpha-1.0)*numpy.log(weights))
 
         log_p = log_likelihood + log_prior
 
@@ -335,6 +344,27 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         log_likelihood = A+B
 
         return log_likelihood
+
+    @staticmethod
+    def log_pdf(X, params):
+        """
+        Calculates the log pdf of the data X given mean mu and precision
+        rho.
+        Inputs:
+            X: a column of data (numpy)
+            params: a dict with the following keys
+                weights: a list of categories weights (should sum to 1)
+        """
+        check_data_type_column_data(X)
+        check_model_parameters_dict(params)
+        
+        N = len(X)
+        
+        weights = numpy.array(params['weights'])
+
+        lpdf = [math.log(weights[int(x)]) for x in X]
+        
+        return lpdf
 
     def brute_force_marginal_likelihood(self, X, n_samples=10000, gen_seed=0):
         """
@@ -390,29 +420,38 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         Draws hyperparameters dirichlet_alpha from the same distribution that 
         generates the grid in the C++ code.
         Inputs:
-             X: a column of data (numpy)
+             X: a column of data or an int which acts as K. If a data array is 
+             	provided, K is assumed to be max(X)+1
              n_draws: the number of draws
              gen_seed: seed the rng
         Output:
             A list of dicts of draws where each entry has keys 'dirichlet_alpha'
             and 'K'. K is defined by the data and will be the same for each samples
         """
-        check_data_type_column_data(X)
+        if type(X) is list or type(X) is numpy.ndarray:
+	        check_data_type_column_data(X)
+	        K = int(max(X)+1)
+        elif type(X) is int:
+        	if X < 1:
+        		raise ValueError("If X is an int, it should be greatert than 1")
+        	K = X
+        else:
+        	raise TypeError("X should be an array or int")
+
         if type(n_draws) is not int:
             raise TypeError("n_draws should be an int")
+
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
         
         random.seed(gen_seed)
         
         samples = []
-        
-        # guess: FIXME: INCLUDE K
-        K = max(X)
-        
+                
         # get draw ranges
         alpha_draw_range = (0.1, math.log(K))
             
+
         for i in range(n_draws):
             alpha = math.exp(random.uniform(alpha_draw_range[0], alpha_draw_range[1]))
 
@@ -448,6 +487,8 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=float)
 
         X = counts_to_data(counts)
+        X = X.flatten(1).tolist()
+
         random.shuffle(X)
 
         assert len(X) == N

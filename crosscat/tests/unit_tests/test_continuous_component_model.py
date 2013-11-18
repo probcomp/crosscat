@@ -5,6 +5,142 @@ import numpy
 
 import unittest
 
+class TestContunuousComponentModelExtensions_Constructors(unittest.TestCase):
+    def setUp(self):
+        N = 10
+        self.N = N
+        random.seed(0)
+        self.X = numpy.array([[random.normalvariate(0.0, 1.0)] for i in range(N)])
+
+        self.params_good = dict(rho=1.0, mu=0.0)
+        self.params_empty = dict()
+        self.params_missing_rho = dict(mu=0.0)
+        self.params_missing_mu = dict(mu=0.0)
+        self.params_not_dict = [0.0, 1.0]
+        self.params_negative_rho = dict(rho=-1.0, mu=0.0)
+        self.params_zero_rho = dict(rho=0.0, mu=0.0)
+
+        self.hypers_good = dict(mu=0.0, nu=1.0, r=1.0, s=1.0)
+        self.hypers_missing_mu = dict(nu=1.0, r=1.0, s=1.0)
+        self.hypers_missing_nu = dict(mu=0.0, r=1.0, s=1.0)
+        self.hypers_missing_r = dict(mu=0.0, nu=1.0, s=1.0)
+        self.hypers_missing_s = dict(mu=0.0, nu=1.0, r=1.0)
+        self.hypers_low_nu = dict(mu=0.0, nu=-1.0, r=1.0, s=1.0)
+        self.hypers_low_r = dict(mu=0.0, nu=1.0, r=-1.0, s=1.0)
+        self.hypers_low_s = dict(mu=0.0, nu=1.0, r=1.0, s=-1.0)
+        self.hypers_not_dict = [0,1,2,3]
+
+    # Test from_parameters conrtuctor
+    def test_from_parameters_contructor_with_good_complete_params_and_hypers(self):
+        m = ccmext.p_ContinuousComponentModel.from_parameters(self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_good,
+            gen_seed=0)
+
+        assert m is not None
+
+    def test_from_parameters_contructor_with_no_params_and_hypers(self):
+        m = ccmext.p_ContinuousComponentModel.from_parameters(self.N, gen_seed=0)
+        assert m is not None
+
+    def test_from_parameters_contructor_with_bad_params_and_good_hypers(self):
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_empty,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        self.assertRaises(TypeError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_not_dict,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_missing_mu,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_missing_rho,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_negative_rho,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_zero_rho,
+            hypers=self.hypers_good,
+            gen_seed=0)
+
+    def test_from_parameters_contructor_with_good_params_and_bad_hypers(self):
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_missing_mu,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_missing_nu,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_missing_r,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_missing_s,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_low_nu,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_low_r,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_low_s,
+            gen_seed=0)
+        self.assertRaises(TypeError, ccmext.p_ContinuousComponentModel.from_parameters, self.N,
+            data_params=self.params_good,
+            hypers=self.hypers_not_dict,
+            gen_seed=0)
+
+
+    # From data constructor
+    def test_from_data_contructor_with_good_complete_hypers(self):
+        m = ccmext.p_ContinuousComponentModel.from_data(self.X,
+            hypers=self.hypers_good,
+            gen_seed=0)
+        assert m is not None
+
+    def test_from_data_contructor_with_no_params_and_hypers(self):
+        m = ccmext.p_ContinuousComponentModel.from_data(self.X,gen_seed=0)
+        assert m is not None
+
+    def test_from_data_contructor_with_bad_hypers(self):
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_missing_mu,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_missing_nu,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_missing_r,
+            gen_seed=0)
+        self.assertRaises(KeyError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_missing_s,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_low_nu,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_low_r,
+            gen_seed=0)
+        self.assertRaises(ValueError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_low_s,
+            gen_seed=0)
+        self.assertRaises(TypeError, ccmext.p_ContinuousComponentModel.from_data, self.X,
+            hypers=self.hypers_not_dict,
+            gen_seed=0)
+
 class TestContunuousComponentModelExtensions_FromParametersConstructor(unittest.TestCase):
 
     def setUp(self):

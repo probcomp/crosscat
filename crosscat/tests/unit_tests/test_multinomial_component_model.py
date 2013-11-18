@@ -127,27 +127,61 @@ class TestMultinomialComponentModelExtensions_FromParametersConstructor(unittest
     def setUp(self):
         N = 10
         K = 5
-        random.seed(0)
-        # self.X = numpy.array([3, 4, 1, 2, 4, 0, 3, 0, 1, 2])
+
+        self.X = [3, 4, 1, 2, 4, 0, 3, 0, 1, 2]
+
+        data_params_good = dict(weights=[1.0/5.0]*5)
+        hypers_good = dict(K=K, dirichlet_alpha=1.0)
+
         self.component_model = mcmext.p_MultinomialComponentModel.from_parameters(N,gen_seed=0)
+        self.component_model_w_params = mcmext.p_MultinomialComponentModel.from_parameters(N,
+            params=data_params_good,
+            gen_seed=0)
+        self.component_model_w_hypers = mcmext.p_MultinomialComponentModel.from_parameters(N,
+            hypers=hypers_good,
+            gen_seed=0)
+        self.component_model_w_params_and_hypers = mcmext.p_MultinomialComponentModel.from_parameters(N,
+            params=data_params_good,
+            hypers=hypers_good,
+            gen_seed=0)
 
         assert self.component_model is not None
 
     def test_all_hyperparameters_intialized(self):  
         these_hyperparameters = self.component_model.get_hypers()
-        # make sure each key exists
+        for hyperparameter in ['K', 'dirichlet_alpha']:
+            assert(hyperparameter in these_hyperparameters.keys())
+
+        these_hyperparameters = self.component_model_w_params.get_hypers()
+        for hyperparameter in ['K', 'dirichlet_alpha']:
+            assert(hyperparameter in these_hyperparameters.keys())
+
+        these_hyperparameters = self.component_model_w_hypers.get_hypers()
+        for hyperparameter in ['K', 'dirichlet_alpha']:
+            assert(hyperparameter in these_hyperparameters.keys())
+
+        these_hyperparameters = self.component_model_w_params_and_hypers.get_hypers()
         for hyperparameter in ['K', 'dirichlet_alpha']:
             assert(hyperparameter in these_hyperparameters.keys())
 
     def test_all_suffstats_intialized(self):
-        _, these_suffstats = self.component_model.get_suffstats()
-
         # make sure each key exists (should be keys 0,..,4)
         key_key = [str(i) for i in range(5)]
+
+        _, these_suffstats = self.component_model.get_suffstats()
         for suffstat in key_key:
-            # if not suffstat in these_suffstats.keys():
-            #     print suffstat
-            #     print these_suffstats.keys()
+            assert(suffstat in these_suffstats.keys())
+
+        _, these_suffstats = self.component_model_w_params.get_suffstats()
+        for suffstat in key_key:
+            assert(suffstat in these_suffstats.keys())
+
+        _, these_suffstats = self.component_model_w_hypers.get_suffstats()
+        for suffstat in key_key:
+            assert(suffstat in these_suffstats.keys())
+
+        _, these_suffstats = self.component_model_w_params_and_hypers.get_suffstats()
+        for suffstat in key_key:
             assert(suffstat in these_suffstats.keys())
 
     def test_draw_component_model_params(self):
@@ -162,8 +196,80 @@ class TestMultinomialComponentModelExtensions_FromParametersConstructor(unittest
             for w in value:
                 assert w >= 0.0
     
-    # def test_uncollapsed_likelihood(self):
-    #     # FIXME: write it
+    def test_uncollapsed_likelihood(self):
+        params = dict(weights=[1.0/5.0]*5)
+        ans = -1.27764862371727
+        lp = self.component_model_w_params_and_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
+        lp = self.component_model_w_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
+
+        params = dict(weights=[.1, .1, .4, .2, .2])
+        ans = -2.66394298483716
+        lp = self.component_model_w_params_and_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
+        lp = self.component_model_w_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
+
+
+class TestMultinomialComponentModelExtensions_FromDataConstructor(unittest.TestCase):
+    def setUp(self):
+        K = 5
+        self.X = [3, 4, 1, 2, 4, 0, 3, 0, 1, 2]
+
+        hypers_good = dict(K=K, dirichlet_alpha=1.0)
+
+        self.component_model = mcmext.p_MultinomialComponentModel.from_data(self.X, gen_seed=0)
+        self.component_model_w_hypers = mcmext.p_MultinomialComponentModel.from_data(self.X,
+            hypers=hypers_good,
+            gen_seed=0)
+
+        assert self.component_model is not None
+
+    def test_all_hyperparameters_intialized(self):  
+        these_hyperparameters = self.component_model.get_hypers()
+        for hyperparameter in ['K', 'dirichlet_alpha']:
+            assert(hyperparameter in these_hyperparameters.keys())
+
+        these_hyperparameters = self.component_model_w_hypers.get_hypers()
+        for hyperparameter in ['K', 'dirichlet_alpha']:
+            assert(hyperparameter in these_hyperparameters.keys())
+
+
+    def test_all_suffstats_intialized(self):
+        # make sure each key exists (should be keys 0,..,4)
+        key_key = [str(i) for i in range(5)]
+
+        _, these_suffstats = self.component_model.get_suffstats()
+        for suffstat in key_key:
+            assert(suffstat in these_suffstats.keys())
+
+        _, these_suffstats = self.component_model_w_hypers.get_suffstats()
+        for suffstat in key_key:
+            assert(suffstat in these_suffstats.keys())
+
+    def test_draw_component_model_params(self):
+        draw = self.component_model.sample_parameters_given_hyper()
+        
+        assert type(draw) is dict
+        
+        for key, value in draw.iteritems():
+            assert key in ['weights']
+            assert type(value) is list
+            assert math.fabs(sum(value)-1.0) < .0000001
+            for w in value:
+                assert w >= 0.0
+    
+    def test_uncollapsed_likelihood(self):
+        params = dict(weights=[1.0/5.0]*5)
+        ans = -1.27764862371727
+        lp = self.component_model_w_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
+
+        params = dict(weights=[.1, .1, .4, .2, .2])
+        ans = -2.66394298483716
+        lp = self.component_model_w_hypers.uncollapsed_likelihood(self.X, params)
+        assert math.fabs(ans-lp) < .00000001
         
 
 class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
@@ -200,6 +306,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
             assert i == support[i]
 
     def test_draw_component_model_hyperparameters_single(self):
+        # test with data array
         draw_list = self.component_class.draw_hyperparameters(self.X)
         assert type(draw_list) is list
         assert type(draw_list[0]) is dict
@@ -216,7 +323,32 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
 
             if key == 'K':
                 assert type(value) is int
-                assert value >= 1.0
+                assert value == max(self.X)+1
+            elif key == 'dirichlet_alpha':
+                assert type(value) is float or type(value) is numpy.float64
+                assert value > 0.0
+            else:
+                raise KeyError("Ivalid model parameters key %s" % key)
+
+        # tests with int
+        K = 5
+        draw_list = self.component_class.draw_hyperparameters(K)
+        assert type(draw_list) is list
+        assert type(draw_list[0]) is dict
+
+        draw = draw_list[0]
+
+        assert type(draw) is dict
+
+        for key, value in draw.iteritems():
+            assert key in ['K', 'dirichlet_alpha']
+
+            assert(not math.isnan(value))
+            assert(not math.isinf(value))
+
+            if key == 'K':
+                assert type(value) is int
+                assert value == K
             elif key == 'dirichlet_alpha':
                 assert type(value) is float or type(value) is numpy.float64
                 assert value > 0.0
@@ -224,6 +356,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
                 raise KeyError("Ivalid model parameters key %s" % key)
 
     def test_draw_component_model_hyperparameters_multiple(self):
+        # test with data array
         n_draws = 3
         draw_list = self.component_class.draw_hyperparameters(self.X, n_draws=n_draws)
 
@@ -239,7 +372,31 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
 
             if key == 'K':
                 assert type(value) is int
+                assert value == max(self.X)+1
+            elif key == 'dirichlet_alpha':
+                assert type(value) is float or type(value) is numpy.float64
+                assert value > 0.0
+            else:
+                raise KeyError("Ivalid model parameters key %s" % key)
+
+        # test with int
+        K = 5
+        draw_list = self.component_class.draw_hyperparameters(K, n_draws=n_draws)
+
+        assert type(draw_list) is list
+        assert len(draw_list) == 3
+
+        for draw in draw_list:
+            assert type(draw) is dict
+        
+        for key, value in draw.iteritems():
+            assert(not math.isnan(value))
+            assert(not math.isinf(value))
+
+            if key == 'K':
+                assert type(value) is int
                 assert value >= 1.0
+                assert value == K
             elif key == 'dirichlet_alpha':
                 assert type(value) is float or type(value) is numpy.float64
                 assert value > 0.0
