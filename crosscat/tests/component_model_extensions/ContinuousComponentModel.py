@@ -270,6 +270,24 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         sigma = (1.0/parameters['rho'])**.5
         
         return norm.logpdf(X,parameters['mu'],sigma)
+
+    @staticmethod
+    def cdf(X, parameters):
+        """
+        Calculates the cdf for each point in the data X given mean mu and 
+        precision rho.
+        Inputs:
+            X: a column of data (numpy)
+            parameters: a dict with the following keys
+                mu: the Gaussian mean
+                rho: the precision of the Gaussian
+        """
+        check_data_type_column_data(X)
+        check_model_params_dict(parameters)
+        
+        sigma = (1.0/parameters['rho'])**.5
+        
+        return norm.cdf(X,parameters['mu'],sigma)
         
     def brute_force_marginal_likelihood(self, X, n_samples=10000, gen_seed=0):
         """
