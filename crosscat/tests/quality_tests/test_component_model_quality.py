@@ -9,6 +9,10 @@ import random
 import pylab
 import numpy
 
+import unittest
+
+from scipy import stats
+
 default_data_parameters = dict(
     symmetric_dirichlet_discrete=dict(weights=[1.0/5.0]*5),
     normal_inverse_gamma=dict(mu=0.0, rho=1.0)
@@ -19,7 +23,29 @@ is_discrete = dict(
     normal_inverse_gamma=False
     )
 
-def test_one_feature_sampler(component_model_type):
+
+def main():
+    unittest.main()
+
+class TestComponentModelQuality(unittest.TestCase):
+    def test_normal_invers_gamma_model(self):
+        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, show_plot=False))
+
+    def test_multinomial_model(self):
+        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, show_plot=False))
+
+
+def cdf_array(X, component_model):
+    cdf = numpy.zeros(len(X))
+    for i in range(len(X)):
+        x = X[i]
+        cdf[i] = component_model.get_predictive_cdf(x,[])
+
+    assert i == len(X)-1
+    assert i > 0
+    return cdf
+
+def test_one_feature_sampler(component_model_type, show_plot=False):
     """
     Tests the ability of component model of component_model_type to capture the
     distribution of the data.
@@ -34,8 +60,10 @@ def test_one_feature_sampler(component_model_type):
     8. Calculate the true pdf for each point in the support
     9. Calculate the predictive probability given the sample for each point in
         the support
-    10. Plot the original data, predictive samples, pdf, and predictive 
-        probabilities
+    10. (OPTIONAL) Plot the original data, predictive samples, pdf, and 
+        predictive probabilities 
+    11. Calculate goodness of fit stats (return True if insignificant; False 
+        otherwise)
     """
     N = 100
     
@@ -81,7 +109,9 @@ def test_one_feature_sampler(component_model_type):
     X_D = state.get_X_D()
     
     # generate samples
-    predictive_samples = numpy.array(su.simple_predictive_sample(M_c, X_L, X_D, [], [(N,0)], get_next_seed, n=N))
+    # kstest has doesn't compute the same answer with row and column vectors
+    # so we flatten this column vector into a row vector.
+    predictive_samples = numpy.array(su.simple_predictive_sample(M_c, X_L, X_D, [], [(N,0)], get_next_seed, n=N)).flatten(1)
     
     # get support
     discrete_support = component_model_type.generate_discrete_support(model_parameters)
@@ -106,36 +136,52 @@ def test_one_feature_sampler(component_model_type):
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
         edges = edges[0:-1]
     
+    if show_plot:
+        # bin widths
+        width = (numpy.max(edges)-numpy.min(edges))/len(edges)
+        pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width)
+        pylab.bar(edges, S_hist, color='red', alpha=.5, width=width)
 
-    # bin widths
-    width = (numpy.max(edges)-numpy.min(edges))/len(edges)
-    pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width)
-    pylab.bar(edges, S_hist, color='red', alpha=.5, width=width)
-
-    # plot actual pdf of support given data params
-    pylab.scatter(discrete_support, 
-        numpy.exp(component_model_type.log_pdf(numpy.array(discrete_support), 
-        model_parameters)), 
-        c="blue", 
-        s=100, 
-        label="true pdf", 
-        alpha=1)
+        # plot actual pdf of support given data params
+        pylab.scatter(discrete_support, 
+            numpy.exp(component_model_type.log_pdf(numpy.array(discrete_support), 
+            model_parameters)), 
+            c="blue", 
+            s=100, 
+            label="true pdf", 
+            alpha=1)
+                
+        # plot predictive probability of support points
+        pylab.scatter(discrete_support, 
+            numpy.exp(probabilities), 
+            c="red", 
+            s=100, 
+            label="predictive probability", 
+            alpha=1)
             
-    # plot predictive probability of support points
-    pylab.scatter(discrete_support, 
-        numpy.exp(probabilities), 
-        c="red", 
-        s=100, 
-        label="predictive probability", 
-        alpha=1)
-        
-    pylab.legend()
+        pylab.legend()
 
-    ylimits = pylab.gca().get_ylim()
-    pylab.ylim([0,ylimits[1]])
+        ylimits = pylab.gca().get_ylim()
+        pylab.ylim([0,ylimits[1]])
 
-    pylab.show()
+        pylab.show()
+
+    if not is_discrete[component_model_type.model_type]:
+        # do a KS tests if the distribution in continuous
+        cdf = lambda x: component_model_type.cdf(x, model_parameters)
+        stat, p = stats.kstest(predictive_samples, cdf)
+    else:
+        # Cressie-Read power divergence statistic and goodness of fit test.
+        # This function gives a lot of flexibility in the method <lambda_> used.
+        freq_obs = S_hist*N
+        freq_exp = numpy.exp(probabilities)*N
+        stat, p = stats.power_divergence(freq_obs, freq_exp, lambda_='pearson')
+
+    # print (stat, p)
+
+    # tests should be non-significant. We want the null hypthesis, that the 
+    # two distributions are the same, to be true
+    return p > .1
 
 if __name__ == '__main__':
-    test_one_feature_sampler(ccmext.p_ContinuousComponentModel)
-    test_one_feature_sampler(mcmext.p_MultinomialComponentModel)
+    main()
