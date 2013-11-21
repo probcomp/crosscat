@@ -77,21 +77,21 @@ State_sources = generate_sources([
 # create exts
 ContinuousComponentModel_ext = Extension(
     "crosscat.ContinuousComponentModel",
-    libraries = ['boost'],
+    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
     language="c++")
 MultinomialComponentModel_ext = Extension(
     "crosscat.MultinomialComponentModel",
-    libraries = ['boost'],
+    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
     language="c++")
 State_ext = Extension(
     "crosscat.State",
-    libraries = ['boost'],
+    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
