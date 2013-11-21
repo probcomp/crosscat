@@ -45,7 +45,7 @@ ContinuousComponentModel_sources = generate_sources([
 #
 MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
-    'utils.cpp'
+    'utils.cpp',
     'numerics.cpp',
     'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
