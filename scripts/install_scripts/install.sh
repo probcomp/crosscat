@@ -29,7 +29,7 @@ requirements_filename=$project_location/requirements.txt
 
 # install system dependencies
 # engine dependencies
-apt-get build-dep -y python-numpy python-matplotlib python-scipy
+apt-get build-dep -y python-numpy python-matplotlib python-scipy ccache
 apt-get install -y python-pip libboost1.48-all-dev
 # doc dependencies
 apt-get build-dep -y python-sphinx
