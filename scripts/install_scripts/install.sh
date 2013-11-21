@@ -28,11 +28,12 @@ requirements_filename=$project_location/requirements.txt
 
 
 # install system dependencies
+# engine dependencies
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
+apt-get install -y python-pip libboost1.48-all-dev
+# doc dependencies
 apt-get build-dep -y python-sphinx
-apt-get install -y doxygen python-pip
+apt-get install -y doxygen
 
 # 
 pip install $options -r $requirements_filename
-bash $my_dirname/install_boost.sh
-bash $my_dirname/install_hcluster.sh
