@@ -67,6 +67,7 @@ State_cpp_sources = [
     'ComponentModel.cpp',
     'MultinomialComponentModel.cpp',
     'ContinuousComponentModel.cpp',
+    'State.cpp',
     ]
 State_sources = generate_sources([
     (pyx_src_dir, State_pyx_sources),
