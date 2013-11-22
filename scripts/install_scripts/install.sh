@@ -27,6 +27,9 @@ project_location=$(dirname $(cd $my_dirname && git rev-parse --git-dir))
 requirements_filename=$project_location/requirements.txt
 
 
+# update seems necessary, else get
+# E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+apt-get update
 # install system dependencies
 # engine dependencies
 apt-get build-dep -y python-numpy python-matplotlib python-scipy ccache
