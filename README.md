@@ -18,13 +18,7 @@ CrossCat can be installed locally on Ubuntu systems with
 
     git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
     sudo bash crosscat/scripts/install_scripts/install.sh
-    cd crosscat && PYTHONPATH=$PYTHONPATH:$(pwd) make cython
-
-Don't forget to add crosscat to your python path.  For bash, this can be accomplished by substituting the correct value for <CROSSCAT_DIR> and running
-
-    cat -- >> ~/.bashrc <<EOF
-    export PYTHONPATH=\$PYTHONPATH:<CROSSCAT_DIR>
-    EOF
+    sudo python crosscat/setup.py install
 
 # Documentation
 
