@@ -103,7 +103,7 @@ ext_modules = [
         State_ext,
         ]
 
-packages = ['crosscat', 'crosscat.utils', 'crosscat.convergence_analysis', 'crosscat.jsonrpc_http']
+packages = ['crosscat', 'crosscat.utils', 'crosscat.convergence_analysis', 'crosscat.jsonrpc_http', 'crosscat.cython_code']
 setup(
         name='CrossCat',
         version='0.1',
