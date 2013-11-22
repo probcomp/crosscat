@@ -12,7 +12,7 @@ grep_hcluster=$MISSING
 [ grep_hcluster=$(pip freeze | grep hcluster) ] || true
 if [[ $grep_hcluster = "$MISSING" ]]; then
     mkdir -p $CACHED_PACKAGES_DIR
-    pip install --no-install --download $CACHED_PACKAGES_DIR hcluster==$WHICH_HCLUSTER
+    pip install --no-install --download $CACHED_PACKAGES_DIR --exists-action b hcluster==$WHICH_HCLUSTER
     cd $CACHED_PACKAGES_DIR
     tar xvfz hcluster-$WHICH_HCLUSTER.tar.gz
     cd hcluster-$WHICH_HCLUSTER
