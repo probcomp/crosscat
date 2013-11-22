@@ -16,7 +16,7 @@ scipy>=0.11.0
 freetype-py==0.4.1
 matplotlib==1.2.0
 # this will fail if there are multiple possible pythons, as with virtualenv
-hcluster==0.2.0
+# hcluster==0.2.0
 
 # for documentation generation
 Sphinx==1.2b1
