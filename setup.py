@@ -1,15 +1,8 @@
 #!/usr/bin/python
-
-
 import os
-
-# old crosscat setup.py
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
-
-# venture setup.py
-# from distutils.core import setup, Extension
 
 
 def generate_sources(dir_files_tuples):
@@ -21,6 +14,12 @@ def generate_sources(dir_files_tuples):
                 ]
         sources.extend(full_files)
     return sources
+
+
+# make sure cwd is correct
+this_file = os.path.abspath(__file__)
+this_dir = os.path.split(this_file)[0]
+os.chdir(this_dir)
 
 
 # locations
