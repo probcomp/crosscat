@@ -28,12 +28,22 @@ def main():
     unittest.main()
 
 class TestComponentModelQuality(unittest.TestCase):
-    def test_normal_invers_gamma_model(self):
-        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, show_plot=False))
+    def test_normal_inverse_gamma_model(self):
+        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, show_plot=True) > .1)
 
-    def test_multinomial_model(self):
-        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, show_plot=False))
+    def test_dirchlet_multinomial_model(self):
+        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, show_plot=True) > .1)
 
+
+def get_params_string(params):
+    string = dict()
+    for k,v in params.iteritems():
+        if isinstance(v, float):
+            string[k] = round(v,3)
+        elif isinstance(v, list):
+            string[k] = [round(val,3) for val in v]
+
+    return str(string)
 
 def cdf_array(X, component_model):
     cdf = numpy.zeros(len(X))
@@ -62,8 +72,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         the support
     10. (OPTIONAL) Plot the original data, predictive samples, pdf, and 
         predictive probabilities 
-    11. Calculate goodness of fit stats (return True if insignificant; False 
-        otherwise)
+    11. Calculate goodness of fit stats (returns p value)
     """
     N = 100
     
@@ -135,12 +144,28 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)), normed=True)
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
         edges = edges[0:-1]
+
+    # Goodness-of-fit-tests
+    if not is_discrete[component_model_type.model_type]:
+        # do a KS tests if the distribution in continuous
+        cdf = lambda x: component_model_type.cdf(x, model_parameters)
+        # stat, p = stats.kstest(predictive_samples, cdf)   # 1-sample test
+        stat, p = stats.ks_2samp(predictive_samples, T[:,0]) # 2-sample test
+        test_str = "KS"
+    else:
+        # Cressie-Read power divergence statistic and goodness of fit test.
+        # This function gives a lot of flexibility in the method <lambda_> used.
+        freq_obs = S_hist*N
+        freq_exp = numpy.exp(probabilities)*N
+        stat, p = stats.power_divergence(freq_obs, freq_exp, lambda_='pearson')
+        test_str = "Chi-square"
     
     if show_plot:
+        pylab.axes([0.1, 0.1, .8, .7])
         # bin widths
         width = (numpy.max(edges)-numpy.min(edges))/len(edges)
-        pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width)
-        pylab.bar(edges, S_hist, color='red', alpha=.5, width=width)
+        pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width, label='Original data')
+        pylab.bar(edges, S_hist, color='red', alpha=.5, width=width, label='Predictive samples')
 
         # plot actual pdf of support given data params
         pylab.scatter(discrete_support, 
@@ -164,24 +189,14 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         ylimits = pylab.gca().get_ylim()
         pylab.ylim([0,ylimits[1]])
 
+        title_string = "%i samples drawn from %s w/ params: \n%s\ninference after 100 crosscat transitions\n%s test: p = %f" \
+            % (N, component_model_type.cctype, str(get_params_string(model_parameters)), test_str, round(p,4))
+
+        pylab.title(title_string, fontsize=12)
+
         pylab.show()
 
-    if not is_discrete[component_model_type.model_type]:
-        # do a KS tests if the distribution in continuous
-        cdf = lambda x: component_model_type.cdf(x, model_parameters)
-        stat, p = stats.kstest(predictive_samples, cdf)
-    else:
-        # Cressie-Read power divergence statistic and goodness of fit test.
-        # This function gives a lot of flexibility in the method <lambda_> used.
-        freq_obs = S_hist*N
-        freq_exp = numpy.exp(probabilities)*N
-        stat, p = stats.power_divergence(freq_obs, freq_exp, lambda_='pearson')
-
-    # print (stat, p)
-
-    # tests should be non-significant. We want the null hypthesis, that the 
-    # two distributions are the same, to be true
-    return p > .1
+    return p
 
 if __name__ == '__main__':
     main()
