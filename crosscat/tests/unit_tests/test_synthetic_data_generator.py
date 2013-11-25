@@ -1,9 +1,73 @@
 import crosscat.tests.quality_tests.synthetic_data_generator as sdg
 
 import unittest
+import random
 
 def main():
     unittest.main()
+
+
+class TestGenerateGeparatedGodelParameters(unittest.TestCase):
+	def setUp(self):
+		self.num_clusters = 5
+		self.get_next_seed = lambda : random.randrange(32000)
+		self.distargs_multinomial = dict(K=5)
+		random.seed(0)
+
+	def test_should_return_list_of_params(self):
+		ret = sdg.generate_separated_model_parameters('continuous',
+			.5, self.num_clusters, self.get_next_seed )
+
+		assert isinstance(ret, list)
+		assert len(ret) == self.num_clusters
+		for entry in ret:
+			assert isinstance(entry, dict)
+			for key in entry.keys():
+				assert key in ['mu', 'rho']
+
+			assert len(entry.keys()) == 2
+
+		ret = sdg.generate_separated_model_parameters('multinomial',
+			.5, self.num_clusters, self.get_next_seed,
+			distargs=self.distargs_multinomial)
+
+		assert isinstance(ret, list)
+		assert len(ret) == self.num_clusters
+		for entry in ret:
+			assert isinstance(entry, dict)
+			for key in entry.keys():
+				assert key in ['weights']
+
+			assert len(entry.keys()) == 1
+
+	def tests_should_not_accept_invalid_cctype(self):
+		# peanut is an invalid cctype
+		self.assertRaises(ValueError, sdg.generate_separated_model_parameters,
+			'peanut', .5, self.num_clusters, self.get_next_seed)
+
+
+class TestsGenerateSeparatedMultinomialWeights(unittest.TestCase):
+	def setUp(self):
+		self.A_good = [.2]*5
+		self.C_good = .5
+
+	def tests_should_return_proper_list(self):
+		w = sdg.generate_separated_multinomial_weights(self.A_good,self.C_good)
+		assert isinstance(w, list)
+		assert len(w) == len(self.A_good)
+
+	def tests_bad_separation_should_raise_exception(self):
+		# C is too low
+		self.assertRaises(ValueError, sdg.generate_separated_multinomial_weights,
+			self.A_good, -.1)
+		# C is too high
+		self.assertRaises(ValueError, sdg.generate_separated_multinomial_weights,
+			self.A_good, 1.2)
+
+	def tests_bad_weights_should_raise_exception(self):
+		# weights do not sum to 1
+		self.assertRaises(ValueError, sdg.generate_separated_multinomial_weights,
+			[.2]*4, .5)
 
 class TestSyntheticDataGenerator(unittest.TestCase):
 	def setUp(self):
