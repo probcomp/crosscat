@@ -18,6 +18,7 @@
 #   limitations under the License.
 #
 import crosscat.utils.data_utils as du
+import crosscat.utils.sample_utils as su
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
@@ -37,12 +38,26 @@ get_data_generator = dict(
 	continuous=ccmext.p_ContinuousComponentModel.generate_data_from_parameters
 	)
 
+NaN = float('nan')
+
+has_key = lambda dictionary, key : key in dictionary.keys()
 
 def p_draw(M):
 	r = random.random()
 	for i in range(len(M)):
 		if r < M[i]:
 			return i
+
+def add_missing_data_to_column(X, col, proportion):
+	"""	Adds NaN entried to propotion of the data X in column col
+	"""
+	assert proportion >= 0 and proportion <= 1
+
+	for row in range(X.shape[0]):
+		if random.random() < proportion:
+			X[row,col] = NaN
+
+	return X
 
 def generate_separated_multinomial_weights(A,C):
 	"""Generates a set of multinomial weights B, where sum(abs(B-A)) = C
@@ -155,8 +170,9 @@ def generate_separated_model_parameters(cctype, C, num_clusters, get_next_seed, 
 			 the number of categories")
 
 		# generate an inital set of parameters
-		weights = numpy.random.rand(K)
-		weights = weights/numpy.sum(weights)
+		# weights = numpy.random.rand(K)
+		# weights = weights/numpy.sum(weights)
+		weights = numpy.array([1.0/float(K)]*K)
 		weights = weights.tolist()
 
 		model_params = [dict(weights=weights)]
@@ -353,3 +369,79 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 	# TODO: return component model params for inference quality tests?
 
 	return T, M_c
+
+def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, seed=0):
+	""" Generates rows of data from the inferred distributions
+	Inputs:
+		- M_c: crosscat metadata (See documentation)
+		- X_L: crosscat metadata (See documentation)
+		- X_D: crosscat metadata (See documentation)
+		- columns_list: a list of columns to sample
+		- optinal_settings: list of dicts of optional arguments. Each column
+		  in columns_list should have its own list entry which is either None
+		  or a dict with possible keys:
+			- missing_data: Proportion missing data
+	Returns:
+		- a num_rows by len(columns_list) numpy array, where n_rows is the
+		original number of rows in the crosscat table. 
+	"""
+	# supported arguments for optional_settings
+	supported_arguments = ['missing_data']
+
+	num_rows = len(X_D[0])
+	num_cols = len(M_c['column_metadata'])
+
+	if not isinstance(columns_list, list):
+		raise TypeError("columns_list should be a list")
+
+	for col in columns_list:
+		if not isinstance(col, int):
+			raise TypeError("every entry in columns_list shuold be an integer")
+		if col < 0 or col >= num_cols:
+			raise ValueError("%i is not a valid column. Should be valid entries\
+			 are 0-%i" % (col, num_cols))
+
+	if not isinstance(seed, int):
+		raise TypeError("seed should be an int")
+
+	if seed < 0:
+		raise ValueError("seed should be positive")
+
+	if optional_settings:
+		if not isinstance(optional_settings, list):
+			raise TypeError("optional_settings should be a list")
+
+		for col_setting in optional_settings:
+			if isinstance(col_setting, dict):
+				for key, value in col_setting.iteritems():
+					if key not in supported_arguments:
+						raise KeyError("Invalid key in optional_settings, '%s'" % key)
+	else:
+		optional_settings = [None]*len(columns_list)
+
+	random.seed(seed)
+
+	X = numpy.zeros((num_rows, len(columns_list)))
+
+	get_next_seed = lambda : random.randrange(2147483647)
+
+	for c in range(len(columns_list)):
+		col = columns_list[c]
+		for row in range(num_rows):
+			X[row,c] = su.simple_predictive_sample(M_c, X_L, X_D, [],
+						 [(row,col)], get_next_seed, n=1)[0][0]
+
+		# check if there are optional arguments
+		if isinstance(optional_settings[c], dict):
+			# missing data argument
+			if has_key(optional_settings[c], 'missing_data'):
+				proportion = optional_settings[c]['missing_data']
+				X = add_missing_data_to_column(X, c, proportion)
+
+	assert X.shape[0] == num_rows
+	assert X.shape[1] == len(columns_list)
+
+	return X
+
+
+

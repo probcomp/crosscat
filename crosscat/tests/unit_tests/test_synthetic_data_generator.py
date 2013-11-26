@@ -1,11 +1,88 @@
 import crosscat.tests.quality_tests.synthetic_data_generator as sdg
+import crosscat.cython_code.State as State
+import crosscat.utils.data_utils as du
 
 import unittest
 import random
+import numpy
 
 def main():
     unittest.main()
 
+
+class TestPredictiveColumns(unittest.TestCase):
+	def setUp(self):
+		# generate a crosscat state and pull the metadata
+		gen_seed = 0
+		num_clusters = 2
+		self.num_rows = 10
+		self.num_cols = 2
+		num_splits = 1
+
+		self.T, self.M_r, self.M_c = du.gen_factorial_data_objects(gen_seed,
+							   num_clusters, self.num_cols, 
+							   self.num_rows, num_splits)
+
+		state = State.p_State(self.M_c, self.T)
+		self.X_L = state.get_X_L()
+		self.X_D = state.get_X_D()
+
+	def test_should_return_array_of_proper_size(self):
+		columns_list = [0]
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list)
+		assert isinstance(X, numpy.ndarray)
+		assert X.shape[0] == self.num_rows
+		assert X.shape[1] == len(columns_list)
+
+		columns_list = [0,1]
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list)
+		assert isinstance(X, numpy.ndarray)
+		assert X.shape[0] == self.num_rows
+		assert X.shape[1] == len(columns_list)
+
+	def test_should_not_generate_data_from_invalid_rows(self):
+		columns_list = [0,-1]
+		self.assertRaises(ValueError, sdg.predictive_columns, 
+			self.M_c, self.X_L, self.X_D, columns_list)
+
+		columns_list = [0,3]
+		self.assertRaises(ValueError, sdg.predictive_columns, 
+			self.M_c, self.X_L, self.X_D, columns_list)
+
+	def test_should_have_nan_entries_if_specified(self):
+		# for one column
+		columns_list = [0]
+		optargs = [dict(missing_data=1.0)] # every entry will be missing NaN
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list,
+			optional_settings=optargs)
+
+		assert numpy.all(numpy.isnan(X))
+		
+		# for two columns
+		columns_list = [0,1]
+		optargs = [dict(missing_data=1.0)]*2 
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list,
+			optional_settings=optargs)
+
+		assert numpy.all(numpy.isnan(X))
+
+		# for one of two columns (no dict means no missing data)
+		columns_list = [0,1]
+		optargs = [dict(missing_data=1.0), None]
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list,
+			optional_settings=optargs)
+
+		assert numpy.all(numpy.isnan(X[:,0]))
+		assert not numpy.any(numpy.isnan(X[:,1]))
+
+		# for one of two columns. Missing data specified 0 for second column
+		columns_list = [0,1]
+		optargs = [dict(missing_data=1.0), dict(missing_data=0.0)]
+		X = sdg.predictive_columns(self.M_c, self.X_L, self.X_D, columns_list,
+			optional_settings=optargs)
+
+		assert numpy.all(numpy.isnan(X[:,0]))
+		assert not numpy.any(numpy.isnan(X[:,1]))
 
 class TestGenerateGeparatedGodelParameters(unittest.TestCase):
 	def setUp(self):
@@ -44,6 +121,31 @@ class TestGenerateGeparatedGodelParameters(unittest.TestCase):
 		# peanut is an invalid cctype
 		self.assertRaises(ValueError, sdg.generate_separated_model_parameters,
 			'peanut', .5, self.num_clusters, self.get_next_seed)
+
+	def test_normal_means_should_be_farther_apart_if_they_have_higer_separation(self):
+		random.seed(0)	
+		closer = sdg.generate_separated_model_parameters('continuous',
+			.1, 2, self.get_next_seed )
+
+		sum_std_close = closer[0]['rho']**(-.5) + closer[1]['rho']**(-.5)
+		distance_close = ((closer[0]['mu']-closer[1]['mu'])/sum_std_close)**2.0
+
+		random.seed(0)
+		farther = sdg.generate_separated_model_parameters('continuous',
+			.5, 2, self.get_next_seed )
+
+		sum_std_far = farther[0]['rho']**(-.5) + farther[1]['rho']**(-.5)
+		distance_far = ((farther[0]['mu']-farther[1]['mu'])/sum_std_far)**2.0
+
+		random.seed(0)
+		farthest = sdg.generate_separated_model_parameters('continuous',
+			1.0, 2, self.get_next_seed )
+
+		sum_std_farthest = farthest[0]['rho']**(-.5) + farthest[1]['rho']**(-.5)
+		distance_farthest = ((farthest[0]['mu']-farthest[1]['mu'])/sum_std_farthest)**2.0
+
+		assert distance_far  > distance_close
+		assert distance_farthest  > distance_far
 
 
 class TestsGenerateSeparatedMultinomialWeights(unittest.TestCase):

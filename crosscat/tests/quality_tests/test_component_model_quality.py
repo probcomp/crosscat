@@ -29,10 +29,10 @@ def main():
 
 class TestComponentModelQuality(unittest.TestCase):
     def test_normal_inverse_gamma_model(self):
-        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, show_plot=True) > .1)
+        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, show_plot=False) > .1)
 
     def test_dirchlet_multinomial_model(self):
-        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, show_plot=True) > .1)
+        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, show_plot=False) > .1)
 
 
 def get_params_string(params):
@@ -91,22 +91,8 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
     # generate data from the parameters
     T = component_model_type.generate_data_from_parameters(model_parameters, N, gen_seed=get_next_seed())
 
-    # FIXME:
-    # currently there is a bug that causes a freeze when a 1-feature crosscat
-    # state is intialized so the below code is so we can test while we wait
-    # for the bug fix
-    T1 = component_model_type.generate_data_from_parameters(model_parameters, N, gen_seed=get_next_seed())
-    T2 = component_model_type.generate_data_from_parameters(model_parameters, N, gen_seed=get_next_seed())
-    T1 = numpy.array(T1)
-    T2 = numpy.array(T2)
-    T = numpy.hstack((T1, T2))
-    T = T.tolist()
-    # END hack code
-
-    cctypes = [component_model_type.cctype] * 2
-
     # create a crosscat state 
-    M_c = du.gen_M_c_from_T(T, cctypes=cctypes)
+    M_c = du.gen_M_c_from_T(T, cctypes=[component_model_type.cctype])
     
     state = State.p_State(M_c, T)
     
@@ -135,13 +121,13 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
     # get histogram. Different behavior for discrete and continuous types. For some reason
     # the normed property isn't normalizing the multinomial histogram to 1.
     if is_discrete[component_model_type.model_type]:
-        T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)))
+        T_hist, edges = numpy.histogram(T, bins=min(20,len(discrete_support)))
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges)
         T_hist = T_hist/float(numpy.sum(T_hist))
         S_hist = S_hist/float(numpy.sum(S_hist))
         edges = numpy.array(discrete_support,dtype=float)
     else:
-        T_hist, edges = numpy.histogram(T[:,0], bins=min(20,len(discrete_support)), normed=True)
+        T_hist, edges = numpy.histogram(T, bins=min(20,len(discrete_support)), normed=True)
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
         edges = edges[0:-1]
 
