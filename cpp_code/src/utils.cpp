@@ -82,11 +82,25 @@ bool is_almost(double val1, double val2, double precision) {
 // http://stackoverflow.com/a/11747023/1769715
 vector<double> linspace(double a, double b, int n) {
   vector<double> values;
-  double step = (b-a) / (n-1);
-  double epsilon = step * 1E-6;
-  while(a <= (b + epsilon)) {
+  if(a > b) {
+    cerr << "linspace: passed lower bound greater than upper bound!" << endl;
+    cerr << "linspace: using upper bound equal to lower bound" << endl;
+    b = a;
+  }
+  if(a == b && n != 1) {
+    cerr << "linspace: passed lower bound equal upper bound but n != 1!" << endl;
+    cerr << "linspace: using n = 1" << endl;
+    n = 1;
+  }
+  if(n == 1) {
     values.push_back(a);
-    a += step;
+  } else {
+    double step = (b-a) / (n-1);
+    double epsilon = step * 1E-6;
+    while(a <= (b + epsilon)) {
+      values.push_back(a);
+      a += step;
+    }
   }
   return values;
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 
 # test for root
@@ -27,12 +28,17 @@ project_location=$(dirname $(cd $my_dirname && git rev-parse --git-dir))
 requirements_filename=$project_location/requirements.txt
 
 
+# update seems necessary, else get
+# E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+apt-get update
 # install system dependencies
-apt-get build-dep -y python-numpy python-matplotlib python-scipy
+# engine dependencies
+apt-get build-dep -y python-numpy python-matplotlib python-scipy ccache
+apt-get install -y python-pip libboost1.48-all-dev
+# doc dependencies
 apt-get build-dep -y python-sphinx
-apt-get install -y doxygen python-pip
+apt-get install -y doxygen
 
 # 
 pip install $options -r $requirements_filename
-bash $my_dirname/install_boost.sh
-bash $my_dirname/install_hcluster.sh
+bash $project_location/scripts/install_scripts/install_hcluster.sh
