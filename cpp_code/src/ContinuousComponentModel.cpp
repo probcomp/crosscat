@@ -180,26 +180,8 @@ void ContinuousComponentModel::get_suffstats(int &count_out, double &sum_x_out,
 }
 
 double ContinuousComponentModel::get_draw(int random_seed) const {
-  // get modified suffstats
-  double r, nu, s, mu;
-  int count;
-  double sum_x, sum_x_squared;
-  get_hyper_doubles(r, nu, s, mu);
-  get_suffstats(count, sum_x, sum_x_squared);
-  numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
-  // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
-  // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
-  // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
-  s /= 2; 
-  //
-  boost::mt19937  _engine(random_seed);
-  boost::uniform_01<boost::mt19937> _dist(_engine);
-  boost::random::student_t_distribution<double> student_t(nu);
-  double student_t_draw = student_t(_dist);  
-  double coeff = sqrt((s * (r+1)) / (nu / 2. * r));
-  double draw = student_t_draw * coeff + mu;
-  return draw;
+  vector<double> constraints;
+  return get_draw_constrained(random_seed, constraints);
 }
 
 double ContinuousComponentModel::get_draw_constrained(int random_seed, vector<double> constraints) const {
@@ -218,6 +200,8 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed, vector<do
   numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
 
   // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
+  // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
+  // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
   s /= 2; 
   //
   boost::mt19937  _engine(random_seed);
