@@ -87,8 +87,8 @@ double ContinuousComponentModel::calc_element_predictive_logp_constrained(double
   get_hyper_doubles(r, nu, s, mu);
   get_suffstats(count, sum_x, sum_x_squared);
   //
-  for(int constraint_idx=0; constraint_idx<constraints.size();
-      constraint_idx++) {
+  int num_constraints = (int) constraints.size();
+  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
     double constraint = constraints[constraint_idx];
     numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
 					     constraint);
@@ -191,8 +191,8 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed, vector<do
   double sum_x, sum_x_squared;
   get_hyper_doubles(r, nu, s, mu);
   get_suffstats(count, sum_x, sum_x_squared);
-  for(int constraint_idx=0; constraint_idx<constraints.size();
-      constraint_idx++) {
+  int num_constraints = (int) constraints.size();
+  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
     double constraint = constraints[constraint_idx];
     numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
 					     constraint);
@@ -221,8 +221,8 @@ double ContinuousComponentModel::get_predictive_cdf(double element, vector<doubl
   double sum_x, sum_x_squared;
   get_hyper_doubles(r, nu, s, mu);
   get_suffstats(count, sum_x, sum_x_squared);
-  for(int constraint_idx=0; constraint_idx<constraints.size();
-      constraint_idx++) {
+  int num_constraints = (int) constraints.size();
+  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
     double constraint = constraints[constraint_idx];
     numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
                constraint);

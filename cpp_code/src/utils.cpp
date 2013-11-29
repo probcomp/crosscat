@@ -302,7 +302,8 @@ vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
   if(initialization==TOGETHER) {
     cluster_indices_v.push_back(global_row_indices);
   } else if(initialization==APART) {
-    for(int i=0; i<global_row_indices.size(); i++) {
+    int num_global_row_indices = (int) global_row_indices.size();
+    for(int i=0; i<num_global_row_indices; i++) {
       vector<int> singleton_cluster;
       singleton_cluster.push_back(global_row_indices[i]);
       cluster_indices_v.push_back(singleton_cluster);
