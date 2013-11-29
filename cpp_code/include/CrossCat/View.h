@@ -159,7 +159,7 @@ class View {
   std::string to_string(std::string join_str="\n", bool top_level=false) const;
   void print();
   void print_score_matrix();
-  void assert_state_consistency();
+  // void assert_state_consistency();
   // double score_test_set(std::vector<std::vector<double> > test_set) const;
   //
   // hyper inference grids FIXME: MOVE TO PRIVATE WHEN DONE TESTING
