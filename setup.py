@@ -56,6 +56,21 @@ RoundedContinuousComponentModel_sources = generate_sources([
     (cpp_src_dir, RoundedContinuousComponentModel_cpp_sources),
     ])
 #
+#
+DoublyBoundedRoundedContinuousComponentModel_pyx_sources = ['DoublyBoundedRoundedContinuousComponentModel.pyx']
+DoublyBoundedRoundedContinuousComponentModel_cpp_sources = [
+        'utils.cpp',
+        'numerics.cpp',
+        'RandomNumberGenerator.cpp', 'ComponentModel.cpp',
+        'ContinuousComponentModel.cpp',
+        'RoundedContinuousComponentModel.cpp',
+        'DoublyBoundedRoundedContinuousComponentModel.cpp',
+        ]
+DoublyBoundedRoundedContinuousComponentModel_sources = generate_sources([
+    (pyx_src_dir, DoublyBoundedRoundedContinuousComponentModel_pyx_sources),
+    (cpp_src_dir, DoublyBoundedRoundedContinuousComponentModel_cpp_sources),
+    ])
+#
 MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
     'utils.cpp',
@@ -103,6 +118,13 @@ RoundedContinuousComponentModel_ext = Extension(
     sources=RoundedContinuousComponentModel_sources,
     include_dirs=include_dirs,
     language="c++")
+DoublyBoundedRoundedContinuousComponentModel_ext = Extension(
+    "crosscat.cython_code.DoublyBoundedRoundedContinuousComponentModel",
+    libraries = ['boost_random'],
+    extra_compile_args = [],
+    sources=DoublyBoundedRoundedContinuousComponentModel_sources,
+    include_dirs=include_dirs,
+    language="c++")
 MultinomialComponentModel_ext = Extension(
     "crosscat.cython_code.MultinomialComponentModel",
     libraries = ['boost_random'],
@@ -121,6 +143,7 @@ State_ext = Extension(
 ext_modules = [
         ContinuousComponentModel_ext,
         RoundedContinuousComponentModel_ext,
+        DoublyBoundedRoundedContinuousComponentModel_ext,
         MultinomialComponentModel_ext,
         State_ext,
         ]
