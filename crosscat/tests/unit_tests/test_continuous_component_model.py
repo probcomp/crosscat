@@ -8,7 +8,7 @@ import unittest
 def main():
     unittest.main()
 
-class TestContunuousComponentModelExtensions_Constructors(unittest.TestCase):
+class TestContinuousComponentModelExtensions_Constructors(unittest.TestCase):
     def setUp(self):
         N = 10
         self.N = N
@@ -144,7 +144,7 @@ class TestContunuousComponentModelExtensions_Constructors(unittest.TestCase):
             hypers=self.hypers_not_dict,
             gen_seed=0)
 
-class TestContunuousComponentModelExtensions_FromParametersConstructor(unittest.TestCase):
+class TestContinuousComponentModelExtensions_FromParametersConstructor(unittest.TestCase):
 
     def setUp(self):
         N = 10
@@ -186,7 +186,7 @@ class TestContunuousComponentModelExtensions_FromParametersConstructor(unittest.
         assert math.fabs(ans-log_likelihood) < .00000001
 
 
-class TestContunuousComponentModelExtensions_FromDataConstructor(unittest.TestCase):
+class TestContinuousComponentModelExtensions_FromDataConstructor(unittest.TestCase):
 
     def setUp(self):
         N = 10
@@ -225,7 +225,7 @@ class TestContunuousComponentModelExtensions_FromDataConstructor(unittest.TestCa
         assert log_likelihood < 0.0 
         assert math.fabs(ans-log_likelihood) < .00000001
 
-class TestContunuousComponentModelExtensions_static(unittest.TestCase):
+class TestContinuousComponentModelExtensions_static(unittest.TestCase):
     def setUp(self):
         N = 10
         random.seed(0)

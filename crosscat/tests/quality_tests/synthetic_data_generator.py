@@ -189,7 +189,7 @@ def generate_separated_model_parameters(cctype, C, num_clusters, get_next_seed, 
 		raise ValueError("Invalid cctype %s." % cctype )
 
 
-def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0, distargs=None):
+def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0, distargs=None, return_structure=False):
 	"""	Generates a synthetic data.
 		Inputs:
 			- cctypes: List of strings. Each entry, i, is the cctype of the 
@@ -214,6 +214,15 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 			for the cctype in that column. For a normal feature, the entry 
 			should be None, for a multinomial feature, the entry should be a 
 			dict with the entry K (the number of categories). 
+			- return_structure: (bool, optional). Returns also a dict withe the
+			data generation structure included. A dict with keys:
+				- component_params:  a n_cols length list of lists. Where each 
+				list is a set of component model parameters for each cluster in
+				the view to which that column belongs
+				- cols_to_views: a list assigning each column to a view
+				- rows_to_clusters: a n_views length list of list. Each entry,
+				rows_to_clusters[v][r] is the cluster to which all rows in 
+				columns belonging to view v are assigned
 		Returns:
 			T, M_c
 		Example:
@@ -338,6 +347,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 
 	# start generating the data
 	data_table = numpy.zeros((n_rows, n_cols))
+	component_params = []
 	for col in range(n_cols):
 	
 		view = cols_to_views[col]
@@ -353,6 +363,8 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 		component_parameters = generate_separated_model_parameters(cctype, C,
 			num_clusters, get_next_seed, distargs=distargs[col])
 
+		component_params.append(component_parameters)
+
 		# get the data generation function
 		gen = get_data_generator[cctype]
 		for row in range(n_rows):
@@ -366,9 +378,14 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 	T = data_table.tolist()
 	M_c = du.gen_M_c_from_T(T, cctypes=cctypes)
 
-	# TODO: return component model params for inference quality tests?
-
-	return T, M_c
+	if return_structure:
+		structure = dict()
+		structure['component_params'] = component_params
+		structure['cols_to_views'] = cols_to_views
+		structure['rows_to_clusters'] = rows_to_clusters
+		return T, M_c, structure
+	else:
+		return T, M_c
 
 def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, seed=0):
 	""" Generates rows of data from the inferred distributions
@@ -442,6 +459,40 @@ def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, see
 	assert X.shape[1] == len(columns_list)
 
 	return X
+
+def get_mixture_pdf(X, component_model_class, parameters_list, component_weights):
+
+	if not isinstance(X, numpy.ndarray) and not isinstance(X, list):
+		raise TypeError("X should be a list or numpy array of data")
+
+	if not isinstance(parameters_list, list):
+		raise TypeError('parameters_list should be a list')
+
+	if not isinstance(component_weights, list):
+		raise TypeError('component_weights should be a lsit')
+
+	if len(parameters_list) != len(component_weights):
+		raise ValueError("parameters_list and component_weights should have the\
+			same number of elements")
+
+	if math.fabs(sum(component_weights)-1.0) > .0000001:
+		raise ValueError("component_weights should sum to 1")
+
+	K = len(component_weights)
+
+	lpdf = numpy.zeros(len(X))
+
+	for k in range(K):
+		lpdf += component_weights[k]*numpy.exp(component_model_class.log_pdf(X,
+					parameters_list[k]))
+
+	lpdf = numpy.log(lpdf)
+
+	assert len(lpdf) == len(X)
+
+	return lpdf
+
+
 
 
 
