@@ -1,4 +1,4 @@
-crosscat
+CrossCat
 ==============
 
 This package is configured to be installed as a StarCluster plugin.  Roughly, the following are prerequisites.
@@ -6,10 +6,23 @@ This package is configured to be installed as a StarCluster plugin.  Roughly, th
 * An [Amazon EC2](http://aws.amazon.com/ec2/) account
     * [EC2 key pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/generating-a-keypair.html)
 * [StarCluster](http://star.mit.edu/cluster/) installed on your local machine
-    * ~/.starcluster/config file contains the information in [/path/to/crosscat/starcluster.config](https://github.com/mit-probabilistic-computing-project/tabular-predDB/blob/master/starcluster.config) with information filled in
-* crosscat package available on your local machine and available on the PTYHONPATH
-    * The package directory must be renamed to tabular\_predDB from tabular-predDB
-    * if not on the PYTHONPATH, all starcluster commands must be run one level above the package directory
+    * ~/.starcluster/config file includes this repo's [starcluster.config](https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/starcluster.config) by including the following line in the [global] section
+
+     INCLUDE=/path/to/crosscat/starcluster.config
+* You are able to start a 'smallcluster' cluster as defined in the default StarCluster config file
+    * Make sure to fill in your credentials **and** have a properly defined keypair
+
+     AWS_ACCESS_KEY_ID = #your_aws_access_key_id
+     
+     AWS_SECRET_ACCESS_KEY = #your_secret_access_key
+     
+     AWS_USER_ID= #your userid
+     
+     KEYNAME = mykey
+
+    * To generate the default StarCluster config file, run
+
+     starcluster -c [NONEXISTANT_FILE] help
 
 # **NOTE**: starcluster_plugin.py is currently broken.
 A starcluster_plugin.py file in included in this repo.  Assuming the above prerequisites are fulfilled,
