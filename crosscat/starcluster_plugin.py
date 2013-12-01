@@ -44,6 +44,8 @@ class crosscatSetup(ClusterSetup):
                #
                # FIXME: should be capturing out, err from script executions
                cmd_strs = [
+                       # FIXME: could add an if [[ ! -d crosscat ]]; then ... done
+                       # to squelch 'git clone' error messages
                        'git clone https://github.com/mit-probabilistic-computing-project/crosscat.git',
                        'bash crosscat/scripts/install_scripts/install.sh',
                        'python crosscat/setup.py install',
