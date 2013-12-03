@@ -4,6 +4,8 @@ import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
+import crosscat.tests.quality_tests.synthetic_data_generator as sdg
+import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 import random
 import pylab
@@ -12,6 +14,11 @@ import numpy
 import unittest
 
 from scipy import stats
+
+distargs = dict(
+    multinomial=dict(K=5),
+    continuous=None,
+    )
 
 default_data_parameters = dict(
     symmetric_dirichlet_discrete=dict(weights=[1.0/5.0]*5),
@@ -29,15 +36,15 @@ def main():
 
 class TestComponentModelQuality(unittest.TestCase):
     def setUp(self):
-        self.show_plot = False
+        self.show_plot = True
 
     def test_normal_inverse_gamma_model(self):
-        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, 
-            show_plot=self.show_plot) > .1)
+        assert(test_one_feature_mixture(ccmext.p_ContinuousComponentModel, 
+                show_plot=self.show_plot) > .1)
 
-    def test_dirchlet_multinomial_model(self):
-        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, 
-            show_plot=self.show_plot) > .1)
+    # def test_dirchlet_multinomial_model(self):
+    #     assert(test_one_feature_mixture(mcmext.p_MultinomialComponentModel, 
+    #             show_plot=self.show_plot) > .1)
 
 
 def get_params_string(params):
@@ -60,50 +67,35 @@ def cdf_array(X, component_model):
     assert i > 0
     return cdf
 
-def test_one_feature_sampler(component_model_type, show_plot=False):
+def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=False, seed=None):
     """
-    Tests the ability of component model of component_model_type to capture the
-    distribution of the data.
-    1. Draws 100 random points from a standard normal distribution
-    2. Initializes a component model with that data (and random hyperparameters)
-    3. Draws data from that component model
-    4. Initialize a crosscat state with that data
-    5. Get one sample after 100 transitions
-    6. Draw predictive samples
-    7. Caluclates the 95 precent support of the continuous distribution or the 
-        entire support of the discrete distribution
-    8. Calculate the true pdf for each point in the support
-    9. Calculate the predictive probability given the sample for each point in
-        the support
-    10. (OPTIONAL) Plot the original data, predictive samples, pdf, and 
-        predictive probabilities 
-    11. Calculate goodness of fit stats (returns p value)
+
     """
-    N = 100
+    random.seed(seed)
+
+    N = 1000
+    separation = .9
     
     get_next_seed = lambda : random.randrange(2147483647)
 
-    data_params = default_data_parameters[component_model_type.model_type]
-    
-    X = component_model_type.generate_data_from_parameters(data_params, N, gen_seed=get_next_seed())
-    
-    hyperparameters = component_model_type.draw_hyperparameters(X)[0]
-    
-    component_model = component_model_type.from_data(X, hyperparameters)
-    
-    model_parameters = component_model.sample_parameters_given_hyper()
-    
-    # generate data from the parameters
-    T = component_model_type.generate_data_from_parameters(model_parameters, N, gen_seed=get_next_seed())
+    cluster_weights = [[1.0/float(num_clusters)]*num_clusters]
 
-    # create a crosscat state 
-    M_c = du.gen_M_c_from_T(T, cctypes=[component_model_type.cctype])
+    cctype = component_model_type.cctype
+    T, M_c, structure = sdg.gen_data([cctype], N, [0], cluster_weights,
+                        [separation], seed=get_next_seed(),
+                        distargs=[distargs[cctype]],
+                        return_structure=True)
+
+    T = numpy.array(T)
+    T_list = T
     
-    state = State.p_State(M_c, T)
+    # create a crosscat state 
+    M_c = du.gen_M_c_from_T(T_list, cctypes=[cctype])
+    
+    state = State.p_State(M_c, T_list)
     
     # transitions
-    n_transitions = 100
-    state.transition(n_steps=n_transitions)
+    state.transition(n_steps=200)
     
     # get the sample
     X_L = state.get_X_L()
@@ -112,23 +104,37 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
     # generate samples
     # kstest has doesn't compute the same answer with row and column vectors
     # so we flatten this column vector into a row vector.
-    predictive_samples = numpy.array(su.simple_predictive_sample(M_c, X_L, X_D, [], [(N,0)], get_next_seed, n=N)).flatten(1)
+    predictive_samples = sdg.predictive_columns(M_c, X_L, X_D, [0],
+                            seed=get_next_seed()).flatten(1)
     
-    # get support
-    discrete_support = component_model_type.generate_discrete_support(model_parameters)
+    # Get support over all component models
+    if cctype == 'multinomial':
+        discrete_support = component_model_type.generate_discrete_support(
+                            structure['component_params'][0][0])
+    else:
+        for k in range(num_clusters):
+            model_parameters = structure['component_params'][0][k]
+            support = numpy.array(component_model_type.generate_discrete_support(
+                model_parameters))
+            if k == 0:
+                all_support = support
+            else:
+                all_support = numpy.hstack((all_support, support))
+
+        discrete_support = numpy.linspace(numpy.min(all_support), 
+                            numpy.max(all_support), num=500)
 
     # calculate simple predictive probability for each point
     Q = [(N,0,x) for x in discrete_support]
 
     probabilities = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q,)
     
-    T = numpy.array(T)
-
     # get histogram. Different behavior for discrete and continuous types. For some reason
     # the normed property isn't normalizing the multinomial histogram to 1.
     if is_discrete[component_model_type.model_type]:
-        T_hist, edges = numpy.histogram(T, bins=len(discrete_support))
-        S_hist, _ =  numpy.histogram(predictive_samples, bins=edges)
+        bins = range(len(discrete_support))
+        T_hist = numpy.array(qtu.bincount(T, bins=bins))
+        S_hist = numpy.array(qtu.bincount(predictive_samples, bins=bins))
         T_hist = T_hist/float(numpy.sum(T_hist))
         S_hist = S_hist/float(numpy.sum(S_hist))
         edges = numpy.array(discrete_support,dtype=float)
@@ -140,7 +146,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
     # Goodness-of-fit-tests
     if not is_discrete[component_model_type.model_type]:
         # do a KS tests if the distribution in continuous
-        cdf = lambda x: component_model_type.cdf(x, model_parameters)
+        # cdf = lambda x: component_model_type.cdf(x, model_parameters)
         # stat, p = stats.kstest(predictive_samples, cdf)   # 1-sample test
         stat, p = stats.ks_2samp(predictive_samples, T[:,0]) # 2-sample test
         test_str = "KS"
@@ -153,36 +159,41 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         test_str = "Chi-square"
     
     if show_plot:
+        lpdf = sdg.get_mixture_pdf(discrete_support, component_model_type, 
+                structure['component_params'][0], [1.0/num_clusters]*num_clusters)
         pylab.axes([0.1, 0.1, .8, .7])
         # bin widths
         width = (numpy.max(edges)-numpy.min(edges))/len(edges)
-        pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width, label='Original data')
-        pylab.bar(edges, S_hist, color='red', alpha=.5, width=width, label='Predictive samples')
+        pylab.bar(edges, T_hist, color='blue', alpha=.5, width=width, label='Original data', zorder=1)
+        pylab.bar(edges, S_hist, color='red', alpha=.5, width=width, label='Predictive samples', zorder=2)
 
         # plot actual pdf of support given data params
         pylab.scatter(discrete_support, 
-            numpy.exp(component_model_type.log_pdf(numpy.array(discrete_support), 
-            model_parameters)), 
+            numpy.exp(lpdf), 
             c="blue", 
+            edgecolor="none",
             s=100, 
             label="true pdf", 
-            alpha=1)
+            alpha=1,
+            zorder=3)
                 
         # plot predictive probability of support points
         pylab.scatter(discrete_support, 
             numpy.exp(probabilities), 
             c="red", 
+            edgecolor="none",
             s=100, 
             label="predictive probability", 
-            alpha=1)
+            alpha=1,
+            zorder=4)
             
         pylab.legend()
 
         ylimits = pylab.gca().get_ylim()
         pylab.ylim([0,ylimits[1]])
 
-        title_string = "%i samples drawn from %s w/ params: \n%s\ninference after %i crosscat transitions\n%s test: p = %f" \
-            % (N, component_model_type.cctype, str(get_params_string(model_parameters)), n_transitions, test_str, round(p,4))
+        title_string = "%i samples drawn from %i %s components: \ninference after 200 crosscat transitions\n%s test: p = %f" \
+            % (N, num_clusters, component_model_type.cctype, test_str, round(p,4))
 
         pylab.title(title_string, fontsize=12)
 

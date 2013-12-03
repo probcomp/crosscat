@@ -327,7 +327,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 	rows_to_clusters = []
 	for W in cluster_weights:
 
-		cW = W
+		cW = list(W)
 		for i in range(1, len(cW)):
 			cW[i] += cW[i-1]
 

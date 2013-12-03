@@ -6,9 +6,12 @@ import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccm
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
 import crosscat.tests.quality_tests.synthetic_data_generator as sdg
 
+import crosscat.tests.quality_tests.quality_test_utils as qtu
+
 import random
 import pylab
 import numpy
+from scipy import stats
 
 import unittest
 
@@ -26,13 +29,9 @@ class TestComponentModelQuality(unittest.TestCase):
     							ccmext.p_ContinuousComponentModel, 2)
         assert mse_sample < mse_ave
 
-    def test_dirchlet_multinomial_model(self):
-        mse_sample, mse_ave = test_impute_vs_column_average_single(
-    							mcmext.p_MultinomialComponentModel, 2)
-        assert mse_sample < mse_ave
-
 def test_impute_vs_column_average_single(component_model_type, num_clusters, seed=0):
 	"""	tests predictive row generation vs column average
+		Note: This test does not make sense for categorical data
 		Inputs:
 			- component_model_type: main class from datatype. Ex:
 				ccmext.p_ContinuousComponentModel 
@@ -93,11 +92,10 @@ def test_impute_vs_column_average_single(component_model_type, num_clusters, see
 	T_colave = numpy.ones(T.shape)*numpy.mean(T)
 
 	# get the mean squared error
-	# FIXME: find better meaasure of error for multinomial data
-	mse_sample = numpy.mean( (T_generated-T)**2.0 )
-	mse_colave = numpy.mean( (T_colave-T)**2.0 )
+	err_sample = numpy.mean( (T_generated-T)**2.0 )
+	err_colave = numpy.mean( (T_colave-T)**2.0 )
 
-	return mse_sample, mse_colave
+	return err_sample, err_colave
 
 if __name__ == '__main__':
     main()

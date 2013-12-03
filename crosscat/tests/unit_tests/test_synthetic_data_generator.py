@@ -197,6 +197,52 @@ class TestSyntheticDataGenerator(unittest.TestCase):
 		self.separation_wrong_type = dict();
 
 
+	def test_same_seeds_should_produce_the_same_data(self):
+		distargs = [None]*5
+		T1, M_c = sdg.gen_data(self.cctypes_all_contiuous,
+			self.n_rows,
+			self.cols_to_views_good,
+			self.cluster_weights_good,
+			self.separation_good,
+			seed=0,
+			distargs=distargs)
+
+		T2, M_c = sdg.gen_data(self.cctypes_all_contiuous,
+			self.n_rows,
+			self.cols_to_views_good,
+			self.cluster_weights_good,
+			self.separation_good,
+			seed=0,
+			distargs=distargs)
+
+		A1 = numpy.array(T1)
+		A2 = numpy.array(T2)
+
+		assert numpy.all(A1==A2)
+
+	def test_different_seeds_should_produce_the_different_data(self):
+		distargs = [None]*5
+		T1, M_c = sdg.gen_data(self.cctypes_all_contiuous,
+			self.n_rows,
+			self.cols_to_views_good,
+			self.cluster_weights_good,
+			self.separation_good,
+			seed=0,
+			distargs=distargs)
+
+		T2, M_c = sdg.gen_data(self.cctypes_all_contiuous,
+			self.n_rows,
+			self.cols_to_views_good,
+			self.cluster_weights_good,
+			self.separation_good,
+			seed=12345,
+			distargs=distargs)
+
+		A1 = numpy.array(T1)
+		A2 = numpy.array(T2)
+		
+		assert not numpy.all(A1==A2)
+
 	def test_proper_set_up_all_continuous(self):
 		T, M_c = sdg.gen_data(self.cctypes_all_contiuous,
 			self.n_rows,
@@ -223,7 +269,6 @@ class TestSyntheticDataGenerator(unittest.TestCase):
 		assert(len(T[0]) == len(self.cols_to_views_good))
 
 	def test_proper_set_up_mixed(self):
-		# cctypes = ['continuous','continuous','multinomial','continuous','multinomial']
 		distargs = [ None, None, dict(K=5), None, dict(K=5)]
 		T, M_c = sdg.gen_data(self.cctypes_mixed,
 			self.n_rows,

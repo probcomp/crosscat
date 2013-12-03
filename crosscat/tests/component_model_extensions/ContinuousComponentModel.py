@@ -17,8 +17,6 @@ default_data_parameters = dict(mu=0.0, rho=1.0)
 ###############################################################################
 #   Input-checking and exception-handling functions
 ###############################################################################
-# TODO: Add dictonary-validating functions rather than repeating large blocks
-# of code
 def check_type_force_float(x, name):
     """
     If an int is passed, convert it to a float. If some other type is passed, 
@@ -408,8 +406,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
     @staticmethod
     def generate_data_from_parameters(params, N, gen_seed=0):
         """
-        returns a set of intervals over which the component model pdf is 
-        supported. 
+        Generates data from a gaussina distribution
         Inputs:
             params: a dict with entries 'mu' and 'rho'
             N: number of data points
