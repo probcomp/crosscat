@@ -42,9 +42,9 @@ class TestComponentModelQuality(unittest.TestCase):
         assert(test_one_feature_mixture(ccmext.p_ContinuousComponentModel, 
                 show_plot=self.show_plot) > .1)
 
-    # def test_dirchlet_multinomial_model(self):
-    #     assert(test_one_feature_mixture(mcmext.p_MultinomialComponentModel, 
-    #             show_plot=self.show_plot) > .1)
+    def test_dirchlet_multinomial_model(self):
+        assert(test_one_feature_mixture(mcmext.p_MultinomialComponentModel, 
+                show_plot=self.show_plot) > .1)
 
 
 def get_params_string(params):

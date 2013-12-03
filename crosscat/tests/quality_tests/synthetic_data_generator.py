@@ -209,7 +209,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 			1 is well-separated.
 			ex (2 views): separation = [ .5, .7]
 			- seed: optional
-			- distargs: optional (if only continuous). distargs is n_columns
+			- distargs: optional (only if continuous). distargs is n_columns
 			length list where each entry is either None or a dict appropriate 
 			for the cctype in that column. For a normal feature, the entry 
 			should be None, for a multinomial feature, the entry should be a 

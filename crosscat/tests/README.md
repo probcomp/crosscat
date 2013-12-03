@@ -2,11 +2,30 @@
 
 This document covers how to extend the cython class in python so that new data types can be added to quality tests.
 
+## Adding the git hook
+
+The hook script is `git_unittest_hook.sh` in the crosscat root directory. To add a pre-commit hook copy the contents of the file to `.git/hooks/pre-commit` then make it executable.
+
+	chmod +x .git/hooks/pre-commit
+
+The tests will run before each commit. You should see something like this:
+
+	$ git commit -m "added tests and documentation"
+	....................................................................
+	----------------------------------------------------------------------
+	Ran 68 tests in 0.054s
+
+	OK
+	[inference_testing_framework d551512] added tests and documentation
+	 10 files changed, 705 insertions(+), 21 deletions(-)
+
 ## Quality testing considerations
 
 ### Unit tests
 
 All unit tests use the `unittest` module and should go in the `unit_tests` folder. The git hook will automatically run all tests in the `unit_tests` folder.
+
+**Note:** Quality tests are separate from unit_tests because they rely on random processes (and sometime fail for statistically valid reasons [mixing]) and take over a minute to run. They should not be included in the pre-commit hook.
 
 ### Error and goodness-of-fit
 
