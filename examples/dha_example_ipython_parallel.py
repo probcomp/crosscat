@@ -32,6 +32,8 @@ default_table_filename = os.path.join(S.path.web_resources_data_dir,
   'dha.csv')
 # parse input
 parser = argparse.ArgumentParser()
+parser.add_argument('ipython_parallel_sshserver', default=None, type=str)
+parser.add_argument('--sshserver_path_append', default=None, type=str)
 parser.add_argument('--filename', default=default_table_filename, type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
@@ -39,6 +41,8 @@ parser.add_argument('--num_chains', default=25, type=int)
 parser.add_argument('--num_transitions', default=200, type=int)
 args = parser.parse_args()
 #
+ipython_parallel_sshserver = args.ipython_parallel_sshserver
+sshserver_path_append = args.sshserver_path_append
 filename = args.filename
 inf_seed = args.inf_seed
 gen_seed = args.gen_seed
@@ -73,15 +77,27 @@ num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
 
-# initialize the chains
-do_initialize = lambda seed: LE._do_initialize(M_c, M_r, T,
-        'from_the_prior', seed)
-seeds = range(num_chains)
-chain_tuples = map(do_initialize, seeds)
-# transition the chains
-do_analyze = lambda ((X_L, X_D), seed): LE._do_analyze(M_c, T, X_L, X_D, (),
-        num_transitions, (), (), -1, -1, seed)
-chain_tuples = map(do_analyze, zip(chain_tuples, seeds))
+if ipython_parallel_sshserver is not None:
+    ## set up parallel
+    from IPython.parallel import Client
+    c = Client(profile='ssh', sshserver=ipython_parallel_sshserver)
+    dview = c[:]
+    dview.execute('import sys')
+    if sshserver_path_append is not None:
+        dview.apply_sync(lambda: sys.path.append(sshserver_path_append))
+    #
+    with dview.sync_imports(): 
+        import crosscat.LocalEngine as LE
+    dview.push(dict(
+            M_c=M_c,
+            M_r=M_r,
+            T=T))
+    async_result = dview.map_async(lambda SEED: LE.do_initialize(M_c, M_r, T, 'from_the_prior', SEED), range(8))
+    initialized_states = async_result.get()
+    #
+    async_result = dview.map_async(lambda (SEED, state_tuple): LE.do_analyze(M_c, T, state_tuple[0], state_tuple[1], (), 10, (), (), -1, -1, SEED), zip(range(len(initialized_states)), initialized_states))
+    chain_tuples = async_result.get()
+
 
 # visualize the column cooccurence matrix    
 X_L_list, X_D_list = map(list, zip(*chain_tuples))
@@ -94,7 +110,6 @@ fu.pickle(to_pickle, pkl_filename)
 # X_L_list = to_pickle['X_L_list']
 # X_D_list = to_pickle['X_D_list']
 
-engine = LE.LocalEngine(inf_seed)
 # can we recreate a row given some of its values?
 query_cols = [2, 6, 9]
 query_names = col_names[query_cols]
