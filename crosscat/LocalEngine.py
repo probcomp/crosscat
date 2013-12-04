@@ -17,6 +17,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import numpy
+#
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
@@ -363,6 +365,28 @@ def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
+
+def get_child_n_steps_list(n_steps, every_N):
+    missing_endpoint = numpy.arange(0, n_steps, every_N)
+    with_endpoint = numpy.append(missing_endpoint, n_steps)
+    child_n_steps_list = numpy.diff(with_endpoint)
+    return child_n_steps_list.tolist()
+
+def _do_analyze_with_summary(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
+        max_iterations, max_time, SEED, summary_func_every_N):
+    summary_func, every_N = summary_func_every_N
+    child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
+    #
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    summaries = []
+    for child_n_steps in child_n_steps_list:
+        p_State.transition(kernel_list, child_n_steps, c, r,
+                max_iterations, max_time)
+        summary = summary_func(p_State)
+        summaries.append(summary)
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime, summaries
 
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     is_multistate = su.get_is_multistate(X_L, X_D)
