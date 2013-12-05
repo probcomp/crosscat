@@ -61,22 +61,19 @@ class MultiprocessingEngine(LE.LocalEngine):
         """
 
         # FIXME: why is M_r passed?
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([M_r]),
+                itertools.cycle([T]),
+                itertools.cycle([initialization]),
+                seeds,
+                )
+        chain_tuples = self.pool.map(_do_initialize, arg_tuples)
+        X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
-            SEED = self.get_next_seed()
-            X_L, X_D = _do_initialize((M_c, M_r, T, initialization, SEED))
-            return X_L, X_D
-        else:
-            seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
-            args = itertools.izip(
-                    itertools.cycle([M_c]),
-                    itertools.cycle([M_r]),
-                    itertools.cycle([T]),
-                    itertools.cycle([initialization]),
-                    seeds,
-                    )
-            result = self.pool.map_async(_do_initialize, args)
-            X_L_list, X_D_list = zip(*result.get())
-            return X_L_list, X_D_list
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        return X_L_list, X_D_list
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1):
@@ -110,30 +107,25 @@ class MultiprocessingEngine(LE.LocalEngine):
 
         """
 
-        if not su.get_is_multistate(X_L, X_D):
-            SEED = self.get_next_seed()
-            X_L_prime, X_D_prime = _do_analyze((M_c, T, X_L, X_D,
-                    kernel_list, n_steps, c, r,
-                    max_iterations, max_time,
-                    SEED))
-            return X_L_prime, X_D_prime
-        else:
-            seeds = [self.get_next_seed() for seed_idx in range(len(X_L))]
-            args = itertools.izip(
-                    itertools.cycle([M_c]),
-                    itertools.cycle([T]),
-                    X_L, X_D,
-                    itertools.cycle([kernel_list]),
-                    itertools.cycle([n_steps]),
-                    itertools.cycle([c]),
-                    itertools.cycle([r]),
-                    itertools.cycle([max_iterations]),
-                    itertools.cycle([max_time]),
-                    seeds,
-                    )
-            result = self.pool.map_async(_do_analyze, args)
-            X_L_prime_list, X_D_prime_list = zip(*result.get())
-            return X_L_prime_list, X_D_prime_list
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        seeds = [self.get_next_seed() for seed_idx in range(len(X_L_list))]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([T]),
+                X_L_list, X_D_list,
+                itertools.cycle([kernel_list]),
+                itertools.cycle([n_steps]),
+                itertools.cycle([c]),
+                itertools.cycle([r]),
+                itertools.cycle([max_iterations]),
+                itertools.cycle([max_time]),
+                seeds,
+                )
+        chain_tuples = self.pool.map(_do_analyze, arg_tuples)
+        X_L_prime_list, X_D_prime_list = zip(*chain_tuples)
+        if not was_multistate:
+            X_L_prime_list, X_D_prime_list = X_L_prime_list[0], X_D_prime_list[0]
+        return X_L_prime_list, X_D_prime_list
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
