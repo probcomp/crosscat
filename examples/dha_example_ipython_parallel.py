@@ -30,13 +30,17 @@ import crosscat.LocalEngine as LE
 
 # parse input
 parser = argparse.ArgumentParser()
+parser.add_argument('ipython_parallel_config', default=None, type=str)
 parser.add_argument('filename', type=str)
+parser.add_argument('--path_append', default=None, type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=25, type=int)
 parser.add_argument('--num_transitions', default=200, type=int)
 args = parser.parse_args()
 #
+ipython_parallel_config = args.ipython_parallel_config
+path_append = args.path_append
 filename = args.filename
 inf_seed = args.inf_seed
 gen_seed = args.gen_seed
@@ -64,11 +68,14 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
-def do_initialize(seed):
-    return LE._do_initialize(M_c, M_r, T, 'from_the_prior', seed)
+def do_intialize(SEED):
+    _do_initialize = crosscat.LocalEngine._do_initialize
+    return _do_initialize(M_c, M_r, T, 'from_the_prior', SEED)
 
-def do_analyze(((X_L, X_D), seed)):
-    return LE._do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, seed)
+def do_analyze((SEED, state_tuple)):
+    X_L, X_D = state_tuple
+    _do_analyze = crosscat.LocalEngine._do_analyze
+    return _do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, SEED)
 
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
@@ -76,10 +83,31 @@ num_rows = len(T)
 num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
-# initialze and transition chains
+
+## set up parallel
+from IPython.parallel import Client
+c = Client(ipython_parallel_config)
+dview = c[:]
+with dview.sync_imports():
+    import crosscat
+    import crosscat.LocalEngine
+    import sys
+if path_append is not None:
+    dview.apply_sync(lambda: sys.path.append(path_append))
+#
+dview.push(dict(
+        M_c=M_c,
+        M_r=M_r,
+        T=T,
+        num_transitions=num_transitions
+        ))
 seeds = range(num_chains)
-chain_tuples = map(do_initialize, seeds)
-chain_tuples = map(do_analyze, zip(chain_tuples, seeds))
+async_result = dview.map_async(do_intialize, seeds)
+initialized_states = async_result.get()
+#
+async_result = dview.map_async(do_analyze, zip(seeds, initialized_states))
+chain_tuples = async_result.get()
+
 
 # visualize the column cooccurence matrix    
 X_L_list, X_D_list = map(list, zip(*chain_tuples))
@@ -92,7 +120,6 @@ fu.pickle(to_pickle, pkl_filename)
 # X_L_list = to_pickle['X_L_list']
 # X_D_list = to_pickle['X_D_list']
 
-engine = LE.LocalEngine(inf_seed)
 # can we recreate a row given some of its values?
 query_cols = [2, 6, 9]
 query_names = col_names[query_cols]
@@ -101,6 +128,7 @@ Q = determine_Q(M_c, query_names, num_rows)
 condition_cols = [3, 4, 10]
 condition_names = col_names[condition_cols]
 samples_list = []
+engine = LE.LocalEngine(inf_seed)
 for actual_row_idx in [1, 10, 100]:
     actual_row_values = T[actual_row_idx]
     condition_values = [actual_row_values[condition_col] for condition_col in condition_cols]
