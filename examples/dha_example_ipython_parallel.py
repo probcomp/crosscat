@@ -28,13 +28,11 @@ import crosscat.utils.file_utils as fu
 import crosscat.LocalEngine as LE
 
 
-default_table_filename = os.path.join(S.path.web_resources_data_dir,
-  'dha.csv')
 # parse input
 parser = argparse.ArgumentParser()
 parser.add_argument('ipython_parallel_config', default=None, type=str)
+parser.add_argument('filename', type=str)
 parser.add_argument('--path_append', default=None, type=str)
-parser.add_argument('--filename', default=default_table_filename, type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=25, type=int)
@@ -70,6 +68,15 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
+def do_intialize(SEED):
+    _do_initialize = crosscat.LocalEngine._do_initialize
+    return _do_initialize(M_c, M_r, T, 'from_the_prior', SEED)
+
+def do_analyze((SEED, state_tuple)):
+    X_L, X_D = state_tuple
+    _do_analyze = crosscat.LocalEngine._do_analyze
+    return _do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, SEED)
+
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
 num_rows = len(T)
@@ -91,12 +98,14 @@ if path_append is not None:
 dview.push(dict(
         M_c=M_c,
         M_r=M_r,
-        T=T))
-async_result = dview.map_async(lambda SEED: crosscat.LocalEngine._do_initialize(M_c, M_r, T, 'from_the_prior', SEED), range(8))
+        T=T,
+        num_transitions=num_transitions
+        ))
+seeds = range(num_chains)
+async_result = dview.map_async(do_intialize, seeds)
 initialized_states = async_result.get()
 #
-async_result = dview.map_async(lambda (SEED, state_tuple): \
-        crosscat.LocalEngine._do_analyze(M_c, T, state_tuple[0], state_tuple[1], (), 10, (), (), -1, -1, SEED), zip(range(len(initialized_states)), initialized_states))
+async_result = dview.map_async(do_analyze, zip(seeds, initialized_states))
 chain_tuples = async_result.get()
 
 
