@@ -23,7 +23,6 @@ import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.inference_utils as iu
-import crosscat.utils.xnet_utils as xu
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):

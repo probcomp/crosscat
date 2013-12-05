@@ -24,7 +24,6 @@ import multiprocessing
 import crosscat.cython_code.State as State
 import crosscat.LocalEngine as LE
 import crosscat.utils.sample_utils as su
-import crosscat.utils.xnet_utils as xu
 
 
 class MultiprocessingEngine(LE.LocalEngine):
