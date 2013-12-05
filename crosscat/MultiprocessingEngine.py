@@ -63,7 +63,7 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
         # FIXME: why is M_r passed?
         if n_chains == 1:
             SEED = self.get_next_seed()
-            X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
+            X_L, X_D = _do_initialize((M_c, M_r, T, initialization, SEED))
             return X_L, X_D
         else:
             seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
@@ -74,7 +74,7 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
                     itertools.cycle([initialization]),
                     seeds,
                     )
-            result = self.pool.map_async(_do_initialize2, args)
+            result = self.pool.map_async(_do_initialize, args)
             X_L_list, X_D_list = zip(*result.get())
             return X_L_list, X_D_list
 
@@ -112,10 +112,10 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
 
         if not xu.get_is_multistate(X_L, X_D):
             SEED = self.get_next_seed()
-            X_L_prime, X_D_prime = _do_analyze(M_c, T, X_L, X_D,
+            X_L_prime, X_D_prime = _do_analyze((M_c, T, X_L, X_D,
                     kernel_list, n_steps, c, r,
                     max_iterations, max_time,
-                    SEED)
+                    SEED))
             return X_L_prime, X_D_prime
         else:
             seeds = [self.get_next_seed() for seed_idx in range(len(X_L))]
@@ -243,28 +243,13 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
         return (e,confidence)
 
 
-def _do_initialize(M_c, M_r, T, initialization, SEED):
+def _do_initialize((M_c, M_r, T, initialization, SEED)):
     p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
     return X_L, X_D
 
-def _do_initialize2((M_c, M_r, T, initialization, SEED)):
-    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
-    X_L = p_State.get_X_L()
-    X_D = p_State.get_X_D()
-    return X_L, X_D
-
-def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
-               max_iterations, max_time, SEED):
-    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
-    p_State.transition(kernel_list, n_steps, c, r,
-                       max_iterations, max_time)
-    X_L_prime = p_State.get_X_L()
-    X_D_prime = p_State.get_X_D()
-    return X_L_prime, X_D_prime
-
-def _do_analyze2((M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
+def _do_analyze((M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
                max_iterations, max_time, SEED)):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
     p_State.transition(kernel_list, n_steps, c, r,
