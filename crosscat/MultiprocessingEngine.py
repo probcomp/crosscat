@@ -22,12 +22,12 @@ import functools
 import multiprocessing
 #
 import crosscat.cython_code.State as State
-import crosscat.LocalEngine as LocalEngine
+import crosscat.LocalEngine as LE
 import crosscat.utils.sample_utils as su
 import crosscat.utils.xnet_utils as xu
 
 
-class MultiprocessingEngine(LocalEngine.LocalEngine):
+class MultiprocessingEngine(LE.LocalEngine):
     """A simple interface to the Cython-wrapped C++ engine
 
     MultiprocessingEngine holds no state other than a seed generator.
@@ -131,7 +131,7 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
                     itertools.cycle([max_time]),
                     seeds,
                     )
-            result = self.pool.map_async(_do_analyze2, args)
+            result = self.pool.map_async(_do_analyze, args)
             X_L_prime_list, X_D_prime_list = zip(*result.get())
             return X_L_prime_list, X_D_prime_list
 
@@ -157,7 +157,7 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
 
         """
         get_next_seed = self.get_next_seed
-        samples = _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed)
+        samples = LE._do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return samples
 
     def simple_predictive_probability(self, M_c, X_L, X_D, Y, Q, epsilon=0.001):
@@ -243,31 +243,11 @@ class MultiprocessingEngine(LocalEngine.LocalEngine):
         return (e,confidence)
 
 
-def _do_initialize((M_c, M_r, T, initialization, SEED)):
-    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
-    X_L = p_State.get_X_L()
-    X_D = p_State.get_X_D()
-    return X_L, X_D
+def _do_initialize(arg_tuple):
+    return LE._do_initialize(*arg_tuple)
 
-def _do_analyze((M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
-               max_iterations, max_time, SEED)):
-    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
-    p_State.transition(kernel_list, n_steps, c, r,
-                       max_iterations, max_time)
-    X_L_prime = p_State.get_X_L()
-    X_D_prime = p_State.get_X_D()
-    return X_L_prime, X_D_prime
-
-def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
-    is_multistate = su.get_is_multistate(X_L, X_D)
-    if is_multistate:
-        samples = su.simple_predictive_sample_multistate(M_c, X_L, X_D, Y, Q,
-                                                         get_next_seed, n)
-    else:
-        samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q,
-                                              get_next_seed, n)
-    return samples
-
+def _do_analyze(arg_tuple):
+    return LE._do_analyze(*arg_tuple)
 
 if __name__ == '__main__':
     import crosscat.utils.data_utils as du
