@@ -33,6 +33,7 @@ default_table_filename = os.path.join(S.path.web_resources_data_dir,
 # parse input
 parser = argparse.ArgumentParser()
 parser.add_argument('ipython_parallel_sshserver', default=None, type=str)
+parser.add_argument('--ipython_parallel_profile', default='ssh', type=str)
 parser.add_argument('--sshserver_path_append', default=None, type=str)
 parser.add_argument('--filename', default=default_table_filename, type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
@@ -42,6 +43,7 @@ parser.add_argument('--num_transitions', default=200, type=int)
 args = parser.parse_args()
 #
 ipython_parallel_sshserver = args.ipython_parallel_sshserver
+ipython_parallel_profile = args.ipython_parallel_profile
 sshserver_path_append = args.sshserver_path_append
 filename = args.filename
 inf_seed = args.inf_seed
@@ -77,26 +79,26 @@ num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
 
-if ipython_parallel_sshserver is not None:
-    ## set up parallel
-    from IPython.parallel import Client
-    c = Client(profile='ssh', sshserver=ipython_parallel_sshserver)
-    dview = c[:]
-    dview.execute('import sys')
-    if sshserver_path_append is not None:
-        dview.apply_sync(lambda: sys.path.append(sshserver_path_append))
-    #
-    with dview.sync_imports(): 
-        import crosscat.LocalEngine as LE
-    dview.push(dict(
-            M_c=M_c,
-            M_r=M_r,
-            T=T))
-    async_result = dview.map_async(lambda SEED: LE.do_initialize(M_c, M_r, T, 'from_the_prior', SEED), range(8))
-    initialized_states = async_result.get()
-    #
-    async_result = dview.map_async(lambda (SEED, state_tuple): LE.do_analyze(M_c, T, state_tuple[0], state_tuple[1], (), 10, (), (), -1, -1, SEED), zip(range(len(initialized_states)), initialized_states))
-    chain_tuples = async_result.get()
+## set up parallel
+from IPython.parallel import Client
+c = Client(profile=ipython_parallel_profile, sshserver=ipython_parallel_sshserver)
+dview = c[:]
+with dview.sync_imports():
+    import crosscat
+    import sys
+if sshserver_path_append is not None:
+    dview.apply_sync(lambda: sys.path.append(sshserver_path_append))
+#
+dview.push(dict(
+        M_c=M_c,
+        M_r=M_r,
+        T=T))
+async_result = dview.map_async(lambda SEED: crosscat.LocalEngine._do_initialize(M_c, M_r, T, 'from_the_prior', SEED), range(8))
+initialized_states = async_result.get()
+#
+async_result = dview.map_async(lambda (SEED, state_tuple): \
+        crosscat.LocalEngine._do_analyze(M_c, T, state_tuple[0], state_tuple[1], (), 10, (), (), -1, -1, SEED), zip(range(len(initialized_states)), initialized_states))
+chain_tuples = async_result.get()
 
 
 # visualize the column cooccurence matrix    
@@ -118,6 +120,7 @@ Q = determine_Q(M_c, query_names, num_rows)
 condition_cols = [3, 4, 10]
 condition_names = col_names[condition_cols]
 samples_list = []
+engine = LE.LocalEngine(inf_seed)
 for actual_row_idx in [1, 10, 100]:
     actual_row_values = T[actual_row_idx]
     condition_values = [actual_row_values[condition_col] for condition_col in condition_cols]
