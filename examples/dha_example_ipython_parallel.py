@@ -32,9 +32,8 @@ default_table_filename = os.path.join(S.path.web_resources_data_dir,
   'dha.csv')
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('ipython_parallel_sshserver', default=None, type=str)
-parser.add_argument('--ipython_parallel_profile', default='ssh', type=str)
-parser.add_argument('--sshserver_path_append', default=None, type=str)
+parser.add_argument('ipython_parallel_config', default=None, type=str)
+parser.add_argument('--path_append', default=None, type=str)
 parser.add_argument('--filename', default=default_table_filename, type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
@@ -42,9 +41,8 @@ parser.add_argument('--num_chains', default=25, type=int)
 parser.add_argument('--num_transitions', default=200, type=int)
 args = parser.parse_args()
 #
-ipython_parallel_sshserver = args.ipython_parallel_sshserver
-ipython_parallel_profile = args.ipython_parallel_profile
-sshserver_path_append = args.sshserver_path_append
+ipython_parallel_config = args.ipython_parallel_config
+path_append = args.path_append
 filename = args.filename
 inf_seed = args.inf_seed
 gen_seed = args.gen_seed
@@ -81,13 +79,14 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 
 ## set up parallel
 from IPython.parallel import Client
-c = Client(profile=ipython_parallel_profile, sshserver=ipython_parallel_sshserver)
+c = Client(ipython_parallel_config)
 dview = c[:]
 with dview.sync_imports():
     import crosscat
+    import crosscat.LocalEngine
     import sys
-if sshserver_path_append is not None:
-    dview.apply_sync(lambda: sys.path.append(sshserver_path_append))
+if path_append is not None:
+    dview.apply_sync(lambda: sys.path.append(path_append))
 #
 dview.push(dict(
         M_c=M_c,
