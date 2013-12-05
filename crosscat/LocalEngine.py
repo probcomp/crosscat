@@ -59,19 +59,13 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
 
         # FIXME: why is M_r passed?
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        do_initialize = lambda seed: _do_initialize(M_c, M_r, T, initialization, seed)
+        chain_tuples = map(do_initialize, seeds)
+        X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
-            SEED = self.get_next_seed()
-            X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
-            return X_L, X_D
-        else:
-            X_L_list = []
-            X_D_list = []
-            for chain_idx in range(n_chains):
-                SEED = self.get_next_seed()
-                X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
-                X_L_list.append(X_L)
-                X_D_list.append(X_D)
-            return X_L_list, X_D_list
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        return X_L_list, X_D_list
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1):
@@ -105,25 +99,17 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
-        if not su.get_is_multistate(X_L, X_D):
-            SEED = self.get_next_seed()
-            X_L_prime, X_D_prime = _do_analyze(M_c, T, X_L, X_D,
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        seeds = [self.get_next_seed() for seed_idx in range(len(X_L_list))]
+        do_analyze = lambda ((X_L, X_D), seed): _do_analyze(M_c, T, X_L, X_D,
                     kernel_list, n_steps, c, r,
                     max_iterations, max_time,
-                    SEED)
-            return X_L_prime, X_D_prime
-        else:
-            X_L_prime_list = []
-            X_D_prime_list = []
-            for X_L_i, X_D_i in zip(X_L, X_D):
-                SEED = self.get_next_seed()
-                X_L_i_prime, X_D_i_prime = _do_analyze(M_c, T, X_L_i, X_D_i,
-                        kernel_list, n_steps, c, r,
-                        max_iterations, max_time,
-                        SEED)
-                X_L_prime_list.append(X_L_i_prime)
-                X_D_prime_list.append(X_D_i_prime)
-            return X_L_prime_list, X_D_prime_list
+                    seed)
+        chain_tuples = map(do_analyze, zip(zip(X_L_list, X_D_list), seeds))
+        X_L_list, X_D_list = zip(*chain_tuples)
+        if not was_multistate:
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        return X_L_list, X_D_list
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
