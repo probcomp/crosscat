@@ -48,17 +48,6 @@ num_transitions = args.num_transitions
 pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
 
 
-def do_initialize(seed):
-    engine = LE.LocalEngine(seed)
-    X_L, X_D = engine.initialize(M_c, M_r, T)
-    return X_L, X_D
-
-def do_analyze((chain_tuple, seed)):
-    (X_L, X_D) = chain_tuple
-    engine = LE.LocalEngine(seed)
-    X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions)
-    return X_L, X_D
-
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
     query_col_indices = [name_to_idx[colname] for colname in query_names]
@@ -77,6 +66,7 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
+
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
 num_rows = len(T)
@@ -84,22 +74,10 @@ num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 engine = LE.LocalEngine(inf_seed)
 
-
-# initialize the chains    
-p = Pool()
-seeds = range(num_chains)
-if False:
-    chain_tuples = p.map(do_initialize, seeds)
-    chain_tuples = p.map(do_analyze, zip(chain_tuples, seeds))
-else:
-    engine = MultiprocessingEngine.MultiprocessingEngine()
-    X_L, X_D = engine.initialize(M_c, M_r, T, n_chains=num_chains)
-    X_L, X_D = engine.analyze(M_c, T, X_L, X_D)
-    chain_tuples = zip(X_L, X_D)
-    
-
-# visualize the column cooccurence matrix    
-X_L_list, X_D_list = map(list, zip(*chain_tuples))
+# run the chains
+engine = MultiprocessingEngine.MultiprocessingEngine()
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=num_chains)
+X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list)
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
