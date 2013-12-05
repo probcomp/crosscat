@@ -28,11 +28,9 @@ import crosscat.utils.file_utils as fu
 import crosscat.LocalEngine as LE
 
 
-default_table_filename = os.path.join(S.path.web_resources_data_dir,
-  'dha.csv')
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('--filename', default=default_table_filename, type=str)
+parser.add_argument('filename', type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=25, type=int)
@@ -66,21 +64,21 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
+def do_initialize(seed):
+    return LE._do_initialize(M_c, M_r, T, 'from_the_prior', seed)
+
+def do_analyze(((X_L, X_D), seed)):
+    return LE._do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, seed)
+
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
 num_rows = len(T)
 num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
-
-# initialize the chains
-do_initialize = lambda seed: LE._do_initialize(M_c, M_r, T,
-        'from_the_prior', seed)
+# initialze and transition chains
 seeds = range(num_chains)
 chain_tuples = map(do_initialize, seeds)
-# transition the chains
-do_analyze = lambda ((X_L, X_D), seed): LE._do_analyze(M_c, T, X_L, X_D, (),
-        num_transitions, (), (), -1, -1, seed)
 chain_tuples = map(do_analyze, zip(chain_tuples, seeds))
 
 # visualize the column cooccurence matrix    
