@@ -64,12 +64,6 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
-def do_initialize(seed):
-    return LE._do_initialize(M_c, M_r, T, 'from_the_prior', seed)
-
-def do_analyze(((X_L, X_D), seed)):
-    return LE._do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, seed)
-
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
 num_rows = len(T)
@@ -78,11 +72,9 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 
 # initialze and transition chains
 seeds = range(num_chains)
-chain_tuples = map(do_initialize, seeds)
-chain_tuples = map(do_analyze, zip(chain_tuples, seeds))
-
-# visualize the column cooccurence matrix    
-X_L_list, X_D_list = map(list, zip(*chain_tuples))
+engine = LE.LocalEngine(inf_seed)
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, 'from_the_prior', num_chains)
+X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=num_transitions)
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
