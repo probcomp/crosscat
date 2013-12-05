@@ -719,6 +719,11 @@ def get_is_multistate(X_L, X_D):
     else:
         return False
 
+def ensure_multistate(X_L_list, X_D_list):
+    was_multistate = get_is_multistate(X_L_list, X_D_list)
+    if not was_multistate:
+        X_L_list, X_D_list = [X_L_list], [X_D_list]
+    return X_L_list, X_D_list, was_multistate
 
 # def determine_cluster_view_logps(M_c, X_L, X_D, Y):
 #     get_which_view = lambda which_column: \

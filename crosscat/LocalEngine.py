@@ -105,7 +105,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
-        if not xu.get_is_multistate(X_L, X_D):
+        if not su.get_is_multistate(X_L, X_D):
             SEED = self.get_next_seed()
             X_L_prime, X_D_prime = _do_analyze(M_c, T, X_L, X_D,
                     kernel_list, n_steps, c, r,
