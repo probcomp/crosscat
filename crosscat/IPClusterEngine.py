@@ -48,6 +48,7 @@ class IPClusterEngine(LE.LocalEngine):
         self.mapper = self.view.map
         with self.view.sync_imports():
             import crosscat
+            import crosscat.LocalEngine
         return
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
@@ -249,6 +250,8 @@ def do_analyze(((X_L, X_D), seed)):
 
 
 if __name__ == '__main__':
+    import os
+    #
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
     import crosscat.utils.timing_test_utils as ttu
@@ -265,6 +268,9 @@ if __name__ == '__main__':
     n_times = 5
     n_chains = 3
     n_test = 100
+    #
+    config_filename = os.path.expanduser('~/ipcontroller-client.json')
+    sshkey_filename = os.path.expanduser('~/.ssh/id_rsa')
 
 
     # generate some data
@@ -282,7 +288,8 @@ if __name__ == '__main__':
 
 
     # run some tests
-    engine = MultiprocessingEngine(seed=inf_seed)
+    engine = IPClusterEngine(config_filename=config_filename,
+            sshkey=sshkey_filename, seed=inf_seed)
     # single state test
     single_state_ARIs = []
     single_state_mean_test_lls = []
