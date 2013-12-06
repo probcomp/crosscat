@@ -27,19 +27,16 @@ import crosscat.settings as S
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
 import crosscat.LocalEngine as LE
+import crosscat.MultiprocessingEngine as MultiprocessingEngine
 
 
-default_table_filename = os.path.join(S.path.web_resources_data_dir,
-  'dha.csv')
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('--filename', default=default_table_filename, type=str)
+parser.add_argument('filename', type=str)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=14, type=int)
 parser.add_argument('--num_transitions', default=2, type=int)
-parser.add_argument('--ipython_parallel_sshserver', default=None, type=str)
-parser.add_argument('--sshserver_path_append', default=None, type=str)
 args = parser.parse_args()
 #
 filename = args.filename
@@ -47,8 +44,6 @@ inf_seed = args.inf_seed
 gen_seed = args.gen_seed
 num_chains = args.num_chains
 num_transitions = args.num_transitions
-ipython_parallel_sshserver = args.ipython_parallel_sshserver
-sshserver_path_append = args.sshserver_path_append
 #
 pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
 
@@ -59,9 +54,9 @@ def do_initialize(seed):
     return X_L, X_D
 
 def do_analyze((chain_tuple, seed)):
+    (X_L, X_D) = chain_tuple
     engine = LE.LocalEngine(seed)
-    X_L, X_D = engine.analyze(M_c, T, chain_tuple[0], chain_tuple[1],
-            n_steps=num_transitions)
+    X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions)
     return X_L, X_D
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
@@ -90,18 +85,13 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 engine = LE.LocalEngine(inf_seed)
 
 
-
 # initialize the chains    
 p = Pool()
 seeds = range(num_chains)
 if False:
-    result = p.map_async(do_initialize, seeds)
-    chain_tuples = result.get()
-    import itertools
-    result = p.map_async(do_analyze, itertools.izip(chain_tuples, seeds))
-    chain_tuples = result.get()
+    chain_tuples = p.map(do_initialize, seeds)
+    chain_tuples = p.map(do_analyze, zip(chain_tuples, seeds))
 else:
-    import crosscat.MultiprocessingEngine as MultiprocessingEngine
     engine = MultiprocessingEngine.MultiprocessingEngine()
     X_L, X_D = engine.initialize(M_c, M_r, T, n_chains=num_chains)
     X_L, X_D = engine.analyze(M_c, T, X_L, X_D)
