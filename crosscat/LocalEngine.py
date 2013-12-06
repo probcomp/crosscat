@@ -44,6 +44,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         super(LocalEngine, self).__init__(seed=seed)
         self.mapper = map
+        self.do_initialize = _do_initialize_tuple
+        self.do_analyze = _do_analyze_tuple
         return
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
@@ -75,7 +77,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         # FIXME: why is M_r passed?
         arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
                 n_chains)
-        chain_tuples = self.mapper(_do_initialize_tuple, arg_tuples)
+        chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
@@ -134,7 +136,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                 kernel_list, n_steps, c, r, max_iterations, max_time)
-        chain_tuples = self.mapper(_do_analyze_tuple, arg_tuples)
+        chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
