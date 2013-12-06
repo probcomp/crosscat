@@ -460,38 +460,6 @@ def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, see
 
 	return X
 
-def get_mixture_pdf(X, component_model_class, parameters_list, component_weights):
-
-	if not isinstance(X, numpy.ndarray) and not isinstance(X, list):
-		raise TypeError("X should be a list or numpy array of data")
-
-	if not isinstance(parameters_list, list):
-		raise TypeError('parameters_list should be a list')
-
-	if not isinstance(component_weights, list):
-		raise TypeError('component_weights should be a lsit')
-
-	if len(parameters_list) != len(component_weights):
-		raise ValueError("parameters_list and component_weights should have the\
-			same number of elements")
-
-	if math.fabs(sum(component_weights)-1.0) > .0000001:
-		raise ValueError("component_weights should sum to 1")
-
-	K = len(component_weights)
-
-	lpdf = numpy.zeros(len(X))
-
-	for k in range(K):
-		lpdf += component_weights[k]*numpy.exp(component_model_class.log_pdf(X,
-					parameters_list[k]))
-
-	lpdf = numpy.log(lpdf)
-
-	assert len(lpdf) == len(X)
-
-	return lpdf
-
 
 
 

@@ -108,26 +108,13 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
                             seed=get_next_seed()).flatten(1)
     
     # Get support over all component models
-    if cctype == 'multinomial':
-        discrete_support = component_model_type.generate_discrete_support(
-                            structure['component_params'][0][0])
-    else:
-        for k in range(num_clusters):
-            model_parameters = structure['component_params'][0][k]
-            support = numpy.array(component_model_type.generate_discrete_support(
-                model_parameters))
-            if k == 0:
-                all_support = support
-            else:
-                all_support = numpy.hstack((all_support, support))
-
-        discrete_support = numpy.linspace(numpy.min(all_support), 
-                            numpy.max(all_support), num=500)
+    discrete_support = qtu.get_mixture_support(cctype, component_model_type,
+                         structure['component_params'][0], nbins=500)
 
     # calculate simple predictive probability for each point
     Q = [(N,0,x) for x in discrete_support]
 
-    probabilities = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q,)
+    probabilities = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q)
     
     # get histogram. Different behavior for discrete and continuous types. For some reason
     # the normed property isn't normalizing the multinomial histogram to 1.
@@ -159,7 +146,7 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
         test_str = "Chi-square"
     
     if show_plot:
-        lpdf = sdg.get_mixture_pdf(discrete_support, component_model_type, 
+        lpdf = qtu.get_mixture_pdf(discrete_support, component_model_type, 
                 structure['component_params'][0], [1.0/num_clusters]*num_clusters)
         pylab.axes([0.1, 0.1, .8, .7])
         # bin widths

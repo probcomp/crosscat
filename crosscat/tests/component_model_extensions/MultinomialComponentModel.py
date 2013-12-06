@@ -357,9 +357,15 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         
         weights = numpy.array(params['weights'])
 
-        lpdf = [math.log(weights[int(x)]) for x in X]
+        lpdf = []
+        for x in X:
+            w = weights[int(x)]
+            if w == 0.0 or w == 0:
+                lpdf.append(float('-Inf'))
+            else:
+                lpdf.append(math.log(w))
         
-        return lpdf
+        return numpy.array(lpdf)
 
     def brute_force_marginal_likelihood(self, X, n_samples=10000, gen_seed=0):
         """

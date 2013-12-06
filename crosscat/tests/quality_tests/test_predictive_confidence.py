@@ -17,7 +17,7 @@ from scipy import stats
 import unittest
 
 distargs = dict(
-	multinomial=dict(K=5),
+	multinomial=dict(K=8),
 	continuous=None,
 	)
 
@@ -43,11 +43,11 @@ def test_predictive_sample_improvement(component_model_type, seed=0, show_plot=T
 	""" Shows the error of predictive sample over iterations.
 	"""
 
-	num_transitions = 150 
-	num_samples = 25	
+	num_transitions = 100
+	num_samples = 10	
 	num_clusters = 2
 	separation = .9	# cluster separation
-	N = 100
+	N = 150
 	
 	random.seed(seed)
 	get_next_seed = lambda : random.randrange(2147483647)
@@ -61,10 +61,18 @@ def test_predictive_sample_improvement(component_model_type, seed=0, show_plot=T
 	T_array = numpy.array(T)
 
 	X = numpy.zeros((N,num_transitions))
+	KL = numpy.zeros((num_samples, num_transitions))
 
-	for _ in range(num_samples):
+
+	support = qtu.get_mixture_support(cctype, component_model_type, 
+					struc['component_params'][0], nbins=1000, support=.995)
+	true_log_pdf = qtu.get_mixture_pdf(support, component_model_type, 
+					struc['component_params'][0],[.5,.5])
+
+	for s in range(num_samples):
 		# generate the state
 		state = State.p_State(M_c, T, SEED=get_next_seed())
+
 		for i in range(num_transitions):
 			# transition
 			state.transition()
@@ -88,6 +96,10 @@ def test_predictive_sample_improvement(component_model_type, seed=0, show_plot=T
 			else:
 				err = (T_array-T_inf)**2.0
 
+			KL[s,i] = qtu.KL_divergence(component_model_type, 
+						struc['component_params'][0], [.5,.5], M_c, X_L, X_D,
+						true_log_pdf=true_log_pdf, support=support)
+
 			for j in range(N):
 				X[j,i] += err[j]
 
@@ -97,16 +109,26 @@ def test_predictive_sample_improvement(component_model_type, seed=0, show_plot=T
 	X_mean = numpy.mean(X,axis=0)
 	X_err = numpy.std(X,axis=0)/float(num_samples)**.5
 
+	KL_mean = numpy.mean(KL, axis=0)
+	KL_err = numpy.std(KL, axis=0)/float(num_samples)**.5
+
 	if show_plot:
+		pylab.subplot(1,2,1)
 		pylab.errorbar(range(num_transitions), X_mean, yerr=X_err)
 		pylab.xlabel('iteration')
-		pylab.ylabel('mean MSE across each data point')
-		pylab.title('error of predictive sample over iterations')
+		pylab.ylabel('error across each data point')
+		pylab.title('error of predictive sample over iterations, N=%i' % N)
+
+		pylab.subplot(1,2,2)
+		pylab.errorbar(range(num_transitions), KL_mean, yerr=KL_err)
+		pylab.xlabel('iteration')
+		pylab.ylabel('KL divergence')
+		pylab.title('KL divergence, N=%i' % N)
 
 		pylab.show()
 
 	# error should decrease over time
-	return X_mean[0] > X_mean[-1]
+	return X_mean[0] > X_mean[-1] and KL_mean[0] > KL_mean[-1]
 
 if __name__ == '__main__':
     main()
