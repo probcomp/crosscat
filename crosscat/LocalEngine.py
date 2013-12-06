@@ -75,8 +75,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         # FIXME: why is M_r passed?
         arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
                 n_chains)
-        do_initialize = lambda arg_tuple: _do_initialize(*arg_tuple)
-        chain_tuples = self.mapper(do_initialize, arg_tuples)
+        chain_tuples = self.mapper(_do_initialize_tuple, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
@@ -84,7 +83,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
             n_steps, c, r, max_iterations, max_time):
-        seeds = [self.get_next_seed() for seed_idx in range(len(X_L_list))]
+        n_chains = len(X_L_list)
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
                 itertools.cycle([M_c]),
                 itertools.cycle([T]),
@@ -134,8 +134,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                 kernel_list, n_steps, c, r, max_iterations, max_time)
-        do_analyze = lambda (arg_tuple): _do_analyze(*arg_tuple)
-        chain_tuples = map(do_analyze, arg_tuples)
+        chain_tuples = self.mapper(_do_analyze_tuple, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
@@ -373,6 +372,9 @@ def _do_initialize(M_c, M_r, T, initialization, SEED):
     X_D = p_State.get_X_D()
     return X_L, X_D
 
+def _do_initialize_tuple(arg_tuple):
+    return _do_initialize(*arg_tuple)
+
 def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
                max_iterations, max_time, SEED):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
@@ -381,6 +383,9 @@ def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
+
+def _do_analyze_tuple(arg_tuple):
+    return _do_analyze(*arg_tuple)
 
 def get_child_n_steps_list(n_steps, every_N):
     missing_endpoint = numpy.arange(0, n_steps, every_N)
