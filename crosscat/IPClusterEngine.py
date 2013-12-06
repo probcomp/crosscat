@@ -17,12 +17,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import itertools
-import functools
-#
 from IPython.parallel import Client
 #
-import crosscat.cython_code.State as State
 import crosscat.LocalEngine as LE
 import crosscat.utils.sample_utils as su
 
@@ -44,42 +40,26 @@ class IPClusterEngine(LE.LocalEngine):
         """
         super(IPClusterEngine, self).__init__(seed=seed)
         self.rc = Client(config_filename, sshkey=sshkey, packer=packer)
-        self.view = self.rc[:]
-        self.mapper = self.view.map
-        with self.view.sync_imports():
+        with self.rc[:].sync_imports():
             import crosscat
             import crosscat.LocalEngine
+        self.view = self.rc.load_balanced_view()
+        self.mapper = self.view.map
+        self.do_initialize = _do_initialize_tuple
+        self.do_analyze = _do_analyze_tuple
         return
 
-    def initialize(self, M_c, M_r, T, initialization='from_the_prior',
-            n_chains=1):
-        """Sample a latent state from prior
-
-        :param M_c: The column metadata
-        :type M_c: dict
-        :param M_r: The row metadata
-        :type M_r: dict
-        :param T: The data table in mapped representation (all floats, generated
-                  by data_utils.read_data_objects)
-        :type T: list of lists
-        :returns: X_L, X_D -- the latent state
-
-        """
-
-        # FIXME: why is M_r passed?
-        self.view.push(dict(
+    def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
+        self.rc[:].push(dict(
             M_c=M_c,
             M_r=M_r,
             T=T,
             initialization=initialization,
-            do_initialize=do_initialize,
+            do_initialize=self.do_initialize,
             ))
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
-        chain_tuples = self.mapper(do_initialize, seeds)
-        X_L_list, X_D_list = zip(*chain_tuples)
-        if n_chains == 1:
-            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
-        return X_L_list, X_D_list
+        arg_tuples = [[seed] for seed in seeds]
+        return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1):
@@ -113,7 +93,7 @@ class IPClusterEngine(LE.LocalEngine):
 
         """
 
-        self.view.push(dict(
+        self.rc[:].push(dict(
             M_c=M_c,
             T=T,
             kernel_list=kernel_list,
@@ -132,118 +112,17 @@ class IPClusterEngine(LE.LocalEngine):
             X_L_prime_list, X_D_prime_list = X_L_prime_list[0], X_D_prime_list[0]
         return X_L_prime_list, X_D_prime_list
 
-    def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
-        """Sample values from the predictive distribution of the given latent state
 
-        :param M_c: The column metadata
-        :type M_c: dict
-        :param X_L: the latent variables associated with the latent state
-        :type X_L: dict
-        :param X_D: the particular cluster assignments of each row in each view
-        :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
-                  index and v is the value of the constraint
-        :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
-        :type Q: list of lists
-        :param n: the number of samples to draw
-        :type n: int
-        :returns: list of floats -- samples in the same order specified by Q
-
-        """
-        get_next_seed = self.get_next_seed
-        samples = LE._do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed)
-        return samples
-
-    def simple_predictive_probability(self, M_c, X_L, X_D, Y, Q, epsilon=0.001):
-        """Calculate the probability of a cell taking a value within epsilon of 
-        the specified values given a latent state
-
-        :param M_c: The column metadata
-        :type M_c: dict
-        :param X_L: the latent variables associated with the latent state
-        :type X_L: dict
-        :param X_D: the particular cluster assignments of each row in each view
-        :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
-                  index and v is the value of the constraint
-        :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
-        :type Q: list of lists
-        :param epsilon: the window around the specified value to take the delta
-                        in cdf of
-        :type epsilon: float
-        :returns: list of floats -- probabilities of the values specified by Q
-
-        """
-        return su.simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon)
-
-    def impute(self, M_c, X_L, X_D, Y, Q, n):
-        """Impute values from the predictive distribution of the given latent state
-
-        :param M_c: The column metadata
-        :type M_c: dict
-        :param X_L: the latent variables associated with the latent state
-        :type X_L: dict
-        :param X_D: the particular cluster assignments of each row in each view
-        :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
-                  index and v is the value of the constraint
-        :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
-        :type Q: list of lists
-        :param n: the number of samples to use in the imputation
-        :type n: int
-        :returns: list of floats -- imputed values in the same order as
-                  specified by Q
-
-        """
-        e = su.impute(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-        return e
-
-    def impute_and_confidence(self, M_c, X_L, X_D, Y, Q, n):
-        """Impute values and confidence of the value from the predictive
-        distribution of the given latent state
-
-        :param M_c: The column metadata
-        :type M_c: dict
-        :param X_L: the latent variables associated with the latent state
-        :type X_L: dict
-        :param X_D: the particular cluster assignments of each row in each view
-        :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
-                  index and v is the value of the constraint
-        :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
-        :type Q: list of lists
-        :param n: the number of samples to use in the imputation
-        :type n: int
-        :returns: list of lists -- list of (value, confidence) tuples in the
-                  same order as specified by Q
-
-        """
-        if isinstance(X_L, (list, tuple)):
-            assert isinstance(X_D, (list, tuple))
-            # TODO: multistate impute doesn't exist yet
-            #e,confidence = su.impute_and_confidence_multistate(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-            e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-        else:
-            e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-        return (e,confidence)
-
-def do_initialize(seed):
+def _do_initialize_tuple((seed,)):
     do_initialize = crosscat.LocalEngine._do_initialize
     return do_initialize(M_c, M_r, T, initialization, seed)
 
 def do_analyze(((X_L, X_D), seed)):
+    do_analyze = crosscat.LocalEngine._do_analyze
+    return do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
+            max_iterations, max_time, seed)
+
+def _do_analyze_tuple(((X_L, X_D), seed)):
     do_analyze = crosscat.LocalEngine._do_analyze
     return do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
             max_iterations, max_time, seed)
