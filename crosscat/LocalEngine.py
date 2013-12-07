@@ -374,11 +374,26 @@ def _do_initialize(M_c, M_r, T, initialization, SEED):
     X_D = p_State.get_X_D()
     return X_L, X_D
 
+def _do_initialize2(SEED, M_c, M_r, T, initialization):
+    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
+    X_L = p_State.get_X_L()
+    X_D = p_State.get_X_D()
+    return X_L, X_D
+
 def _do_initialize_tuple(arg_tuple):
     return _do_initialize(*arg_tuple)
 
 def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
                max_iterations, max_time, SEED):
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    p_State.transition(kernel_list, n_steps, c, r,
+                       max_iterations, max_time)
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime
+
+def _do_analyze2(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+               max_iterations, max_time):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
     p_State.transition(kernel_list, n_steps, c, r,
                        max_iterations, max_time)
