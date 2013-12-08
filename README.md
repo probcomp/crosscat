@@ -36,7 +36,7 @@ CrossCat can be successfully installed locally on bare Ubuntu server 12.04 syste
 
 dha\_example.py ([github](https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/examples/dha_example.py)) is a basic example of analysis using CrossCat.  For a first test, run the following from inside the top level crosscat dir
 
-    python crosscat/examples/dha_example.py --num_chains 2 --num_transitions 2
+    python crosscat/examples/dha_example.py crosscat/www/data/dha.csv --num_chains 2 --num_transitions 2
 
 
 **Note**: the default argument values take a considerable amount of time to run and are best suited to a cluster.
