@@ -14,7 +14,12 @@ We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_x0H2s37jOVanBmYVJ
 **Note**: The VM is only meant to provide an out-of-the-box usable system setup.  Its resources are limited and large jobs will fail due to memory errors.  To run larger jobs, increase the VM resources or install directly to your system.
 
 ### Local (Ubuntu)
-CrossCat can be installed locally on Ubuntu systems with
+
+**We recommend using the VM when possible to preclude any issues that might arise from installing locally**
+
+**Please read the install scripts and consider their implications before using**
+
+CrossCat can be successfully installed locally on bare Ubuntu server 12.04 systems with
 
     git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
     sudo bash crosscat/scripts/install_scripts/install.sh
