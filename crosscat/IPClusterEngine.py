@@ -42,14 +42,14 @@ class IPClusterEngine(LE.LocalEngine):
 
     """
 
-    def __init__(self, config_filename, seed=0, sshkey=None, packer='json'):
+    def __init__(self, config_filename, profile=None, seed=0, sshkey=None, packer='json'):
         """Initialize a IPClusterEngine
 
         Do IPython.parallel operations to set up cluster and generate mapper.
 
         """
         super(IPClusterEngine, self).__init__(seed=seed)
-        rc = Client(config_filename, sshkey=sshkey, packer=packer)
+        rc = Client(config_filename, profile=profile, sshkey=sshkey, packer=packer)
         dview = rc.direct_view()
         lview = rc.load_balanced_view()
         with dview.sync_imports(local=True):
