@@ -17,6 +17,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import itertools
+#
 import numpy
 #
 import crosscat.cython_code.State as State
@@ -41,6 +43,21 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
         super(LocalEngine, self).__init__(seed=seed)
+        self.mapper = map
+        self.do_initialize = _do_initialize_tuple
+        self.do_analyze = _do_analyze_tuple
+        return
+
+    def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([M_r]),
+                itertools.cycle([T]),
+                itertools.cycle([initialization]),
+                seeds,
+                )
+        return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
             n_chains=1):
@@ -58,13 +75,31 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
 
         # FIXME: why is M_r passed?
-        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
-        do_initialize = lambda seed: _do_initialize(M_c, M_r, T, initialization, seed)
-        chain_tuples = map(do_initialize, seeds)
+        arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
+                n_chains)
+        chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         return X_L_list, X_D_list
+
+    def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
+            n_steps, c, r, max_iterations, max_time):
+        n_chains = len(X_L_list)
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([T]),
+                X_L_list, X_D_list,
+                itertools.cycle([kernel_list]),
+                itertools.cycle([n_steps]),
+                itertools.cycle([c]),
+                itertools.cycle([r]),
+                itertools.cycle([max_iterations]),
+                itertools.cycle([max_time]),
+                seeds,
+                )
+        return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1):
@@ -99,12 +134,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
 
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
-        seeds = [self.get_next_seed() for seed_idx in range(len(X_L_list))]
-        do_analyze = lambda ((X_L, X_D), seed): _do_analyze(M_c, T, X_L, X_D,
-                    kernel_list, n_steps, c, r,
-                    max_iterations, max_time,
-                    seed)
-        chain_tuples = map(do_analyze, zip(zip(X_L_list, X_D_list), seeds))
+        arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
+                kernel_list, n_steps, c, r, max_iterations, max_time)
+        chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
@@ -342,6 +374,15 @@ def _do_initialize(M_c, M_r, T, initialization, SEED):
     X_D = p_State.get_X_D()
     return X_L, X_D
 
+def _do_initialize2(SEED, M_c, M_r, T, initialization):
+    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
+    X_L = p_State.get_X_L()
+    X_D = p_State.get_X_D()
+    return X_L, X_D
+
+def _do_initialize_tuple(arg_tuple):
+    return _do_initialize(*arg_tuple)
+
 def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
                max_iterations, max_time, SEED):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
@@ -350,6 +391,18 @@ def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
+
+def _do_analyze2(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+               max_iterations, max_time):
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    p_State.transition(kernel_list, n_steps, c, r,
+                       max_iterations, max_time)
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime
+
+def _do_analyze_tuple(arg_tuple):
+    return _do_analyze(*arg_tuple)
 
 def get_child_n_steps_list(n_steps, every_N):
     missing_endpoint = numpy.arange(0, n_steps, every_N)
