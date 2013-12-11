@@ -58,38 +58,6 @@ cdef extern from "<boost/numeric/ublas/matrix.hpp>" namespace "boost::numeric::u
     matrix[double] *new_matrix "new boost::numeric::ublas::matrix<double>" (int i, int j)
     void del_matrix "delete" (matrix *m)
 
-cdef class p_matrix:
-    cdef matrix[double] *thisptr
-    def __cinit__(self, i, j):
-          self.thisptr = new_matrix(i, j)
-    def __dealloc__(self):
-        del_matrix(self.thisptr)
-    def size1(self):
-        return self.thisptr.size1()
-    def size2(self):
-        return self.thisptr.size2()
-    def get(self, i, j):
-         # cdef matrix[double] m = dereference(self.thisptr)
-         # this doesn't work: error: ‘operator()’ not defined
-         # return m(i,j) 
-         #
-         # this doesn't work: Object of type 'matrix[double]' has
-         #   no attribute 'operator'
-         # return m.operator()(i,j) 
-        return dereference(self.thisptr)(i,j)
-    def set(self, i, j, val):
-         # this doesn't work: Cannot assign to or delete this
-         # dereference(self.thisptr)(i,j) = val
-         #
-         # this doesn't work: error: ‘__pyx_v_intermediate’ declared as
-         #   reference but not initialized
-         # cdef double &intermediate = dereference(self.thisptr)(i,j)
-         set_double(dereference(self.thisptr)(i,j), val)
-         return dereference(self.thisptr)(i,j)
-    def __repr__(self):
-         print_tuple = (self.thisptr.size1(), self.thisptr.size2())
-         return "matrix[%s, %s]" % print_tuple
-
 cdef matrix[double]* convert_data_to_cpp(np.ndarray[np.float64_t, ndim=2] data):
      cdef int num_rows = data.shape[0]
      cdef int num_cols = data.shape[1]
