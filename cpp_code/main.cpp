@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   vector<int> global_row_indices = create_sequence(data.size1());
   vector<int> global_column_indices = create_sequence(data.size2());
   int n_cols = data.size2();
-  vector<string> GLOBAL_COL_DATATYPES(n_cols, "continuous");
+  vector<string> GLOBAL_COL_DATATYPES(n_cols, "normal_inverse_gamma");
   vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS(n_cols, 0);
 
   ofstream out(samples_filename.c_str(), ios_base::app);
