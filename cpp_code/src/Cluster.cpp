@@ -17,6 +17,7 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
+#include <stdlib.h>
 #include "Cluster.h"
 
 using namespace std;
@@ -109,7 +110,8 @@ double Cluster::calc_column_predictive_logp(vector<double> column_data,
 					    CM_Hypers hypers) {
   // FIXME: global_to_data must be used if not all rows are present
   // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
-  ComponentModel *p_cm;
+  ComponentModel prevent_warning;
+  ComponentModel *p_cm = &prevent_warning;
   if(col_datatype==CONTINUOUS_DATATYPE) {
     p_cm = new ContinuousComponentModel(hypers);
   } else if(col_datatype==MULTINOMIAL_DATATYPE) {
@@ -117,6 +119,7 @@ double Cluster::calc_column_predictive_logp(vector<double> column_data,
   } else {
     cout << "Cluster::calc_column_predictive_logp: col_datatype=" << col_datatype << endl;
     assert(1==0);
+    exit(EXIT_FAILURE);
   }
   set<int>::iterator it;
   for(it=row_indices.begin(); it!=row_indices.end(); it++) {
@@ -137,7 +140,11 @@ double Cluster::insert_row(vector<double> values, int row_idx) {
   // track row indices
   pair<set<int>::iterator, bool> set_pair = \
     row_indices.insert(row_idx);
-  assert(set_pair.second);
+  if(!set_pair.second) {
+    cout << "Cluster::insert_row: !set_pair.second" << endl;
+    assert(set_pair.second);
+    exit(EXIT_FAILURE);
+  }
   // track score
   for(unsigned int col_idx=0; col_idx<values.size(); col_idx++) {
     sum_score_deltas += p_model_v[col_idx]->insert_element(values[col_idx]);
@@ -150,7 +157,11 @@ double Cluster::remove_row(vector<double> values, int row_idx) {
   double sum_score_deltas = 0;
   // track row indices
   unsigned int num_removed = row_indices.erase(row_idx);
-  assert(num_removed!=0);
+  if(num_removed==0) {
+    cout << "Cluster::remove_row: num_removed==0" << endl;
+    assert(num_removed!=0);
+    exit(EXIT_FAILURE);
+  }
   // track score
   for(unsigned int col_idx=0; col_idx<values.size(); col_idx++) {
     double value_to_remove = values[col_idx];
@@ -177,13 +188,16 @@ double Cluster::insert_col(vector<double> data,
 			   CM_Hypers &hypers) {
   // FIXME: global_to_data must be used if not all rows are present
   // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
-  ComponentModel *p_cm;
+  ComponentModel prevent_warning;
+  ComponentModel *p_cm = &prevent_warning;
   if(col_datatype==CONTINUOUS_DATATYPE) {
     p_cm = new ContinuousComponentModel(hypers);
   } else if(col_datatype==MULTINOMIAL_DATATYPE) {
     p_cm = new MultinomialComponentModel(hypers);
   } else {
+    cout << "Cluster::insert_col: col_datatype=" << col_datatype << endl;
     assert(1==0);
+    exit(EXIT_FAILURE);
   }
   set<int>::iterator it;
   for(it=row_indices.begin(); it!=row_indices.end(); it++) {
@@ -242,7 +256,9 @@ void Cluster::init_columns(vector<CM_Hypers*> &hypers_v) {
       p_cm = new MultinomialComponentModel(hypers);
       p_model_v.push_back(p_cm);
     } else {
+      cout << "Cluster::init_columns: hypers=" << hypers << endl;
       assert(1==0);
+      exit(EXIT_FAILURE);
     }
     int col_idx = p_model_v.size() - 1;
     score += p_model_v[col_idx]->calc_marginal_logp();

@@ -36,6 +36,7 @@
 
 class ComponentModel {
  public:
+  virtual ~ComponentModel() {};
   //
   // getters
   CM_Hypers get_hypers() const;

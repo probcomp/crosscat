@@ -47,7 +47,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(INC)/%.h $(HEADERS)
 	$(CXX) -c $< -o $@ $(CXXOPTS) -I$(INC)
 
 $(BIN): $(OBJECTS) $(MAIN) $(HEADERS)
-	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -I$(INC)
+	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -lboost_program_options -I$(INC)
 
 $(TEST)/%: $(TEST)/%.cpp $(HEADERS) $(OBJECTS)
 	$(CXX) $< -o $@ $(CXXOPTS) -I$(INC) $(OBJECTS)
