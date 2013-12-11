@@ -317,6 +317,7 @@ cdef class p_State:
     # mutators
     def transition(self, which_transitions=(), n_steps=1,
                    c=(), r=(), max_iterations=-1, max_time=-1):
+         seed = None
          score_delta = 0
          if len(which_transitions) == 0:
               seed = self.thisptr.draw_rand_i()

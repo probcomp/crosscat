@@ -74,8 +74,8 @@ double MultinomialComponentModel::calc_element_predictive_logp_constrained(doubl
   //
   map<string, double> suffstats_copy = suffstats;
   int count_copy = count;
-  for(int constraint_idx=0; constraint_idx<constraints.size();
-      constraint_idx++) {
+  int num_constraints = (int) constraints.size();
+  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
     double constraint = constraints[constraint_idx];
     string constraint_str = stringify(constraint);
     count_copy++;
@@ -95,7 +95,6 @@ vector<double> MultinomialComponentModel::calc_hyper_conditionals(string which_h
   int count;
   map<string, double> counts;
   int K = hyper_K;
-  double dirichlet_alpha = hyper_dirichlet_alpha;
   get_suffstats(count, counts);
   if(which_hyper=="dirichlet_alpha") {
     return numerics::calc_multinomial_dirichlet_alpha_conditional(hyper_grid,
@@ -148,7 +147,6 @@ void MultinomialComponentModel::set_log_Z_0() {
 
 void MultinomialComponentModel::init_suffstats() {
   int K = hyper_K;
-  double dirichlet_alpha = hyper_dirichlet_alpha;
   for(int key=0; key<K; key++) {
 	  string key_str = stringify(key);
 	  if(suffstats.find(key_str)==suffstats.end()) {
@@ -158,7 +156,6 @@ void MultinomialComponentModel::init_suffstats() {
 }
 
 void MultinomialComponentModel::get_keys_counts_for_draw(vector<string> &keys, vector<double> &log_counts_for_draw, map<string, double> counts) const {
-  int K = hyper_K;
   double dirichlet_alpha = hyper_dirichlet_alpha;
   map<string, double>::const_iterator it;
   for(it=counts.begin(); it!=counts.end(); it++) {
@@ -206,7 +203,8 @@ double MultinomialComponentModel::get_draw_constrained(int random_seed, vector<d
   vector<double> log_counts_for_draw;
   get_keys_counts_for_draw(keys, log_counts_for_draw, counts);
   map<string, int> index_lookup = construct_lookup_map(keys);
-  for(int constraint_idx=0; constraint_idx<constraints.size(); constraint_idx++) {
+  int num_constraints = (int) constraints.size();
+  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
     double constraint = constraints[constraint_idx];
     string constraint_str = stringify(constraint);
     int count_idx = index_lookup[constraint_str];

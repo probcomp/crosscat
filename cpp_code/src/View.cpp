@@ -684,14 +684,14 @@ void View::print() {
   cout << to_string() << endl;
 }
 
-void View::assert_state_consistency() {
-  double tolerance = 1E-10;
-  vector<int> cluster_counts = get_cluster_counts();
-  int sum_via_cluster_counts = std::accumulate(cluster_counts.begin(),
-					       cluster_counts.end(), 0);  
-  assert(is_almost(get_num_vectors(), sum_via_cluster_counts, tolerance));
-  assert(is_almost(get_crp_score(),calc_crp_marginal(), tolerance));
-}
+//void View::assert_state_consistency() {
+//  double tolerance = 1E-10;
+//  vector<int> cluster_counts = get_cluster_counts();
+//  int sum_via_cluster_counts = std::accumulate(cluster_counts.begin(),
+//					       cluster_counts.end(), 0);  
+//  assert(is_almost(get_num_vectors(), sum_via_cluster_counts, tolerance));
+//  assert(is_almost(get_crp_score(),calc_crp_marginal(), tolerance));
+//}
 
 double View::draw_rand_u() {
   return rng.next();
