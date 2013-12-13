@@ -51,11 +51,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
+                seeds,
                 itertools.cycle([M_c]),
                 itertools.cycle([M_r]),
                 itertools.cycle([T]),
                 itertools.cycle([initialization]),
-                seeds,
                 )
         return arg_tuples
 
@@ -88,16 +88,16 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
+                seeds,
+                X_L_list, X_D_list,
                 itertools.cycle([M_c]),
                 itertools.cycle([T]),
-                X_L_list, X_D_list,
                 itertools.cycle([kernel_list]),
                 itertools.cycle([n_steps]),
                 itertools.cycle([c]),
                 itertools.cycle([r]),
                 itertools.cycle([max_iterations]),
                 itertools.cycle([max_time]),
-                seeds,
                 )
         return arg_tuples
 
@@ -367,14 +367,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e,confidence)
 
-
-def _do_initialize(M_c, M_r, T, initialization, SEED):
-    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
-    X_L = p_State.get_X_L()
-    X_D = p_State.get_X_D()
-    return X_L, X_D
-
-def _do_initialize2(SEED, M_c, M_r, T, initialization):
+# switched ordering so args that change come first
+# FIXME: change LocalEngine.initialze to match ordering here
+def _do_initialize(SEED, M_c, M_r, T, initialization):
     p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
@@ -383,16 +378,9 @@ def _do_initialize2(SEED, M_c, M_r, T, initialization):
 def _do_initialize_tuple(arg_tuple):
     return _do_initialize(*arg_tuple)
 
-def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
-               max_iterations, max_time, SEED):
-    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
-    p_State.transition(kernel_list, n_steps, c, r,
-                       max_iterations, max_time)
-    X_L_prime = p_State.get_X_L()
-    X_D_prime = p_State.get_X_D()
-    return X_L_prime, X_D_prime
-
-def _do_analyze2(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+# switched ordering so args that change come first
+# FIXME: change LocalEngine.analyze to match ordering here
+def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                max_iterations, max_time):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
     p_State.transition(kernel_list, n_steps, c, r,
@@ -410,8 +398,10 @@ def get_child_n_steps_list(n_steps, every_N):
     child_n_steps_list = numpy.diff(with_endpoint)
     return child_n_steps_list.tolist()
 
-def _do_analyze_with_summary(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
-        max_iterations, max_time, SEED, summary_func_every_N):
+# switched ordering so args that change come first
+# FIXME: change LocalEngine.analyze to match ordering here
+def _do_analyze_with_summary(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+        max_iterations, max_time, summary_func_every_N):
     summary_func, every_N = summary_func_every_N
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
