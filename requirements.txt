@@ -32,7 +32,8 @@ Sphinx==1.2b1
 # workerpool==0.9.2
 
 # for ipython notebook
-ipython==0.13.2
+ipython==1.1.0
+pyzmq
 tornado==3.1
 
 # for convergence testing (ARI)
