@@ -36,6 +36,8 @@ int main(int argc, char** argv) {
   std::time_t default_seed = 0;
   string default_data_filename = "SynData2.csv";
   string default_samples_filename = "samples.out";
+  string col_initialization = "from_the_prior";
+  string row_initialization = "from_the_prior";
   int default_nChains = 1;
   int default_nSamples = 4;
   int default_burnIn = 5;
@@ -81,6 +83,9 @@ int main(int argc, char** argv) {
   LoadData(data_filename, data);
   vector<int> global_row_indices = create_sequence(data.size1());
   vector<int> global_column_indices = create_sequence(data.size2());
+  int n_cols = data.size2();
+  vector<string> GLOBAL_COL_DATATYPES(n_cols, "normal_inverse_gamma");
+  vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS(n_cols, 0);
 
   ofstream out(samples_filename.c_str(), ios_base::app);
   if(!out) { cout << "Cannot open file: " << samples_filename << endl; return -1; }
@@ -94,8 +99,9 @@ int main(int argc, char** argv) {
   int raw_sample_idx = 0;
   for(int nc=0; nc<nChains; nc++) {
     cout << "nc = " << nc << endl;
+    int SEED = nc;
     // need to randomize initialization of State
-    State s = State(data, global_row_indices, global_column_indices, nGrid);
+    State s = State(data, GLOBAL_COL_DATATYPES, GLOBAL_COL_MULTINOMIAL_COUNTS, global_row_indices, global_column_indices, col_initialization, row_initialization, nGrid, SEED);
     Timer T(true);
     for(int nb=0; nb<burnIn; nb++) {
       s.transition(data);

@@ -17,11 +17,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import itertools
+#
+import numpy
+#
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.inference_utils as iu
-import crosscat.utils.xnet_utils as xu
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):
@@ -40,6 +43,21 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
         super(LocalEngine, self).__init__(seed=seed)
+        self.mapper = map
+        self.do_initialize = _do_initialize_tuple
+        self.do_analyze = _do_analyze_tuple
+        return
+
+    def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([M_r]),
+                itertools.cycle([T]),
+                itertools.cycle([initialization]),
+                seeds,
+                )
+        return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
             n_chains=1):
@@ -57,19 +75,31 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
 
         # FIXME: why is M_r passed?
+        arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
+                n_chains)
+        chain_tuples = self.mapper(self.do_initialize, arg_tuples)
+        X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
-            SEED = self.get_next_seed()
-            X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
-            return X_L, X_D
-        else:
-            X_L_list = []
-            X_D_list = []
-            for chain_idx in range(n_chains):
-                SEED = self.get_next_seed()
-                X_L, X_D = _do_initialize(M_c, M_r, T, initialization, SEED)
-                X_L_list.append(X_L)
-                X_D_list.append(X_D)
-            return X_L_list, X_D_list
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        return X_L_list, X_D_list
+
+    def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
+            n_steps, c, r, max_iterations, max_time):
+        n_chains = len(X_L_list)
+        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+                itertools.cycle([M_c]),
+                itertools.cycle([T]),
+                X_L_list, X_D_list,
+                itertools.cycle([kernel_list]),
+                itertools.cycle([n_steps]),
+                itertools.cycle([c]),
+                itertools.cycle([r]),
+                itertools.cycle([max_iterations]),
+                itertools.cycle([max_time]),
+                seeds,
+                )
+        return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1):
@@ -103,25 +133,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
-        if not xu.get_is_multistate(X_L, X_D):
-            SEED = self.get_next_seed()
-            X_L_prime, X_D_prime = _do_analyze(M_c, T, X_L, X_D,
-                    kernel_list, n_steps, c, r,
-                    max_iterations, max_time,
-                    SEED)
-            return X_L_prime, X_D_prime
-        else:
-            X_L_prime_list = []
-            X_D_prime_list = []
-            for X_L_i, X_D_i in zip(X_L, X_D):
-                SEED = self.get_next_seed()
-                X_L_i_prime, X_D_i_prime = _do_analyze(M_c, T, X_L_i, X_D_i,
-                        kernel_list, n_steps, c, r,
-                        max_iterations, max_time,
-                        SEED)
-                X_L_prime_list.append(X_L_i_prime)
-                X_D_prime_list.append(X_D_i_prime)
-            return X_L_prime_list, X_D_prime_list
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
+                kernel_list, n_steps, c, r, max_iterations, max_time)
+        chain_tuples = self.mapper(self.do_analyze, arg_tuples)
+        X_L_list, X_D_list = zip(*chain_tuples)
+        if not was_multistate:
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        return X_L_list, X_D_list
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
@@ -355,6 +374,15 @@ def _do_initialize(M_c, M_r, T, initialization, SEED):
     X_D = p_State.get_X_D()
     return X_L, X_D
 
+def _do_initialize2(SEED, M_c, M_r, T, initialization):
+    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
+    X_L = p_State.get_X_L()
+    X_D = p_State.get_X_D()
+    return X_L, X_D
+
+def _do_initialize_tuple(arg_tuple):
+    return _do_initialize(*arg_tuple)
+
 def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
                max_iterations, max_time, SEED):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
@@ -363,6 +391,40 @@ def _do_analyze(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
+
+def _do_analyze2(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+               max_iterations, max_time):
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    p_State.transition(kernel_list, n_steps, c, r,
+                       max_iterations, max_time)
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime
+
+def _do_analyze_tuple(arg_tuple):
+    return _do_analyze(*arg_tuple)
+
+def get_child_n_steps_list(n_steps, every_N):
+    missing_endpoint = numpy.arange(0, n_steps, every_N)
+    with_endpoint = numpy.append(missing_endpoint, n_steps)
+    child_n_steps_list = numpy.diff(with_endpoint)
+    return child_n_steps_list.tolist()
+
+def _do_analyze_with_summary(M_c, T, X_L, X_D, kernel_list, n_steps, c, r,
+        max_iterations, max_time, SEED, summary_func_every_N):
+    summary_func, every_N = summary_func_every_N
+    child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
+    #
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    summaries = []
+    for child_n_steps in child_n_steps_list:
+        p_State.transition(kernel_list, child_n_steps, c, r,
+                max_iterations, max_time)
+        summary = summary_func(p_State)
+        summaries.append(summary)
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime, summaries
 
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     is_multistate = su.get_is_multistate(X_L, X_D)

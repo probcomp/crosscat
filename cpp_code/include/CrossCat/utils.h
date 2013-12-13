@@ -130,6 +130,7 @@ K get_key_of_value(const std::map<K, V> m, V value) {
     }
   }
   assert(0);
+  std::cout << "utils.h::get_key_of_value(): got value for which there is no key!!!" << std::endl;
   return m.end()->first;
 }
 

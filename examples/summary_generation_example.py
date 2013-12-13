@@ -20,6 +20,7 @@
 import argparse
 import os
 #
+import pylab
 import numpy
 #
 import crosscat.settings as S
@@ -64,58 +65,62 @@ def determine_unobserved_Y(num_rows, M_c, condition_tuples):
         Y.append(y)
     return Y
 
+def do_initialize(seed):
+    return LE._do_initialize(M_c, M_r, T, 'from_the_prior', seed)
+
+def do_analyze(((X_L, X_D), seed)):
+    return LE._do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, seed)
+
+def get_num_views(p_State):
+    return len(p_State.get_X_D())
+
+def get_marginal_logp(p_State):
+    return p_State.get_marginal_logp()
+
+def get_column_crp_alpha(p_State):
+    return p_State.get_column_crp_alpha()
+
+def get_summary_i(p_State):
+    summary_funcs = [
+            get_num_views,
+            get_marginal_logp,
+            get_column_crp_alpha,
+            ]
+    summary_i = [
+            summary_func(p_State)
+            for summary_func in summary_funcs
+            ]
+    return summary_i
+
 # set everything up
 T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
 num_rows = len(T)
 num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
-# initialze and transition chains
-seeds = range(num_chains)
-engine = LE.LocalEngine(inf_seed)
-X_L_list, X_D_list = engine.initialize(M_c, M_r, T, 'from_the_prior', num_chains)
-X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=num_transitions)
+X_L, X_D = LE._do_initialize(M_c, M_r, T, 'from_the_prior', inf_seed)
+X_L, X_D, summaries = LE._do_analyze_with_summary(M_c, T, X_L, X_D, (), num_transitions,
+        (), (), -1, -1, inf_seed, (get_summary_i, 1))
 
-# save the progress
-to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
-fu.pickle(to_pickle, pkl_filename)
-
-# to_pickle = fu.unpickle(pkl_filename)
-# X_L_list = to_pickle['X_L_list']
-# X_D_list = to_pickle['X_D_list']
-
-engine = LE.LocalEngine(inf_seed)
-# can we recreate a row given some of its values?
-query_cols = [2, 6, 9]
-query_names = col_names[query_cols]
-Q = determine_Q(M_c, query_names, num_rows)
+pylab.ion()
+pylab.show()
+summaries_arr = numpy.array(summaries)
+num_views_vec = summaries_arr[:, 0]
+marginal_logp_vec = summaries_arr[:, 1]
+column_crp_alpha_vec = summaries_arr[:, 2]
 #
-condition_cols = [3, 4, 10]
-condition_names = col_names[condition_cols]
-samples_list = []
-for actual_row_idx in [1, 10, 100]:
-    actual_row_values = T[actual_row_idx]
-    condition_values = [actual_row_values[condition_col] for condition_col in condition_cols]
-    condition_tuples = zip(condition_names, condition_values)
-    Y = determine_unobserved_Y(num_rows, M_c, condition_tuples)
-    samples = engine.simple_predictive_sample(M_c, X_L_list, X_D_list, Y, Q, 10)
-    samples_list.append(samples)
+pylab.subplot(311)
+pylab.plot(num_views_vec)
+pylab.xlabel('iters')
+pylab.ylabel('#views')
+#
+pylab.subplot(312)
+pylab.plot(marginal_logp_vec)
+pylab.xlabel('iters')
+pylab.ylabel('marginal_logp')
+#
+pylab.subplot(313)
+pylab.plot(column_crp_alpha_vec)
+pylab.xlabel('iters')
+pylab.ylabel('column_crp_alpha')
 
-round_1 = lambda value: round(value, 2)
-# impute some values (as if they were missing)
-for impute_row in [10, 20, 30, 40, 50, 60, 70, 80]:
-    impute_cols = [31, 32, 52, 60, 62]
-    #
-    actual_values = [T[impute_row][impute_col] for impute_col in impute_cols]
-    # conditions are immaterial
-    Y = []
-    imputed_list = []
-    for impute_col in impute_cols:
-        impute_names = [col_names[impute_col]]
-        Q = determine_Q(M_c, impute_names, num_rows, impute_row=impute_row)
-        #
-        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, 1000)
-        imputed_list.append(imputed)
-    print
-    print actual_values
-    print map(round_1, imputed_list)

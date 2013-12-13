@@ -144,13 +144,6 @@ def link_initialize_to_analyze(initialize_output_filename,
                 write_hadoop_line(out_fh, key, dict_in)
     return num_lines
 
-def get_is_multistate(X_L, X_D):
-    if isinstance(X_L, (list, tuple)):
-        assert isinstance(X_D, (list, tuple))
-        return True
-    else:
-        return False
-
 def get_is_vpn_connected():
     # cmd_str = 'ifconfig | grep tun'
     cmd_str = 'ping -W 2 -c 1 10.1.90.10'
