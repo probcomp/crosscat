@@ -84,7 +84,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
-            n_steps, c, r, max_iterations, max_time):
+            n_steps, c, r, max_iterations, max_time, summary_func_every_N):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
@@ -98,11 +98,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([r]),
                 itertools.cycle([max_iterations]),
                 itertools.cycle([max_time]),
+                itertools.cycle([summary_func_every_N]),
                 )
         return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1):
+                max_iterations=-1, max_time=-1, summary_func_every_N=None):
         """Evolve the latent state by running MCMC transition kernels
 
         :param M_c: The column metadata
@@ -135,12 +136,17 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
-                kernel_list, n_steps, c, r, max_iterations, max_time)
+                kernel_list, n_steps, c, r, max_iterations, max_time,
+                summary_func_every_N)
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
-        X_L_list, X_D_list = zip(*chain_tuples)
+        X_L_list, X_D_list, summaries_list = zip(*chain_tuples)
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
-        return X_L_list, X_D_list
+        if summary_func_every_N is not None:
+            ret_tuple = X_L_list, X_D_list, summaries_list
+        else:
+            ret_tuple = X_L_list, X_D_list
+        return ret_tuple
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
@@ -390,18 +396,25 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
     return X_L_prime, X_D_prime
 
 def _do_analyze_tuple(arg_tuple):
-    return _do_analyze(*arg_tuple)
+    return _do_analyze_with_summary(*arg_tuple)
 
 def get_child_n_steps_list(n_steps, every_N):
+    if every_N is None:
+        # results in one block of size n_steps
+        every_N = n_steps
     missing_endpoint = numpy.arange(0, n_steps, every_N)
     with_endpoint = numpy.append(missing_endpoint, n_steps)
     child_n_steps_list = numpy.diff(with_endpoint)
     return child_n_steps_list.tolist()
 
+none_summary = lambda p_State: None
+
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
 def _do_analyze_with_summary(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-        max_iterations, max_time, summary_func_every_N):
+        max_iterations, max_time, summary_func_every_N=None):
+    if summary_func_every_N is None:
+        summary_func_every_N = (none_summary, None)
     summary_func, every_N = summary_func_every_N
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
