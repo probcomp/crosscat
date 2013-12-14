@@ -103,7 +103,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1, summary_func_every_N=None):
+                max_iterations=-1, max_time=-1, summary_func_every_N=None,
+                reprocess_summary_func=None):
         """Evolve the latent state by running MCMC transition kernels
 
         :param M_c: The column metadata
@@ -144,6 +145,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         if summary_func_every_N is not None:
             summaries_arrs = munge_summaries(summaries_list)
+            if reprocess_summary_func is not None:
+                summaries_arrs = reprocess_summary_func(summaries_arrs)
             ret_tuple = X_L_list, X_D_list, summaries_arrs
         else:
             ret_tuple = X_L_list, X_D_list
