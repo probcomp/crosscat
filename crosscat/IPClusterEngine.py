@@ -50,6 +50,9 @@ class IPClusterEngine(LE.LocalEngine):
         """
         super(IPClusterEngine, self).__init__(seed=seed)
         rc = Client(config_filename, profile=profile, sshkey=sshkey, packer=packer)
+        # FIXME: add a warning if environment in direct view is not 'empty'?
+        #        else, might become dependent on an object created in
+        #        environemnt in a prior run
         dview = rc.direct_view()
         lview = rc.load_balanced_view()
         with dview.sync_imports(local=True):
