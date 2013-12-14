@@ -42,7 +42,7 @@ class IPClusterEngine(LE.LocalEngine):
 
     """
 
-    def __init__(self, config_filename, profile=None, seed=0, sshkey=None, packer='json'):
+    def __init__(self, config_filename=None, profile=None, seed=0, sshkey=None, packer='json'):
         """Initialize a IPClusterEngine
 
         Do IPython.parallel operations to set up cluster and generate mapper.
@@ -69,7 +69,7 @@ class IPClusterEngine(LE.LocalEngine):
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
         args_dict = dict(M_c=M_c, M_r=M_r, T=T, initialization=initialization)
-        do_initialize = partialize(crosscat.LocalEngine._do_initialize2,
+        do_initialize = partialize(crosscat.LocalEngine._do_initialize,
                 args_dict, self.dview)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = [seeds]
@@ -78,15 +78,15 @@ class IPClusterEngine(LE.LocalEngine):
         return arg_tuples
 
     def get_analyze_arg_tuples(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1):
+                max_iterations=-1, max_time=-1, summary_func_every_N=None):
         n_chains = len(X_L)
         args_dict = dict(M_c=M_c, T=T, kernel_list=kernel_list, n_steps=n_steps,
-                c=c, r=r, max_iterations=max_iterations, max_time=max_time)
-        do_analyze = partialize(crosscat.LocalEngine._do_analyze2,
+                c=c, r=r, max_iterations=max_iterations, max_time=max_time,
+                summary_func_every_N=summary_func_every_N)
+        do_analyze = partialize(crosscat.LocalEngine._do_analyze_with_summary,
                 args_dict, self.dview)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = [seeds, X_L, X_D]
         #
         self.do_analyze = do_analyze
         return arg_tuples
-
