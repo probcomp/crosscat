@@ -143,7 +143,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         if summary_func_every_N is not None:
-            ret_tuple = X_L_list, X_D_list, summaries_list
+            summaries_list = zip(*[zip(*summaries) for summaries in summaries_list])
+            summaries_arrs = map(numpy.array, summaries_list)
+            summaries_arrs = map(lambda arr: arr.T, summaries_arrs)
+            ret_tuple = X_L_list, X_D_list, summaries_arrs
         else:
             ret_tuple = X_L_list, X_D_list
         return ret_tuple
