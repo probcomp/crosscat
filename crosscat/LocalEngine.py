@@ -143,9 +143,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         if summary_func_every_N is not None:
-            summaries_list = zip(*[zip(*summaries) for summaries in summaries_list])
-            summaries_arrs = map(numpy.array, summaries_list)
-            summaries_arrs = map(lambda arr: arr.T, summaries_arrs)
+            summaries_arrs = munge_summaries(summaries_list)
             ret_tuple = X_L_list, X_D_list, summaries_arrs
         else:
             ret_tuple = X_L_list, X_D_list
@@ -375,6 +373,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e,confidence)
+
+def munge_summaries(summaries_list):
+    summaries_list = zip(*[zip(*summaries) for summaries in summaries_list])
+    summaries_arrs = map(numpy.array, summaries_list)
+    summaries_arrs = map(lambda arr: arr.T, summaries_arrs)
+    return summaries_arrs
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.initialze to match ordering here
