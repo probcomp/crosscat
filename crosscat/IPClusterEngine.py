@@ -81,11 +81,11 @@ class IPClusterEngine(LE.LocalEngine):
         return arg_tuples
 
     def get_analyze_arg_tuples(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1, summary_func_every_N=None):
+                max_iterations=-1, max_time=-1, summary_func_dict=None, every_N=1):
         n_chains = len(X_L)
         args_dict = dict(M_c=M_c, T=T, kernel_list=kernel_list, n_steps=n_steps,
                 c=c, r=r, max_iterations=max_iterations, max_time=max_time,
-                summary_func_every_N=summary_func_every_N)
+                summary_func_dict=summary_func_dict, every_N=every_N)
         do_analyze = partialize(crosscat.LocalEngine._do_analyze_with_summary,
                 args_dict, self.dview)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
