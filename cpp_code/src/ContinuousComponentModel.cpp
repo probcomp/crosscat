@@ -266,3 +266,12 @@ map<string, double> ContinuousComponentModel::_get_suffstats() const {
   	return suffstats;
 }
 
+map<string, double> ContinuousComponentModel::get_hypers() const {
+	map<string, double> hypers;
+	hypers["r"] = hyper_r;
+	hypers["s"] = hyper_s;
+	hypers["nu"] = hyper_nu;
+	hypers["mu"] = hyper_mu;
+  	return hypers;
+}
+

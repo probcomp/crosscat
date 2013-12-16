@@ -101,7 +101,12 @@ def gen_continuous_metadata(column_data):
         )
 
 def gen_multinomial_metadata(column_data):
-    get_is_not_nan = lambda el: el.upper() != 'NAN'
+    def get_is_not_nan(el):
+        if type(el) is str:
+            return el.upper() != 'NAN'
+        else:
+            return True
+    # get_is_not_nan = lambda el: el.upper() != 'NAN'
     #
     unique_codes = list(set(column_data))
     unique_codes = filter(get_is_not_nan, unique_codes)

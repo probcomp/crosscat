@@ -43,6 +43,8 @@ cdef get_string_double_map(to_map, cpp_map[cpp_string, double] &from_map):
 cdef extern from "MultinomialComponentModel.h":
      cdef cppclass MultinomialComponentModel:
         double score
+        cpp_map[cpp_string, double] get_hypers()
+        int get_count()
         cpp_string to_string()
         double get_draw(int seed)
         double get_draw_constrained(int seed, vector[double] constraints)
@@ -82,6 +84,10 @@ cdef class p_MultinomialComponentModel:
         counts = dict()
         get_string_double_map(counts, cpp_counts)
         return count_out, counts
+    def get_hypers(self):
+        return self.thisptr.get_hypers()
+    def get_count(self):
+        return self.thisptr.get_count()
     def insert_element(self, element):
         return self.thisptr.insert_element(element)
     def remove_element(self, element):
