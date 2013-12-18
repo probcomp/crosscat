@@ -105,9 +105,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1, summary_func_dict=None,
-                every_N=1,
-                reprocess_summaries_func=None):
+                max_iterations=-1, max_time=-1, do_diagnostics=False,
+                diagnostics_every_N=1,
+                ):
         """Evolve the latent state by running MCMC transition kernels
 
         :param M_c: The column metadata
@@ -138,11 +138,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
+        summary_func_dict, reprocess_summaries_func = do_diagnostics_to_func_dict(do_diagnostics)
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                 kernel_list, n_steps, c, r, max_iterations, max_time,
-                summary_func_dict,
-                every_N)
+                summary_func_dict, diagnostics_every_N,
+                )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, summaries_dict_list = zip(*chain_tuples)
         if not was_multistate:
@@ -381,6 +382,18 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e,confidence)
 
+def do_diagnostics_to_func_dict(do_diagnostics):
+    summary_func_dict = None
+    reprocess_summaries_func = None
+    if do_diagnostics:
+        if type(do_diagnostics) == dict:
+            summary_func_dict = do_diagnostics
+        else:
+            summary_func_dict = default_summary_func_dict
+        if 'reprocess_summaries_func' in summary_func_dict:
+            reprocess_summaries_func = summary_func_dict.pop('reprocess_summaries_func')
+    return summary_func_dict, reprocess_summaries_func
+
 def get_value_in_each_dict(key, dict_list):
     return numpy.array([dict_i[key] for dict_i in dict_list]).T
 
@@ -460,6 +473,17 @@ def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
                                               get_next_seed, n)
     return samples
 
+import crosscat.utils.summary_utils
+default_summary_func_dict = dict(
+        # fully qualify path b/c dview.sync_imports can't deal with 'as' imports
+        logscore=crosscat.utils.summary_utils.get_logscore,
+        num_views=crosscat.utils.summary_utils.get_num_views,
+        column_crp_alpha=crosscat.utils.summary_utils.get_column_crp_alpha,
+        # any outputs required by reproess_summaries_func must be generated as well
+        column_partition_assignments=crosscat.utils.summary_utils.get_column_partition_assignments,
+        reprocess_summaries_func=crosscat.utils.summary_utils.default_reprocess_summaries_func,
+        )
+
 
 if __name__ == '__main__':
     import crosscat.utils.data_utils as du
@@ -496,21 +520,6 @@ if __name__ == '__main__':
 
     # run some tests
     engine = LocalEngine(seed=inf_seed)
-    # single state test
-    single_state_ARIs = []
-    single_state_mean_test_lls = []
-    X_L, X_D = engine.initialize(M_c, M_r, T, n_chains=1)
-    single_state_ARIs.append(ctu.get_column_ARI(X_L, view_assignment_truth))
-    single_state_mean_test_lls.append(
-            ctu.calc_mean_test_log_likelihood(M_c, T, X_L, X_D, T_test)
-            )
-    for time_i in range(n_times):
-        X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=n_steps)
-        single_state_ARIs.append(ctu.get_column_ARI(X_L, view_assignment_truth))
-        single_state_mean_test_lls.append(
-            ctu.calc_mean_test_log_likelihood(M_c, T, X_L, X_D, T_test)
-            )
-    # multistate test
     multi_state_ARIs = []
     multi_state_mean_test_lls = []
     X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
@@ -523,15 +532,12 @@ if __name__ == '__main__':
         multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
             X_L_list, X_D_list, T_test))
 
+    X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
+            n_steps=n_steps, do_diagnostics=True)
+
     # print results
     print 'generative_mean_test_log_likelihood'
     print generative_mean_test_log_likelihood
-    #
-    print 'single_state_mean_test_lls:'
-    print single_state_mean_test_lls
-    #
-    print 'single_state_ARIs:'
-    print single_state_ARIs
     #
     print 'multi_state_mean_test_lls:'
     print multi_state_mean_test_lls
