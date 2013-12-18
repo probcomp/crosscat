@@ -26,6 +26,8 @@ import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.inference_utils as iu
+# for default_summary_func_dict below
+import crosscat.utils.summary_utils
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):
@@ -473,7 +475,7 @@ def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
                                               get_next_seed, n)
     return samples
 
-import crosscat.utils.summary_utils
+
 default_summary_func_dict = dict(
         # fully qualify path b/c dview.sync_imports can't deal with 'as' imports
         logscore=crosscat.utils.summary_utils.get_logscore,
