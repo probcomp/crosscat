@@ -21,11 +21,8 @@ import functools
 #
 from IPython.parallel import Client
 #
-import crosscat.LocalEngine as LE
-import crosscat.utils.sample_utils as su
-# these imports are necessary to make ipcluster to work
 import crosscat
-import crosscat.LocalEngine
+import crosscat.LocalEngine as LE
 
 
 def partialize(func, args_dict, dview):
@@ -57,7 +54,6 @@ class IPClusterEngine(LE.LocalEngine):
         lview = rc.load_balanced_view()
         with dview.sync_imports(local=True):
             import crosscat
-            import crosscat.LocalEngine
         mapper = lambda f, tuples: self.lview.map(f, *tuples)
         # if you're trying to debug issues, consider clearning to start fresh
         # rc.clear(block=True)
