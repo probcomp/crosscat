@@ -95,7 +95,7 @@ do_diagnostics = summary_func_dict
 
 # run inference
 X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
-X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
+X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
         n_steps=n_steps, do_diagnostics=do_diagnostics,
         diagnostics_every_N=diagnostics_every_N,
         )
