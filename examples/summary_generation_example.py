@@ -3,6 +3,8 @@
 
 # <codecell>
 
+import os
+#
 import numpy
 import pylab
 pylab.ion()
@@ -14,7 +16,7 @@ import crosscat.IPClusterEngine as IPE
 import crosscat.utils.data_utils as du
 import crosscat.utils.convergence_test_utils as ctu
 import crosscat.utils.timing_test_utils as ttu
-import crosscat.utils.summary_utils as su
+import crosscat.utils.diagnostic_utils as su
 
 
 def plot_with_mean(data_arr, hline=None):
@@ -40,13 +42,13 @@ n_test = 40
 data_max_mean = 1
 data_max_std = 1.
 #
-num_rows = 800
-n_chains = 16
-config_filename = '/home/dlovell/.config/ipython/profile_ssh/security/ipcontroller-client.json'
+#num_rows = 800
+#n_chains = 16
+#config_filename = os.path.userexpand('~/.config/ipython/profile_ssh/security/ipcontroller-client.json')
 #
-#num_rows = 100
-#n_chains = 2
-#config_filename = None
+num_rows = 100
+n_chains = 2
+config_filename = None
 
 
 # generate some data
@@ -71,7 +73,7 @@ engine = IPE.IPClusterEngine(config_filename=config_filename, seed=inf_seed)
 
 
 # each custom function must take only p_State as its argument
-summary_func_dict = dict(LE.default_summary_func_dict)
+diagnostic_func_dict = dict(LE.default_diagnostic_func_dict)
 def get_ari(p_State):
     # requires environment: {view_assignment_truth}
     # requires import: {crosscat.utils.convergence_test_utils}
@@ -84,18 +86,18 @@ args_dict = dict(
         view_assignment_truth=view_assignment_truth,
         )
 engine.dview.push(args_dict, block=True)
-summary_func_dict['ARI'] = get_ari
+diagnostic_func_dict['ARI'] = get_ari
 
 # <codecell>
 
 # determine which diagnostics to do
 # do_diagnostics = False
 # do_diagnostics = True
-do_diagnostics = summary_func_dict
+do_diagnostics = diagnostic_func_dict
 
 # run inference
 X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
-X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
+X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
         n_steps=n_steps, do_diagnostics=do_diagnostics,
         diagnostics_every_N=diagnostics_every_N,
         )
@@ -103,19 +105,19 @@ X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
 # <codecell>
 
 # plot results
-# plot_summaries_names = ['ARI', 'mean_test_ll', 'num_views']
-plot_summaries_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI']
+# plot_diagnostics_names = ['ARI', 'mean_test_ll', 'num_views']
+plot_diagnostics_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI']
 hline_lookup = dict(
         ARI=1.0,
         mean_test_ll=generative_mean_test_log_likelihood,
         num_views=num_views,
         )
-for summaries_name in plot_summaries_names:
-    data_arr = summaries_dict[summaries_name]
-    hline = hline_lookup.get(summaries_name)
+for diagnostics_name in plot_diagnostics_names:
+    data_arr = diagnostics_dict[diagnostics_name]
+    hline = hline_lookup.get(diagnostics_name)
     plot_with_mean(data_arr, hline=hline)
     pylab.xlabel('iter')
-    pylab.ylabel(summaries_name)
+    pylab.ylabel(diagnostics_name)
 
 # import crosscat.utils.plot_utils as pu
 # pu.plot_views(numpy.array(T), X_D_gen, X_L_gen, M_c)

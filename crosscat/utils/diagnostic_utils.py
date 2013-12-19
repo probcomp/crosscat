@@ -37,9 +37,9 @@ def column_partition_assignments_to_f_z_statistic(column_partition_assignments):
             column_partition_assignments.T)
     return numpy.array(intermediate).T
 
-def default_reprocess_summaries_func(summaries_arr_dict):
-    column_partition_assignments = summaries_arr_dict.pop('column_partition_assignments')
+def default_reprocess_diagnostics_func(diagnostics_arr_dict):
+    column_partition_assignments = diagnostics_arr_dict.pop('column_partition_assignments')
     f_z_statistic = column_partition_assignments_to_f_z_statistic(column_partition_assignments)
-    summaries_arr_dict['f_z_statistic'] = f_z_statistic
+    diagnostics_arr_dict['f_z_statistic'] = f_z_statistic
     #
-    return summaries_arr_dict
+    return diagnostics_arr_dict

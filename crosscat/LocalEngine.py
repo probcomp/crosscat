@@ -26,8 +26,8 @@ import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.inference_utils as iu
-# for default_summary_func_dict below
-import crosscat.utils.summary_utils
+# for default_diagnostic_func_dict below
+import crosscat.utils.diagnostic_utils
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):
@@ -87,7 +87,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
-            n_steps, c, r, max_iterations, max_time, summary_func_dict, every_N):
+            n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
@@ -101,7 +101,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([r]),
                 itertools.cycle([max_iterations]),
                 itertools.cycle([max_time]),
-                itertools.cycle([summary_func_dict]),
+                itertools.cycle([diagnostic_func_dict]),
                 itertools.cycle([every_N]),
                 )
         return arg_tuples
@@ -140,21 +140,21 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
-        summary_func_dict, reprocess_summaries_func = do_diagnostics_to_func_dict(do_diagnostics)
+        diagnostic_func_dict, reprocess_diagnostics_func = do_diagnostics_to_func_dict(do_diagnostics)
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                 kernel_list, n_steps, c, r, max_iterations, max_time,
-                summary_func_dict, diagnostics_every_N,
+                diagnostic_func_dict, diagnostics_every_N,
                 )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
-        X_L_list, X_D_list, summaries_dict_list = zip(*chain_tuples)
+        X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
-        if summary_func_dict is not None:
-            summaries_dict = munge_summaries(summaries_dict_list)
-            if reprocess_summaries_func is not None:
-                summaries_dict = reprocess_summaries_func(summaries_dict)
-            ret_tuple = X_L_list, X_D_list, summaries_dict
+        if diagnostic_func_dict is not None:
+            diagnostics_dict = munge_diagnostics(diagnostics_dict_list)
+            if reprocess_diagnostics_func is not None:
+                diagnostics_dict = reprocess_diagnostics_func(diagnostics_dict)
+            ret_tuple = X_L_list, X_D_list, diagnostics_dict
         else:
             ret_tuple = X_L_list, X_D_list
         return ret_tuple
@@ -385,28 +385,28 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return (e,confidence)
 
 def do_diagnostics_to_func_dict(do_diagnostics):
-    summary_func_dict = None
-    reprocess_summaries_func = None
+    diagnostic_func_dict = None
+    reprocess_diagnostics_func = None
     if do_diagnostics:
         if type(do_diagnostics) == dict:
-            summary_func_dict = do_diagnostics
+            diagnostic_func_dict = do_diagnostics
         else:
-            summary_func_dict = default_summary_func_dict
-        if 'reprocess_summaries_func' in summary_func_dict:
-            reprocess_summaries_func = summary_func_dict.pop('reprocess_summaries_func')
-    return summary_func_dict, reprocess_summaries_func
+            diagnostic_func_dict = default_diagnostic_func_dict
+        if 'reprocess_diagnostics_func' in diagnostic_func_dict:
+            reprocess_diagnostics_func = diagnostic_func_dict.pop('reprocess_diagnostics_func')
+    return diagnostic_func_dict, reprocess_diagnostics_func
 
 def get_value_in_each_dict(key, dict_list):
     return numpy.array([dict_i[key] for dict_i in dict_list]).T
 
-def munge_summaries(summaries_dict_list):
+def munge_diagnostics(diagnostics_dict_list):
     # all dicts should have the same keys
-    summary_names = summaries_dict_list[0].keys()
-    summaries_dict = {
-            summary_name : get_value_in_each_dict(summary_name, summaries_dict_list)
-            for summary_name in summary_names
+    diagnostic_names = diagnostics_dict_list[0].keys()
+    diagnostics_dict = {
+            diagnostic_name : get_value_in_each_dict(diagnostic_name, diagnostics_dict_list)
+            for diagnostic_name in diagnostic_names
             }
-    return summaries_dict
+    return diagnostics_dict
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.initialze to match ordering here
@@ -431,7 +431,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
     return X_L_prime, X_D_prime
 
 def _do_analyze_tuple(arg_tuple):
-    return _do_analyze_with_summary(*arg_tuple)
+    return _do_analyze_with_diagnostic(*arg_tuple)
 
 def get_child_n_steps_list(n_steps, every_N):
     if every_N is None:
@@ -446,11 +446,11 @@ none_summary = lambda p_State: None
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
-def _do_analyze_with_summary(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-        max_iterations, max_time, summary_func_dict=None, every_N=1):
-    summaries_dict = collections.defaultdict(list)
-    if summary_func_dict is None:
-        summary_func_dict = dict()
+def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+        max_iterations, max_time, diagnostic_func_dict=None, every_N=1):
+    diagnostics_dict = collections.defaultdict(list)
+    if diagnostic_func_dict is None:
+        diagnostic_func_dict = dict()
         every_N = None
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
@@ -458,12 +458,12 @@ def _do_analyze_with_summary(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
     for child_n_steps in child_n_steps_list:
         p_State.transition(kernel_list, child_n_steps, c, r,
                 max_iterations, max_time)
-        for summary_name, summary_func in summary_func_dict.iteritems():
-            summary_value = summary_func(p_State)
-            summaries_dict[summary_name].append(summary_value)
+        for diagnostic_name, diagnostic_func in diagnostic_func_dict.iteritems():
+            diagnostic_value = diagnostic_func(p_State)
+            diagnostics_dict[diagnostic_name].append(diagnostic_value)
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
-    return X_L_prime, X_D_prime, summaries_dict
+    return X_L_prime, X_D_prime, diagnostics_dict
 
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     is_multistate = su.get_is_multistate(X_L, X_D)
@@ -476,14 +476,14 @@ def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     return samples
 
 
-default_summary_func_dict = dict(
+default_diagnostic_func_dict = dict(
         # fully qualify path b/c dview.sync_imports can't deal with 'as' imports
-        logscore=crosscat.utils.summary_utils.get_logscore,
-        num_views=crosscat.utils.summary_utils.get_num_views,
-        column_crp_alpha=crosscat.utils.summary_utils.get_column_crp_alpha,
-        # any outputs required by reproess_summaries_func must be generated as well
-        column_partition_assignments=crosscat.utils.summary_utils.get_column_partition_assignments,
-        reprocess_summaries_func=crosscat.utils.summary_utils.default_reprocess_summaries_func,
+        logscore=crosscat.utils.diagnostic_utils.get_logscore,
+        num_views=crosscat.utils.diagnostic_utils.get_num_views,
+        column_crp_alpha=crosscat.utils.diagnostic_utils.get_column_crp_alpha,
+        # any outputs required by reproess_diagnostics_func must be generated as well
+        column_partition_assignments=crosscat.utils.diagnostic_utils.get_column_partition_assignments,
+        reprocess_diagnostics_func=crosscat.utils.diagnostic_utils.default_reprocess_diagnostics_func,
         )
 
 
