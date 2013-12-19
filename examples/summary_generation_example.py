@@ -44,7 +44,7 @@ data_max_std = 1.
 #
 #num_rows = 800
 #n_chains = 16
-#config_filename = os.path.userexpand('~/.config/ipython/profile_ssh/security/ipcontroller-client.json')
+#config_filename = os.path.expanduser('~/.config/ipython/profile_ssh/security/ipcontroller-client.json')
 #
 num_rows = 100
 n_chains = 2
