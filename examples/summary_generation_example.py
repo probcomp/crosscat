@@ -39,12 +39,13 @@ diagnostics_every_N= 2
 n_test = 40
 data_max_mean = 1
 data_max_std = 1.
-#num_rows = 1600
-#n_chains = 32
-config_filename = '/home/dlovell/ipcontroller-client.json'
-#config_filename = '/home/dlovell/.config/ipython/profile_ssh/security/ipcontroller-client.json'
-num_rows = 100
-n_chains = 2
+#
+num_rows = 800
+n_chains = 16
+config_filename = '/home/dlovell/.config/ipython/profile_ssh/security/ipcontroller-client.json'
+#
+#num_rows = 100
+#n_chains = 2
 #config_filename = None
 
 
@@ -69,7 +70,7 @@ generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(M_c, T,
 engine = IPE.IPClusterEngine(config_filename=config_filename, seed=inf_seed)
 
 
-# each function must take only p_State as its argument
+# each custom function must take only p_State as its argument
 summary_func_dict = dict(LE.default_summary_func_dict)
 def get_ari(p_State):
     # requires environment: {view_assignment_truth}
@@ -85,36 +86,17 @@ args_dict = dict(
 engine.dview.push(args_dict, block=True)
 summary_func_dict['ARI'] = get_ari
 
-# # Why does this fail?
-# # IPython.parallel.error.RemoteError: NameError(global name 'view_assignment_truth' is not defined)
-# #
-# # this fails WITH SAME ERROR even if version above is run and passes
-# # suggests it has to do with environment that get_ari func gets from
-# # crosscat.utils.summary_utils.get_ari
-# #
-# # possibly this stackoverflow post describes what is wrong
-# # http://stackoverflow.com/questions/10857250/python-name-space-issues-with-ipython-parallel
-#
-# import crosscat.utils.summary_utils
-# args_dict = dict(view_assignment_truth=view_assignment_truth)
-# engine.dview.push(args_dict, block=True)
-# summary_func_dict['ARI'] = crosscat.utils.summary_utils.get_ari
-
-
 # <codecell>
+
+# determine which diagnostics to do
+# do_diagnostics = False
+# do_diagnostics = True
+do_diagnostics = summary_func_dict
 
 # run inference
 X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
 X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
-        n_steps=n_steps, do_diagnostics=False,
-        diagnostics_every_N=diagnostics_every_N,
-        )
-X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
-        n_steps=n_steps, do_diagnostics=True,
-        diagnostics_every_N=diagnostics_every_N,
-        )
-X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
-        n_steps=n_steps, do_diagnostics=summary_func_dict,
+        n_steps=n_steps, do_diagnostics=do_diagnostics,
         diagnostics_every_N=diagnostics_every_N,
         )
 
