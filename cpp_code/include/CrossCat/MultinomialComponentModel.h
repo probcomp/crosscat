@@ -29,6 +29,7 @@ class MultinomialComponentModel : public ComponentModel {
   MultinomialComponentModel(CM_Hypers &in_hypers);
   MultinomialComponentModel(CM_Hypers &in_hypers,
 			    int count, std::map<std::string, double> counts);
+  virtual ~MultinomialComponentModel() {};
   //
   // getters
   void get_suffstats(int &count_out, std::map<std::string, double> &counts) const;

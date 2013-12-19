@@ -30,6 +30,7 @@ class ContinuousComponentModel : public ComponentModel {
   ContinuousComponentModel(std::map<std::string, double> &in_hyper_hash);
   ContinuousComponentModel(std::map<std::string, double> &in_hyper_hash,
 			   int COUNT, double SUM_X, double SUM_X_SQ);
+  virtual ~ContinuousComponentModel() {};
   //
   // getters
   void get_suffstats(int &count_out, double &sum_x, double &sum_x_sq) const;

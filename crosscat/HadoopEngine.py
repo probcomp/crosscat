@@ -175,7 +175,7 @@ class HadoopEngine(object):
           analyze_args_dict['chunk_filename_prefix'] = chunk_filename_prefix
           # WARNING: chunk_dest_dir MUST be writeable by hadoop user mapred
           analyze_args_dict['chunk_dest_dir'] = chunk_dest_dir
-        if not xu.get_is_multistate(X_L, X_D):
+        if not su.get_is_multistate(X_L, X_D):
             X_L = [X_L]
             X_D = [X_D]
         #
