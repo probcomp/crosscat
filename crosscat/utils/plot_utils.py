@@ -270,3 +270,26 @@ def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
                   bbox_inches=bbox_inches,
                   )
     return
+
+def _plot_diagnostic_with_mean(data_arr, hline=None):
+    data_mean = data_arr.mean(axis=1)
+    #
+    fh = pylab.figure()
+    pylab.plot(data_arr, color='k')
+    pylab.plot(data_mean, linewidth=3, color='r')
+    if hline is not None:
+        pylab.axhline(hline)
+    return fh
+
+def plot_diagnostics(diagnostics_dict, hline_lookup=None, which_diagnostics=None):
+    if which_diagnostics is None:
+        which_diagnostics = diagnostics_dict.keys()
+    if hline_lookup is None:
+        hline_lookup = dict()
+    for which_diagnostic in which_diagnostics:
+        data_arr = diagnostics_dict[which_diagnostic]
+        hline = hline_lookup.get(which_diagnostic)
+        fh = _plot_diagnostic_with_mean(data_arr, hline=hline)
+        pylab.xlabel('iter')
+        pylab.ylabel(which_diagnostic)
+    return fh

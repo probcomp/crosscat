@@ -14,19 +14,10 @@ import crosscat.LocalEngine as LE
 import crosscat.MultiprocessingEngine as ME
 import crosscat.IPClusterEngine as IPE
 import crosscat.utils.data_utils as du
+import crosscat.utils.plot_utils as pu
 import crosscat.utils.convergence_test_utils as ctu
 import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.diagnostic_utils as su
-
-
-def plot_with_mean(data_arr, hline=None):
-    data_mean = data_arr.mean(axis=1)
-    #
-    pylab.figure()
-    pylab.plot(data_arr, color='k')
-    pylab.plot(data_mean, linewidth=3, color='r')
-    if hline is not None:
-        pylab.axhline(hline)
 
 # <codecell>
 
@@ -64,6 +55,11 @@ T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
 #
 generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(M_c, T,
         X_L_gen, X_D_gen, T_test)
+ground_truth_lookup = dict(
+        ARI=1.0,
+        mean_test_ll=generative_mean_test_log_likelihood,
+        num_views=num_views,
+        )
 
 # <codecell>
 
@@ -73,6 +69,22 @@ engine = IPE.IPClusterEngine(config_filename=config_filename, seed=inf_seed)
 
 # <codecell>
 
+# run inference
+do_diagnostics = True
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
+X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
+        n_steps=n_steps, do_diagnostics=do_diagnostics,
+        diagnostics_every_N=diagnostics_every_N,
+        )
+
+# <codecell>
+
+# plot results
+pu.plot_diagnostics(diagnostics_dict, hline_lookup=ground_truth_lookup)
+
+# <codecell>
+
+# demonstrate custom diagnostic functions
 # each custom function must take only p_State as its argument
 diagnostic_func_dict = dict(LE.default_diagnostic_func_dict)
 def get_ari(p_State):
@@ -91,12 +103,8 @@ diagnostic_func_dict['ARI'] = get_ari
 
 # <codecell>
 
-# determine which diagnostics to do
-# do_diagnostics = False
-# do_diagnostics = True
-do_diagnostics = diagnostic_func_dict
-
 # run inference
+do_diagnostics = diagnostic_func_dict
 X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
 X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
         n_steps=n_steps, do_diagnostics=do_diagnostics,
@@ -106,21 +114,9 @@ X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list
 # <codecell>
 
 # plot results
-# plot_diagnostics_names = ['ARI', 'mean_test_ll', 'num_views']
-plot_diagnostics_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI', 'f_z[0, 1]', 'f_z[0, D]']
-hline_lookup = dict(
-        ARI=1.0,
-        mean_test_ll=generative_mean_test_log_likelihood,
-        num_views=num_views,
-        )
-for diagnostics_name in plot_diagnostics_names:
-    data_arr = diagnostics_dict[diagnostics_name]
-    hline = hline_lookup.get(diagnostics_name)
-    plot_with_mean(data_arr, hline=hline)
-    pylab.xlabel('iter')
-    pylab.ylabel(diagnostics_name)
-
-# import crosscat.utils.plot_utils as pu
+which_diagnostics = ['num_views', 'column_crp_alpha', 'ARI', 'f_z[0, 1]', 'f_z[0, D]']
+pu.plot_diagnostics(diagnostics_dict, hline_lookup=ground_truth_lookup,
+        which_diagnostics=which_diagnostics)
 # pu.plot_views(numpy.array(T), X_D_gen, X_L_gen, M_c)
 
 # <codecell>

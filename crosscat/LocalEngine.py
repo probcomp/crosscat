@@ -391,7 +391,7 @@ def do_diagnostics_to_func_dict(do_diagnostics):
         if type(do_diagnostics) == dict:
             diagnostic_func_dict = do_diagnostics
         else:
-            diagnostic_func_dict = default_diagnostic_func_dict
+            diagnostic_func_dict = dict(default_diagnostic_func_dict)
         if 'reprocess_diagnostics_func' in diagnostic_func_dict:
             reprocess_diagnostics_func = diagnostic_func_dict.pop('reprocess_diagnostics_func')
     return diagnostic_func_dict, reprocess_diagnostics_func
