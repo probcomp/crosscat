@@ -1,126 +1,143 @@
-#
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
-#
-#   Lead Developers: Dan Lovell and Jay Baxter
-#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
-#   Research Leads: Vikash Mansinghka, Patrick Shafto
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
-import argparse
-import os
-#
-import pylab
+# -*- coding: utf-8 -*-
+# <nbformat>3.0</nbformat>
+
+# <codecell>
+
 import numpy
-#
-import crosscat.settings as S
-import crosscat.utils.data_utils as du
-import crosscat.utils.file_utils as fu
-import crosscat.LocalEngine as LE
-
-
-# parse input
-parser = argparse.ArgumentParser()
-parser.add_argument('filename', type=str)
-parser.add_argument('--inf_seed', default=0, type=int)
-parser.add_argument('--gen_seed', default=0, type=int)
-parser.add_argument('--num_chains', default=25, type=int)
-parser.add_argument('--num_transitions', default=200, type=int)
-args = parser.parse_args()
-#
-filename = args.filename
-inf_seed = args.inf_seed
-gen_seed = args.gen_seed
-num_chains = args.num_chains
-num_transitions = args.num_transitions
-#
-pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
-
-
-def determine_Q(M_c, query_names, num_rows, impute_row=None):
-    name_to_idx = M_c['name_to_idx']
-    query_col_indices = [name_to_idx[colname] for colname in query_names]
-    row_idx = num_rows + 1 if impute_row is None else impute_row
-    Q = [(row_idx, col_idx) for col_idx in query_col_indices]
-    return Q
-
-def determine_unobserved_Y(num_rows, M_c, condition_tuples):
-    name_to_idx = M_c['name_to_idx']
-    row_idx = num_rows + 1
-    Y = []
-    for col_name, col_value in condition_tuples:
-        col_idx = name_to_idx[col_name]
-        col_code = du.convert_value_to_code(M_c, col_idx, col_value)
-        y = (row_idx, col_idx, col_code)
-        Y.append(y)
-    return Y
-
-def do_initialize(seed):
-    return LE._do_initialize(M_c, M_r, T, 'from_the_prior', seed)
-
-def do_analyze(((X_L, X_D), seed)):
-    return LE._do_analyze(M_c, T, X_L, X_D, (), num_transitions, (), (), -1, -1, seed)
-
-def get_num_views(p_State):
-    return len(p_State.get_X_D())
-
-def get_marginal_logp(p_State):
-    return p_State.get_marginal_logp()
-
-def get_column_crp_alpha(p_State):
-    return p_State.get_column_crp_alpha()
-
-def get_summary_i(p_State):
-    summary_funcs = [
-            get_num_views,
-            get_marginal_logp,
-            get_column_crp_alpha,
-            ]
-    summary_i = [
-            summary_func(p_State)
-            for summary_func in summary_funcs
-            ]
-    return summary_i
-
-# set everything up
-T, M_r, M_c = du.read_model_data_from_csv(filename, gen_seed=gen_seed)
-num_rows = len(T)
-num_cols = len(T[0])
-col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
-
-X_L, X_D = LE._do_initialize(M_c, M_r, T, 'from_the_prior', inf_seed)
-X_L, X_D, summaries = LE._do_analyze_with_summary(M_c, T, X_L, X_D, (), num_transitions,
-        (), (), -1, -1, inf_seed, (get_summary_i, 1))
-
+import pylab
 pylab.ion()
 pylab.show()
-summaries_arr = numpy.array(summaries)
-num_views_vec = summaries_arr[:, 0]
-marginal_logp_vec = summaries_arr[:, 1]
-column_crp_alpha_vec = summaries_arr[:, 2]
 #
-pylab.subplot(311)
-pylab.plot(num_views_vec)
-pylab.xlabel('iters')
-pylab.ylabel('#views')
+import crosscat.LocalEngine as LE
+import crosscat.MultiprocessingEngine as ME
+import crosscat.IPClusterEngine as IPE
+import crosscat.utils.data_utils as du
+import crosscat.utils.convergence_test_utils as ctu
+import crosscat.utils.timing_test_utils as ttu
+import crosscat.utils.summary_utils as su
+
+
+def plot_with_mean(data_arr, hline=None):
+    data_mean = data_arr.mean(axis=1)
+    #
+    pylab.figure()
+    pylab.plot(data_arr, color='k')
+    pylab.plot(data_mean, linewidth=3, color='r')
+    if hline is not None:
+        pylab.axhline(hline)
+
+# <codecell>
+
+# settings
+gen_seed = 0
+inf_seed = 0
+num_clusters = 4
+num_cols = 32
+num_views = 4
+n_steps = 64
+diagnostics_every_N= 2
+n_test = 40
+data_max_mean = 1
+data_max_std = 1.
+#num_rows = 1600
+#n_chains = 32
+config_filename = '/home/dlovell/ipcontroller-client.json'
+#config_filename = '/home/dlovell/.config/ipython/profile_ssh/security/ipcontroller-client.json'
+num_rows = 100
+n_chains = 2
+#config_filename = None
+
+
+# generate some data
+T, M_r, M_c, data_inverse_permutation_indices = du.gen_factorial_data_objects(
+        gen_seed, num_clusters, num_cols, num_rows, num_views,
+        max_mean=data_max_mean, max_std=data_max_std,
+        send_data_inverse_permutation_indices=True)
+view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
+        data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
+X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
+        data_inverse_permutation_indices, num_clusters, num_views)
+T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
 #
-pylab.subplot(312)
-pylab.plot(marginal_logp_vec)
-pylab.xlabel('iters')
-pylab.ylabel('marginal_logp')
+generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(M_c, T,
+        X_L_gen, X_D_gen, T_test)
+
+# <codecell>
+
+# create the engine
+# engine = ME.MultiprocessingEngine(seed=inf_seed)
+engine = IPE.IPClusterEngine(config_filename=config_filename, seed=inf_seed)
+
+
+# each function must take only p_State as its argument
+summary_func_dict = dict(LE.default_summary_func_dict)
+def get_ari(p_State):
+    # requires environment: {view_assignment_truth}
+    # requires import: {crosscat.utils.convergence_test_utils}
+    X_L = p_State.get_X_L()
+    ctu = crosscat.utils.convergence_test_utils
+    return ctu.get_column_ARI(X_L, view_assignment_truth)
+# push the function and any arguments needed from the surrounding environment
+args_dict = dict(
+        get_ari=get_ari,
+        view_assignment_truth=view_assignment_truth,
+        )
+engine.dview.push(args_dict, block=True)
+summary_func_dict['ARI'] = get_ari
+
+# # Why does this fail?
+# # IPython.parallel.error.RemoteError: NameError(global name 'view_assignment_truth' is not defined)
+# #
+# # this fails WITH SAME ERROR even if version above is run and passes
+# # suggests it has to do with environment that get_ari func gets from
+# # crosscat.utils.summary_utils.get_ari
+# #
+# # possibly this stackoverflow post describes what is wrong
+# # http://stackoverflow.com/questions/10857250/python-name-space-issues-with-ipython-parallel
 #
-pylab.subplot(313)
-pylab.plot(column_crp_alpha_vec)
-pylab.xlabel('iters')
-pylab.ylabel('column_crp_alpha')
+# import crosscat.utils.summary_utils
+# args_dict = dict(view_assignment_truth=view_assignment_truth)
+# engine.dview.push(args_dict, block=True)
+# summary_func_dict['ARI'] = crosscat.utils.summary_utils.get_ari
+
+
+# <codecell>
+
+# run inference
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
+X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
+        n_steps=n_steps, do_diagnostics=False,
+        diagnostics_every_N=diagnostics_every_N,
+        )
+X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
+        n_steps=n_steps, do_diagnostics=True,
+        diagnostics_every_N=diagnostics_every_N,
+        )
+X_L_list, X_D_list, summaries_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
+        n_steps=n_steps, do_diagnostics=summary_func_dict,
+        diagnostics_every_N=diagnostics_every_N,
+        )
+
+# <codecell>
+
+# plot results
+# plot_summaries_names = ['ARI', 'mean_test_ll', 'num_views']
+plot_summaries_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI']
+hline_lookup = dict(
+        ARI=1.0,
+        mean_test_ll=generative_mean_test_log_likelihood,
+        num_views=num_views,
+        )
+for summaries_name in plot_summaries_names:
+    data_arr = summaries_dict[summaries_name]
+    hline = hline_lookup.get(summaries_name)
+    plot_with_mean(data_arr, hline=hline)
+    pylab.xlabel('iter')
+    pylab.ylabel(summaries_name)
+
+# import crosscat.utils.plot_utils as pu
+# pu.plot_views(numpy.array(T), X_D_gen, X_L_gen, M_c)
+
+# <codecell>
+
 
