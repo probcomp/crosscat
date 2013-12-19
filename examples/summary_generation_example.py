@@ -71,6 +71,7 @@ generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(M_c, T,
 # engine = ME.MultiprocessingEngine(seed=inf_seed)
 engine = IPE.IPClusterEngine(config_filename=config_filename, seed=inf_seed)
 
+# <codecell>
 
 # each custom function must take only p_State as its argument
 diagnostic_func_dict = dict(LE.default_diagnostic_func_dict)
@@ -106,7 +107,7 @@ X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list
 
 # plot results
 # plot_diagnostics_names = ['ARI', 'mean_test_ll', 'num_views']
-plot_diagnostics_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI']
+plot_diagnostics_names = ['logscore', 'num_views', 'column_crp_alpha', 'ARI', 'f_z[0, 1]', 'f_z[0, D]']
 hline_lookup = dict(
         ARI=1.0,
         mean_test_ll=generative_mean_test_log_likelihood,
