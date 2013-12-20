@@ -17,6 +17,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import crosscat.cython_code.State as State
+
 import crosscat.utils.data_utils as du
 import crosscat.utils.sample_utils as su
 
@@ -26,6 +28,8 @@ import crosscat.tests.component_model_extensions.MultinomialComponentModel as mc
 import random
 import numpy
 import math
+
+import pdb
 
 # default parameters for 'seeding' random categories
 default_data_parameters = dict(
@@ -47,6 +51,23 @@ def p_draw(M):
 	for i in range(len(M)):
 		if r < M[i]:
 			return i
+
+def gen_partition_from_weights(N, weights):
+
+	K = len(weights)
+	Z = range(K)
+	d = numpy.random.multinomial(N-K, weights)
+	for k in range(K):
+		for _ in range(d[k]):
+			Z.append(k)
+
+	assert len(Z) == N
+
+	random.shuffle(Z)
+
+	return Z
+
+
 
 def add_missing_data_to_column(X, col, proportion):
 	"""	Adds NaN entried to propotion of the data X in column col
@@ -189,7 +210,8 @@ def generate_separated_model_parameters(cctype, C, num_clusters, get_next_seed, 
 		raise ValueError("Invalid cctype %s." % cctype )
 
 
-def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0, distargs=None, return_structure=False):
+def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0,
+	distargs=None, return_structure=False, return_metadata=False):
 	"""	Generates a synthetic data.
 		Inputs:
 			- cctypes: List of strings. Each entry, i, is the cctype of the 
@@ -209,7 +231,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 			1 is well-separated.
 			ex (2 views): separation = [ .5, .7]
 			- seed: optional
-			- distargs: optional (only if continuous). distargs is n_columns
+			- distargs: optional (depending on data type). distargs is n_columns
 			length list where each entry is either None or a dict appropriate 
 			for the cctype in that column. For a normal feature, the entry 
 			should be None, for a multinomial feature, the entry should be a 
@@ -223,6 +245,9 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 				- rows_to_clusters: a n_views length list of list. Each entry,
 				rows_to_clusters[v][r] is the cluster to which all rows in 
 				columns belonging to view v are assigned
+				- cctypes
+				- cluster_weights
+			- return_metadata: (bool, optional). Return X_L and X_D
 		Returns:
 			T, M_c
 		Example:
@@ -378,17 +403,26 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 	T = data_table.tolist()
 	M_c = du.gen_M_c_from_T(T, cctypes=cctypes)
 
-	if return_structure:
-		structure = dict()
-		structure['component_params'] = component_params
-		structure['cols_to_views'] = cols_to_views
-		structure['rows_to_clusters'] = rows_to_clusters
+	structure = dict()
+	structure['component_params'] = component_params
+	structure['cols_to_views'] = cols_to_views
+	structure['rows_to_clusters'] = rows_to_clusters
+	structure['cctypes'] = cctypes
+	structure['cluster_weights'] = cluster_weights
+
+	if return_metadata and return_structure:
+		_, X_L, X_D = structure_dict_to_metadata(T, structure)
+		return T, M_c, X_L, X_D, structure
+	elif return_structure:
 		return T, M_c, structure
+	elif return_metadata:
+		_, X_L, X_D = structure_dict_to_metadata(T, structure)
+		return T, M_c, X_L, X_D
 	else:
 		return T, M_c
 
-def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, seed=0):
-	""" Generates rows of data from the inferred distributions
+def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, impute=False, seed=0):
+	""" Generates rows of data from the inferred distributions (impute)
 	Inputs:
 		- M_c: crosscat metadata (See documentation)
 		- X_L: crosscat metadata (See documentation)
@@ -442,11 +476,28 @@ def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, see
 
 	get_next_seed = lambda : random.randrange(2147483647)
 
+	# impute one value for every category instead of every entry
+	if impute:
+		imputed_data = [[] for _ in range(num_cols)]
+		for c in columns_list:
+			view = X_L['column_partition']['assignments'][c]
+			K_view = max(X_D[view])+1
+			for k in range(K_view):
+				row = X_D[view].index(k)
+				x = su.impute(M_c, X_L, X_D, [],[(row,c)], 1000, get_next_seed)
+				imputed_data[c].append(x)
+
+	# start filling things in
 	for c in range(len(columns_list)):
 		col = columns_list[c]
 		for row in range(num_rows):
-			X[row,c] = su.simple_predictive_sample(M_c, X_L, X_D, [],
-						 [(row,col)], get_next_seed, n=1)[0][0]
+			if impute:
+				view = X_L['column_partition']['assignments'][col]
+				k = X_D[view][row]
+				x = imputed_data[col][k]
+			else:
+				x = su.simple_predictive_sample(M_c, X_L, X_D, [],[(row,c)], get_next_seed)[0][0]
+			X[row,c] = x
 
 		# check if there are optional arguments
 		if isinstance(optional_settings[c], dict):
@@ -455,12 +506,55 @@ def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, see
 				proportion = optional_settings[c]['missing_data']
 				X = add_missing_data_to_column(X, c, proportion)
 
+
 	assert X.shape[0] == num_rows
 	assert X.shape[1] == len(columns_list)
 
 	return X
 
+def structure_dict_to_metadata(T, structure):
+	"""
+	Converts T and structure (dict from gen_data) to crosscat metadata for T
+	"""
+	M_c = su.gen_M_c_from_T(T, cctypes=structure['cctypes'])
+	state = State.p_State(M_c, T)
+	X_L = state.get_X_L()
+	X_D = structure['rows_to_clusters']
+	X_L['column_partition']['assignments'] = structure['cols_to_views']
+	state = State.p_State(M_c, T, X_L=X_L, X_D=X_D)
+	X_L = state.get_X_L()
+
+	return M_c, X_L, X_D
 
 
+def gen_crosscat_array_from_params(structure, num_rows, return_partitions=False):
+
+	get_next_seed = lambda : random.randrange(2147483647)
+
+	num_cols = len(structure['cols_to_views'])
+
+	T = numpy.zeros((num_rows, num_cols))
+
+	num_views = len(structure['cluster_weights'])
+
+	rows_to_clusters = []
+
+	for v in range(num_views):
+		W = structure['cluster_weights'][v]
+		Z = gen_partition_from_weights(num_rows, W)
+		rows_to_clusters.append(Z)
+
+	for c in range(num_cols):
+		v = structure['cols_to_views'][c]
+		generator = get_data_generator[structure['cctypes'][c]]
+		for r in range(num_rows):
+			k = rows_to_clusters[v][r]
+			T[r,c] = generator(structure['component_params'][c][k], 1, get_next_seed())[0]
+
+
+	if return_partitions:
+		return T.tolist(), rows_to_clusters
+	else:
+		return T.tolist()
 
 

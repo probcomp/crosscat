@@ -1,3 +1,23 @@
+#
+#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#
+#   Lead Developers: Dan Lovell and Jay Baxter
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
+#   Research Leads: Vikash Mansinghka, Patrick Shafto
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
 import crosscat.cython_code.State as State
 import crosscat.utils.sample_utils as su
 import crosscat.utils.data_utils as du
@@ -25,6 +45,13 @@ is_discrete = dict(
 
 
 def main():
+    print " "
+    print "======================================================================="
+    print "TEST SINGLE COMPONENT INFERENCE QUALITY"
+    print " Performs a 2-sample KS or Chi-square test for a single column"
+    print " problem with a single cluster"
+    print " "
+    print " ** NOTE: Used primarily for testing new data types."
     unittest.main()
 
 class TestComponentModelQuality(unittest.TestCase):
@@ -60,7 +87,7 @@ def cdf_array(X, component_model):
     assert i > 0
     return cdf
 
-def test_one_feature_sampler(component_model_type, show_plot=False):
+def test_one_feature_sampler(component_model_type, num_rows=100, show_plot=False, print_out=True):
     """
     Tests the ability of component model of component_model_type to capture the
     distribution of the data.
@@ -79,7 +106,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         predictive probabilities 
     11. Calculate goodness of fit stats (returns p value)
     """
-    N = 100
+    N = num_rows
     
     get_next_seed = lambda : random.randrange(2147483647)
 
@@ -143,7 +170,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         cdf = lambda x: component_model_type.cdf(x, model_parameters)
         # stat, p = stats.kstest(predictive_samples, cdf)   # 1-sample test
         stat, p = stats.ks_2samp(predictive_samples, T[:,0]) # 2-sample test
-        test_str = "KS"
+        test_str = "2-sample KS"
     else:
         # Cressie-Read power divergence statistic and goodness of fit test.
         # This function gives a lot of flexibility in the method <lambda_> used.
@@ -187,6 +214,17 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         pylab.title(title_string, fontsize=12)
 
         pylab.show()
+
+    if print_out:
+        print "======================================"
+        print "IMPUTE SINGLE CLUSTER INFERNCE QUALITY"
+        print "TEST INFORMATION:"
+        print "       data type: " + component_model_type.cctype
+        print "        num_rows: " + str(num_rows)
+        print " num_transitions:" + str(n_transitions)
+        print "RESULTS (%s) for each chain" % test_str 
+        print "   statistic(s): " + str(stat)
+        print "           p(s): " + str(p)
 
     return p
 

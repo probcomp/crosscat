@@ -1,17 +1,45 @@
+#
+#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#
+#   Lead Developers: Dan Lovell and Jay Baxter
+#   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
+#   Research Leads: Vikash Mansinghka, Patrick Shafto
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
 import crosscat.utils.sample_utils as su
+import random
 
 import numpy
 import math
 
-import pdb
+import sys
 
 from scipy.misc import logsumexp
 
 is_discrete = {
 	'multinomial' : True,
+	'binomial' : True,
 	'ordinal' : True,
 	'continuous' : False
 	}
+
+def print_progress(n,N,test_name='test'):
+	spinner = ['-', '\\', '|', '/']
+	string = " Running %s. %.2f%% %s" % (test_name, 100.0*float(n)/float(N), spinner[n%4])
+	print(string)
+	sys.stdout.write("\033[F")
+	sys.stdout.flush()
 
 def get_mixture_pdf(X, component_model_class, parameters_list, component_weights):
 	""" FIXME: Add doc
@@ -109,32 +137,49 @@ def bincount(X, bins=None):
 
 	return counts
 
-def get_mixture_support(cctype, component_model_class, parameters_list, support=.95, nbins=500):
+def get_mixture_support(cctype, component_model_class, parameters_list,
+			component_weights=None, support=.95, nbins=500):
 	"""
 	"""
 	if cctype == 'multinomial':
 		discrete_support = component_model_class.generate_discrete_support(
 							parameters_list[0])
 	else:
-		for k in range(len(parameters_list)):
-			model_parameters = parameters_list[k]
-			support_k = numpy.array(component_model_class.generate_discrete_support(
-						model_parameters, support=support))
-			if k == 0:
-				all_support = support_k
-			else:
-				all_support = numpy.hstack((all_support, support_k))
+		# estimate support using samples
+		# if no component weights included, assume uniform weighting
+		if component_weights is None:
+			K = len(parameters_list)
+			component_weights = [1.0/float(K)]*K
 
-		discrete_support = numpy.linspace(numpy.min(all_support), 
-							numpy.max(all_support), num=nbins)
+		K = len(parameters_list)
+
+		n_samples = 10000
+		samples = numpy.zeros(n_samples)
+
+		ks = numpy.random.multinomial(n_samples, component_weights)
+
+		i = 0;
+		for k in range(K):
+			for n in range(int(ks[k])):
+				x = component_model_class.generate_data_from_parameters(
+					parameters_list[k], 1, gen_seed=random.randrange(2147483647))[0]
+				samples[i] = x
+				i += 1
+
+		samples = numpy.sort(samples)
+		
+		lower_value = samples[int(n_samples-n_samples*support)]
+		upper_value = samples[int(n_samples*support)]
+		
+		discrete_support = numpy.linspace(lower_value, upper_value, num=nbins)
 
 		assert len(discrete_support) == nbins
 
 	return numpy.array(discrete_support)
 
 def KL_divergence(component_model_class, parameters_list, component_weights,
-	M_c, X_L, X_D, n_samples=1000, true_log_pdf=None, support=None):
-	""" FIXME: Add doc
+	M_c, X_L, X_D, col=0, n_samples=1000, true_log_pdf=None, support=None):
+	""" This is a bad way to estimate KL divergence for conuinuous distributions
 	"""
 
 	# FIXME: Add validation code
@@ -144,7 +189,7 @@ def KL_divergence(component_model_class, parameters_list, component_weights,
 	# get support (X)
 	if support is None:
 		support = get_mixture_support(cctype, component_model_class, parameters_list, 
-				nbins=n_samples, support=.995)
+				nbins=n_samples, support=.999)
 	elif not isinstance(support, numpy.ndarray):
 		raise TypeError("support must be a numpy array (vector)")
 
@@ -156,13 +201,16 @@ def KL_divergence(component_model_class, parameters_list, component_weights,
 		raise TypeError("true_log_pdf should be a numpy array (vector)")
 
 	row = len(X_D[0])
-	Q = [ (row,0,x) for x in support ]
+	Q = [ (row,col,x) for x in support ]
 
 	# get predictive probabilities
 	pred_probs = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q)
 
 	kld = KL_divergence_arrays(support, pred_probs, true_log_pdf,
 			is_discrete[cctype])
+
+	if float(kld) < 0.0:
+		print "KLD < 0!"
 
 	return float(kld)
 

@@ -10,6 +10,59 @@ def main():
     unittest.main()
 
 
+class TestGenCrosscatArrayFromParams(unittest.TestCase):
+	def test_should_generate_right_size_continuous(self):
+		structure = dict()
+		structure['cctypes'] = ['continuous']
+		structure['cols_to_views'] = [0]
+		structure['component_params'] = [[
+			dict(mu=1.0, rho=2.0),
+			dict(mu=0.0, rho=2.0)]]
+		structure['cluster_weights'] = [[.5,.5]]
+
+		T = sdg.gen_crosscat_array_from_params(structure, 10)
+
+		assert len(T) == 10
+		assert len(T[0]) == 1
+
+		structure['cctypes'] = ['continuous']*4
+		structure['cols_to_views'] = [0]*4
+		structure['component_params'] = [[
+			dict(mu=1.0, rho=2.0),
+			dict(mu=0.0, rho=2.0)]]*4
+
+		T = sdg.gen_crosscat_array_from_params(structure, 20)
+
+		assert len(T) == 20
+		assert len(T[0]) == 4
+
+	def test_should_generate_right_size_multinomial(self):
+		structure = dict()
+		structure['cctypes'] = ['multinomial']
+		structure['cols_to_views'] = [0]
+		structure['component_params'] = [[
+			dict(weights=[.2]*5),
+			dict(weights=[1.0, 0.0, 0.0, 0.0, 0.0])]]
+		structure['cluster_weights'] = [[.5,.5]]
+
+		T = sdg.gen_crosscat_array_from_params(structure, 10)
+
+		assert len(T) == 10
+		assert len(T[0]) == 1
+
+		structure['cctypes'] = ['multinomial']*4
+		structure['cols_to_views'] = [0]*4
+		structure['component_params'] = [[
+			dict(weights=[.2]*5),
+			dict(weights=[1.0, 0.0, 0.0, 0.0, 0.0])]]*4
+
+		T = sdg.gen_crosscat_array_from_params(structure, 20)
+
+		assert len(T) == 20
+		assert len(T[0]) == 4
+
+
+
 class TestPredictiveColumns(unittest.TestCase):
 	def setUp(self):
 		# generate a crosscat state and pull the metadata
