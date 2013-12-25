@@ -3,7 +3,7 @@
 
 # set default values
 jenkins_home=/var/lib/jenkins/
-user=sgeadmin
+user=crosscat
 project_name=crosscat
 
 

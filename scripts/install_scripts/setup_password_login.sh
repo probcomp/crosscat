@@ -2,7 +2,7 @@
 
 
 # default values
-user=sgeadmin
+user=crosscat
 password=
 
 

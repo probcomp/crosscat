@@ -28,7 +28,7 @@ class path():
     if 'WORKSPACE' in os.environ:
         user_home_dir = os.environ['WORKSPACE']
     # target installation for deployment
-    remote_code_dir = os.path.join('/home/sgeadmin', project_name)
+    remote_code_dir = os.path.join('/home/crosscat', project_name)
     # where we actually are right now
     this_dir = os.path.dirname(os.path.abspath(__file__))
     this_repo_dir = os.path.abspath(os.path.join(this_dir, '..'))
