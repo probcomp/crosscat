@@ -49,7 +49,7 @@ get_next_seed = lambda : random.randrange(32000)
 
 correlations = [.0, .1, .2, .3, .4 , .5, .6, .7, .8, .9, 1.0]
 # N = [5, 10, 25, 50]
-N = [50]
+N = [100]
 n_samples = 10
 n_data_sets = 3
 pl.figure()
@@ -94,7 +94,7 @@ for n in N:
 		nr += 1
 
 
-	pl.subplot(2,2,subplot)
+	pl.subplot(1,1,subplot)
 	pl.boxplot(data)
 	title = "N=%i" % n
 	pl.title(title)

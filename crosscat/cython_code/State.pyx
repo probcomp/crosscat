@@ -112,7 +112,7 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    string col_initialization,
                                    string row_initialization,
-                                   int N_GRID, int SEED)
+                                   int N_GRID, int SEED, int CT_KERNEL)
      State *new_State "new State" (matrix[double] &data,
                                    vector[string] global_col_datatypes,
                                    vector[int] global_col_multinomial_counts,
@@ -123,7 +123,7 @@ cdef extern from "State.h":
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
-                                   int N_GRID, int SEED)
+                                   int N_GRID, int SEED, int CT_KERNEL)
      void del_State "delete" (State *s)
 
 
@@ -171,7 +171,7 @@ cdef class p_State:
 
     def __cinit__(self, M_c, T, X_L=None, X_D=None,
                   initialization='from_the_prior', row_initialization=-1,
-                  N_GRID=31, SEED=0):
+                  N_GRID=31, SEED=0, CT_KERNEL=0):
          column_types, event_counts = extract_column_types_counts(M_c)
          global_row_indices = range(len(T))
          global_col_indices = range(len(T[0]))
@@ -196,7 +196,7 @@ cdef class p_State:
                                        self.gri, self.gci,
                                        col_initialization,
                                        row_initialization,
-                                       N_GRID, SEED)
+                                       N_GRID, SEED, CT_KERNEL)
          else:
               # # !!! MUTATES X_L !!!
               desparsify_X_L(M_c, X_L)
@@ -214,7 +214,7 @@ cdef class p_State:
                                        hypers_m,
                                        column_partition, column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
-                                       N_GRID, SEED)
+                                       N_GRID, SEED, CT_KERNEL)
     def __dealloc__(self):
         del_matrix(self.dataptr)
         del_State(self.thisptr)
@@ -422,6 +422,7 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
      n_grid = 31
      seed = 0
+     ct_kernel=0
      #
      constructor_args = dict()
      constructor_args['global_row_indices'] = global_row_indices
@@ -433,6 +434,7 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      constructor_args['row_crp_alpha_v'] = row_crp_alpha_v
      constructor_args['N_GRID'] = n_grid
      constructor_args['SEED'] = seed
+     constructor_args['CT_KERNEL'] = ct_kernel
      #
      return constructor_args
 

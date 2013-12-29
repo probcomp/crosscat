@@ -28,6 +28,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+ #include <math.h>   // for log()
 
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
@@ -76,7 +77,7 @@ class State {
 	double COLUMN_CRP_ALPHA,
 	std::vector<std::vector<std::vector<int> > > row_partition_v,
 	std::vector<double> row_crp_alpha_v,
-	int N_GRID=31, int SEED=0);
+	int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
   /** Constructor for drawing a CrossCat state from the prior.
    *  Column and row partitionings are given, as well as all hyper parameters.
@@ -95,6 +96,7 @@ class State {
    *         to use for the row partitioning.  Valid values are defined in constants.h
    *  \param N_GRID The number of grid points to use when gibbs sampling hyperparameters
    *  \param SEED The seed for the state's RNG
+   *  \param CT_KERNEL The column transition kernel to use (0:Gibbs, 1:birth-death)
    */
   State(const MatrixD &data,
 	std::vector<std::string> GLOBAL_COL_DATATYPES,
@@ -103,7 +105,7 @@ class State {
 	std::vector<int> global_col_indices,
 	std::string col_initialization=FROM_THE_PRIOR,
 	std::string row_initialization="",
-	int N_GRID=31, int SEED=0);
+	int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
   ~State();
 
@@ -230,7 +232,13 @@ class State {
    * \param feature_idx The column index that the view should associaate with the data
    * \param feature_data The data that comprises the feature
    */
-  double transition_feature(int feature_idx, std::vector<double> feature_data);
+  double transition_feature_0(int feature_idx, std::vector<double> feature_data);
+  /**
+   * Metropolis birth-death process for assigning columns to view (or creating new views)
+   * \param feature_idx The column index that the view should associaate with the data
+   * \param feature_data The data that comprises the feature
+   */
+  double transition_feature_1(int feature_idx, std::vector<double> feature_data);
   /**
    * Instantiate a new view object with properties matching the state
    * (datatypes, #rows, etc) and track in memeber variable views
@@ -346,6 +354,7 @@ class State {
   double column_crp_alpha;
   double column_crp_score;
   double data_score;
+  int ct_kernel;
   // grids
   std::vector<double> column_crp_alpha_grid;
   std::vector<double> row_crp_alpha_grid;
