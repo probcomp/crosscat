@@ -51,7 +51,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         self.do_analyze = _do_analyze_tuple
         return
 
-    def get_initialize_arg_tuples(self, M_c, M_r, T, initialization, n_chains):
+    def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
+            row_initialization, n_chains):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
                 seeds,
@@ -59,11 +60,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([M_r]),
                 itertools.cycle([T]),
                 itertools.cycle([initialization]),
+                itertools.cycle([row_initialization]),
                 )
         return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
-            n_chains=1):
+            row_initialization=-1, n_chains=1):
         """Sample a latent state from prior
 
         :param M_c: The column metadata
@@ -79,7 +81,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         # FIXME: why is M_r passed?
         arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
-                n_chains)
+                row_initialization, n_chains)
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
@@ -410,8 +412,9 @@ def munge_diagnostics(diagnostics_dict_list):
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.initialze to match ordering here
-def _do_initialize(SEED, M_c, M_r, T, initialization):
-    p_State = State.p_State(M_c, T, initialization=initialization, SEED=SEED)
+def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization):
+    p_State = State.p_State(M_c, T, initialization=initialization,
+            row_initialization=row_initialization, SEED=SEED)
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
     return X_L, X_D
