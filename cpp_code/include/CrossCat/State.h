@@ -76,8 +76,6 @@ class State {
 	double COLUMN_CRP_ALPHA,
 	std::vector<std::vector<std::vector<int> > > row_partition_v,
 	std::vector<double> row_crp_alpha_v,
-	std::string col_initialization=FROM_THE_PRIOR,
-	std::string row_initialization="",
 	int N_GRID=31, int SEED=0);
 
   /** Constructor for drawing a CrossCat state from the prior.

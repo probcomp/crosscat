@@ -37,11 +37,7 @@ State::State(const MatrixD &data,
 	     double COLUMN_CRP_ALPHA,
 	     vector<vector<vector<int> > > row_partition_v,
 	     vector<double> row_crp_alpha_v,
-	     string col_initialization,
-	     string row_initialization,
 	     int N_GRID, int SEED) : rng(SEED) {
-  // set up
-  if(row_initialization=="") {row_initialization = col_initialization; }
   // move this into ':' section above?
   column_crp_score = 0;
   data_score = 0;
