@@ -63,7 +63,6 @@ State::State(const MatrixD &data,
 	     string col_initialization,
 	     string row_initialization,
 	     int N_GRID, int SEED) : rng(SEED), column_crp_score(0), data_score(0) {
-  // FIXME: unlink these when API is updated
   if(row_initialization=="") {row_initialization = col_initialization; }
   global_col_datatypes = construct_lookup_map(global_col_indices,
 					      GLOBAL_COL_DATATYPES);
