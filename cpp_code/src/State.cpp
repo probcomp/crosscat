@@ -37,18 +37,13 @@ State::State(const MatrixD &data,
 	     double COLUMN_CRP_ALPHA,
 	     vector<vector<vector<int> > > row_partition_v,
 	     vector<double> row_crp_alpha_v,
-	     int N_GRID, int SEED) : rng(SEED) {
-  // move this into ':' section above?
-  column_crp_score = 0;
-  data_score = 0;
-  int num_rows = data.size1();
-  int num_cols = data.size2();
+	     int N_GRID, int SEED) : rng(SEED), column_crp_score(0), data_score(0) {
   global_col_datatypes = construct_lookup_map(global_col_indices,
 					      GLOBAL_COL_DATATYPES);
   global_col_multinomial_counts = \
     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
   // construct grids
-  construct_base_hyper_grids(num_rows, num_cols, N_GRID);
+  construct_base_hyper_grids(data, N_GRID);
   construct_column_hyper_grids(data, global_col_indices,
 			       GLOBAL_COL_DATATYPES);
   // actually build the state
@@ -67,19 +62,15 @@ State::State(const MatrixD &data,
 	     vector<int> global_col_indices,
 	     string col_initialization,
 	     string row_initialization,
-	     int N_GRID, int SEED) : rng(SEED) {
+	     int N_GRID, int SEED) : rng(SEED), column_crp_score(0), data_score(0) {
   // FIXME: unlink these when API is updated
   if(row_initialization=="") {row_initialization = col_initialization; }
-  column_crp_score = 0;
-  data_score = 0;
-  int num_rows = data.size1();
-  int num_cols = data.size2();
   global_col_datatypes = construct_lookup_map(global_col_indices,
 					      GLOBAL_COL_DATATYPES);
   global_col_multinomial_counts = \
     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
   // construct grids
-  construct_base_hyper_grids(num_rows, num_cols, N_GRID);
+  construct_base_hyper_grids(data, N_GRID);
   construct_column_hyper_grids(data, global_col_indices,
 			       GLOBAL_COL_DATATYPES);
   //
@@ -619,14 +610,16 @@ double State::transition(const MatrixD &data) {
   return score_delta;
 }
 
-void State::construct_base_hyper_grids(int num_rows, int num_cols, int N_GRID) {
+void State::construct_base_hyper_grids(const MatrixD &data, int N_GRID) {
+  int num_rows = data.size1();
+  int num_cols = data.size2();
   row_crp_alpha_grid = create_crp_alpha_grid(num_rows, N_GRID);
   column_crp_alpha_grid = create_crp_alpha_grid(num_cols, N_GRID);
   construct_continuous_base_hyper_grids(N_GRID, num_rows, r_grid, nu_grid);
   construct_multinomial_base_hyper_grids(N_GRID, num_rows, multinomial_alpha_grid);
 }
 
-void State::construct_column_hyper_grids(const MatrixD data,
+void State::construct_column_hyper_grids(const MatrixD &data,
 					 vector<int> global_col_indices,
 					 vector<string> GLOBAL_COL_DATATYPES) {
   int N_GRID = r_grid.size();

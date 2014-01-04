@@ -360,8 +360,8 @@ class State {
   // sub-objects
   RandomNumberGenerator rng;
   // resources
-  void construct_base_hyper_grids(int num_rows, int num_cols, int N_GRID);
-  void construct_column_hyper_grids(boost::numeric::ublas::matrix<double> data,
+  void construct_base_hyper_grids(const boost::numeric::ublas::matrix<double> &data, int N_GRID);
+  void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double> &data,
 				    std::vector<int> global_col_indices,
 				    std::vector<std::string> global_col_datatypes);
   CM_Hypers get_default_hypers() const;
