@@ -37,7 +37,9 @@ State::State(const MatrixD &data,
 	     double COLUMN_CRP_ALPHA,
 	     vector<vector<vector<int> > > row_partition_v,
 	     vector<double> row_crp_alpha_v,
-	     int N_GRID, int SEED) : rng(SEED), column_crp_score(0), data_score(0) {
+	     int N_GRID, int SEED) : rng(SEED) {
+  column_crp_score = 0;
+  data_score = 0;
   global_col_datatypes = construct_lookup_map(global_col_indices,
 					      GLOBAL_COL_DATATYPES);
   global_col_multinomial_counts = \
@@ -62,7 +64,9 @@ State::State(const MatrixD &data,
 	     vector<int> global_col_indices,
 	     string col_initialization,
 	     string row_initialization,
-	     int N_GRID, int SEED) : rng(SEED), column_crp_score(0), data_score(0) {
+	     int N_GRID, int SEED) : rng(SEED) {
+  column_crp_score = 0;
+  data_score = 0;
   if(row_initialization=="") {row_initialization = col_initialization; }
   global_col_datatypes = construct_lookup_map(global_col_indices,
 					      GLOBAL_COL_DATATYPES);
