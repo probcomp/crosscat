@@ -76,6 +76,8 @@ class State {
 	double COLUMN_CRP_ALPHA,
 	std::vector<std::vector<std::vector<int> > > row_partition_v,
 	std::vector<double> row_crp_alpha_v,
+	std::string col_initialization=FROM_THE_PRIOR,
+	std::string row_initialization="",
 	int N_GRID=31, int SEED=0);
 
   /** Constructor for drawing a CrossCat state from the prior.
@@ -365,22 +367,22 @@ class State {
 				    std::vector<int> global_col_indices,
 				    std::vector<std::string> global_col_datatypes);
   CM_Hypers get_default_hypers() const;
+  double sample_column_crp_alpha();
+  double sample_row_crp_alpha();
+  std::vector<double> sample_row_crp_alphas(int N_views);
+  std::vector<std::vector<int> > generate_col_partition(std::vector<int> global_col_indices,
+		  std::string col_initialization);
+  std::vector<std::vector<std::vector<int> > > generate_row_partitions(std::vector<int> global_row_indices,
+	       	std::vector<double> row_crp_alpha_v, std::string row_initialization);
   void init_base_hypers();
   CM_Hypers uniform_sample_hypers(int global_col_idx);
   void init_column_hypers(std::vector<int> global_col_indices);
   void init_views(const MatrixD &data,
-		  std::map<int, std::string> global_col_datatypes,
 		  std::vector<int> global_row_indices,
 		  std::vector<int> global_col_indices,
 		  std::vector<std::vector<int> > column_partition,
 		  std::vector<std::vector<std::vector<int> > > row_partition_v,
 		  std::vector<double> row_crp_alpha_v);
-  void init_views(const MatrixD &data,
-		  std::map<int, std::string> global_col_datatypes,
-		  std::vector<int> global_row_indices,
-		  std::vector<int> global_col_indices,
-		  std::string col_initialization,
-		  std::string row_initialization);
 };
 
 #endif // GUARD_state_h
