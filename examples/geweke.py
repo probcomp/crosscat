@@ -17,6 +17,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import collections
+import functools
+import operator
 import argparse
 import os
 #
@@ -30,7 +33,7 @@ import crosscat.LocalEngine as LE
 
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_rows', default=50, type=int)
+parser.add_argument('--num_rows', default=10, type=int)
 parser.add_argument('--num_cols', default=2, type=int)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
@@ -65,49 +68,92 @@ def sample_T(engine, M_c, X_L, X_D):
         generated_T.append(sample)
     return generated_T
 
+def generate_and_initialize(gen_seed, inf_seed, num_rows, num_cols):
+    T, inverse_permutation_indices = du.gen_factorial_data(
+            gen_seed=gen_seed,
+            num_clusters=1,
+            num_rows=num_rows,
+            num_cols=num_cols,
+            num_splits=1,
+    		max_mean_per_category=1,
+            max_std=1)
+    M_r = du.gen_M_r_from_T(T)
+    M_c = du.gen_M_c_from_T(T)
+    # initialze and transition chains
+    engine = LE.LocalEngine(inf_seed)
+    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+    return T, M_r, M_c, X_L, X_D
 
-# generate data
-T, inverse_permutation_indices = du.gen_factorial_data(
-        gen_seed=gen_seed,
-        num_clusters=1,
-        num_cols=num_cols,
-        num_rows=num_rows,
-        num_splits=1,
-		max_mean_per_category=1,
-        max_std=1,
-        max_mean=None)
-M_r = du.gen_M_r_from_T(T)
-M_c = du.gen_M_c_from_T(T)
-col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
-# initialze and transition chains
-engine = LE.LocalEngine(inf_seed)
-X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+get_col_0_mu = lambda X_L: X_L['column_hypers'][0]['mu']
+get_col_0_nu = lambda X_L: X_L['column_hypers'][0]['nu']
+get_col_0_s = lambda X_L: X_L['column_hypers'][0]['s']
+get_col_0_r = lambda X_L: X_L['column_hypers'][0]['r']
+get_column_crp_alpha = lambda X_L: X_L['column_partition']['hypers']['alpha']
+get_view_0_crp_alpha = lambda X_L: X_L['view_state'][0]['row_partition_model']['hypers']['alpha']
 
-
-# actually operate witht eh data
-column_crp_alphas = []
-import collections
-first_column_hypers = collections.defaultdict(list)
-for idx in range(10000):
-    X_L, X_D= engine.analyze(M_c, T, X_L, X_D)
-    column_crp_alphas.append(X_L['column_partition']['hypers']['alpha'])
-    for key, value in X_L['column_hypers'][0].iteritems():
-        if key == 'fixed': continue
-        first_column_hypers[key].append(value)
+diagnostics_funcs = dict(
+        col_0_r=get_col_0_r,
+        col_0_s=get_col_0_s,
+        col_0_mu=get_col_0_mu,
+        col_0_nu=get_col_0_nu,
+        column_crp_alpha=get_column_crp_alpha,
+        view_0_crp_alpha=get_view_0_crp_alpha,
+        )
+def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data, diagnostics_funcs):
+    X_L, X_D = engine.analyze(M_c, T, X_L, X_D)
+    for key, func in diagnostics_funcs.iteritems():
+        diagnostics_data[key].append(func(X_L))
+        pass
     T = sample_T(engine, M_c, X_L, X_D)
+    return M_c, T, X_L, X_D
+
+def run_geweke(seed, num_rows, num_cols, num_iters, diagnostics_funcs):
+    engine = LE.LocalEngine(seed)
+    T, M_r, M_c, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
+    diagnostics_data = collections.defaultdict(list)
+    for idx in range(num_iters):
+        M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+                diagnostics_funcs)
+        pass
+    return diagnostics_data
+
+def generate_log_bins(data, n_bins):
+    log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
+    return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
+
+def condense_diagnostics_data_list(diagnostics_data_list):
+    def get_key_condensed(key):
+        get_key = lambda x: x.get(key)
+        return reduce(operator.add, map(get_key, diagnostics_data_list))
+    keys = diagnostics_data_list[0].keys()
+    return { key : get_key_condensed(key) for key in keys}
+
+num_iters = 100
+seeds = range(3)
+# import multiprocessing
+# mapper = multiprocessing.Pool().map
+mapper = map
+#
+helper = functools.partial(run_geweke, num_rows=num_rows, num_cols=num_cols,
+        num_iters=num_iters, diagnostics_funcs=diagnostics_funcs)
+diagnostics_data_list = mapper(helper, seeds)
+diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
 import pylab
 pylab.ion()
 pylab.show()
-
-set_bins = set(['r', 'nu'])
-bins = numpy.linspace(0, numpy.log(100), 10)
-for key in first_column_hypers:
+n_bins = 31
+for variable_name, data in diagnostics_data.iteritems():
     pylab.figure()
-    bins_i = None
-    if key in set_bins:
-        bins_i = bins
+    bins = n_bins
+    if variable_name != 'col_0_mu':
+        bins = generate_log_bins(data, n_bins)
         pass
-    pylab.hist(first_column_hypers[key], bins=bins)
-    pylab.title(key)
+    pylab.hist(data, bins=bins)
+    pylab.title(variable_name)
+    if variable_name != 'col_0_mu':
+        pylab.gca().set_xscale('log')
+        pass
+    pass
+
 
