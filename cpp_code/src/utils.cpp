@@ -330,6 +330,21 @@ vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
   return cluster_indices_v;
 }
 
+vector<vector<vector<int> > > draw_crp_init(vector<int> global_row_indices,
+				   vector<double> alphas,
+				   RandomNumberGenerator &rng,
+				   string initialization) {
+  vector<vector<vector<int> > > cluster_indicies_v_v;
+  for(vector<double>::iterator it = alphas.begin(); it!=alphas.end(); it++) {
+    double alpha = *it;
+    vector<vector<int> > cluster_indicies_v = draw_crp_init(global_row_indices,
+		    alpha, rng, initialization);
+    cluster_indicies_v_v.push_back(cluster_indicies_v);
+  }
+  return cluster_indicies_v_v;
+}
+
+
 void copy_column(const MatrixD fromM, int from_col, MatrixD &toM, int to_col) {
   assert(fromM.size1()==toM.size1());
   int num_rows = fromM.size1();
