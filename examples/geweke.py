@@ -144,6 +144,7 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         X_L, X_D = engine.analyze(M_c, T, X_L, X_D)
+        fu.pickle(dict(X_L=X_L,X_D=X_D), 'X_L_X_D.pkl.gz')
         for key, func in diagnostics_funcs.iteritems():
             diagnostics_data[key].append(func(X_L))
             pass
@@ -163,6 +164,13 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
             generated_T.append(sample)
             pass
         T = generated_T
+        # make sure data scale doesn't get too large, else turns into inf/nan
+        T = numpy.array(T)
+        T[T<-1E10] = -1E10
+        T[1E10<T] = 1E10
+        T = T.tolist()
+        #
+        fu.pickle(T, 'T.pkl.gz')
         #
         pass
     return diagnostics_data
@@ -210,22 +218,24 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data):
     pylab.gca().set_xscale('log')
     return hist_ret
 
+def do_log_hist(variable_name, diagnostics_data, n_bins=31):
+    data = diagnostics_data[variable_name]
+    pylab.figure()
+    bins = generate_log_bins(data, n_bins)
+    pylab.hist(data, bins=bins)
+    pylab.title(variable_name)
+    pylab.gca().set_xscale('log')
+    return
+
 def do_hist(variable_name, diagnostics_data, n_bins=31):
     data = diagnostics_data[variable_name]
     pylab.figure()
-    bins = n_bins
-    if variable_name != 'col_0_mu':
-        bins = generate_log_bins(data, n_bins)
-        pass
-    pylab.hist(data, bins=bins)
+    pylab.hist(data, bins=n_bins)
     pylab.title(variable_name)
-    if variable_name != 'col_0_mu':
-        pylab.gca().set_xscale('log')
-        pass
     return
 
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
-        col_0_s=do_hist,
+        col_0_s=do_log_hist,
         col_0_mu=do_hist,
         )
 def plot_diagnostic_data(diagnostics_data):
