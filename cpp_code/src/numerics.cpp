@@ -297,8 +297,11 @@ namespace numerics {
       // invert the effect of log gridding
       double prior = log(s_prime);
       logp += log(prior);
+      // applying gamma prior causes large memory usage?!
       // apply gamma prior to s: shape = 2, scale = 10
-      // logp += -(lgamma(10.) + 2. * log(10.)) + (2.-1.)*log(s_prime) - s_prime / 10.;
+      // double shape = 2;
+      // double scale = 10;
+      // logp += -(lgamma(shape) + shape * log(scale)) + (shape-1.)*log(s_prime) - s_prime / scale;
       logps.push_back(logp);
     }
     return logps;
