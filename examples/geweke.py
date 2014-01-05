@@ -166,8 +166,9 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
         T = generated_T
         # make sure data scale doesn't get too large, else turns into inf/nan
         T = numpy.array(T)
-        T[T<-1E10] = -1E10
-        T[1E10<T] = 1E10
+        max_magnitude = 1E10
+        T[T<-max_magnitude] = -max_magnitude
+        T[max_magnitude<T] = max_magnitude
         T = T.tolist()
         #
         fu.pickle(T, 'T.pkl.gz')
@@ -197,6 +198,11 @@ def filter_eps(data):
     is_eps = (0 < data) & (data < 1E-100)
     return data[~is_eps]
 
+def clip_extremes(data):
+    data = numpy.array(data)
+    lower, upper = numpy.percentile(data, [.5, 99.5])
+    return data.clip(lower, upper)
+
 def generate_log_bins(data, n_bins=31):
     data = filter_eps(data)
     log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
@@ -220,6 +226,7 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data):
 
 def do_log_hist(variable_name, diagnostics_data, n_bins=31):
     data = diagnostics_data[variable_name]
+    data = clip_extremes(data)
     pylab.figure()
     bins = generate_log_bins(data, n_bins)
     pylab.hist(data, bins=bins)
@@ -229,6 +236,7 @@ def do_log_hist(variable_name, diagnostics_data, n_bins=31):
 
 def do_hist(variable_name, diagnostics_data, n_bins=31):
     data = diagnostics_data[variable_name]
+    data = clip_extremes(data)
     pylab.figure()
     pylab.hist(data, bins=n_bins)
     pylab.title(variable_name)
@@ -247,7 +255,7 @@ def plot_diagnostic_data(diagnostics_data):
 
 
 # settings
-num_iters = 1000
+num_iters = 4000
 num_chains = 8
 seeds = range(num_chains)
 import multiprocessing
