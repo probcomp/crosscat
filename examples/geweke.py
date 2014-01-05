@@ -167,8 +167,7 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
         # make sure data scale doesn't get too large, else turns into inf/nan
         T = numpy.array(T)
         max_magnitude = 1E10
-        T[T<-max_magnitude] = -max_magnitude
-        T[max_magnitude<T] = max_magnitude
+        # T.clip(-max_magnitude, max_magnitude)
         T = T.tolist()
         #
         fu.pickle(T, 'T.pkl.gz')
@@ -255,7 +254,7 @@ def plot_diagnostic_data(diagnostics_data):
 
 
 # settings
-num_iters = 4000
+num_iters = 10000
 num_chains = 8
 seeds = range(num_chains)
 import multiprocessing
