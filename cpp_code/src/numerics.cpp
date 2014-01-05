@@ -295,8 +295,8 @@ namespace numerics {
 					 r_prime, nu_prime, s_prime,
 					 log_Z_0);
       // invert the effect of log gridding
-      // double prior = log(s_prime);
-      // logp += log(prior);
+      double prior = log(s_prime);
+      logp += log(prior);
       // apply gamma prior to s: shape = 2, scale = 10
       // logp += -(lgamma(10.) + 2. * log(10.)) + (2.-1.)*log(s_prime) - s_prime / 10.;
       logps.push_back(logp);
