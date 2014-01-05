@@ -36,8 +36,8 @@ import crosscat.LocalEngine as LE
 
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_rows', default=10, type=int)
-parser.add_argument('--num_cols', default=2, type=int)
+parser.add_argument('--num_rows', default=40, type=int)
+parser.add_argument('--num_cols', default=4, type=int)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=2, type=int)
@@ -167,6 +167,7 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
         # make sure data scale doesn't get too large, else turns into inf/nan
         T = numpy.array(T)
         max_magnitude = 1E10
+        T[numpy.isnan(T)] = 0
         # T.clip(-max_magnitude, max_magnitude)
         T = T.tolist()
         #
@@ -254,7 +255,7 @@ def plot_diagnostic_data(diagnostics_data):
 
 
 # settings
-num_iters = 10000
+num_iters = 5000
 num_chains = 8
 seeds = range(num_chains)
 import multiprocessing
