@@ -52,7 +52,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
-            row_initialization, n_chains):
+            row_initialization, n_chains,
+            specified_s_grid, specified_mu_grid,
+            ):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
                 seeds,
@@ -61,11 +63,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([T]),
                 itertools.cycle([initialization]),
                 itertools.cycle([row_initialization]),
+                itertools.cycle([specified_s_grid]),
+                itertools.cycle([specified_mu_grid]),
                 )
         return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
-            row_initialization=-1, n_chains=1):
+            row_initialization=-1, n_chains=1,
+            specified_s_grid=(), specified_mu_grid=(),
+            ):
         """Sample a latent state from prior
 
         :param M_c: The column metadata
@@ -81,7 +87,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         # FIXME: why is M_r passed?
         arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
-                row_initialization, n_chains)
+                row_initialization, n_chains,
+                specified_s_grid, specified_mu_grid,
+                )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
@@ -89,7 +97,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
-            n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N):
+            n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
+            specified_s_grid, specified_mu_grid,
+            ):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
@@ -105,12 +115,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([max_time]),
                 itertools.cycle([diagnostic_func_dict]),
                 itertools.cycle([every_N]),
+                itertools.cycle([specified_s_grid]),
+                itertools.cycle([specified_mu_grid]),
                 )
         return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1, do_diagnostics=False,
                 diagnostics_every_N=1,
+                specified_s_grid=(), specified_mu_grid=(),
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
@@ -147,6 +160,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                 kernel_list, n_steps, c, r, max_iterations, max_time,
                 diagnostic_func_dict, diagnostics_every_N,
+                specified_s_grid, specified_mu_grid,
                 )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
@@ -412,9 +426,14 @@ def munge_diagnostics(diagnostics_dict_list):
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.initialze to match ordering here
-def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization):
+def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
+            specified_s_grid, specified_mu_grid,
+            ):
     p_State = State.p_State(M_c, T, initialization=initialization,
-            row_initialization=row_initialization, SEED=SEED)
+            row_initialization=row_initialization, SEED=SEED,
+            specified_s_grid=specified_s_grid,
+            specified_mu_grid=specified_mu_grid,
+            )
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
     return X_L, X_D
@@ -425,8 +444,13 @@ def _do_initialize_tuple(arg_tuple):
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-               max_iterations, max_time):
-    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+               max_iterations, max_time,
+               specified_s_grid, specified_mu_grid,
+               ):
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
+            specified_s_grid=specified_s_grid,
+            specified_mu_grid=specified_mu_grid,
+            )
     p_State.transition(kernel_list, n_steps, c, r,
                        max_iterations, max_time)
     X_L_prime = p_State.get_X_L()
@@ -450,14 +474,19 @@ none_summary = lambda p_State: None
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
 def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-        max_iterations, max_time, diagnostic_func_dict=None, every_N=1):
+        max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
+        specified_s_grid=(), specified_mu_grid=(),
+        ):
     diagnostics_dict = collections.defaultdict(list)
     if diagnostic_func_dict is None:
         diagnostic_func_dict = dict()
         every_N = None
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
-    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED)
+    p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
+            specified_s_grid=specified_s_grid,
+            specified_mu_grid=specified_mu_grid,
+            )
     for child_n_steps in child_n_steps_list:
         p_State.transition(kernel_list, child_n_steps, c, r,
                 max_iterations, max_time)
