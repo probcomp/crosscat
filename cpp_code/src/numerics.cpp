@@ -244,6 +244,10 @@ namespace numerics {
       double logp = calc_continuous_logp(count,
 					 r_prime, nu_prime, s_prime,
 					 log_Z_0);
+      // invert the effect of log gridding
+      // double prior = log(r_prime);
+      // logp += log(prior);
+      //
       logps.push_back(logp);
     }
     return logps;
@@ -269,6 +273,10 @@ namespace numerics {
       double logp = calc_continuous_logp(count,
 					 r_prime, nu_prime, s_prime,
 					 log_Z_0);
+      // invert the effect of log gridding
+      // double prior = log(nu_prime);
+      // logp += log(prior);
+      //
       logps.push_back(logp);
     }
     return logps;
@@ -295,13 +303,14 @@ namespace numerics {
 					 r_prime, nu_prime, s_prime,
 					 log_Z_0);
       // invert the effect of log gridding
-      double prior = log(s_prime);
-      logp += log(prior);
-      // applying gamma prior causes large memory usage?!
+      // double prior = log(s_prime);
+      // logp += log(prior);
+      //
       // apply gamma prior to s: shape = 2, scale = 10
       // double shape = 2;
       // double scale = 10;
       // logp += -(lgamma(shape) + shape * log(scale)) + (shape-1.)*log(s_prime) - s_prime / scale;
+      //
       logps.push_back(logp);
     }
     return logps;
@@ -328,14 +337,15 @@ namespace numerics {
 					 r_prime, nu_prime, s_prime,
 					 log_Z_0);
       // apply prior to mu
-      double sigma = 1E4;
-      double mean = 0;
-      boost::math::normal_distribution<> nd(mean, sigma);
-      double prior = boost::math::pdf(nd, mu_prime);
-      double log_prior = log(prior);
+      // double sigma = 1E4;
+      // double mean = 0;
+      // boost::math::normal_distribution<> nd(mean, sigma);
+      // double prior = boost::math::pdf(nd, mu_prime);
+      // double log_prior = log(prior);
+      //
       // Does this not work?
       // double log_prior = -log(sigma) - .5 * log(2.0 * M_PI)  + 0.5 * ((mu_prime-mean)*(mu_prime-mean)) / ( sigma*sigma );
-      logp += log_prior;
+      // logp += log_prior;
       logps.push_back(logp);
     }
     return logps;
