@@ -157,7 +157,7 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
-        fu.pickle(dict(X_L=X_L,X_D=X_D), 'X_L_X_D.pkl.gz')
+        # fu.pickle(dict(X_L=X_L,X_D=X_D), 'X_L_X_D.pkl.gz')
         for key, func in diagnostics_funcs.iteritems():
             diagnostics_data[key].append(func(X_L))
             pass
@@ -185,7 +185,7 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
             T.clip(-max_magnitude, max_magnitude)
             T = T.tolist()
             pass
-        fu.pickle(T, 'T.pkl.gz')
+        # fu.pickle(T, 'T.pkl.gz')
         #
         pass
     return diagnostics_data
