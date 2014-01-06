@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import multiprocessing
 import collections
 import functools
 import operator
@@ -227,8 +228,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_cols', default=2, type=int)
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
-    parser.add_argument('--num_chains', default=2, type=int)
-    parser.add_argument('--num_iters', default=200, type=int)
+    parser.add_argument('--num_chains', default=None, type=int)
+    parser.add_argument('--num_iters', default=2000, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -240,9 +241,15 @@ if __name__ == '__main__':
 
 
     # specify multiprocessing or not by setting mapper
-    import multiprocessing
-    mapper = multiprocessing.Pool().map
-    # mapper = map
+    if num_chains != 1:
+        if num_chains is None:
+            num_chains = multiprocessing.cpu_count()
+            pass
+        num_iters = num_iters /num_chains
+        mapper = multiprocessing.Pool(num_chains).map
+    else:
+        mapper = map
+        pass
 
 
     # specify grid
