@@ -124,7 +124,8 @@ def filter_eps(data):
 
 def clip_extremes(data):
     data = numpy.array(data)
-    lower, upper = numpy.percentile(data, [.5, 99.5])
+    percentiles = [.5, 99.5]
+    lower, upper = numpy.percentile(data, percentiles)
     return data.clip(lower, upper)
 
 def generate_log_bins(data, n_bins=31):
@@ -166,14 +167,26 @@ def do_hist(variable_name, diagnostics_data, n_bins=31):
     pylab.title(variable_name)
     return
 
+def show_parameters(parameters):
+    if len(parameters) == 0: return
+    create_line = lambda (key, value): key + ' = ' + str(value)
+    lines = map(create_line, parameters.iteritems())
+    text = '\n'.join(lines)
+    pylab.text(0, 1, text, transform=pylab.axes().transAxes,
+            va='top', size='small', linespacing=1.0)
+    return
+
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
-        col_0_s=do_log_hist,
+#         col_0_s=do_log_hist,
         col_0_mu=do_hist,
         )
-def plot_diagnostic_data(diagnostics_data):
+def plot_diagnostic_data(diagnostics_data, parameters=None):
     for variable_name in diagnostics_data.keys():
         plotter = plotter_lookup[variable_name]
         plotter(variable_name, diagnostics_data)
+        if parameters is not None:
+            show_parameters(parameters)
+            pass
         pass
     return
 
@@ -215,6 +228,13 @@ if __name__ == '__main__':
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
     s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
 
+    # set up parameters
+    parameters = dict(
+            num_rows=num_rows,
+            num_cols=num_cols,
+            max_mu_grid=max_mu_grid,
+            max_s_grid=max_s_grid,
+            )
 
     # run geweke
     helper = functools.partial(run_geweke, num_rows=num_rows,
@@ -225,4 +245,4 @@ if __name__ == '__main__':
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
-    plot_diagnostic_data(diagnostics_data)
+    plot_diagnostic_data(diagnostics_data, parameters)
