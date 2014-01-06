@@ -26,6 +26,7 @@ import numpy
 import pylab
 #
 import crosscat.utils.data_utils as du
+import crosscat.utils.file_utils as fu
 import crosscat.LocalEngine as LE
 
 
@@ -140,12 +141,19 @@ def generate_log_bins_unique(data):
     bins.append(bins[-1] + delta)
     return bins
 
+def do_hist_labelling(variable_name):
+    title_str = 'Histogram for %s' % variable_name
+    pylab.title(title_str)
+    pylab.xlabel(variable_name)
+    pylab.ylabel('frequency')
+    return
+
 def do_log_hist_bin_unique(variable_name, diagnostics_data):
     data = diagnostics_data[variable_name]
     bins = generate_log_bins_unique(data)
     pylab.figure()
     hist_ret = pylab.hist(data, bins=bins)
-    pylab.title(variable_name)
+    do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return hist_ret
 
@@ -155,7 +163,7 @@ def do_log_hist(variable_name, diagnostics_data, n_bins=31):
     pylab.figure()
     bins = generate_log_bins(data, n_bins)
     pylab.hist(data, bins=bins)
-    pylab.title(variable_name)
+    do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return
 
@@ -164,7 +172,7 @@ def do_hist(variable_name, diagnostics_data, n_bins=31):
     data = clip_extremes(data)
     pylab.figure()
     pylab.hist(data, bins=n_bins)
-    pylab.title(variable_name)
+    do_hist_labelling(variable_name)
     return
 
 def show_parameters(parameters):
@@ -176,20 +184,38 @@ def show_parameters(parameters):
             va='top', size='small', linespacing=1.0)
     return
 
+def save_current_figure(filename, directory, close_after_save=True):
+    fu.ensure_dir(directory)
+    full_filename = os.path.join(directory, filename)
+    pylab.savefig(full_filename)
+    if close_after_save:
+        pylab.close()
+    return
+
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
 #         col_0_s=do_log_hist,
         col_0_mu=do_hist,
         )
-def plot_diagnostic_data(diagnostics_data, parameters=None):
+def plot_diagnostic_data(diagnostics_data, parameters=None, save_kwargs=None):
     for variable_name in diagnostics_data.keys():
         plotter = plotter_lookup[variable_name]
         plotter(variable_name, diagnostics_data)
         if parameters is not None:
             show_parameters(parameters)
             pass
+        if save_kwargs is not None:
+            filename = variable_name + '_hist.png'
+            save_current_figure(filename, **save_kwargs)
+            pass
         pass
     return
 
+def generate_directory_name(**kwargs):
+    generate_part = lambda (key, value): key + '=' + str(value)
+    parts = map(generate_part, kwargs.iteritems())
+    directory_prefix = 'geweke_plots_'
+    directory_name = directory_prefix + ''.join(parts)
+    return directory_name
 
 if __name__ == '__main__':
     import argparse
@@ -202,7 +228,7 @@ if __name__ == '__main__':
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=2, type=int)
-    parser.add_argument('--num_iters', default=2000, type=int)
+    parser.add_argument('--num_iters', default=200, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -245,4 +271,11 @@ if __name__ == '__main__':
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
-    plot_diagnostic_data(diagnostics_data, parameters)
+    directory = generate_directory_name(
+            num_rows=num_rows,
+            num_cols=num_cols,
+            max_mu_grid=max_mu_grid,
+            max_s_grid=max_s_grid,
+            )
+    save_kwargs = dict(directory=directory)
+    plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
