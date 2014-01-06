@@ -36,8 +36,8 @@ import crosscat.LocalEngine as LE
 
 # parse input
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_rows', default=40, type=int)
-parser.add_argument('--num_cols', default=4, type=int)
+parser.add_argument('--num_rows', default=10, type=int)
+parser.add_argument('--num_cols', default=2, type=int)
 parser.add_argument('--inf_seed', default=0, type=int)
 parser.add_argument('--gen_seed', default=0, type=int)
 parser.add_argument('--num_chains', default=2, type=int)
@@ -110,6 +110,13 @@ def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data, diagnostics_func
     T = sample_T(engine, M_c, X_L, X_D)
     return M_c, T, X_L, X_D
 
+
+max_mu_grid = 10
+mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, 31)
+max_s_grid = (max_mu_grid /  2.) ** 2 * num_rows
+s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), 31))
+
+# my_grid = ()
 def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
     get_col_0_mu = lambda X_L: X_L['column_hypers'][0]['mu']
     get_col_0_nu = lambda X_L: X_L['column_hypers'][0]['nu']
@@ -140,10 +147,16 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
     M_c = du.gen_M_c_from_T(T)
     # initialze and transition chains
     engine = LE.LocalEngine(seed)
-    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior',
+            specified_s_grid=s_grid,
+            specified_mu_grid=mu_grid,
+            )
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
-        X_L, X_D = engine.analyze(M_c, T, X_L, X_D)
+        X_L, X_D = engine.analyze(M_c, T, X_L, X_D,
+            specified_s_grid=s_grid,
+            specified_mu_grid=mu_grid,
+            )
         fu.pickle(dict(X_L=X_L,X_D=X_D), 'X_L_X_D.pkl.gz')
         for key, func in diagnostics_funcs.iteritems():
             diagnostics_data[key].append(func(X_L))
@@ -164,13 +177,14 @@ def run_geweke_no_subs((seed, num_rows, num_cols, num_iters)):
             generated_T.append(sample)
             pass
         T = generated_T
-        # make sure data scale doesn't get too large, else turns into inf/nan
-        T = numpy.array(T)
-        max_magnitude = 1E10
-        T[numpy.isnan(T)] = 0
-        # T.clip(-max_magnitude, max_magnitude)
-        T = T.tolist()
-        #
+        if False:
+            # make sure data scale doesn't get too large, else turns into inf/nan
+            T = numpy.array(T)
+            max_magnitude = 1E10
+            T[numpy.isnan(T)] = 0
+            T.clip(-max_magnitude, max_magnitude)
+            T = T.tolist()
+            pass
         fu.pickle(T, 'T.pkl.gz')
         #
         pass
@@ -255,7 +269,7 @@ def plot_diagnostic_data(diagnostics_data):
 
 
 # settings
-num_iters = 5000
+num_iters = 1000
 num_chains = 8
 seeds = range(num_chains)
 import multiprocessing
