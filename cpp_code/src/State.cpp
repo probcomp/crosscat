@@ -37,6 +37,8 @@ State::State(const MatrixD &data,
 	     double COLUMN_CRP_ALPHA,
 	     vector<vector<vector<int> > > row_partition_v,
 	     vector<double> row_crp_alpha_v,
+	     vector<double> specified_s_grid,
+	     vector<double> specified_mu_grid,
 	     int N_GRID, int SEED) : rng(SEED) {
   column_crp_score = 0;
   data_score = 0;
@@ -46,8 +48,13 @@ State::State(const MatrixD &data,
     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
   // construct grids
   construct_base_hyper_grids(data, N_GRID);
-  construct_column_hyper_grids(data, global_col_indices,
-			       GLOBAL_COL_DATATYPES);
+  if(specified_s_grid.begin()!=specified_s_grid.end()) {
+	  construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
+			  specified_s_grid, specified_mu_grid);
+  } else {
+	  construct_column_hyper_grids(data, global_col_indices,
+			  GLOBAL_COL_DATATYPES);
+  }
   // actually build the state
   hypers_m = HYPERS_M;
   column_crp_alpha = COLUMN_CRP_ALPHA;
@@ -622,6 +629,21 @@ void State::construct_base_hyper_grids(const MatrixD &data, int N_GRID) {
   construct_multinomial_base_hyper_grids(N_GRID, num_rows, multinomial_alpha_grid);
 }
 
+void State::construct_column_hyper_grids(vector<int> global_col_indices,
+					 vector<string> GLOBAL_COL_DATATYPES,
+					 vector<double> S_GRID,
+					 vector<double> MU_GRID
+					 ) {
+  vector<int>::iterator it;
+  for(it=global_col_indices.begin(); it!=global_col_indices.end(); it++) {
+    int global_col_idx = *it;
+    string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
+    if(col_datatype!=CONTINUOUS_DATATYPE) continue;
+    s_grids[global_col_idx] = S_GRID;
+    mu_grids[global_col_idx] = MU_GRID;
+  }
+}
+ 
 void State::construct_column_hyper_grids(const MatrixD &data,
 					 vector<int> global_col_indices,
 					 vector<string> GLOBAL_COL_DATATYPES) {

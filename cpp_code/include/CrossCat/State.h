@@ -37,6 +37,7 @@ const static double r0_0 = 1.0;
 const static double nu0_0 = 2.0;
 const static double s0_0 = 2.0;
 const static double mu0_0 = 0.0;
+const static std::vector<double> empty_vector_double;
 
 /**
  * A full CrossCat state.  This class is sufficient to draw a posterior sample.
@@ -76,6 +77,8 @@ class State {
 	double COLUMN_CRP_ALPHA,
 	std::vector<std::vector<std::vector<int> > > row_partition_v,
 	std::vector<double> row_crp_alpha_v,
+	std::vector<double> specified_s_grid=empty_vector_double,
+	std::vector<double> specified_mu_grid=empty_vector_double,
 	int N_GRID=31, int SEED=0);
 
   /** Constructor for drawing a CrossCat state from the prior.
@@ -361,6 +364,10 @@ class State {
   RandomNumberGenerator rng;
   // resources
   void construct_base_hyper_grids(const boost::numeric::ublas::matrix<double> &data, int N_GRID);
+  void construct_column_hyper_grids(std::vector<int> global_col_indices,
+				    std::vector<std::string> global_col_datatypes,
+				    std::vector<double> S_GRID,
+				    std::vector<double> MU_GRID);
   void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double> &data,
 				    std::vector<int> global_col_indices,
 				    std::vector<std::string> global_col_datatypes);
