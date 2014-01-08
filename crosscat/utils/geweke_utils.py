@@ -66,6 +66,12 @@ def generate_and_initialize(gen_seed, inf_seed, num_rows, num_cols):
     X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
     return T, M_r, M_c, X_L, X_D
 
+def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
+    for key, func in diagnostics_funcs.iteritems():
+        diagnostics_data[key].append(func(X_L))
+    return diagnostics_data
+
+
 get_col_0_mu = lambda X_L: X_L['column_hypers'][0]['mu']
 get_col_0_nu = lambda X_L: X_L['column_hypers'][0]['nu']
 get_col_0_s = lambda X_L: X_L['column_hypers'][0]['s']
@@ -89,9 +95,8 @@ def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 specified_s_grid=specified_s_grid,
                 specified_mu_grid=specified_mu_grid,
                 )
-    for key, func in diagnostics_funcs.iteritems():
-        diagnostics_data[key].append(func(X_L))
-        pass
+    diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
+            diagnostics_funcs)
     T = sample_T(engine, M_c, X_L, X_D)
     return M_c, T, X_L, X_D
 
@@ -107,6 +112,22 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid)
         pass
+    return diagnostics_data
+
+def forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
+        diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
+        ):
+    if diagnostics_funcs is None:
+        diagnostics_funcs = default_diagnostics_funcs
+    T = (numpy.array(T) * numpy.nan).tolist()
+    diagnostics_data = collections.defaultdict(list)
+    for sample_idx in range(n_samples):
+        X_L, X_D = engine.initialize(M_c, M_r, T,
+                specified_s_grid=specified_s_grid,
+                specified_mu_grid=specified_mu_grid,
+                )
+        diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
+                diagnostics_funcs)
     return diagnostics_data
 
 def run_geweke_tuple(args_tuple):
@@ -211,11 +232,10 @@ def plot_diagnostic_data(diagnostics_data, parameters=None, save_kwargs=None):
         pass
     return
 
-def generate_directory_name(**kwargs):
+def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, kwargs.iteritems())
-    directory_prefix = 'geweke_plots_'
-    directory_name = directory_prefix + ''.join(parts)
+    directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
 
 if __name__ == '__main__':
@@ -269,7 +289,28 @@ if __name__ == '__main__':
             max_s_grid=max_s_grid,
             )
 
-    # run geweke
+    # run geweke: forward sample only
+    T, inverse_permutation_indices = du.gen_factorial_data(
+            gen_seed=gen_seed,
+            num_clusters=1,
+            num_rows=num_rows,
+            num_cols=num_cols,
+            num_splits=1,
+            max_mean_per_category=1,
+            max_std=1)
+    M_r = du.gen_M_r_from_T(T)
+    M_c = du.gen_M_c_from_T(T)
+    n_samples = num_chains * num_iters
+    engine = LE.LocalEngine(inf_seed)
+    diagnostics_data = forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
+            specified_s_grid=s_grid,
+            specified_mu_grid=mu_grid,
+            )
+    directory = generate_directory_name(directory_prefix='forward_sample', **parameters)
+    save_kwargs = dict(directory=directory)
+    plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
+
+    # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, num_rows=num_rows,
             num_cols=num_cols, num_iters=num_iters,
             specified_s_grid=s_grid,
@@ -278,11 +319,6 @@ if __name__ == '__main__':
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
-    directory = generate_directory_name(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            )
+    directory = generate_directory_name(**parameters)
     save_kwargs = dict(directory=directory)
     plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
