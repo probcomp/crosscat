@@ -26,9 +26,10 @@ import os
 import numpy
 import pylab
 #
+import crosscat.LocalEngine as LE
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
-import crosscat.LocalEngine as LE
+import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
@@ -232,11 +233,30 @@ def plot_diagnostic_data(diagnostics_data, parameters=None, save_kwargs=None):
         pass
     return
 
+def _get_kl(bins, bin_counts1, bin_counts2):
+    return qtu.KL_divergence_arrays(bins, bin_counts1, bin_counts2, False)
+
+def get_kl_series(grid, series1, series2):
+    assert len(series1) == len(series2)
+    series1, series2 = numpy.array(series1), numpy.array(series2)
+    grid = numpy.array(grid)
+    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+    N = len(series1)
+    kl_series = []
+    for idx in range(1, N):
+        bin_counts1, binz = numpy.histogram(series1[:idx], bins)
+        bin_counts2, binz = numpy.histogram(series2[:idx], bins)
+        kld = _get_kl(grid, bin_counts1, bin_counts2)
+        kl_series.append(kld)
+        pass
+    return kl_series
+
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, kwargs.iteritems())
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
+
 
 if __name__ == '__main__':
     import argparse
@@ -302,13 +322,13 @@ if __name__ == '__main__':
     M_c = du.gen_M_c_from_T(T)
     n_samples = num_chains * num_iters
     engine = LE.LocalEngine(inf_seed)
-    diagnostics_data = forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
+    forward_diagnostics_data = forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
     directory = generate_directory_name(directory_prefix='forward_sample', **parameters)
     save_kwargs = dict(directory=directory)
-    plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
+    plot_diagnostic_data(forward_diagnostics_data, parameters, save_kwargs)
 
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, num_rows=num_rows,
@@ -322,3 +342,4 @@ if __name__ == '__main__':
     directory = generate_directory_name(**parameters)
     save_kwargs = dict(directory=directory)
     plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
+
