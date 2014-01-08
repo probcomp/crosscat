@@ -398,14 +398,21 @@ void construct_continuous_specific_hyper_grid(int n_grid,
 				 vector<double> col_data,
 				 vector<double> &s_grid,
 				 vector<double> &mu_grid) {
-  // construct s grid
   // FIXME: should s_grid be a linspace from min el**2 to max el**2
+  double sum_sq_deviation, min, max;
   col_data = filter_nans(col_data);
-  double sum_sq_deviation = calc_sum_sq_deviation(col_data);
+  int num_non_nan = col_data.size();
+  if(num_non_nan != 0) {
+    sum_sq_deviation = calc_sum_sq_deviation(col_data);
+    min = *std::min_element(col_data.begin(), col_data.end());
+    max = *std::max_element(col_data.begin(), col_data.end());
+  } else {
+    // FIXME: What to do here?
+    sum_sq_deviation = 100;
+    min = -100;
+    max = 100;
+  }
   s_grid = log_linspace(sum_sq_deviation / 100., sum_sq_deviation, n_grid);
-  // construct mu grids
-  double min = *std::min_element(col_data.begin(), col_data.end());
-  double max = *std::max_element(col_data.begin(), col_data.end());
   mu_grid = linspace(min, max, n_grid);
 }
 
