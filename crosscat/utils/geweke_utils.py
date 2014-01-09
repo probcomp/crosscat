@@ -349,6 +349,11 @@ variable_name_mapper = dict(
         column_crp_alpha='column_crp_alpha',
         )
 
+def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
+    if max_s_grid is None:
+        max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
+    return max_mu_grid, max_s_grid
+
 
 if __name__ == '__main__':
     import argparse
@@ -356,12 +361,14 @@ if __name__ == '__main__':
     pylab.show()
     # parse input
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_rows', default=10, type=int)
-    parser.add_argument('--num_cols', default=2, type=int)
+    parser.add_argument('--num_rows', default=40, type=int)
+    parser.add_argument('--num_cols', default=4, type=int)
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=20, type=int)
+    parser.add_argument('--max_mu_grid', default=None, type=int)
+    parser.add_argument('--max_s_grid', default=None, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -370,6 +377,8 @@ if __name__ == '__main__':
     gen_seed = args.gen_seed
     num_chains = args.num_chains
     num_iters = args.num_iters
+    max_mu_grid = args.max_mu_grid
+    max_s_grid = args.max_s_grid
 
 
     # specify multiprocessing or not by setting mapper
@@ -385,8 +394,7 @@ if __name__ == '__main__':
 
 
     # specify grid
-    max_mu_grid = 100
-    max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
+    max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
     # may be an issue if this n_grid doesn't match the other grids in the c++
     n_grid = 31
     #
