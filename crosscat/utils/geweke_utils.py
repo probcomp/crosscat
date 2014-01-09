@@ -102,15 +102,26 @@ def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
     T = sample_T(engine, M_c, X_L, X_D)
     return M_c, T, X_L, X_D
 
+def arbitrate_plot_rand_idx(plot_rand_idx, num_iters):
+    if plot_rand_idx is not None:
+        if type(plot_rand_idx) == bool:
+            if plot_rand_idx:
+                plot_rand_idx = numpy.random.randint(num_iters)
+            else:
+                plot_rand_idx = None
+                pass
+            pass
+        pass
+    return plot_rand_idx
+
 def run_geweke(seed, num_rows, num_cols, num_iters,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
         plot_rand_idx=None,
         ):
     if diagnostics_funcs is None:
         diagnostics_funcs = default_diagnostics_funcs
-    if plot_rand_idx:
-        if type(plot_rand_idx) == bool:
-            plot_rand_idx = numpy.random.randint(num_iters)
+        pass
+    plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
     engine = LE.LocalEngine(seed)
     T, M_r, M_c, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
     diagnostics_data = collections.defaultdict(list)
@@ -415,7 +426,8 @@ if __name__ == '__main__':
             num_cols=num_cols, num_iters=num_iters,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
-            plot_rand_idx=True,
+            # this breaks with multiprocessing
+            plot_rand_idx=(num_chains==1),
             )
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
