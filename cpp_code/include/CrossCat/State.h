@@ -106,6 +106,8 @@ class State {
 	std::vector<int> global_col_indices,
 	std::string col_initialization=FROM_THE_PRIOR,
 	std::string row_initialization="",
+	std::vector<double> specified_s_grid=empty_vector_double,
+	std::vector<double> specified_mu_grid=empty_vector_double,
 	int N_GRID=31, int SEED=0);
 
   ~State();

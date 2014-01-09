@@ -71,6 +71,8 @@ State::State(const MatrixD &data,
 	     vector<int> global_col_indices,
 	     string col_initialization,
 	     string row_initialization,
+	     vector<double> specified_s_grid,
+	     vector<double> specified_mu_grid,
 	     int N_GRID, int SEED) : rng(SEED) {
   column_crp_score = 0;
   data_score = 0;
@@ -81,8 +83,13 @@ State::State(const MatrixD &data,
     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
   // construct grids
   construct_base_hyper_grids(data, N_GRID);
-  construct_column_hyper_grids(data, global_col_indices,
-			       GLOBAL_COL_DATATYPES);
+  if(specified_s_grid.begin()!=specified_s_grid.end()) {
+	  construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
+			  specified_s_grid, specified_mu_grid);
+  } else {
+	  construct_column_hyper_grids(data, global_col_indices,
+			  GLOBAL_COL_DATATYPES);
+  }
   //
   init_column_hypers(global_col_indices);
   column_crp_alpha = sample_column_crp_alpha();

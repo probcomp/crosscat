@@ -112,6 +112,8 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    string col_initialization,
                                    string row_initialization,
+                                   vector[double] specified_s_grid,
+                                   vector[double] specified_mu_grid,
                                    int N_GRID, int SEED)
      State *new_State "new State" (matrix[double] &data,
                                    vector[string] global_col_datatypes,
@@ -199,6 +201,7 @@ cdef class p_State:
                                        self.gri, self.gci,
                                        col_initialization,
                                        row_initialization,
+                                       specified_s_grid, specified_mu_grid,
                                        N_GRID, SEED)
          else:
               # # !!! MUTATES X_L !!!

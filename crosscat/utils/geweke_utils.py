@@ -130,6 +130,7 @@ def forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
         ):
     if diagnostics_funcs is None:
         diagnostics_funcs = default_diagnostics_funcs
+        pass
     T = (numpy.array(T) * numpy.nan).tolist()
     diagnostics_data = collections.defaultdict(list)
     for sample_idx in range(n_samples):
@@ -139,6 +140,7 @@ def forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
                 )
         diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
                 diagnostics_funcs)
+        pass
     return diagnostics_data
 
 def run_geweke_tuple(args_tuple):
@@ -266,10 +268,10 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
     pylab.ylabel('Posterior samples\n mass')
     #
     pylab.subplot(313)
-    map(pylab.plot, map(numpy.log, kl_series_list))
+    map(pylab.plot, kl_series_list)
     show_parameters(parameters)
     pylab.xlabel('iteration')
-    pylab.ylabel('log KL')
+    pylab.ylabel('KL')
     if parameters is not None:
         show_parameters(parameters)
         pass
@@ -310,8 +312,8 @@ def get_kl_series(grid, series1, series2):
     N = len(series1)
     kl_series = []
     for idx in range(1, N):
-        bin_counts1, binz = numpy.histogram(series1[:idx], bins)
-        bin_counts2, binz = numpy.histogram(series2[:idx], bins)
+        bin_counts1, binz = numpy.histogram(series1[:idx], bins, density=True)
+        bin_counts2, binz = numpy.histogram(series2[:idx], bins, density=True)
         kld = qtu.KL_divergence_arrays(grid, bin_counts1, bin_counts2, False)
         kl_series.append(kld)
         pass
@@ -350,7 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
-    parser.add_argument('--num_iters', default=2000, type=int)
+    parser.add_argument('--num_iters', default=20, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -374,7 +376,7 @@ if __name__ == '__main__':
 
 
     # specify grid
-    max_mu_grid = 10
+    max_mu_grid = 100
     max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     # may be an issue if this n_grid doesn't match the other grids in the c++
     n_grid = 31
