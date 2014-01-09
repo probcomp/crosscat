@@ -29,6 +29,7 @@ import pylab
 import crosscat.LocalEngine as LE
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
+import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
@@ -103,15 +104,24 @@ def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
 
 def run_geweke(seed, num_rows, num_cols, num_iters,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
+        plot_rand_idx=None,
         ):
     if diagnostics_funcs is None:
         diagnostics_funcs = default_diagnostics_funcs
+    if plot_rand_idx:
+        if type(plot_rand_idx) == bool:
+            plot_rand_idx = numpy.random.randint(num_iters)
     engine = LE.LocalEngine(seed)
     T, M_r, M_c, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid)
+        if idx == plot_rand_idx:
+            filename = 'T_%s.png' % idx
+            pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
+                    close=True)
+            pass
         pass
     return diagnostics_data
 
@@ -171,31 +181,43 @@ def do_hist_labelling(variable_name):
     pylab.ylabel('frequency')
     return
 
-def do_log_hist_bin_unique(variable_name, diagnostics_data):
+def do_log_hist_bin_unique(variable_name, diagnostics_data, new_figure=True,
+        do_labelling=True,
+        ):
     data = diagnostics_data[variable_name]
     bins = generate_log_bins_unique(data)
-    pylab.figure()
+    if new_figure:
+        pylab.figure()
     hist_ret = pylab.hist(data, bins=bins)
-    do_hist_labelling(variable_name)
+    if do_labelling:
+        do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return hist_ret
 
-def do_log_hist(variable_name, diagnostics_data, n_bins=31):
+def do_log_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
+        do_labelling=True,
+        ):
     data = diagnostics_data[variable_name]
     data = clip_extremes(data)
-    pylab.figure()
+    if new_figure:
+        pylab.figure()
     bins = generate_log_bins(data, n_bins)
     pylab.hist(data, bins=bins)
-    do_hist_labelling(variable_name)
+    if do_labelling:
+        do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return
 
-def do_hist(variable_name, diagnostics_data, n_bins=31):
+def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
+        do_labelling=True,
+        ):
     data = diagnostics_data[variable_name]
     data = clip_extremes(data)
-    pylab.figure()
+    if new_figure:
+        pylab.figure()
     pylab.hist(data, bins=n_bins)
-    do_hist_labelling(variable_name)
+    if do_labelling:
+        do_hist_labelling(variable_name)
     return
 
 def show_parameters(parameters):
@@ -203,7 +225,9 @@ def show_parameters(parameters):
     create_line = lambda (key, value): key + ' = ' + str(value)
     lines = map(create_line, parameters.iteritems())
     text = '\n'.join(lines)
-    pylab.text(0, 1, text, transform=pylab.axes().transAxes,
+    ax = pylab.gca()
+    # pylab.text(0, 1, text, transform=pylab.axes().transAxes,
+    pylab.text(0, 1, text, transform=ax.transAxes,
             va='top', size='small', linespacing=1.0)
     return
 
@@ -216,10 +240,54 @@ def save_current_figure(filename, directory, close_after_save=True):
     return
 
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
-#         col_0_s=do_log_hist,
         col_0_mu=do_hist,
         )
-def plot_diagnostic_data(diagnostics_data, parameters=None, save_kwargs=None):
+def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
+        parameters=None, save_kwargs=None):
+    plotter = plotter_lookup[variable_name]
+    diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
+    forward = forward_diagnostics_data[variable_name]
+    not_forward_list = [el[variable_name] for el in diagnostics_data_list]
+    kl_series_list = [
+            get_fixed_gibbs_kl_series(forward, not_forward)
+            for not_forward in not_forward_list
+            ]
+    pylab.figure()
+    #
+    pylab.subplot(311)
+    pylab.title('Geweke analysis for %s' % variable_name_mapper[variable_name])
+    plotter(variable_name, forward_diagnostics_data, new_figure=False,
+            do_labelling=False)
+    pylab.ylabel('Forward samples\n mass')
+    #
+    pylab.subplot(312)
+    plotter(variable_name, diagnostics_data, new_figure=False,
+            do_labelling=False)
+    pylab.ylabel('Posterior samples\n mass')
+    #
+    pylab.subplot(313)
+    map(pylab.plot, map(numpy.log, kl_series_list))
+    show_parameters(parameters)
+    pylab.xlabel('iteration')
+    pylab.ylabel('log KL')
+    if parameters is not None:
+        show_parameters(parameters)
+        pass
+    if save_kwargs is not None:
+        filename = variable_name + '_hist.png'
+        save_current_figure(filename, **save_kwargs)
+        pass
+    return
+
+def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+        parameters=None, save_kwargs=None):
+    for variable_name in forward_diagnostics_data:
+        plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+                variable_name, parameters, save_kwargs)
+        pass
+    return
+
+def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
     for variable_name in diagnostics_data.keys():
         plotter = plotter_lookup[variable_name]
         plotter(variable_name, diagnostics_data)
@@ -234,28 +302,41 @@ def plot_diagnostic_data(diagnostics_data, parameters=None, save_kwargs=None):
     return
 
 def _get_kl(bins, bin_counts1, bin_counts2):
-    return qtu.KL_divergence_arrays(bins, bin_counts1, bin_counts2, False)
+    return
 
 def get_kl_series(grid, series1, series2):
-    assert len(series1) == len(series2)
-    series1, series2 = numpy.array(series1), numpy.array(series2)
-    grid = numpy.array(grid)
+    # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
     N = len(series1)
     kl_series = []
     for idx in range(1, N):
         bin_counts1, binz = numpy.histogram(series1[:idx], bins)
         bin_counts2, binz = numpy.histogram(series2[:idx], bins)
-        kld = _get_kl(grid, bin_counts1, bin_counts2)
+        kld = qtu.KL_divergence_arrays(grid, bin_counts1, bin_counts2, False)
         kl_series.append(kld)
         pass
     return kl_series
+
+def get_fixed_gibbs_kl_series(forward, not_forward):
+    forward, not_forward = map(numpy.array, (zip(*zip(forward, not_forward))))
+    grid = numpy.array(sorted(set(not_forward)))
+    return get_kl_series(grid, forward, not_forward)
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, kwargs.iteritems())
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
+
+
+variable_name_mapper = dict(
+        col_0_s='column 0 precision hyperparameter sufficient statistic',
+        col_0_nu='column 0 precision hyperparameter psuedo count',
+        col_0_mu='column 0 mean hyperparameter sufficient statistic',
+        col_0_r='column 0 mean hyperparameter psuedo count',
+        view_0_crp_alpha='view_0_crp_alpha',
+        column_crp_alpha='column_crp_alpha',
+        )
 
 
 if __name__ == '__main__':
@@ -307,6 +388,8 @@ if __name__ == '__main__':
             num_cols=num_cols,
             max_mu_grid=max_mu_grid,
             max_s_grid=max_s_grid,
+            total_num_iters=num_iters*num_chains,
+            num_chains=num_chains,
             )
 
     # run geweke: forward sample only
@@ -326,20 +409,20 @@ if __name__ == '__main__':
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
-    directory = generate_directory_name(directory_prefix='forward_sample', **parameters)
-    save_kwargs = dict(directory=directory)
-    plot_diagnostic_data(forward_diagnostics_data, parameters, save_kwargs)
 
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, num_rows=num_rows,
             num_cols=num_cols, num_iters=num_iters,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
+            plot_rand_idx=True,
             )
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
+
     directory = generate_directory_name(**parameters)
     save_kwargs = dict(directory=directory)
-    plot_diagnostic_data(diagnostics_data, parameters, save_kwargs)
+    plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+            parameters, save_kwargs)
 
