@@ -330,9 +330,9 @@ def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
 
 
 variable_name_mapper = dict(
-        col_0_s='column 0 precision hyperparameter sufficient statistic',
+        col_0_s='column 0 precision hyperparameter value',
         col_0_nu='column 0 precision hyperparameter psuedo count',
-        col_0_mu='column 0 mean hyperparameter sufficient statistic',
+        col_0_mu='column 0 mean hyperparameter value',
         col_0_r='column 0 mean hyperparameter psuedo count',
         view_0_crp_alpha='view_0_crp_alpha',
         column_crp_alpha='column_crp_alpha',
