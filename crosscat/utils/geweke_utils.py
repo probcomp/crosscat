@@ -303,18 +303,16 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def _get_kl(bins, bin_counts1, bin_counts2):
-    return
-
 def get_kl_series(grid, series1, series2):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
     N = len(series1)
     kl_series = []
     for idx in range(1, N):
-        bin_counts1, binz = numpy.histogram(series1[:idx], bins, density=True)
-        bin_counts2, binz = numpy.histogram(series2[:idx], bins, density=True)
-        kld = qtu.KL_divergence_arrays(grid, bin_counts1, bin_counts2, False)
+        density1, binz = numpy.histogram(series1[:idx], bins, density=True)
+        density2, binz = numpy.histogram(series2[:idx], bins, density=True)
+        log_density1, log_density2 = numpy.log(density1), numpy.log(density2)
+        kld = qtu.KL_divergence_arrays(grid, log_density1, log_density2, False)
         kl_series.append(kld)
         pass
     return kl_series
