@@ -364,6 +364,17 @@ def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
 
+def arbitrate_num_chains(num_chains, num_iters):
+    if num_chains != 1:
+        if num_chains is None:
+            num_chains = multiprocessing.cpu_count()
+            pass
+        num_iters = num_iters /num_chains
+        mapper = multiprocessing.Pool(num_chains).map
+    else:
+        mapper = map
+        pass
+    return num_chains, num_iters, mapper
 
 if __name__ == '__main__':
     import argparse
@@ -392,16 +403,7 @@ if __name__ == '__main__':
 
 
     # specify multiprocessing or not by setting mapper
-    if num_chains != 1:
-        if num_chains is None:
-            num_chains = multiprocessing.cpu_count()
-            pass
-        num_iters = num_iters /num_chains
-        mapper = multiprocessing.Pool(num_chains).map
-    else:
-        mapper = map
-        pass
-
+    num_chains, num_iters, mapper = arbitrate_num_chains(num_chains, num_iters)
 
     # specify grid
     max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
