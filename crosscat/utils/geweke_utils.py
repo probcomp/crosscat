@@ -238,13 +238,16 @@ def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
         do_hist_labelling(variable_name)
     return
 
-def show_parameters(parameters):
-    if len(parameters) == 0: return
-    create_line = lambda (key, value): key + ' = ' + str(value)
+create_line = lambda (key, value): key + ' = ' + str(value)
+def get_parameters_as_text(parameters):
     lines = map(create_line, parameters.iteritems())
     text = '\n'.join(lines)
+    return text
+
+def show_parameters(parameters):
+    if len(parameters) == 0: return
     ax = pylab.gca()
-    # pylab.text(0, 1, text, transform=pylab.axes().transAxes,
+    text = get_parameters_as_text(parameters)
     pylab.text(0, 1, text, transform=ax.transAxes,
             va='top', size='small', linespacing=1.0)
     return
@@ -295,15 +298,17 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
         filename = variable_name + '_hist.png'
         save_current_figure(filename, **save_kwargs)
         pass
-    return
+    return kl_series_list
 
 def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         parameters=None, save_kwargs=None):
+    kl_series_list_dict = dict()
     for variable_name in forward_diagnostics_data:
-        plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+        kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                 variable_name, parameters, save_kwargs)
+        kl_series_list_dict[variable_name] = kl_series_list
         pass
-    return
+    return kl_series_list_dict
 
 def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
     for variable_name in diagnostics_data.keys():
@@ -376,6 +381,15 @@ def arbitrate_num_chains(num_chains, num_iters):
         pass
     return num_chains, num_iters, mapper
 
+def write_parameters_to_text(filename, parameters, directory=''):
+    full_filename = os.path.join(directory, filename)
+    text = get_parameters_as_text(parameters)
+    with open(full_filename, 'w') as fh:
+        fh.writelines(text + '\n')
+        pass
+    return
+
+
 if __name__ == '__main__':
     import argparse
     pylab.ion()
@@ -432,6 +446,7 @@ if __name__ == '__main__':
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
+    # save plots
     parameters = dict(
             num_rows=num_rows,
             num_cols=num_cols,
@@ -443,6 +458,22 @@ if __name__ == '__main__':
             )
     directory = generate_directory_name(**parameters)
     save_kwargs = dict(directory=directory)
-    plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+    kl_series_list_dict = plot_all_diagnostic_data(
+            forward_diagnostics_data, diagnostics_data_list,
             parameters, save_kwargs)
+    get_final = lambda indexable: indexable[-1]
+    final_kls = {
+            key : map(get_final, value)
+            for key, value in kl_series_list_dict.iteritems()
+            }
+    summary_kls = {
+            key : numpy.mean(value)
+            for key, value in final_kls.iteritems()
+            }
+    parameters['final_kls'] = final_kls
+    parameters['summary_kls'] = summary_kls
+    write_parameters_to_text('parameters.txt', parameters, directory=directory)
+    fu.pickle(parameters, 'parameters.pkl', dir=directory)
+
+    # save data
     # parameters['final_kls'] = [kls[-1] for kls in ]
