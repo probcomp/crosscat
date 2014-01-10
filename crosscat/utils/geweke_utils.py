@@ -33,7 +33,7 @@ import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
-image_format = 'pdf'
+image_format = 'png'
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
@@ -270,7 +270,8 @@ plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
 def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
         parameters=None, save_kwargs=None):
     plotter = plotter_lookup[variable_name]
-    diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
+    which_idx = numpy.random.randint(len(diagnostics_data_list))
+    diagnostics_data = diagnostics_data_list[which_idx]
     forward = forward_diagnostics_data[variable_name]
     not_forward_list = [el[variable_name] for el in diagnostics_data_list]
     kl_series_list = [
@@ -314,6 +315,8 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             kl_series_list_dict[variable_name] = kl_series_list
             pass
         except Exception, e:
+            print 'Failed to plot_diagnostic_data for %s' % variable_name
+            print e
             pass
         pass
     return kl_series_list_dict
