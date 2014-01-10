@@ -33,7 +33,7 @@ import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
-image_format = 'png'
+image_format = 'pdf'
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
@@ -308,9 +308,13 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         parameters=None, save_kwargs=None):
     kl_series_list_dict = dict()
     for variable_name in forward_diagnostics_data:
-        kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
-                variable_name, parameters, save_kwargs)
-        kl_series_list_dict[variable_name] = kl_series_list
+        try:
+            kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+                    variable_name, parameters, save_kwargs)
+            kl_series_list_dict[variable_name] = kl_series_list
+            pass
+        except Exception, e:
+            pass
         pass
     return kl_series_list_dict
 
