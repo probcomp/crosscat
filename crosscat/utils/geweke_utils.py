@@ -33,6 +33,8 @@ import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
+image_format = 'png'
+
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
     query_col_indices = [name_to_idx[colname] for colname in query_names]
@@ -129,7 +131,7 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid)
         if idx == plot_rand_idx:
-            filename = 'T_%s.png' % idx
+            filename = 'T_%s.%s' % (idx, image_format)
             pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
                     close=True)
             pass
@@ -252,12 +254,14 @@ def show_parameters(parameters):
             va='top', size='small', linespacing=1.0)
     return
 
-def save_current_figure(filename, directory, close_after_save=True):
+def save_current_figure(filename_no_format, directory, close_after_save=True,
+        format=image_format):
     fu.ensure_dir(directory)
-    full_filename = os.path.join(directory, filename)
+    full_filename = os.path.join(directory, filename_no_format + '.' + format)
     pylab.savefig(full_filename)
     if close_after_save:
         pylab.close()
+        pass
     return
 
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
@@ -295,8 +299,8 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
         show_parameters(parameters)
         pass
     if save_kwargs is not None:
-        filename = variable_name + '_hist.png'
-        save_current_figure(filename, **save_kwargs)
+        filename = variable_name + '_hist'
+        save_current_figure(filename, format=image_format, **save_kwargs)
         pass
     return kl_series_list
 
@@ -318,8 +322,8 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
             show_parameters(parameters)
             pass
         if save_kwargs is not None:
-            filename = variable_name + '_hist.png'
-            save_current_figure(filename, **save_kwargs)
+            filename = variable_name + '_hist'
+            save_current_figure(filename, format=image_format, **save_kwargs)
             pass
         pass
     return
@@ -401,8 +405,8 @@ if __name__ == '__main__':
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
-    parser.add_argument('--num_iters', default=20, type=int)
-    parser.add_argument('--max_mu_grid', default=None, type=int)
+    parser.add_argument('--num_iters', default=10000, type=int)
+    parser.add_argument('--max_mu_grid', default=100, type=int)
     parser.add_argument('--max_s_grid', default=None, type=int)
     args = parser.parse_args()
     #
