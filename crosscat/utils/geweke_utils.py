@@ -314,18 +314,23 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def get_kl_series(grid, series1, series2):
+def _get_kl_series(max_idx, grid, series1, series2):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+    density1, binz = numpy.histogram(series1[:max_idx], bins, density=True)
+    density2, binz = numpy.histogram(series2[:max_idx], bins, density=True)
+    log_density1, log_density2 = map(numpy.log, (density1, density2))
+    kld = qtu.KL_divergence_arrays(grid, log_density1, log_density2, False)
+    return kld
+
+def _get_kl_series_tuple(tuple_args):
+    return _get_kl_series(*tuple_args)
+
+def get_kl_series(grid, series1, series2):
     N = len(series1)
-    kl_series = []
-    for idx in range(1, N):
-        density1, binz = numpy.histogram(series1[:idx], bins, density=True)
-        density2, binz = numpy.histogram(series2[:idx], bins, density=True)
-        log_density1, log_density2 = numpy.log(density1), numpy.log(density2)
-        kld = qtu.KL_divergence_arrays(grid, log_density1, log_density2, False)
-        kl_series.append(kld)
-        pass
+    mapper, func = multiprocessing.Pool().map, _get_kl_series_tuple
+    arg_tuples = [(n, grid, series1, series2) for n in range(1, N)]
+    kl_series = mapper(func, arg_tuples)
     return kl_series
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
@@ -401,16 +406,6 @@ if __name__ == '__main__':
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
     s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
 
-    # set up parameters
-    parameters = dict(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            total_num_iters=num_iters*num_chains,
-            num_chains=num_chains,
-            )
-
     # run geweke: forward sample only
     T, inverse_permutation_indices = du.gen_factorial_data(
             gen_seed=gen_seed,
@@ -441,8 +436,17 @@ if __name__ == '__main__':
     diagnostics_data_list = mapper(helper, seeds)
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
+    parameters = dict(
+            num_rows=num_rows,
+            num_cols=num_cols,
+            max_mu_grid=max_mu_grid,
+            max_s_grid=max_s_grid,
+            total_num_iters=num_iters*num_chains,
+            chain_num_iters=num_iters,
+            num_chains=num_chains,
+            )
     directory = generate_directory_name(**parameters)
     save_kwargs = dict(directory=directory)
     plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             parameters, save_kwargs)
-
+    # parameters['final_kls'] = [kls[-1] for kls in ]
