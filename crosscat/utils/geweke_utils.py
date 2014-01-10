@@ -136,9 +136,14 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         pass
     return diagnostics_data
 
-def forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
+def forward_sample_from_prior(num_rows, num_cols, n_samples,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
         ):
+    # presume all continuous for now, else need T, M_c, M_r
+    T = (numpy.ndarray((num_rows, num_cols)) * numpy.nan).tolist()
+    M_r = du.gen_M_r_from_T(T)
+    M_c = du.gen_M_c_from_T(T)
+    engine = LE.LocalEngine(inf_seed)
     if diagnostics_funcs is None:
         diagnostics_funcs = default_diagnostics_funcs
         pass
@@ -407,19 +412,8 @@ if __name__ == '__main__':
     s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
 
     # run geweke: forward sample only
-    T, inverse_permutation_indices = du.gen_factorial_data(
-            gen_seed=gen_seed,
-            num_clusters=1,
-            num_rows=num_rows,
-            num_cols=num_cols,
-            num_splits=1,
-            max_mean_per_category=1,
-            max_std=1)
-    M_r = du.gen_M_r_from_T(T)
-    M_c = du.gen_M_c_from_T(T)
     n_samples = num_chains * num_iters
-    engine = LE.LocalEngine(inf_seed)
-    forward_diagnostics_data = forward_sample_from_prior(engine, M_c, M_r, T, n_samples,
+    forward_diagnostics_data = forward_sample_from_prior(num_rows, num_cols, n_samples,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
