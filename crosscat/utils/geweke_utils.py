@@ -21,6 +21,7 @@ import multiprocessing
 import collections
 import functools
 import operator
+import re
 import os
 #
 import numpy
@@ -254,22 +255,30 @@ def save_current_figure(filename_no_format, directory, close_after_save=True,
         pass
     return
 
-variable_name_mapper = dict(
-        col_0_s='column 0 precision hyperparameter value',
-        col_0_nu='column 0 precision hyperparameter psuedo count',
-        col_0_mu='column 0 mean hyperparameter value',
-        col_0_r='column 0 mean hyperparameter psuedo count',
-        view_0_crp_alpha='view_0_crp_alpha',
-        column_crp_alpha='column_crp_alpha',
+hyper_name_mapper = dict(
+        s='precision hyperparameter value',
+        nu='precision hyperparameter psuedo count',
+        mu='mean hyperparameter value',
+        r='mean hyperparameter psuedo count',
         )
+col_hyper_re = re.compile('^col_([^_]*)_(.*)$')
+def map_variable_name(variable_name):
+    mapped_variable_name = variable_name
+    match = col_hyper_re.match(variable_name)
+    if match is not None:
+        column_idx, hyper_name = match.groups()
+        mapped_hyper_name = hyper_name_mapper.get(hyper_name, hyper_name)
+        mapped_variable_name = 'column %s %s' % (column_idx, mapped_hyper_name)
+        pass
+    return mapped_variable_name
+
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
         col_0_mu=do_hist,
         )
 def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
         parameters=None, save_kwargs=None):
     plotter = plotter_lookup[variable_name]
-    mapped_variable_name = variable_name_mapper.get(variable_name,
-            variable_name)
+    mapped_variable_name = map_variable_name(variable_name)
     which_idx = numpy.random.randint(len(diagnostics_data_list))
     diagnostics_data = diagnostics_data_list[which_idx]
     forward = forward_diagnostics_data[variable_name]
