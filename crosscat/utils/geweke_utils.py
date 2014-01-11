@@ -344,21 +344,28 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def _get_kl_series(max_idx, grid, series1, series2):
+def get_kl(max_idx, grid, true_series, inferred_series):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-    density1, binz = numpy.histogram(series1[:max_idx], bins, density=True)
-    density2, binz = numpy.histogram(series2[:max_idx], bins, density=True)
-    log_density1, log_density2 = map(numpy.log, (density1, density2))
-    kld = qtu.KL_divergence_arrays(grid, log_density1, log_density2, False)
+    true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
+    inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
+    kld = numpy.nan
+    true_has_support = sum(true_density==0) == 0
+    inferred_has_support = sum(inferred_density==0) == 0
+    if true_has_support and inferred_has_support:
+        # inferred has support every true does
+        log_true_density = numpy.log(true_density)
+        log_inferred_density = numpy.log(inferred_density)
+        kld = qtu.KL_divergence_arrays(grid, log_true_density,
+                log_inferred_density, False)
     return kld
 
-def _get_kl_series_tuple(tuple_args):
-    return _get_kl_series(*tuple_args)
+def get_kl_tuple(tuple_args):
+    return get_kl(*tuple_args)
 
 def get_kl_series(grid, series1, series2):
     N = len(series1)
-    mapper, func = multiprocessing.Pool().map, _get_kl_series_tuple
+    mapper, func = multiprocessing.Pool().map, get_kl_tuple
     arg_tuples = [(n, grid, series1, series2) for n in range(1, N)]
     kl_series = mapper(func, arg_tuples)
     return kl_series
