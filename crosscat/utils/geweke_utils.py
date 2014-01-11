@@ -76,6 +76,15 @@ def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
         diagnostics_data[key].append(func(X_L))
     return diagnostics_data
 
+def generate_diagnostics_funcs_for_column(X_L, column_idx):
+    keys = set(X_L['column_hypers'][column_idx].keys())
+    keys.discard('fixed')
+    def helper(column_idx, key):
+        func_name = 'col_%s_%s' % (column_idx, key)
+        func = lambda X_L: X_L['column_hypers'][column_idx][key]
+        return func_name, func
+    diagnostics_funcs = { helper(column_idx, key) for key in keys }
+    return diagnostics_funcs
 
 get_col_0_mu = lambda X_L: X_L['column_hypers'][0]['mu']
 get_col_0_nu = lambda X_L: X_L['column_hypers'][0]['nu']
@@ -92,6 +101,9 @@ default_diagnostics_funcs = dict(
         column_crp_alpha=get_column_crp_alpha,
         view_0_crp_alpha=get_view_0_crp_alpha,
         )
+# if you wanted to autogenerate diagnostics functions for column 1
+# T, M_r, M_c, X_L, X_D = generate_and_initialize(0, 0, 10, 10)
+# default_diagnostics_funcs.update(generate_diagnostics_funcs_for_column(X_L, 1))
 #
 def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
@@ -132,6 +144,7 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid)
         if idx == plot_rand_idx:
+            # This DOESN'T work with multithreading
             filename = 'T_%s.%s' % (idx, image_format)
             pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
                     close=True)
@@ -271,6 +284,8 @@ plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
 def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
         parameters=None, save_kwargs=None):
     plotter = plotter_lookup[variable_name]
+    mapped_variable_name = variable_name_mapper.get(variable_name,
+            variable_name)
     which_idx = numpy.random.randint(len(diagnostics_data_list))
     diagnostics_data = diagnostics_data_list[which_idx]
     forward = forward_diagnostics_data[variable_name]
@@ -282,7 +297,7 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
     pylab.figure()
     #
     pylab.subplot(311)
-    pylab.title('Geweke analysis for %s' % variable_name_mapper[variable_name])
+    pylab.title('Geweke analysis for %s' % mapped_variable_name)
     plotter(variable_name, forward_diagnostics_data, new_figure=False,
             do_labelling=False)
     pylab.ylabel('Forward samples\n mass')
@@ -460,7 +475,7 @@ if __name__ == '__main__':
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
     # save plots
-    parameters = dict(
+    plot_parameters = dict(
             num_rows=num_rows,
             num_cols=num_cols,
             max_mu_grid=max_mu_grid,
@@ -469,11 +484,11 @@ if __name__ == '__main__':
             chain_num_iters=num_iters,
             num_chains=num_chains,
             )
-    directory = generate_directory_name(**parameters)
+    directory = generate_directory_name(**plot_parameters)
     save_kwargs = dict(directory=directory)
     kl_series_list_dict = plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
-            parameters, save_kwargs)
+            plot_parameters, save_kwargs)
     get_final = lambda indexable: indexable[-1]
     final_kls = {
             key : map(get_final, value)
@@ -483,7 +498,8 @@ if __name__ == '__main__':
             key : numpy.mean(value)
             for key, value in final_kls.iteritems()
             }
-    parameters['final_kls'] = final_kls
-    parameters['summary_kls'] = summary_kls
-    write_parameters_to_text('parameters.txt', parameters, directory=directory)
-    fu.pickle(parameters, 'parameters.pkl', dir=directory)
+    save_parameters = plot_parameters.copy()
+    save_parameters['final_kls'] = final_kls
+    save_parameters['summary_kls'] = summary_kls
+    write_parameters_to_text('parameters.txt', save_parameters, directory=directory)
+    fu.pickle(save_parameters, 'parameters.pkl', dir=directory)
