@@ -64,7 +64,7 @@ def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
 def generate_diagnostics_funcs_for_column(X_L, column_idx):
     keys = set(X_L['column_hypers'][column_idx].keys())
     keys.discard('fixed')
-    keys.discard('N')
+    keys.discard('K')
     def helper(column_idx, key):
         func_name = 'col_%s_%s' % (column_idx, key)
         func = lambda X_L: X_L['column_hypers'][column_idx][key]
@@ -162,10 +162,13 @@ def condense_diagnostics_data_list(diagnostics_data_list):
     keys = diagnostics_data_list[0].keys()
     return { key : get_key_condensed(key) for key in keys}
 
+def is_eps(data):
+    data = numpy.array(data)
+    return (0 < data) & (data < 1E-100)
+
 def filter_eps(data):
     data = numpy.array(data)
-    is_eps = (0 < data) & (data < 1E-100)
-    return data[~is_eps]
+    return data[~is_eps(data)]
 
 def clip_extremes(data):
     data = numpy.array(data)
@@ -322,7 +325,6 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                     variable_name, parameters, save_kwargs)
             kl_series_list_dict[variable_name] = kl_series_list
-            pass
         except Exception, e:
             print 'Failed to plot_diagnostic_data for %s' % variable_name
             print e
@@ -346,33 +348,40 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
 
 def get_kl(max_idx, grid, true_series, inferred_series):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
-    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-    true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
-    inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
     kld = numpy.nan
-    true_has_support = sum(true_density==0) == 0
-    inferred_has_support = sum(inferred_density==0) == 0
-    if true_has_support and inferred_has_support:
-        # inferred has support every true does
-        log_true_density = numpy.log(true_density)
-        log_inferred_density = numpy.log(inferred_density)
-        kld = qtu.KL_divergence_arrays(grid, log_true_density,
-                log_inferred_density, False)
+    try:
+        bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+        true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
+        inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
+        true_has_support = sum(true_density==0) == 0
+        inferred_has_support = sum(inferred_density==0) == 0
+        if true_has_support and inferred_has_support:
+            # inferred has support every true does
+            log_true_density = numpy.log(true_density)
+            log_inferred_density = numpy.log(inferred_density)
+            kld = qtu.KL_divergence_arrays(grid, log_true_density,
+                    log_inferred_density, False)
+            pass
+    except Exception, e:
+        pass
     return kld
 
 def get_kl_tuple(tuple_args):
     return get_kl(*tuple_args)
 
 def get_kl_series(grid, series1, series2):
+    mapper = multiprocessing.Pool().map
+    #
+    series1[is_eps(series1)] = 0
+    series2[is_eps(series2)] = 0
     N = len(series1)
-    mapper, func = multiprocessing.Pool().map, get_kl_tuple
-    arg_tuples = [(n, grid, series1, series2) for n in range(1, N)]
-    kl_series = mapper(func, arg_tuples)
+    arg_tuples = [(n, grid, series1, series2) for n in range(10, N)]
+    kl_series = mapper(get_kl_tuple, arg_tuples)
     return kl_series
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = map(numpy.array, (zip(*zip(forward, not_forward))))
-    grid = numpy.array(sorted(set(not_forward)))
+    grid = numpy.array(sorted(set(forward)))
     return get_kl_series(grid, forward, not_forward)
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
