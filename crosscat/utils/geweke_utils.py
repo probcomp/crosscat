@@ -55,22 +55,6 @@ def sample_T(engine, M_c, X_L, X_D):
         generated_T.append(sample)
     return generated_T
 
-def generate_and_initialize(gen_seed, inf_seed, num_rows, num_cols):
-    T, inverse_permutation_indices = du.gen_factorial_data(
-            gen_seed=gen_seed,
-            num_clusters=1,
-            num_rows=num_rows,
-            num_cols=num_cols,
-            num_splits=1,
-    		max_mean_per_category=1,
-            max_std=1)
-    M_r = du.gen_M_r_from_T(T)
-    M_c = du.gen_M_c_from_T(T)
-    # initialze and transition chains
-    engine = LE.LocalEngine(inf_seed)
-    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
-    return M_c, M_r, T, X_L, X_D
-
 def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
     for key, func in diagnostics_funcs.iteritems():
         diagnostics_data[key].append(func(X_L))
@@ -87,17 +71,6 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     diagnostics_funcs = { helper(column_idx, key) for key in keys }
     return diagnostics_funcs
 
-get_column_crp_alpha = lambda X_L: X_L['column_partition']['hypers']['alpha']
-get_view_0_crp_alpha = lambda X_L: X_L['view_state'][0]['row_partition_model']['hypers']['alpha']
-#
-default_diagnostics_funcs = dict(
-        column_crp_alpha=get_column_crp_alpha,
-        view_0_crp_alpha=get_view_0_crp_alpha,
-        )
-# if you wanted to autogenerate diagnostics functions for column 1
-# M_c, M_r, T, X_L, X_D = generate_and_initialize(0, 0, 10, 10)
-# default_diagnostics_funcs.update(generate_diagnostics_funcs_for_column(X_L, 1))
-#
 def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
         ):
@@ -122,6 +95,12 @@ def arbitrate_plot_rand_idx(plot_rand_idx, num_iters):
         pass
     return plot_rand_idx
 
+get_column_crp_alpha = lambda X_L: X_L['column_partition']['hypers']['alpha']
+get_view_0_crp_alpha = lambda X_L: X_L['view_state'][0]['row_partition_model']['hypers']['alpha']
+default_diagnostics_funcs = dict(
+        column_crp_alpha=get_column_crp_alpha,
+        view_0_crp_alpha=get_view_0_crp_alpha,
+        )
 def generate_diagnostics_funcs(X_L, probe_columns):
     diagnostics_funcs = default_diagnostics_funcs.copy()
     for probe_column in probe_columns:
@@ -155,8 +134,6 @@ def run_geweke(seed, M_c, T, num_iters,
 def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         ):
-    # presume all continuous for now, else need T, M_c, M_r
-    # T = (numpy.array(T) * numpy.nan).tolist()
     T = numpy.zeros(numpy.array(T).shape).tolist()
     M_r = du.gen_M_r_from_T(T)
     engine = LE.LocalEngine(inf_seed)
@@ -277,6 +254,14 @@ def save_current_figure(filename_no_format, directory, close_after_save=True,
         pass
     return
 
+variable_name_mapper = dict(
+        col_0_s='column 0 precision hyperparameter value',
+        col_0_nu='column 0 precision hyperparameter psuedo count',
+        col_0_mu='column 0 mean hyperparameter value',
+        col_0_r='column 0 mean hyperparameter psuedo count',
+        view_0_crp_alpha='view_0_crp_alpha',
+        column_crp_alpha='column_crp_alpha',
+        )
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
         col_0_mu=do_hist,
         )
@@ -379,16 +364,6 @@ def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     parts = map(generate_part, kwargs.iteritems())
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
-
-
-variable_name_mapper = dict(
-        col_0_s='column 0 precision hyperparameter value',
-        col_0_nu='column 0 precision hyperparameter psuedo count',
-        col_0_mu='column 0 mean hyperparameter value',
-        col_0_r='column 0 mean hyperparameter psuedo count',
-        view_0_crp_alpha='view_0_crp_alpha',
-        column_crp_alpha='column_crp_alpha',
-        )
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
     if max_s_grid is None:
