@@ -43,6 +43,7 @@ def determine_Q(M_c, query_names, num_rows, impute_row=None):
     return Q
 
 def sample_T(engine, M_c, X_L, X_D):
+    num_rows = len(X_D[0])
     num_cols = len(X_L['column_partition']['assignments'])
     query_cols = range(num_cols)
     col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
@@ -138,7 +139,7 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         pass
     return diagnostics_data
 
-def forward_sample_from_prior(num_rows, num_cols, n_samples,
+def forward_sample_from_prior(num_rows, num_cols, inf_seed, n_samples,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
         ):
     # presume all continuous for now, else need T, M_c, M_r
@@ -440,7 +441,8 @@ if __name__ == '__main__':
 
     # run geweke: forward sample only
     n_samples = num_chains * num_iters
-    forward_diagnostics_data = forward_sample_from_prior(num_rows, num_cols, n_samples,
+    forward_diagnostics_data = forward_sample_from_prior(num_rows, num_cols,
+            inf_seed, n_samples,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
@@ -485,6 +487,3 @@ if __name__ == '__main__':
     parameters['summary_kls'] = summary_kls
     write_parameters_to_text('parameters.txt', parameters, directory=directory)
     fu.pickle(parameters, 'parameters.pkl', dir=directory)
-
-    # save data
-    # parameters['final_kls'] = [kls[-1] for kls in ]
