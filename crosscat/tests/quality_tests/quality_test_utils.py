@@ -188,7 +188,7 @@ def KL_divergence_arrays(support, log_true, log_inferred, is_discrete):
 		# trapezoidal quadrature
         intervals = numpy.diff(support)
         fs = F[:-1] + (numpy.diff(F) / 2.0)
-		kld = numpy.sum(intervals*fs)
+        kld = numpy.sum(intervals*fs)
 
 	return kld
 
