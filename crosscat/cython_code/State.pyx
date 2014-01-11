@@ -112,6 +112,8 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    string col_initialization,
                                    string row_initialization,
+                                   vector[double] specified_s_grid,
+                                   vector[double] specified_mu_grid,
                                    int N_GRID, int SEED)
      State *new_State "new State" (matrix[double] &data,
                                    vector[string] global_col_datatypes,
@@ -123,6 +125,8 @@ cdef extern from "State.h":
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
+                                   vector[double] specified_s_grid,
+                                   vector[double] specified_mu_grid,
                                    int N_GRID, int SEED)
      void del_State "delete" (State *s)
 
@@ -171,6 +175,7 @@ cdef class p_State:
 
     def __cinit__(self, M_c, T, X_L=None, X_D=None,
                   initialization='from_the_prior', row_initialization=-1,
+                  specified_s_grid=(), specified_mu_grid=(),
                   N_GRID=31, SEED=0):
          column_types, event_counts = extract_column_types_counts(M_c)
          global_row_indices = range(len(T))
@@ -196,6 +201,7 @@ cdef class p_State:
                                        self.gri, self.gci,
                                        col_initialization,
                                        row_initialization,
+                                       specified_s_grid, specified_mu_grid,
                                        N_GRID, SEED)
          else:
               # # !!! MUTATES X_L !!!
@@ -214,6 +220,7 @@ cdef class p_State:
                                        hypers_m,
                                        column_partition, column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
+                                       specified_s_grid, specified_mu_grid,
                                        N_GRID, SEED)
     def __dealloc__(self):
         del_matrix(self.dataptr)
