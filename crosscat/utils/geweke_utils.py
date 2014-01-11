@@ -79,6 +79,7 @@ def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
 def generate_diagnostics_funcs_for_column(X_L, column_idx):
     keys = set(X_L['column_hypers'][column_idx].keys())
     keys.discard('fixed')
+    keys.discard('N')
     def helper(column_idx, key):
         func_name = 'col_%s_%s' % (column_idx, key)
         func = lambda X_L: X_L['column_hypers'][column_idx][key]
@@ -86,18 +87,10 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     diagnostics_funcs = { helper(column_idx, key) for key in keys }
     return diagnostics_funcs
 
-get_col_0_mu = lambda X_L: X_L['column_hypers'][0]['mu']
-get_col_0_nu = lambda X_L: X_L['column_hypers'][0]['nu']
-get_col_0_s = lambda X_L: X_L['column_hypers'][0]['s']
-get_col_0_r = lambda X_L: X_L['column_hypers'][0]['r']
 get_column_crp_alpha = lambda X_L: X_L['column_partition']['hypers']['alpha']
 get_view_0_crp_alpha = lambda X_L: X_L['view_state'][0]['row_partition_model']['hypers']['alpha']
 #
 default_diagnostics_funcs = dict(
-        col_0_r=get_col_0_r,
-        col_0_s=get_col_0_s,
-        col_0_mu=get_col_0_mu,
-        col_0_nu=get_col_0_nu,
         column_crp_alpha=get_column_crp_alpha,
         view_0_crp_alpha=get_view_0_crp_alpha,
         )
@@ -129,16 +122,22 @@ def arbitrate_plot_rand_idx(plot_rand_idx, num_iters):
         pass
     return plot_rand_idx
 
-def run_geweke(seed, num_rows, num_cols, num_iters,
+def arbitrate_diagnostics_funcs(diagnostics_funcs, X_L):
+    if diagnostics_funcs is None:
+        diagnostics_funcs = default_diagnostics_funcs.copy()
+        diagnostics_funcs.update(generate_diagnostics_funcs_for_column(X_L, 0))
+        pass
+    return diagnostics_funcs
+
+def run_geweke(seed, M_c, T, num_iters,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
         plot_rand_idx=None,
         ):
-    if diagnostics_funcs is None:
-        diagnostics_funcs = default_diagnostics_funcs
-        pass
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
     engine = LE.LocalEngine(seed)
-    M_c, M_r, T, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
+    M_r = du.gen_M_r_from_T(T)
+    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+    diagnostics_funcs = arbitrate_diagnostics_funcs(diagnostics_funcs, X_L)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
@@ -152,24 +151,21 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         pass
     return diagnostics_data
 
-def forward_sample_from_prior(num_rows, num_cols, inf_seed, n_samples,
+def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
         diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
         ):
     # presume all continuous for now, else need T, M_c, M_r
-    T = (numpy.ndarray((num_rows, num_cols)) * numpy.nan).tolist()
+    # T = (numpy.array(T) * numpy.nan).tolist()
+    T = numpy.zeros(numpy.array(T).shape).tolist()
     M_r = du.gen_M_r_from_T(T)
-    M_c = du.gen_M_c_from_T(T)
     engine = LE.LocalEngine(inf_seed)
-    if diagnostics_funcs is None:
-        diagnostics_funcs = default_diagnostics_funcs
-        pass
-    T = (numpy.array(T) * numpy.nan).tolist()
     diagnostics_data = collections.defaultdict(list)
     for sample_idx in range(n_samples):
         X_L, X_D = engine.initialize(M_c, M_r, T,
                 specified_s_grid=specified_s_grid,
                 specified_mu_grid=specified_mu_grid,
                 )
+        diagnostics_funcs = arbitrate_diagnostics_funcs(diagnostics_funcs, X_L)
         diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
                 diagnostics_funcs)
         pass
@@ -416,6 +412,25 @@ def write_parameters_to_text(filename, parameters, directory=''):
         pass
     return
 
+def gen_M_c(cctypes, num_values_list):
+    num_cols = len(cctypes)
+    colnames = range(num_cols)
+    col_indices = range(num_cols)
+    def helper((cctype, num_values)):
+        metadata_generator = du.metadata_generator_lookup[cctype]
+        faux_data = range(num_values)
+        return metadata_generator(faux_data)
+    #
+    name_to_idx = dict(zip(colnames, col_indices))
+    idx_to_name = dict(zip(map(str, col_indices), colnames))
+    column_metadata = map(helper, zip(cctypes, num_values_list))
+    M_c = dict(
+        name_to_idx=name_to_idx,
+        idx_to_name=idx_to_name,
+        column_metadata=column_metadata,
+        )
+    return M_c
+
 
 if __name__ == '__main__':
     import argparse
@@ -443,6 +458,12 @@ if __name__ == '__main__':
     max_s_grid = args.max_s_grid
 
 
+    cctypes = ['multinomial'] * num_cols
+    num_values_list = [2] * num_cols
+    M_c = gen_M_c(cctypes, num_values_list)
+    T = numpy.zeros((num_rows, num_cols)).tolist()
+
+
     # specify multiprocessing or not by setting mapper
     num_chains, num_iters, mapper = arbitrate_num_chains(num_chains, num_iters)
 
@@ -456,15 +477,14 @@ if __name__ == '__main__':
 
     # run geweke: forward sample only
     n_samples = num_chains * num_iters
-    forward_diagnostics_data = forward_sample_from_prior(num_rows, num_cols,
+    forward_diagnostics_data = forward_sample_from_prior(M_c, T,
             inf_seed, n_samples,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
 
     # run geweke: transition-erase loop
-    helper = functools.partial(run_geweke, num_rows=num_rows,
-            num_cols=num_cols, num_iters=num_iters,
+    helper = functools.partial(run_geweke, M_c=M_c, T=T, num_iters=num_iters,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             # this breaks with multiprocessing
