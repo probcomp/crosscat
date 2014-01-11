@@ -350,6 +350,8 @@ def get_kl(max_idx, grid, true_series, inferred_series):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     kld = numpy.nan
     try:
+        if len(grid) < 2:
+            raise Exception()
         bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
         true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
         inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
@@ -375,8 +377,9 @@ def get_kl_series(grid, series1, series2):
     series1[is_eps(series1)] = 0
     series2[is_eps(series2)] = 0
     N = len(series1)
-    arg_tuples = [(n, grid, series1, series2) for n in range(10, N)]
-    kl_series = mapper(get_kl_tuple, arg_tuples)
+    start_at = 10
+    arg_tuples = [(n, grid, series1, series2) for n in range(start_at, N+1)]
+    kl_series = ([numpy.nan] * start_at) + mapper(get_kl_tuple, arg_tuples)
     return kl_series
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
