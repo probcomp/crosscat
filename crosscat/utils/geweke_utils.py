@@ -69,7 +69,7 @@ def generate_and_initialize(gen_seed, inf_seed, num_rows, num_cols):
     # initialze and transition chains
     engine = LE.LocalEngine(inf_seed)
     X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
-    return T, M_r, M_c, X_L, X_D
+    return M_c, M_r, T, X_L, X_D
 
 def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
     for key, func in diagnostics_funcs.iteritems():
@@ -102,7 +102,7 @@ default_diagnostics_funcs = dict(
         view_0_crp_alpha=get_view_0_crp_alpha,
         )
 # if you wanted to autogenerate diagnostics functions for column 1
-# T, M_r, M_c, X_L, X_D = generate_and_initialize(0, 0, 10, 10)
+# M_c, M_r, T, X_L, X_D = generate_and_initialize(0, 0, 10, 10)
 # default_diagnostics_funcs.update(generate_diagnostics_funcs_for_column(X_L, 1))
 #
 def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
@@ -138,7 +138,7 @@ def run_geweke(seed, num_rows, num_cols, num_iters,
         pass
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
     engine = LE.LocalEngine(seed)
-    T, M_r, M_c, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
+    M_c, M_r, T, X_L, X_D = generate_and_initialize(seed, seed, num_rows, num_cols)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
