@@ -166,27 +166,28 @@ def KL_divergence(component_model_class, parameters_list, component_weights,
 
 	return float(kld)
 
-def KL_divergence_arrays(support, X, Y, is_discrete):
+def KL_divergence_arrays(support, log_true, log_inferred, is_discrete):
 	"""
 		Separated this function from KL_divergence for testing purposes.
 		Inputs:
 			- support: numpy array of support intervals
-			- X: pdf at support for first distribution
-			- Y: pdf at support for second distribution
+			- log_true: log pdf at support for the "true" distribution
+			- log_inferred: log pdf at support for the distribution to test against the
+              "true" distribution
 			- is_discrete: is this a discrete variable True/False
 		Returns:
 			- KL divergence
 	"""
 
 	# KL divergence formula, recall X and Y are log
-	F = (X-Y)*numpy.exp(X)
+	F = (log_true-log_inferred)*numpy.exp(log_true)
 
 	if is_discrete:
 		kld = numpy.sum(F)
 	else:
 		# trapezoidal quadrature
-		intervals = support[1:]-support[0:-1]
-		fs = (F[1:]+F[0:-1])/2.0
+        intervals = numpy.diff(support)
+        fs = F[:-1] + (numpy.diff(F) / 2.0)
 		kld = numpy.sum(intervals*fs)
 
 	return kld
