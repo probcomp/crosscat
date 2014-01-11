@@ -122,22 +122,23 @@ def arbitrate_plot_rand_idx(plot_rand_idx, num_iters):
         pass
     return plot_rand_idx
 
-def arbitrate_diagnostics_funcs(diagnostics_funcs, X_L):
-    if diagnostics_funcs is None:
-        diagnostics_funcs = default_diagnostics_funcs.copy()
-        diagnostics_funcs.update(generate_diagnostics_funcs_for_column(X_L, 0))
+def generate_diagnostics_funcs(X_L, probe_columns):
+    diagnostics_funcs = default_diagnostics_funcs.copy()
+    for probe_column in probe_columns:
+        funcs_to_add = generate_diagnostics_funcs_for_column(X_L, probe_column)
+        diagnostics_funcs.update(funcs_to_add)
         pass
     return diagnostics_funcs
 
 def run_geweke(seed, M_c, T, num_iters,
-        diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
+        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         plot_rand_idx=None,
         ):
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
     engine = LE.LocalEngine(seed)
     M_r = du.gen_M_r_from_T(T)
     X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
-    diagnostics_funcs = arbitrate_diagnostics_funcs(diagnostics_funcs, X_L)
+    diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
@@ -152,7 +153,7 @@ def run_geweke(seed, M_c, T, num_iters,
     return diagnostics_data
 
 def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
-        diagnostics_funcs=None, specified_s_grid=(), specified_mu_grid=(),
+        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         ):
     # presume all continuous for now, else need T, M_c, M_r
     # T = (numpy.array(T) * numpy.nan).tolist()
@@ -160,12 +161,14 @@ def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
     M_r = du.gen_M_r_from_T(T)
     engine = LE.LocalEngine(inf_seed)
     diagnostics_data = collections.defaultdict(list)
+    diagnostics_funcs = None
     for sample_idx in range(n_samples):
         X_L, X_D = engine.initialize(M_c, M_r, T,
                 specified_s_grid=specified_s_grid,
                 specified_mu_grid=specified_mu_grid,
                 )
-        diagnostics_funcs = arbitrate_diagnostics_funcs(diagnostics_funcs, X_L)
+        if diagnostics_funcs is None:
+            diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
         diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
                 diagnostics_funcs)
         pass
@@ -459,10 +462,10 @@ if __name__ == '__main__':
 
 
     cctypes = ['multinomial'] * num_cols
+    cctypes[0] = 'continuous'
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     T = numpy.zeros((num_rows, num_cols)).tolist()
-
 
     # specify multiprocessing or not by setting mapper
     num_chains, num_iters, mapper = arbitrate_num_chains(num_chains, num_iters)
@@ -479,12 +482,14 @@ if __name__ == '__main__':
     n_samples = num_chains * num_iters
     forward_diagnostics_data = forward_sample_from_prior(M_c, T,
             inf_seed, n_samples,
+            probe_columns=(0, 1),
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
 
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, M_c=M_c, T=T, num_iters=num_iters,
+            probe_columns=(0, 1),
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             # this breaks with multiprocessing
