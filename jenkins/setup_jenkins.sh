@@ -36,7 +36,7 @@ done
 
 # set derived variables
 jenkins_project=${jenkins_home}/workspace/$project_name
-source_dir=/home/$user/$project_name/
+source_dir=$project_name
 
 # install jenkins
 #   per http://pkg.jenkins-ci.org/debian-stable/
@@ -45,23 +45,25 @@ sudo echo "deb http://pkg.jenkins-ci.org/debian-stable binary/" >> /etc/apt/sour
 sudo apt-get update
 sudo apt-get install -y jenkins
 sudo apt-get update
+#
+# make sure jenkins api available for job setup automation
+pip install jenkinsapi==0.1.13
 
 # copy over the key script that will be run for tests
+if [ ! -d $source_dir ]; then
+	git clone https://github.com/mit-probabilistic-computing-project/$project_name
+fi
 mkdir -p $jenkins_project
-cp ${source_dir}/jenkins_script.sh $jenkins_project
-chmod 777 $jenkins_project
-chmod 777 ${jenkins_project}/jenkins_script.sh
+cp ${source_dir}/jenkins/jenkins_script.sh $jenkins_project
 
 # run some helper scripts
 # set up headless matplotlib
 mkdir -p ${jenkins_home}/.matplotlib
 echo backend: Agg > ${jenkins_home}/.matplotlib/matplotlibrc
 # set up password login, set password for jenkins user
-bash ${source_dir}/install_scripts/setup_password_login.sh -u jenkins -p bigdata
-# make sure jenkins api available for job setup automation
-sudo -u $user zsh -c -i 'pip install jenkinsapi==0.1.13'
+bash ${source_dir}/scripts/install_scripts/setup_password_login.sh -u jenkins -p bigdata
 
-
-# make sure jenkins owns everythin
+# make sure jenkins owns everything
+chmod -R 777 $jenkins_project
 chown -R jenkins $jenkins_home
 
