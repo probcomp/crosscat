@@ -67,3 +67,8 @@ bash ${source_dir}/scripts/install_scripts/setup_password_login.sh -u jenkins -p
 chmod -R 777 $jenkins_project
 chown -R jenkins $jenkins_home
 
+
+# make sure jenkins can install python packages
+install_dir=/usr/local/lib/python2.7/dist-packages
+mkdir -p $install_dir
+chown -R jenkins $install_dir
