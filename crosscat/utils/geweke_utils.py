@@ -354,6 +354,7 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         parameters=None, save_kwargs=None):
     kl_series_list_dict = dict()
     for variable_name in forward_diagnostics_data:
+        print 'plotting for variable: %s' % variable_name
         try:
             kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                     variable_name, parameters, save_kwargs)
@@ -556,8 +557,8 @@ if __name__ == '__main__':
             forward_diagnostics_data, diagnostics_data_list,
             plot_parameters, save_kwargs)
 
-    # process and save summary data
-    print 'saving summary data'
+    # process and save parameters
+    print 'saving parameters'
     get_final = lambda indexable: indexable[-1]
     final_kls = {
             key : map(get_final, value)
@@ -571,4 +572,10 @@ if __name__ == '__main__':
     save_parameters['final_kls'] = final_kls
     save_parameters['summary_kls'] = summary_kls
     write_parameters_to_text('parameters.txt', save_parameters, directory=directory)
-    fu.pickle(save_parameters, 'parameters.pkl', dir=directory)
+
+    # save data
+    save_data = save_parameters.copy()
+    save_data['forward_diagnostics_data'] = forward_diagnostics_data
+    save_data['diagnostics_data_list'] = diagnostics_data_list
+    save_data['kl_series_list_dict'] = kl_series_list_dict
+    fu.pickle(save_data, 'data.pkl', dir=directory)
