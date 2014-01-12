@@ -72,7 +72,7 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     diagnostics_funcs = { helper(column_idx, key) for key in keys }
     return diagnostics_funcs
 
-def run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+def run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
         ):
     X_L, X_D = engine.analyze(M_c, T, X_L, X_D,
@@ -110,7 +110,7 @@ def generate_diagnostics_funcs(X_L, probe_columns):
         pass
     return diagnostics_funcs
 
-def run_geweke(seed, M_c, T, num_iters,
+def run_geweke_chain(seed, M_c, T, num_iters,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         plot_rand_idx=None,
         ):
@@ -121,7 +121,7 @@ def run_geweke(seed, M_c, T, num_iters,
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
-        M_c, T, X_L, X_D = run_geweke_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+        M_c, T, X_L, X_D = run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid)
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
@@ -132,9 +132,28 @@ def run_geweke(seed, M_c, T, num_iters,
         pass
     return diagnostics_data
 
-def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
+def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
+        specified_s_grid, specified_mu_grid):
+    # specify multiprocessing or not by setting mapper
+    mapper, pool = get_mapper(num_chains)
+    # run geweke: transition-erase loop
+    helper = functools.partial(run_geweke_chain, M_c=M_c, T=T, num_iters=num_iters,
+            probe_columns=probe_columns,
+            specified_s_grid=s_grid,
+            specified_mu_grid=mu_grid,
+            # this breaks with multiprocessing
+            plot_rand_idx=(num_chains==1),
+            )
+    seeds = range(num_chains)
+    diagnostics_data_list = mapper(helper, seeds)
+    # if pool is not None:
+    #     pool.close(); pool.join()
+    return diagnostics_data_list
+
+def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         ):
+    inf_seed, n_samples = inf_seed_and_n_samples
     T = numpy.zeros(numpy.array(T).shape).tolist()
     M_r = du.gen_M_r_from_T(T)
     engine = LE.LocalEngine(inf_seed)
@@ -152,8 +171,33 @@ def forward_sample_from_prior(M_c, T, inf_seed, n_samples,
         pass
     return diagnostics_data
 
-def run_geweke_tuple(args_tuple):
-    return run_geweke(*args_tuple)
+def get_n_samples_per_worker(n_samples, cpu_count):
+    n_samples_per_worker = n_samples / cpu_count
+    ret_list = numpy.array([n_samples_per_worker] * cpu_count)
+    delta = n_samples - n_samples_per_worker * cpu_count
+    ret_list[range(delta)] += 1
+    return ret_list
+
+def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
+        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        do_multiprocessing=True,
+        ):
+    helper = functools.partial(_forward_sample_from_prior, M_c=M_c, T=T,
+            probe_columns=probe_columns,
+            specified_s_grid=specified_s_grid,
+            specified_mu_grid=specified_mu_grid,
+            )
+    cpu_count, mapper, pool = 1, map, None
+    if do_multiprocessing:
+        cpu_count = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool()
+        mapper = pool.map
+        pass
+    seeds = numpy.random.randint(32676, size=cpu_count)
+    n_samples_list = get_n_samples_per_worker(n_samples, cpu_count)
+    forward_sample_data_list = mapper(helper, zip(seeds, n_samples_list))
+    forward_sample_data = condense_diagnostics_data_list(forward_sample_data_list)
+    return forward_sample_data
 
 def condense_diagnostics_data_list(diagnostics_data_list):
     def get_key_condensed(key):
@@ -335,7 +379,7 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def get_kl(max_idx, grid, true_series, inferred_series):
+def get_kl((max_idx, grid, true_series, inferred_series)):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
     kld = numpy.nan
     try:
@@ -357,24 +401,29 @@ def get_kl(max_idx, grid, true_series, inferred_series):
         pass
     return kld
 
-def get_kl_tuple(tuple_args):
-    return get_kl(*tuple_args)
-
-def get_kl_series(grid, series1, series2):
+def get_kl_series(grid, _true, _inferred):
     pool = multiprocessing.Pool()
     mapper = pool.map
-    #
-    series1[is_eps(series1)] = 0
-    series2[is_eps(series2)] = 0
-    N = len(series1)
+    _true[is_eps(_true)] = 0
+    _inferred[is_eps(_inferred)] = 0
     start_at = 10
-    arg_tuples = [(n, grid, series1, series2) for n in range(start_at, N+1)]
-    kl_series = ([numpy.nan] * start_at) + mapper(get_kl_tuple, arg_tuples)
+    N = len(_true)
+    #
+    ns = range(start_at, N + 1)
+    arg_tuples = [(n, grid, _true, _inferred) for n in ns]
+    prepend = [numpy.nan] * start_at
+    append = mapper(get_kl, arg_tuples)
+    kl_series = prepend + append
+    #
     pool.close(); pool.join()
     return kl_series
 
+def make_same_length(*args):
+    return zip(*zip(*args))
+
 def get_fixed_gibbs_kl_series(forward, not_forward):
-    forward, not_forward = map(numpy.array, (zip(*zip(forward, not_forward))))
+    forward, not_forward = make_same_length(forward, not_forward)
+    forward, not_forward = map(numpy.array, (forward, not_forward))
     grid = numpy.array(sorted(set(forward)))
     return get_kl_series(grid, forward, not_forward)
 
@@ -416,14 +465,14 @@ def gen_M_c(cctypes, num_values_list):
     num_cols = len(cctypes)
     colnames = range(num_cols)
     col_indices = range(num_cols)
-    def helper((cctype, num_values)):
+    def helper(cctype, num_values):
         metadata_generator = du.metadata_generator_lookup[cctype]
         faux_data = range(num_values)
         return metadata_generator(faux_data)
     #
     name_to_idx = dict(zip(colnames, col_indices))
     idx_to_name = dict(zip(map(str, col_indices), colnames))
-    column_metadata = map(helper, zip(cctypes, num_values_list))
+    column_metadata = map(helper, cctypes, num_values_list)
     M_c = dict(
         name_to_idx=name_to_idx,
         idx_to_name=idx_to_name,
@@ -460,6 +509,7 @@ if __name__ == '__main__':
 
     num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
     total_num_iters = num_chains * num_iters
+    probe_columns = (0, 1)
 
 
     cctypes = ['multinomial'] * num_cols
@@ -477,30 +527,20 @@ if __name__ == '__main__':
     s_grid = numpy.linspace(0, max_s_grid, n_grid)
 
     # run geweke: forward sample only
-    forward_diagnostics_data = forward_sample_from_prior(M_c, T,
-            inf_seed, n_samples=total_num_iters,
-            probe_columns=(0, 1),
-            specified_s_grid=s_grid,
-            specified_mu_grid=mu_grid,
+    print 'generating forward samples'
+    forward_diagnostics_data = forward_sample_from_prior(inf_seed,
+            total_num_iters, M_c, T, probe_columns=probe_columns,
+            specified_s_grid=s_grid, specified_mu_grid=mu_grid,
+            do_multiprocessing=True,
             )
 
-    # specify multiprocessing or not by setting mapper
-    mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
-    helper = functools.partial(run_geweke, M_c=M_c, T=T, num_iters=num_iters,
-            probe_columns=(0, 1),
-            specified_s_grid=s_grid,
-            specified_mu_grid=mu_grid,
-            # this breaks with multiprocessing
-            plot_rand_idx=(num_chains==1),
-            )
-    seeds = range(num_chains)
-    diagnostics_data_list = mapper(helper, seeds)
-    if pool is not None:
-        pool.close(); pool.join()
-    diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
+    print 'generating posterior samples'
+    diagnostics_data_list = run_geweke(M_c, T, num_chains, num_iters, probe_columns,
+            s_grid, mu_grid)
 
     # save plots
+    print 'saving plots'
     plot_parameters = dict(
             num_rows=num_rows,
             num_cols=num_cols,
@@ -515,6 +555,9 @@ if __name__ == '__main__':
     kl_series_list_dict = plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
             plot_parameters, save_kwargs)
+
+    # process and save summary data
+    print 'saving summary data'
     get_final = lambda indexable: indexable[-1]
     final_kls = {
             key : map(get_final, value)
