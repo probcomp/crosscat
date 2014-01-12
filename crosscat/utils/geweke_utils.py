@@ -358,7 +358,8 @@ def get_kl_tuple(tuple_args):
     return get_kl(*tuple_args)
 
 def get_kl_series(grid, series1, series2):
-    mapper = multiprocessing.Pool().map
+    pool = multiprocessing.Pool()
+    mapper = pool.map
     #
     series1[is_eps(series1)] = 0
     series2[is_eps(series2)] = 0
@@ -366,6 +367,7 @@ def get_kl_series(grid, series1, series2):
     start_at = 10
     arg_tuples = [(n, grid, series1, series2) for n in range(start_at, N+1)]
     kl_series = ([numpy.nan] * start_at) + mapper(get_kl_tuple, arg_tuples)
+    pool.close(); pool.join()
     return kl_series
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
@@ -384,17 +386,20 @@ def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
 
+def get_mapper(num_chains):
+    mapper, pool = map, None
+    if num_chains != 1:
+        pool = multiprocessing.Pool(num_chains)
+        mapper = pool.map
+    return mapper, pool
+
 def arbitrate_num_chains(num_chains, num_iters):
     if num_chains != 1:
         if num_chains is None:
             num_chains = multiprocessing.cpu_count()
             pass
         num_iters = num_iters /num_chains
-        mapper = multiprocessing.Pool(num_chains).map
-    else:
-        mapper = map
-        pass
-    return num_chains, num_iters, mapper
+    return num_chains, num_iters
 
 def write_parameters_to_text(filename, parameters, directory=''):
     full_filename = os.path.join(directory, filename)
@@ -450,14 +455,15 @@ if __name__ == '__main__':
     max_s_grid = args.max_s_grid
 
 
+    num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
+    total_num_iters = num_chains * num_iters
+
+
     cctypes = ['multinomial'] * num_cols
     cctypes[0] = 'continuous'
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     T = numpy.zeros((num_rows, num_cols)).tolist()
-
-    # specify multiprocessing or not by setting mapper
-    num_chains, num_iters, mapper = arbitrate_num_chains(num_chains, num_iters)
 
     # specify grid
     max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
@@ -468,14 +474,15 @@ if __name__ == '__main__':
     s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
 
     # run geweke: forward sample only
-    n_samples = num_chains * num_iters
     forward_diagnostics_data = forward_sample_from_prior(M_c, T,
-            inf_seed, n_samples,
+            inf_seed, n_samples=total_num_iters,
             probe_columns=(0, 1),
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
 
+    # specify multiprocessing or not by setting mapper
+    mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=(0, 1),
@@ -486,6 +493,8 @@ if __name__ == '__main__':
             )
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
+    if pool is not None:
+        pool.close(); pool.join()
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
     # save plots
@@ -494,7 +503,7 @@ if __name__ == '__main__':
             num_cols=num_cols,
             max_mu_grid=max_mu_grid,
             max_s_grid=max_s_grid,
-            total_num_iters=num_iters*num_chains,
+            total_num_iters=total_num_iters,
             chain_num_iters=num_iters,
             num_chains=num_chains,
             )
