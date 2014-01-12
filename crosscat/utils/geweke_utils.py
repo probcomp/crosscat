@@ -64,7 +64,7 @@ def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
 def generate_diagnostics_funcs_for_column(X_L, column_idx):
     keys = set(X_L['column_hypers'][column_idx].keys())
     keys.discard('fixed')
-    keys.discard('N')
+    keys.discard('K')
     def helper(column_idx, key):
         func_name = 'col_%s_%s' % (column_idx, key)
         func = lambda X_L: X_L['column_hypers'][column_idx][key]
@@ -162,10 +162,13 @@ def condense_diagnostics_data_list(diagnostics_data_list):
     keys = diagnostics_data_list[0].keys()
     return { key : get_key_condensed(key) for key in keys}
 
+def is_eps(data):
+    data = numpy.array(data)
+    return (0 < data) & (data < 1E-100)
+
 def filter_eps(data):
     data = numpy.array(data)
-    is_eps = (0 < data) & (data < 1E-100)
-    return data[~is_eps]
+    return data[~is_eps(data)]
 
 def clip_extremes(data):
     data = numpy.array(data)
@@ -178,7 +181,7 @@ def generate_log_bins(data, n_bins=31):
     log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
     return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
 
-def generate_log_bins_unique(data):
+def generate_bins_unique(data):
     data = filter_eps(data)
     bins = sorted(set(data))
     delta = bins[-1] - bins[-2]
@@ -196,7 +199,7 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data, new_figure=True,
         do_labelling=True,
         ):
     data = diagnostics_data[variable_name]
-    bins = generate_log_bins_unique(data)
+    bins = generate_bins_unique(data)
     if new_figure:
         pylab.figure()
     hist_ret = pylab.hist(data, bins=bins)
@@ -204,20 +207,6 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data, new_figure=True,
         do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return hist_ret
-
-def do_log_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
-        do_labelling=True,
-        ):
-    data = diagnostics_data[variable_name]
-    data = clip_extremes(data)
-    if new_figure:
-        pylab.figure()
-    bins = generate_log_bins(data, n_bins)
-    pylab.hist(data, bins=bins)
-    if do_labelling:
-        do_hist_labelling(variable_name)
-    pylab.gca().set_xscale('log')
-    return
 
 def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
         do_labelling=True,
@@ -273,7 +262,10 @@ def map_variable_name(variable_name):
     return mapped_variable_name
 
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
+        col_0_s=do_hist,
         col_0_mu=do_hist,
+        col_0_r=do_hist,
+        col_0_nu=do_hist,
         )
 def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
         parameters=None, save_kwargs=None):
@@ -322,7 +314,6 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                     variable_name, parameters, save_kwargs)
             kl_series_list_dict[variable_name] = kl_series_list
-            pass
         except Exception, e:
             print 'Failed to plot_diagnostic_data for %s' % variable_name
             print e
@@ -344,28 +335,47 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def _get_kl_series(max_idx, grid, series1, series2):
+def get_kl(max_idx, grid, true_series, inferred_series):
     # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
-    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-    density1, binz = numpy.histogram(series1[:max_idx], bins, density=True)
-    density2, binz = numpy.histogram(series2[:max_idx], bins, density=True)
-    log_density1, log_density2 = map(numpy.log, (density1, density2))
-    kld = qtu.KL_divergence_arrays(grid, log_density1, log_density2, False)
+    kld = numpy.nan
+    try:
+        if len(grid) < 2:
+            raise Exception()
+        bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+        true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
+        inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
+        true_has_support = sum(true_density==0) == 0
+        inferred_has_support = sum(inferred_density==0) == 0
+        if true_has_support and inferred_has_support:
+            # inferred has support every true does
+            log_true_density = numpy.log(true_density)
+            log_inferred_density = numpy.log(inferred_density)
+            kld = qtu.KL_divergence_arrays(grid, log_true_density,
+                    log_inferred_density, False)
+            pass
+    except Exception, e:
+        pass
     return kld
 
-def _get_kl_series_tuple(tuple_args):
-    return _get_kl_series(*tuple_args)
+def get_kl_tuple(tuple_args):
+    return get_kl(*tuple_args)
 
 def get_kl_series(grid, series1, series2):
+    pool = multiprocessing.Pool()
+    mapper = pool.map
+    #
+    series1[is_eps(series1)] = 0
+    series2[is_eps(series2)] = 0
     N = len(series1)
-    mapper, func = multiprocessing.Pool().map, _get_kl_series_tuple
-    arg_tuples = [(n, grid, series1, series2) for n in range(1, N)]
-    kl_series = mapper(func, arg_tuples)
+    start_at = 10
+    arg_tuples = [(n, grid, series1, series2) for n in range(start_at, N+1)]
+    kl_series = ([numpy.nan] * start_at) + mapper(get_kl_tuple, arg_tuples)
+    pool.close(); pool.join()
     return kl_series
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = map(numpy.array, (zip(*zip(forward, not_forward))))
-    grid = numpy.array(sorted(set(not_forward)))
+    grid = numpy.array(sorted(set(forward)))
     return get_kl_series(grid, forward, not_forward)
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
@@ -375,9 +385,16 @@ def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     return directory_name
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
-    if max_s_grid is None:
+    if max_s_grid == -1:
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
+
+def get_mapper(num_chains):
+    mapper, pool = map, None
+    if num_chains != 1:
+        pool = multiprocessing.Pool(num_chains)
+        mapper = pool.map
+    return mapper, pool
 
 def arbitrate_num_chains(num_chains, num_iters):
     if num_chains != 1:
@@ -385,11 +402,7 @@ def arbitrate_num_chains(num_chains, num_iters):
             num_chains = multiprocessing.cpu_count()
             pass
         num_iters = num_iters /num_chains
-        mapper = multiprocessing.Pool(num_chains).map
-    else:
-        mapper = map
-        pass
-    return num_chains, num_iters, mapper
+    return num_chains, num_iters
 
 def write_parameters_to_text(filename, parameters, directory=''):
     full_filename = os.path.join(directory, filename)
@@ -432,7 +445,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=10000, type=int)
     parser.add_argument('--max_mu_grid', default=100, type=int)
-    parser.add_argument('--max_s_grid', default=None, type=int)
+    parser.add_argument('--max_s_grid', default=1000, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -445,14 +458,15 @@ if __name__ == '__main__':
     max_s_grid = args.max_s_grid
 
 
+    num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
+    total_num_iters = num_chains * num_iters
+
+
     cctypes = ['multinomial'] * num_cols
     cctypes[0] = 'continuous'
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     T = numpy.zeros((num_rows, num_cols)).tolist()
-
-    # specify multiprocessing or not by setting mapper
-    num_chains, num_iters, mapper = arbitrate_num_chains(num_chains, num_iters)
 
     # specify grid
     max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
@@ -460,17 +474,18 @@ if __name__ == '__main__':
     n_grid = 31
     #
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
+    s_grid = numpy.linspace(0, max_s_grid, n_grid)
 
     # run geweke: forward sample only
-    n_samples = num_chains * num_iters
     forward_diagnostics_data = forward_sample_from_prior(M_c, T,
-            inf_seed, n_samples,
+            inf_seed, n_samples=total_num_iters,
             probe_columns=(0, 1),
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
             )
 
+    # specify multiprocessing or not by setting mapper
+    mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=(0, 1),
@@ -481,6 +496,8 @@ if __name__ == '__main__':
             )
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
+    if pool is not None:
+        pool.close(); pool.join()
     diagnostics_data = condense_diagnostics_data_list(diagnostics_data_list)
 
     # save plots
@@ -489,7 +506,7 @@ if __name__ == '__main__':
             num_cols=num_cols,
             max_mu_grid=max_mu_grid,
             max_s_grid=max_s_grid,
-            total_num_iters=num_iters*num_chains,
+            total_num_iters=total_num_iters,
             chain_num_iters=num_iters,
             num_chains=num_chains,
             )
