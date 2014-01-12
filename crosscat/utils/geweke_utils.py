@@ -181,7 +181,7 @@ def generate_log_bins(data, n_bins=31):
     log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
     return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
 
-def generate_log_bins_unique(data):
+def generate_bins_unique(data):
     data = filter_eps(data)
     bins = sorted(set(data))
     delta = bins[-1] - bins[-2]
@@ -199,7 +199,7 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data, new_figure=True,
         do_labelling=True,
         ):
     data = diagnostics_data[variable_name]
-    bins = generate_log_bins_unique(data)
+    bins = generate_bins_unique(data)
     if new_figure:
         pylab.figure()
     hist_ret = pylab.hist(data, bins=bins)
@@ -207,20 +207,6 @@ def do_log_hist_bin_unique(variable_name, diagnostics_data, new_figure=True,
         do_hist_labelling(variable_name)
     pylab.gca().set_xscale('log')
     return hist_ret
-
-def do_log_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
-        do_labelling=True,
-        ):
-    data = diagnostics_data[variable_name]
-    data = clip_extremes(data)
-    if new_figure:
-        pylab.figure()
-    bins = generate_log_bins(data, n_bins)
-    pylab.hist(data, bins=bins)
-    if do_labelling:
-        do_hist_labelling(variable_name)
-    pylab.gca().set_xscale('log')
-    return
 
 def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
         do_labelling=True,
