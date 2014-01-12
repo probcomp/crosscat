@@ -262,7 +262,10 @@ def map_variable_name(variable_name):
     return mapped_variable_name
 
 plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
+        col_0_s=do_hist,
         col_0_mu=do_hist,
+        col_0_r=do_hist,
+        col_0_nu=do_hist,
         )
 def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
         parameters=None, save_kwargs=None):
@@ -382,7 +385,7 @@ def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     return directory_name
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
-    if max_s_grid is None:
+    if max_s_grid == -1:
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
 
@@ -442,7 +445,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=10000, type=int)
     parser.add_argument('--max_mu_grid', default=100, type=int)
-    parser.add_argument('--max_s_grid', default=None, type=int)
+    parser.add_argument('--max_s_grid', default=1000, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -471,7 +474,7 @@ if __name__ == '__main__':
     n_grid = 31
     #
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.exp(numpy.linspace(0, numpy.log(max_s_grid), n_grid))
+    s_grid = numpy.linspace(0, max_s_grid, n_grid)
 
     # run geweke: forward sample only
     forward_diagnostics_data = forward_sample_from_prior(M_c, T,
