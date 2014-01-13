@@ -49,26 +49,14 @@ sudo apt-get update
 # make sure jenkins api available for job setup automation
 pip install jenkinsapi==0.1.13
 
-# copy over the key script that will be run for tests
-if [ ! -d $source_dir ]; then
-	git clone https://github.com/mit-probabilistic-computing-project/$project_name
-fi
-mkdir -p $jenkins_project
-cp ${source_dir}/jenkins/jenkins_script.sh $jenkins_project
-
 # run some helper scripts
 # set up headless matplotlib
 mkdir -p ${jenkins_home}/.matplotlib
 echo backend: Agg > ${jenkins_home}/.matplotlib/matplotlibrc
-# set up password login, set password for jenkins user
-bash ${source_dir}/scripts/install_scripts/setup_password_login.sh -u jenkins -p bigdata
-
-# make sure jenkins owns everything
-chmod -R 777 $jenkins_project
 chown -R jenkins $jenkins_home
-
+# set up password login, set password for jenkins user
+bash crosscat/scripts/install_scripts/setup_password_login.sh -u jenkins -p bigdata
 
 # make sure jenkins can install python packages
 install_dir=/usr/local/lib/python2.7/dist-packages
-mkdir -p $install_dir
 chown -R jenkins $install_dir
