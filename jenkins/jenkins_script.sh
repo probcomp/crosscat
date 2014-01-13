@@ -42,6 +42,10 @@ echo "user: $user"
 echo "branch: $branch"
 echo "home_dir: $home_dir"
 
+cd $(dirname $(git rev-parse --git-dir))
+python setup.py install
+exit
+
 # Remove old source, and checkout newest source from master.
 source /var/lib/jenkins/.bashrc
 rm -rf $project_name
