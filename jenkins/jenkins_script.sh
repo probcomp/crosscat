@@ -53,7 +53,7 @@ ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/ContinuousComp
 #
 cd $(dirname $(git rev-parse --git-dir))
 cd crosscat/tests/unit_tests
-python /usr/local/bin/nosetests --with-xunit
+nosetests --with-xunit
 exit
 
 # Remove old source, and checkout newest source from master.
