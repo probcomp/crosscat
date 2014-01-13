@@ -44,8 +44,8 @@ echo "home_dir: $home_dir"
 
 cd $(dirname $(git rev-parse --git-dir))
 python setup.py install
-cd crosscat/tests/
-PYTHONPATH=/usr/local/lib/python2.7/dist-packages:$PYTHONPATH python /usr/local/bin/nosetests --with-xunit test_sampler_enumeration.py
+cd crosscat/tests/unit_tests
+PYTHONPATH=/usr/local/lib/python2.7/dist-packages:$PYTHONPATH python /usr/local/bin/nosetests --with-xunit test_continuous_component_model.py
 exit
 
 # Remove old source, and checkout newest source from master.
