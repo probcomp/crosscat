@@ -60,3 +60,16 @@ bash crosscat/scripts/install_scripts/setup_password_login.sh -u jenkins -p bigd
 # make sure jenkins can install python packages
 install_dir=/usr/local/lib/python2.7/dist-packages
 chown -R jenkins $install_dir
+
+
+# give jenkins some time to come up
+sleep 60
+#
+cd /var/cache/jenkins/war/WEB-INF/
+rm plugins/credentials.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ install-plugin http://updates.jenkins-ci.org/download/plugins/scm-api/0.1/scm-api.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ install-plugin http://updates.jenkins-ci.org/download/plugins/credentials/1.9.3/credentials.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ install-plugin http://updates.jenkins-ci.org/download/plugins/ssh-credentials/1.5.1/ssh-credentials.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ install-plugin http://updates.jenkins-ci.org/download/plugins/git-client/1.6.0/git-client.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ install-plugin http://updates.jenkins-ci.org/download/plugins/git/2.0.1/git.hpi
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ safe-restart
