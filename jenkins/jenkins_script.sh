@@ -44,8 +44,16 @@ echo "home_dir: $home_dir"
 
 cd $(dirname $(git rev-parse --git-dir))
 python setup.py install
+#
+cd $(dirname $(git rev-parse --git-dir))
+cd crosscat/cython_code/
+ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/State.so || true
+ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/MultinomialComponentModel.so || true
+ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/ContinuousComponentModel.so || true
+#
+cd $(dirname $(git rev-parse --git-dir))
 cd crosscat/tests/unit_tests
-PYTHONPATH=/usr/local/lib/python2.7/dist-packages:$PYTHONPATH python /usr/local/bin/nosetests -P --with-xunit test_continuous_component_model.py
+python /usr/local/bin/nosetests --with-xunit test_continuous_component_model.py
 exit
 
 # Remove old source, and checkout newest source from master.
