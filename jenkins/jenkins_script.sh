@@ -44,6 +44,7 @@ echo "home_dir: $home_dir"
 
 cd $(dirname $(git rev-parse --git-dir))
 python setup.py install
+python /usr/bin/nosetests --with-xunit cpp_unit_tests.py cpp_long_tests.py test_sampler_enumeration.py
 exit
 
 # Remove old source, and checkout newest source from master.
