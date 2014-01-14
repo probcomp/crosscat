@@ -44,6 +44,11 @@ echo "home_dir: $home_dir"
 
 cd $(dirname $(git rev-parse --git-dir))
 python setup.py install
+if [ $? ]; then
+	exit 1
+else
+	echo "Build via setup.py passed"
+fi
 #
 cd $(dirname $(git rev-parse --git-dir))
 cd crosscat/cython_code/
