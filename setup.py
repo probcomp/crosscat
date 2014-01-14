@@ -4,6 +4,36 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
+# http://stackoverflow.com/a/18992595
+import sys
+ON_LINUX = 'linux' in sys.platform
+if ON_LINUX:
+    os.environ['CC'] = 'ccache gcc'
+
+# http://stackoverflow.com/a/13176803
+# monkey-patch for parallel compilation
+import multiprocessing
+import multiprocessing.pool
+def parallelCCompile(self, sources, output_dir=None, macros=None,
+        include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None,
+        depends=None):
+    # those lines are copied from distutils.ccompiler.CCompiler directly
+    macros, objects, extra_postargs, pp_opts, build = \
+            self._setup_compile(output_dir, macros, include_dirs, sources,
+                    depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    # parallel code
+    N_cores = multiprocessing.cpu_count()
+    def _single_compile(obj):
+        try: src, ext = build[obj]
+        except KeyError: return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+    # convert to list, imap is evaluated on-demand
+    list(multiprocessing.pool.ThreadPool(N_cores).imap(_single_compile,objects))
+    return objects
+#
+import distutils.ccompiler
+distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 def generate_sources(dir_files_tuples):
     sources = []
@@ -103,7 +133,9 @@ ext_modules = [
         State_ext,
         ]
 
-packages = ['crosscat', 'crosscat.utils', 'crosscat.convergence_analysis', 'crosscat.jsonrpc_http', 'crosscat.cython_code', 'crosscat.tests', 'crosscat.tests.quality_tests']
+packages = ['crosscat', 'crosscat.utils', 'crosscat.convergence_analysis',
+    'crosscat.jsonrpc_http', 'crosscat.cython_code', 'crosscat.tests',
+    'crosscat.tests.quality_tests', 'crosscat.tests.component_model_extensions']
 setup(
         name='CrossCat',
         version='0.1',

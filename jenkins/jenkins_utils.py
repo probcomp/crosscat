@@ -72,7 +72,7 @@ def write_file(config, config_filename):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--base_url', default='http://localhost:8080', type=str)
-	parser.add_argument('--job_name', default='PredictiveDB', type=str)
+	parser.add_argument('--job_name', default='crosscat', type=str)
 	parser.add_argument('--config_filename', default='config.xml', type=str)
 	parser.add_argument('-create', action='store_true')
 	parser.add_argument('-delete', action='store_true')
