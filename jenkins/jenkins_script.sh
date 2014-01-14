@@ -11,7 +11,7 @@ function abort_on_error () {
 
 
 # settings
-repo_base=$(dirname $(git rev-parse --git-dir))
+repo_base=$(readlink -f $(dirname $(git rev-parse --git-dir)))
 installed_cython_dir=/usr/local/lib/python2.7/dist-packages/crosscat/cython_code/
 
 
