@@ -10,8 +10,13 @@ function abort_on_error () {
 }
 
 
+# settings
+repo_base=$(readlink -f $(dirname $(git rev-parse --git-dir)))
+installed_cython_dir=/usr/local/lib/python2.7/dist-packages/crosscat/cython_code/
+
+
 # build
-cd $(dirname $(git rev-parse --git-dir))
+cd $repo_base
 python setup.py install
 abort_on_error "Failed to build via setup.py"
 echo "Build via setup.py passed"
@@ -19,18 +24,17 @@ echo "Build via setup.py passed"
 
 # make sure shared libraries are linked
 # FIXME; figure out why jenkins can't see shared libraries without this
-cd $(dirname $(git rev-parse --git-dir))
-cd crosscat/cython_code/
-ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/State.so || true
-ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/MultinomialComponentModel.so || true
-ln -s /usr/local/lib/python2.7/dist-packages/crosscat/cython_code/ContinuousComponentModel.so || true
+cd $repo_base/crosscat/cython_code/
+ln -s $installed_cython_dir/State.so || true
+ln -s $installed_cython_dir/MultinomialComponentModel.so || true
+ln -s $installed_cython_dir/ContinuousComponentModel.so || true
 
 
 # run the tests
-cd $(dirname $(git rev-parse --git-dir))
-cd crosscat/tests/unit_tests
+cd $repo_base/crosscat/tests/unit_tests
 nosetests --with-xunit
 exit
+
 
 # Build and run tests. WORKSPACE is set by jenkins to /var/
 # export PYTHONPATH=$PYTHONPATH:$WORKSPACE

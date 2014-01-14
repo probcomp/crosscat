@@ -97,7 +97,7 @@ if __name__ == '__main__':
 		delete_jenkins_job(base_url, job_name)
 	elif do_put:
 		config = read_file(config_filename)
-		update_jenkins_job_config(base_url, job_name, config)
+		update_existing_job_config(base_url, job_name, config)
 	elif do_get:
 		config = get_existing_config(base_url, job_name)
 		write_file(config, config_filename)

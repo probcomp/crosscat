@@ -33,8 +33,8 @@ requirements_filename=$project_location/requirements.txt
 apt-get update
 # install system dependencies
 # engine dependencies
-apt-get build-dep -y python-numpy python-matplotlib python-scipy ccache
-apt-get install -y python-pip libboost1.48-all-dev
+apt-get build-dep -y python-numpy python-matplotlib python-scipy
+apt-get install -y python-pip libboost1.48-all-dev ccache
 # doc dependencies
 apt-get build-dep -y python-sphinx
 apt-get install -y doxygen
