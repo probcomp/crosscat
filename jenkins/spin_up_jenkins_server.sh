@@ -42,7 +42,7 @@ starcluster shell < <(perl -pe "s/'crosscat'/'$cluster_name'/" $open_port_script
 # bypass key checking
 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no jenkins@$hostname exit || true
 # FIXME: remove line below when jenkins branch is merged into master
-starcluster sshmaster $cluster_name "(cd crosscat && git checkout origin/jenkins && git pull)"
+starcluster sshmaster $cluster_name "(cd crosscat && git checkout origin/jenkins && git pull origin jenkins)"
 # set up jenkins: RELIES ON CODE BEING IN /root/crosscat
 starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 
