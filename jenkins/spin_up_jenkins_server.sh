@@ -13,6 +13,8 @@ fi
 if [[ -z $local_crosscat_dir ]]; then
 	local_crosscat_dir=/opt/crosscat
 fi
+# set derived variables
+local_jenkins_dir=$local_crosscat_dir/jenkins
 
 
 # helper functions
@@ -31,13 +33,16 @@ function wait_for_web_response () {
 starcluster start -c crosscat -i c1.xlarge -s 1 $cluster_name
 hostname=$(starcluster listclusters $cluster_name | grep master | awk '{print $NF}')
 
+
 # open up the port for jenkins
-local_jenkins_dir=$local_crosscat_dir/jenkins
 open_port_script=$local_jenkins_dir/open_master_port_via_starcluster_shell.py
 starcluster shell < <(perl -pe "s/'crosscat'/'$cluster_name'/" $open_port_script)
 
+
 # bypass key checking
 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no jenkins@$hostname exit || true
+# FIXME: remove line below when jenkins branch is merged into master
+starcluster sshmaster $cluster_name "(cd crosscat && git checkout origin/jenkins && git pull)"
 # set up jenkins: RELIES ON CODE BEING IN /root/crosscat
 starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 
