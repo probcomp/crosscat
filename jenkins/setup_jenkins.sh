@@ -17,22 +17,25 @@ function install_jenkins_plugin () {
 	full_url=$base_url/$plugin_name/$plugin_version/${plugin_name}.hpi
 	plugin_dir=${jar_dir}/plugins/
 	#
-	rm ${plugin_dir}/${plugin_name}.hpi 2>/dev/null
+	rm ${plugin_dir}/${plugin_name}.hpi 2>/dev/null || true
 	java -jar ${jar_dir}/jenkins-cli.jar -s $jenkins_uri install-plugin $full_url
+	return 0
 }
 
 function restart_jenkins () {
-	java -jar ${jar_dir}/jenkins-cli.jar -s $jenkins_uri safe-restart
+	java -jar ${jar_dir}/jenkins-cli.jar -s $jenkins_uri safe-restart || true
+	return 0
 }
 
 function wait_for_web_response () {
 	uri=$1
-	wget $uri 2>/dev/null 1>/dev/null
-	while [ $? -ne "0" ]
+	response=$(wget $uri 2>/dev/null 1>/dev/null) || true
+	while [ $response -ne "0" ]
 	do
 		sleep 2
-		wget $uri 2>/dev/null 1>/dev/null
+		response=$(wget $uri 2>/dev/null 1>/dev/null) || true
 	done
+	return 0
 }
 
 
@@ -42,7 +45,6 @@ wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | sudo a
 sudo echo "deb http://pkg.jenkins-ci.org/debian-stable binary/" >> /etc/apt/sources.list
 sudo apt-get update
 sudo apt-get install -y jenkins
-sudo apt-get update
 #
 # make sure jenkins api available for job setup automation
 pip install jenkinsapi==0.1.13
@@ -66,7 +68,7 @@ restart_jenkins
 wait_for_web_response $jenkins_uri
 
 
-# miscellaneious support operations
+# miscellaneous support operations
 #
 # set up headless matplotlib
 mkdir -p ${jenkins_home}/.matplotlib
