@@ -44,7 +44,7 @@ echo "home_dir: $home_dir"
 
 cd $(dirname $(git rev-parse --git-dir))
 python setup.py install
-if [ $? ]; then
+if [ $? != 0 ]; then
 	exit 1
 else
 	echo "Build via setup.py passed"
