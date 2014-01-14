@@ -31,7 +31,7 @@ ln -s $installed_cython_dir/ContinuousComponentModel.so || true
 
 
 # run the tests
-cd $repo_base/tests/unit_tests
+cd $repo_base/crosscat/tests/unit_tests
 nosetests --with-xunit
 exit
 
