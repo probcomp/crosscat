@@ -61,24 +61,10 @@ cd crosscat/tests/unit_tests
 nosetests --with-xunit
 exit
 
-# Remove old source, and checkout newest source from master.
-source /var/lib/jenkins/.bashrc
-rm -rf $project_name
-git clone --depth=1 https://github.com/mit-probabilistic-computing-project/$project_name.git $project_name --branch $branch
-cd $project_name
-
-# If the virtualenv isn't set up, do that.
-if [ ! -e /var/lib/jenkins/.virtualenvs ]
-then
-  bash -i install_scripts/virtualenv_setup.sh $user $home_dir >virtualenv.out 2>virtualenv.err
-  source /var/lib/jenkins/.bashrc
-fi
-workon $project_name
-
 # Build and run tests. WORKSPACE is set by jenkins to /var/
-export PYTHONPATH=$PYTHONPATH:$WORKSPACE
-cd $WORKSPACE/$project_name
-make tests
-make cython
-cd $project_name/tests
-python /usr/bin/nosetests --with-xunit cpp_unit_tests.py cpp_long_tests.py test_sampler_enumeration.py
+# export PYTHONPATH=$PYTHONPATH:$WORKSPACE
+# cd $WORKSPACE/$project_name
+# make tests
+# make cython
+# cd $project_name/tests
+# python /usr/bin/nosetests --with-xunit cpp_unit_tests.py cpp_long_tests.py test_sampler_enumeration.py
