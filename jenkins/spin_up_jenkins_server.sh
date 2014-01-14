@@ -1,5 +1,6 @@
 set -e
 
+
 # modifiable setings
 local_crosscat_dir=/opt/crosscat
 cluster_name=crosscat
@@ -19,3 +20,7 @@ starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 # push up jenkins configuration
 cd $local_jenkins_dir
 python jenkins_utils.py --base_url http://$hostname:8080 -create
+
+
+# notify user what hostname is
+echo $hostname
