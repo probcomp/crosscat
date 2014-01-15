@@ -28,13 +28,15 @@ function restart_jenkins () {
 }
 
 function wait_for_web_response () {
+	set +e
 	uri=$1
-	response=$(wget $uri 2>/dev/null 1>/dev/null) || true
-	while [ $response -ne "0" ]
+	wget $uri 2>/dev/null 1>/dev/null || true
+	while [ $? -ne "0" ]
 	do
 		sleep 2
-		response=$(wget $uri 2>/dev/null 1>/dev/null) || true
+		wget $uri 2>/dev/null 1>/dev/null || true
 	done
+	set -e
 	return 0
 }
 
