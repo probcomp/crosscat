@@ -17,18 +17,6 @@ fi
 local_jenkins_dir=$local_crosscat_dir/jenkins
 
 
-# helper functions
-function wait_for_web_response () {
-	uri=$1
-	wget $uri 2>/dev/null 1>/dev/null
-	while [ $? -ne "0" ]
-	do
-		sleep 2
-		wget $uri 2>/dev/null 1>/dev/null
-	done
-}
-
-
 # spin up the cluster
 starcluster start -c crosscat -i c1.xlarge -s 1 $cluster_name
 hostname=$(starcluster listclusters $cluster_name | grep master | awk '{print $NF}')
@@ -47,10 +35,10 @@ starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 
 
 # push up jenkins configuration
+# jenkins server must be up and ready
 jenkins_uri=http://$hostname:8080
 jenkins_utils_script=$local_jenkins_dir/jenkins_utils.py
 config_filename=$local_jenkins_dir/config.xml
-wait_for_web_response $jenkins_uri
 python $jenkins_utils_script \
 	--base_url $jenkins_uri \
 	--config_filename $config_filename \
