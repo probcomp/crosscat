@@ -42,7 +42,8 @@ starcluster shell < <(perl -pe "s/'crosscat'/'$cluster_name'/" $open_port_script
 # bypass key checking
 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no jenkins@$hostname exit || true
 # set up jenkins: RELIES ON CODE BEING IN /root/crosscat
-starcluster sshmaster $cluster_name "(cd crosscat && git pull && bash jenkins/setup_jenkins.sh)"
+starcluster sshmaster $cluster_name "(cd crosscat && git pull)"
+starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 
 
 # push up jenkins configuration
