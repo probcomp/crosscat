@@ -299,6 +299,7 @@ def map_from_T_with_M_c(coordinate_value_tuples, M_c):
     return coordinate_code_tuples
 
 def map_to_T_with_M_c(T_uncast_array, M_c):
+    T_uncast_array = numpy.array(T_uncast_array)
     # WARNING: array argument is mutated
     for col_idx in range(T_uncast_array.shape[1]):
         modeltype = M_c['column_metadata'][col_idx]['modeltype']
@@ -316,17 +317,43 @@ def map_to_T_with_M_c(T_uncast_array, M_c):
     T = numpy.array(T_uncast_array, dtype=float).tolist()
     return T
 
-def remove_ignore_cols(T, cctypes, header):
-    cctypes_arr = numpy.array(cctypes)
-    header_arr = numpy.array(header)
-    T_arr = numpy.array(T)
-    #
-    keep_cols_bool = cctypes_arr!='ignore'
-    cctypes_arr = cctypes_arr[keep_cols_bool]
-    header_arr = header_arr[keep_cols_bool]
-    T_arr = T_arr[:, keep_cols_bool]
-    #
-    return T_arr, cctypes_arr, header_arr
+def do_pop_list_indices(in_list, pop_indices):
+    pop_indices = sorted(pop_indices, reverse=True)
+    _do_pop = lambda x: in_list.pop(x)
+    map(_do_pop, pop_indices)
+    return in_list
+
+def get_list_indices(in_list, get_indices_of):
+    lookup = dict(zip(in_list, range(len(in_list))))
+    indices = map(lookup.get, get_indices_of)
+    indices = filter(None, indices)
+    return indices
+
+def transpose_list(in_list):
+    return zip(*in_list)
+
+def get_pop_indices(cctypes, colnames):
+    assert len(colnames) == len(cctypes)
+    pop_columns = [
+            colname
+            for (cctype, colname) in zip(cctypes, colnames)
+            if cctype == 'ignore'
+            ]
+    pop_indices = get_list_indices(colnames, pop_columns)
+    return pop_indices
+
+def do_pop_columns(T, pop_indices):
+    T_by_columns = transpose_list(T)
+    T_by_columns = do_pop_list_indices(T_by_columns, pop_indices)
+    T = transpose_list(T_by_columns)
+    return T
+
+def remove_ignore_cols(T, cctypes, colnames):
+    pop_indices = get_pop_indices(cctypes, colnames)
+    T = do_pop_columns(T, pop_indices)
+    colnames = do_pop_list_indices(colnames[:], pop_indices)
+    cctypes = do_pop_list_indices(cctypes[:], pop_indices)
+    return T, cctypes, colnames
 
 bad_set = set(['null'])
 def read_data_objects(filename, max_rows=None, gen_seed=0,
@@ -380,9 +407,9 @@ def guess_column_type(column_data, count_cutoff=20, ratio_cutoff=0.02):
     return column_type
 
 def guess_column_types(T, count_cutoff=20, ratio_cutoff=0.02):
-    T_array_transposed = numpy.array(T).T
+    T_transposed = transpose_list(T)
     column_types = []
-    for column_data in T_array_transposed:
+    for column_data in T_transposed:
         column_type = guess_column_type(column_data, count_cutoff, ratio_cutoff)
         column_types.append(column_type)
     return column_types
