@@ -33,13 +33,13 @@ import crosscat.utils.file_utils as fu
 import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 
-
 image_format = 'png'
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
     query_col_indices = [name_to_idx[colname] for colname in query_names]
-    row_idx = num_rows + 1 if impute_row is None else impute_row
+    # row_idx = num_rows + 1 if impute_row is None else impute_row
+    row_idx = num_rows
     Q = [(row_idx, col_idx) for col_idx in query_col_indices]
     return Q
 
@@ -112,12 +112,17 @@ def generate_diagnostics_funcs(X_L, probe_columns):
 
 def run_geweke_chain(seed, M_c, T, num_iters,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
-        plot_rand_idx=None,
+        plot_rand_idx=None, engine=None
         ):
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
-    engine = LE.LocalEngine(seed)
+    if engine is None:
+        engine = LE.LocalEngine(seed)
     M_r = du.gen_M_r_from_T(T)
-    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+    # pdb.set_trace()
+    X_L, X_D = engine.initialize(M_c, M_r, T, 
+        specified_s_grid=specified_s_grid,
+        specified_mu_grid=specified_mu_grid,
+        initialization='from_the_prior')
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
@@ -133,7 +138,9 @@ def run_geweke_chain(seed, M_c, T, num_iters,
     return diagnostics_data
 
 def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-        specified_s_grid, specified_mu_grid):
+        specified_s_grid, specified_mu_grid, engine=None):
+    if engine is None:
+        engine = LE.LocalEngine(seed)
     # specify multiprocessing or not by setting mapper
     mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
@@ -143,6 +150,7 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
             specified_mu_grid=mu_grid,
             # this breaks with multiprocessing
             plot_rand_idx=(num_chains==1),
+            engine=engine,
             )
     seeds = range(num_chains)
     diagnostics_data_list = mapper(helper, seeds)
@@ -152,11 +160,14 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
 
 def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        engine=None
         ):
     inf_seed, n_samples = inf_seed_and_n_samples
-    T = numpy.zeros(numpy.array(T).shape).tolist()
+    # T = numpy.zeros(numpy.array(T).shape).tolist() # why was T passed in?
+
     M_r = du.gen_M_r_from_T(T)
-    engine = LE.LocalEngine(inf_seed)
+    if engine is None:
+        engine = LE.LocalEngine(inf_seed)
     diagnostics_data = collections.defaultdict(list)
     diagnostics_funcs = None
     for sample_idx in range(n_samples):
@@ -180,12 +191,13 @@ def get_n_samples_per_worker(n_samples, cpu_count):
 
 def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
-        do_multiprocessing=True,
+        do_multiprocessing=True, engine=None
         ):
     helper = functools.partial(_forward_sample_from_prior, M_c=M_c, T=T,
             probe_columns=probe_columns,
             specified_s_grid=specified_s_grid,
             specified_mu_grid=specified_mu_grid,
+            engine=engine,
             )
     cpu_count, mapper, pool = 1, map, None
     if do_multiprocessing:
@@ -492,6 +504,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_cols', default=4, type=int)
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
+    parser.add_argument('--engine', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=10000, type=int)
     parser.add_argument('--max_mu_grid', default=100, type=int)
@@ -506,39 +519,56 @@ if __name__ == '__main__':
     num_iters = args.num_iters
     max_mu_grid = args.max_mu_grid
     max_s_grid = args.max_s_grid
+    which_engine = args.engine
 
+    if which_engine == 0:
+        engine = LE.LocalEngine()
+    elif which_engine == 1:
+        import crosscat.MatlabEngine as ME
+        from mlabwrap import mlab
+        mlab.addpath('../MatlabEngine')
+        engine = ME.MatlabEngine()
+    elif which_engine == 2:
+        import baxcat.utils.cc_legacy_utils as BE
+        engine = BE.BaxCatEngine()
+    
 
     num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
     total_num_iters = num_chains * num_iters
     probe_columns = (0, 1)
 
 
-    cctypes = ['multinomial'] * num_cols
+    
     cctypes[0] = 'continuous'
     num_values_list = [2] * num_cols
+
+    if which_engine > 0:
+        cctypes = ['continuous'] * num_cols 
+
     M_c = gen_M_c(cctypes, num_values_list)
-    T = numpy.zeros((num_rows, num_cols)).tolist()
+    # T = numpy.zeros((num_rows, num_cols)).tolist()
+    T = numpy.random.normal( size=(num_rows, num_cols)).tolist()
 
     # specify grid
     max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
     # may be an issue if this n_grid doesn't match the other grids in the c++
     n_grid = 31
     #
-    mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.linspace(0, max_s_grid, n_grid)
+    mu_grid = numpy.linspace(0.0, 1.0, n_grid)
+    s_grid = numpy.linspace(10**(-10), num_rows, n_grid) # avoid s=0 
 
     # run geweke: forward sample only
     print 'generating forward samples'
     forward_diagnostics_data = forward_sample_from_prior(inf_seed,
             total_num_iters, M_c, T, probe_columns=probe_columns,
             specified_s_grid=s_grid, specified_mu_grid=mu_grid,
-            do_multiprocessing=True,
+            do_multiprocessing=False, engine=engine
             )
 
     # run geweke: transition-erase loop
     print 'generating posterior samples'
     diagnostics_data_list = run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-            s_grid, mu_grid)
+            s_grid, mu_grid, engine = engine)
 
     # save plots
     print 'saving plots'
@@ -553,6 +583,7 @@ if __name__ == '__main__':
             )
     directory = generate_directory_name(**plot_parameters)
     save_kwargs = dict(directory=directory)
+
     kl_series_list_dict = plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
             plot_parameters, save_kwargs)
