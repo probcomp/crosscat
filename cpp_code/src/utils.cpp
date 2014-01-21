@@ -83,13 +83,17 @@ bool is_almost(double val1, double val2, double precision) {
 vector<double> linspace(double a, double b, int n) {
   vector<double> values;
   if(a > b) {
+	  /*
     cerr << "linspace: passed lower bound greater than upper bound!" << endl;
     cerr << "linspace: using upper bound equal to lower bound" << endl;
+    */
     b = a;
   }
   if(a == b && n != 1) {
+	  /*
     cerr << "linspace: passed lower bound equal upper bound but n != 1!" << endl;
     cerr << "linspace: using n = 1" << endl;
+    */
     n = 1;
   }
   if(n == 1) {
