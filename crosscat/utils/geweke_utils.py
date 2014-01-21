@@ -35,6 +35,8 @@ import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 
 image_format = 'png'
+default_n_grid=31
+
 
 def determine_Q(M_c, query_names, num_rows, impute_row=None):
     name_to_idx = M_c['name_to_idx']
@@ -74,10 +76,12 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
 
 def run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
+        N_GRID,
         ):
     X_L, X_D = engine.analyze(M_c, T, X_L, X_D,
                 specified_s_grid=specified_s_grid,
                 specified_mu_grid=specified_mu_grid,
+                N_GRID=N_GRID,
                 )
     diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
             diagnostics_funcs)
@@ -112,17 +116,24 @@ def generate_diagnostics_funcs(X_L, probe_columns):
 
 def run_geweke_chain(seed, M_c, T, num_iters,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        N_GRID=default_n_grid,
         plot_rand_idx=None,
         ):
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
     engine = LE.LocalEngine(seed)
     M_r = du.gen_M_r_from_T(T)
-    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior')
+    X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior',
+            specified_s_grid=specified_s_grid,
+            specified_mu_grid=specified_mu_grid,
+            N_GRID=N_GRID,
+            )
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
-                diagnostics_funcs, specified_s_grid, specified_mu_grid)
+                diagnostics_funcs, specified_s_grid, specified_mu_grid,
+                N_GRID=N_GRID,
+                )
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
             filename = 'T_%s.%s' % (idx, image_format)
@@ -133,7 +144,9 @@ def run_geweke_chain(seed, M_c, T, num_iters,
     return diagnostics_data
 
 def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-        specified_s_grid, specified_mu_grid):
+        specified_s_grid, specified_mu_grid,
+        N_GRID=default_n_grid,
+        ):
     # specify multiprocessing or not by setting mapper
     mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
@@ -141,6 +154,7 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
             probe_columns=probe_columns,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
+            N_GRID=N_GRID,
             # this breaks with multiprocessing
             plot_rand_idx=(num_chains==1),
             )
@@ -152,6 +166,7 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
 
 def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        N_GRID=default_n_grid,
         ):
     inf_seed, n_samples = inf_seed_and_n_samples
     T = numpy.zeros(numpy.array(T).shape).tolist()
@@ -163,6 +178,7 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         X_L, X_D = engine.initialize(M_c, M_r, T,
                 specified_s_grid=specified_s_grid,
                 specified_mu_grid=specified_mu_grid,
+                N_GRID=N_GRID,
                 )
         if diagnostics_funcs is None:
             diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
@@ -181,11 +197,13 @@ def get_n_samples_per_worker(n_samples, cpu_count):
 def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         do_multiprocessing=True,
+        N_GRID=default_n_grid,
         ):
     helper = functools.partial(_forward_sample_from_prior, M_c=M_c, T=T,
             probe_columns=probe_columns,
             specified_s_grid=specified_s_grid,
             specified_mu_grid=specified_mu_grid,
+            N_GRID=N_GRID,
             )
     cpu_count, mapper, pool = 1, map, None
     if do_multiprocessing:
@@ -347,6 +365,13 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
     if save_kwargs is not None:
         filename = variable_name + '_hist'
         save_current_figure(filename, format=image_format, **save_kwargs)
+        #
+        filename = variable_name + '_pp'
+        pylab.figure()
+        for not_forward in not_forward_list:
+            pp_plot(forward, not_forward, 100)
+            pass
+        save_current_figure(filename, format=image_format, **save_kwargs)
         pass
     return kl_series_list
 
@@ -481,6 +506,16 @@ def gen_M_c(cctypes, num_values_list):
         )
     return M_c
 
+def pp_plot(_f, _p, nbins):
+    ff, edges = numpy.histogram(_f, bins=nbins, density=True)
+    fp, _ = numpy.histogram(_p, bins=edges, density=True)
+    Ff = numpy.cumsum(ff*(edges[1:]-edges[:-1]))
+    Fp = numpy.cumsum(fp*(edges[1:]-edges[:-1]))
+    pylab.plot([0,1],[0,1],c='black', ls='--')
+    pylab.plot(Ff,Fp, c='black')
+    pylab.xlim([0,1])
+    pylab.ylim([0,1])
+    return
 
 if __name__ == '__main__':
     import argparse
@@ -496,6 +531,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_iters', default=10000, type=int)
     parser.add_argument('--max_mu_grid', default=100, type=int)
     parser.add_argument('--max_s_grid', default=1000, type=int)
+    parser.add_argument('--n_grid', default=31, type=int)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -506,39 +542,42 @@ if __name__ == '__main__':
     num_iters = args.num_iters
     max_mu_grid = args.max_mu_grid
     max_s_grid = args.max_s_grid
+    n_grid = args.n_grid
 
 
     num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
     total_num_iters = num_chains * num_iters
-    probe_columns = (0, 1)
+    probe_columns = (0, 1) if num_cols > 1 else (0,)
 
 
     cctypes = ['multinomial'] * num_cols
     cctypes[0] = 'continuous'
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
-    T = numpy.zeros((num_rows, num_cols)).tolist()
+    #T = numpy.zeros((num_rows, num_cols)).tolist()
+    T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
 
     # specify grid
     max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
     # may be an issue if this n_grid doesn't match the other grids in the c++
-    n_grid = 31
-    #
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.linspace(0, max_s_grid, n_grid)
+    s_grid = numpy.linspace(1, max_s_grid, n_grid)
 
     # run geweke: forward sample only
     print 'generating forward samples'
     forward_diagnostics_data = forward_sample_from_prior(inf_seed,
             total_num_iters, M_c, T, probe_columns=probe_columns,
             specified_s_grid=s_grid, specified_mu_grid=mu_grid,
+            N_GRID=n_grid,
             do_multiprocessing=True,
             )
 
     # run geweke: transition-erase loop
     print 'generating posterior samples'
     diagnostics_data_list = run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-            s_grid, mu_grid)
+            s_grid, mu_grid,
+            N_GRID=n_grid,
+            )
 
     # save plots
     print 'saving plots'
@@ -547,6 +586,7 @@ if __name__ == '__main__':
             num_cols=num_cols,
             max_mu_grid=max_mu_grid,
             max_s_grid=max_s_grid,
+            n_grid=n_grid,
             total_num_iters=total_num_iters,
             chain_num_iters=num_iters,
             num_chains=num_chains,
