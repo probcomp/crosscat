@@ -17,9 +17,10 @@ MatlabEngine provides minimal support for the functions required for `geweke_uti
 2. [Download the files](http://sourceforge.net/projects/mlabwrap/) and run setup.py.
 3. It probably doesn't work yet. If you're on OSX you're going to need to set some environmental variables in your virtual environment's `activatee` file.
 
-    export DYLD_LIBRARY_PATH=<path to .virtualenvs>/crosscat/lib/dylib
-    export MLABRAW_CMD_STR="/Applications/MATLAB_R2013a.app/bin/matlab -nodesktop"
-
+```bash
+export DYLD_LIBRARY_PATH=<path to .virtualenvs>/crosscat/lib/dylib
+export MLABRAW_CMD_STR="/Applications/MATLAB_R2013a.app/bin/matlab -nodesktop"
+```
 then in `crosscat/lib/dylib` I have softlinks to the following libraries in the MATLAB.app bin
 
     libeng.dylib     
