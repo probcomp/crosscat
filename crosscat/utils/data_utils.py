@@ -355,7 +355,11 @@ def remove_ignore_cols(T, cctypes, colnames):
     cctypes = do_pop_list_indices(cctypes[:], pop_indices)
     return T, cctypes, colnames
 
-bad_set = set(['null'])
+nan_set = set(['', 'null', 'n/a'])
+_convert_nan = lambda el: el if el.strip().lower() not in nan_set else 'NAN'
+_convert_nans = lambda in_list: map(_convert_nan, in_list)
+convert_nans = lambda in_T: map(_convert_nans, in_T)
+
 def read_data_objects(filename, max_rows=None, gen_seed=0,
                       cctypes=None, colnames=None):
     header, raw_T = read_csv(filename, has_header=True)
@@ -363,20 +367,14 @@ def read_data_objects(filename, max_rows=None, gen_seed=0,
     # FIXME: why both accept colnames argument and read header?
     if colnames is None:
         colnames = header
+        pass
     # remove excess rows
     raw_T = at_most_N_rows(raw_T, N=max_rows, gen_seed=gen_seed)
-    # convert empty strings to NAN
-    def filter_empty(el):
-        el_strip = el.strip()
-        if len(el_strip) == 0 or el_strip.lower() in bad_set:
-            return 'NAN'
-        else:
-            return el
-    for i in range(len(raw_T)):
-        raw_T[i] = map(filter_empty, raw_T[i])
+    raw_T = convert_nans(raw_T)
     # remove ignore columns
     if cctypes is None:
         cctypes = ['continuous'] * len(header)
+        pass
     T_uncast_arr, cctypes, header = remove_ignore_cols(raw_T, cctypes, header)
     # determine value mappings and map T to continuous castable values
     M_r = gen_M_r_from_T(T_uncast_arr)
@@ -418,6 +416,7 @@ def read_model_data_from_csv(filename, max_rows=None, gen_seed=0,
                              cctypes=None):
     colnames, T = read_csv(filename)
     T = at_most_N_rows(T, max_rows, gen_seed)
+    T = convert_nans(T)
     if cctypes is None:
         cctypes = guess_column_types(T)
     M_c = gen_M_c_from_T(T, cctypes, colnames)
