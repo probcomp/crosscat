@@ -278,7 +278,7 @@ def convert_code_to_value(M_c, cidx, code):
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
         return round(code,1)
     else:
-        return M_c['column_metadata'][cidx]['value_to_code'][str(int(code))] 
+        return M_c['column_metadata'][cidx]['value_to_code'][(int(code))] 
 
 def convert_value_to_code(M_c, cidx, value):
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
