@@ -275,16 +275,32 @@ def continuous_or_ignore_from_file_with_colnames(filename, cctypes, max_rows=Non
     return T, M_r, M_c, header
 
 def convert_code_to_value(M_c, cidx, code):
+    """
+    For a column with categorical data, this function takes the 'code':
+    the integer used to represent a specific value, and returns the corresponding
+    raw value (e.g. 'Joe' or 234.23409), which is always encoded as a string.
+
+    Note that the underlying store 'value_to_code' is unfortunately named backwards.
+    TODO: fix the backwards naming.
+    """
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
         return round(code,1)
     else:
-        return M_c['column_metadata'][cidx]['value_to_code'][str(int(code))] 
+        return M_c['column_metadata'][cidx]['value_to_code'][int(code)] 
 
 def convert_value_to_code(M_c, cidx, value):
+    """
+    For a column with categorical data, this function takes the raw value
+    (e.g. 'Joe' or 234.23409), which is always encoded as a string, and returns the
+    'code': the integer used to represent that value in the underlying representation.
+
+    Note that the underlying store 'code_to_value' is unfortunately named backwards.
+    TODO: fix the backwards naming.
+    """
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
         return float(value)
     else:
-        return M_c['column_metadata'][cidx]['code_to_value'][str(int(value))] 
+        return M_c['column_metadata'][cidx]['code_to_value'][str(value)] 
 
 def map_from_T_with_M_c(coordinate_value_tuples, M_c):
     coordinate_code_tuples = []
