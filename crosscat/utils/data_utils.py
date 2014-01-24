@@ -102,7 +102,7 @@ def gen_continuous_metadata(column_data):
 
 def gen_multinomial_metadata(column_data):
     def get_is_not_nan(el):
-        if type(el) is str:
+        if isinstance(el, str):
             return el.upper() != 'NAN'
         else:
             return True
