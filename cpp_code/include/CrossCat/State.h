@@ -73,9 +73,9 @@ public:
           std::vector<int> global_row_indices,
           std::vector<int> global_col_indices,
           std::map<int, CM_Hypers> HYPERS_M,
-          std::vector<std::vector<int>> column_partition,
+          std::vector<std::vector<int> > column_partition,
           double COLUMN_CRP_ALPHA,
-          std::vector<std::vector<std::vector<int>>> row_partition_v,
+          std::vector<std::vector<std::vector<int> > > row_partition_v,
           std::vector<double> row_crp_alpha_v,
           std::vector<double> specified_s_grid = empty_vector_double,
           std::vector<double> specified_mu_grid = empty_vector_double,
@@ -148,7 +148,7 @@ public:
     /**
      * \return The column indices in each column partition
      */
-    std::map<int, std::vector<int>> get_column_groups() const;
+    std::map<int, std::vector<int> > get_column_groups() const;
     /**
      * \return A uniform random draw from [0, 1] using the state's rng
      */
@@ -176,7 +176,7 @@ public:
      * Get the sufficient statistics for the ith view
      * \return A vector of cluster sufficient statistics
      */
-    std::vector<std::vector<std::map<std::string, double>>>
+    std::vector<std::vector<std::map<std::string, double> > >
     get_column_component_suffstats_i(int view_idx) const;
     /**
      * Get all the column component model hyperparameters in order
@@ -198,7 +198,7 @@ public:
      * Get a list of cluster memberships for each view.
      * Each cluster membership is itself a list denoting which cluster a row belongs to
      */
-    std::vector<std::vector<int>> get_X_D() const;
+    std::vector<std::vector<int> > get_X_D() const;
 
     //
     // mutators
@@ -259,7 +259,7 @@ public:
      * Stale function: don't use
      */
     double transition_view_i(int which_view,
-                             std::map<int, std::vector<double>> row_data_map);
+                             std::map<int, std::vector<double> > row_data_map);
     /**
      * Stale function: don't use
      */
@@ -364,8 +364,8 @@ private:
     std::vector<double> r_grid;
     std::vector<double> nu_grid;
     std::vector<double> multinomial_alpha_grid;
-    std::map<int, std::vector<double>> s_grids;
-    std::map<int, std::vector<double>> mu_grids;
+    std::map<int, std::vector<double> > s_grids;
+    std::map<int, std::vector<double> > mu_grids;
     // lookups
     std::set<View*> views;
     std::map<int, View*> view_lookup;  // global_column_index to View mapping
@@ -386,10 +386,10 @@ private:
     double sample_column_crp_alpha();
     double sample_row_crp_alpha();
     std::vector<double> sample_row_crp_alphas(int N_views);
-    std::vector<std::vector<int>> generate_col_partition(std::vector<int>
+    std::vector<std::vector<int> > generate_col_partition(std::vector<int>
                                global_col_indices,
                                std::string col_initialization);
-    std::vector<std::vector<std::vector<int>>> generate_row_partitions(
+    std::vector<std::vector<std::vector<int> > > generate_row_partitions(
         std::vector<int> global_row_indices,
         std::vector<double> row_crp_alpha_v, std::string row_initialization);
     void init_base_hypers();
@@ -398,8 +398,8 @@ private:
     void init_views(const MatrixD& data,
                     std::vector<int> global_row_indices,
                     std::vector<int> global_col_indices,
-                    std::vector<std::vector<int>> column_partition,
-                    std::vector<std::vector<std::vector<int>>> row_partition_v,
+                    std::vector<std::vector<int> > column_partition,
+                    std::vector<std::vector<std::vector<int> > > row_partition_v,
                     std::vector<double> row_crp_alpha_v);
 };
 

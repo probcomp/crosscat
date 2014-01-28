@@ -41,7 +41,7 @@ void LoadData(string file, matrix<double>& M) {
     if (!in.is_open()) {
         return;
     }
-    typedef tokenizer<char_separator<char>> Tokenizer;
+    typedef tokenizer<char_separator<char> > Tokenizer;
     char_separator<char> sep(",");
 
     string line;
@@ -123,9 +123,9 @@ vector<double> std_vector_add(vector<double> vec1, vector<double> vec2) {
     return sum_vec;
 }
 
-vector<double> std_vector_add(vector<vector<double>> vec_vec) {
+vector<double> std_vector_add(vector<vector<double> > vec_vec) {
     vector<double> sum_vec = vec_vec[0];
-    vector<vector<double>>::iterator it = vec_vec.begin();
+    vector<vector<double> >::iterator it = vec_vec.begin();
     it++;
     for (; it != vec_vec.end(); it++) {
         sum_vec = std_vector_add(sum_vec, *it);
@@ -198,9 +198,9 @@ vector<int> extract_global_ordering(map<int, int> global_to_local) {
     return global_indices;
 }
 
-map<int, vector<double>> construct_data_map(const MatrixD data) {
+map<int, vector<double> > construct_data_map(const MatrixD data) {
     unsigned int num_rows = data.size1();
-    map<int, vector<double>> data_map;
+    map<int, vector<double> > data_map;
     for (unsigned int row_idx = 0; row_idx < num_rows; row_idx++) {
         data_map[row_idx] = extract_row(data, row_idx);
     }
@@ -254,13 +254,13 @@ vector<double> reorder_per_map(vector<double> raw_values,
     return reorder_per_indices(raw_values, reorder_indices);
 }
 
-vector<vector<double>> reorder_per_map(vector<vector<double>> raw_values,
+vector<vector<double> > reorder_per_map(vector<vector<double> > raw_values,
                                        vector<int> global_column_indices,
 map<int, int> global_to_local) {
     vector<int> reorder_indices = get_indices_to_reorder(global_column_indices,
                                   global_to_local);
-    vector<vector<double>> arranged_values_v;
-    vector<vector<double>>::iterator it;
+    vector<vector<double> > arranged_values_v;
+    vector<vector<double> >::iterator it;
     for (it = raw_values.begin(); it != raw_values.end(); it++) {
         vector<double> arranged_values = reorder_per_indices(*it, reorder_indices);
         arranged_values_v.push_back(arranged_values);
@@ -302,11 +302,11 @@ vector<int> draw_crp_init_counts(int num_datum, double alpha,
     return counts;
 }
 
-vector<vector<int>> draw_crp_init(vector<int> global_row_indices,
+vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
                                   double alpha,
                                   RandomNumberGenerator& rng,
 string initialization) {
-    vector<vector<int>> cluster_indices_v;
+    vector<vector<int> > cluster_indices_v;
     if (initialization == TOGETHER) {
         cluster_indices_v.push_back(global_row_indices);
     } else if (initialization == APART) {
@@ -338,14 +338,14 @@ string initialization) {
     return cluster_indices_v;
 }
 
-vector<vector<vector<int>>> draw_crp_init(vector<int> global_row_indices,
+vector<vector<vector<int> > > draw_crp_init(vector<int> global_row_indices,
         vector<double> alphas,
         RandomNumberGenerator& rng,
         string initialization) {
-    vector<vector<vector<int>>> cluster_indicies_v_v;
+    vector<vector<vector<int> > > cluster_indicies_v_v;
     for (vector<double>::iterator it = alphas.begin(); it != alphas.end(); it++) {
         double alpha = *it;
-        vector<vector<int>> cluster_indicies_v = draw_crp_init(global_row_indices,
+        vector<vector<int> > cluster_indicies_v = draw_crp_init(global_row_indices,
                          alpha, rng, initialization);
         cluster_indicies_v_v.push_back(cluster_indicies_v);
     }

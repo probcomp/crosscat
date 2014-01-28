@@ -41,7 +41,7 @@ public:
     //FIXME: add constructor with ranges as arguments, rather than recalculate
     View(const MatrixD data,
          std::map<int, std::string> GLOBAL_COL_DATATYPES,
-         std::vector<std::vector<int>> row_partitioning,
+         std::vector<std::vector<int> > row_partitioning,
          std::vector<int> global_row_indices,
          std::vector<int> global_col_indices,
          std::map<int, CM_Hypers>& hypers_m,
@@ -49,8 +49,8 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
-         std::map<int, std::vector<double>> S_GRIDS,
-         std::map<int, std::vector<double>> MU_GRIDS,
+         std::map<int, std::vector<double> > S_GRIDS,
+         std::map<int, std::vector<double> > MU_GRIDS,
          double CRP_ALPHA,
          int SEED = 0);
     View(const MatrixD data,
@@ -62,8 +62,8 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
-         std::map<int, std::vector<double>> S_GRIDS,
-         std::map<int, std::vector<double>> MU_GRIDS,
+         std::map<int, std::vector<double> > S_GRIDS,
+         std::map<int, std::vector<double> > MU_GRIDS,
          int SEED = 0);
     View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
          std::vector<int> global_row_indices,
@@ -71,8 +71,8 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
-         std::map<int, std::vector<double>> S_GRIDS,
-         std::map<int, std::vector<double>> MU_GRIDS,
+         std::map<int, std::vector<double> > S_GRIDS,
+         std::map<int, std::vector<double> > MU_GRIDS,
          int SEED = 0);
     //
     // getters (external use)
@@ -92,9 +92,9 @@ public:
     // API helpers
     std::map<std::string, double> get_row_partition_model_hypers() const;
     std::vector<int> get_row_partition_model_counts() const;
-    std::vector<std::map<std::string, double>> get_column_component_suffstats_i(
+    std::vector<std::map<std::string, double> > get_column_component_suffstats_i(
             int global_col_idx) const;
-    std::vector<std::vector<std::map<std::string, double>>>
+    std::vector<std::vector<std::map<std::string, double> > >
     get_column_component_suffstats() const;
     //
     // getters (internal use)
@@ -119,7 +119,7 @@ public:
                                        CM_Hypers hypers);
     //
     // mutators
-    void set_row_partitioning(std::vector<std::vector<int>> row_partitioning);
+    void set_row_partitioning(std::vector<std::vector<int> > row_partitioning);
     void set_row_partitioning(std::vector<int> global_row_indices);
     double set_crp_alpha(double new_crp_alpha);
     Cluster& get_new_cluster();
@@ -138,7 +138,7 @@ public:
     void remove_if_empty(Cluster& which_cluster);
     void remove_all();
     double transition_z(std::vector<double> vd, int row_idx);
-    double transition_zs(std::map<int, std::vector<double>> row_data_map);
+    double transition_zs(std::map<int, std::vector<double> > row_data_map);
     double transition_crp_alpha();
     double set_hyper(int which_col, std::string which_hyper, double new_value);
     double transition_hyper_i(int which_col, std::string which_hyper,
@@ -146,7 +146,7 @@ public:
     double transition_hyper_i(int which_col, std::string which_hyper);
     double transition_hypers_i(int which_col);
     double transition_hypers();
-    double transition(std::map<int, std::vector<double>> row_data_map);
+    double transition(std::map<int, std::vector<double> > row_data_map);
     //
     // data structures
     std::set<Cluster*> clusters;
@@ -157,7 +157,7 @@ public:
     std::vector<double> align_data(std::vector<double> values,
                                    std::vector<int> global_column_indices) const;
     std::vector<int> shuffle_row_indices();
-    std::vector<std::vector<int>> get_cluster_groupings() const;
+    std::vector<std::vector<int> > get_cluster_groupings() const;
     std::vector<int> get_canonical_clustering() const;
     //
     friend std::ostream& operator<<(std::ostream& os, const View& v);
@@ -181,8 +181,8 @@ private:
     std::vector<double> multinomial_alpha_grid;
     std::vector<double> r_grid;
     std::vector<double> nu_grid;
-    std::map<int, std::vector<double>> s_grids;
-    std::map<int, std::vector<double>> mu_grids;
+    std::map<int, std::vector<double> > s_grids;
+    std::map<int, std::vector<double> > mu_grids;
     // sub-objects
     RandomNumberGenerator rng;
     // resources

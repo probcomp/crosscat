@@ -93,7 +93,7 @@ std::vector<int> create_sequence(int len, int start = 0);
 
 std::vector<double> std_vector_add(std::vector<double> vec1,
                                    std::vector<double> vec2);
-std::vector<double> std_vector_add(std::vector<std::vector<double>> vec_vec);
+std::vector<double> std_vector_add(std::vector<std::vector<double> > vec_vec);
 
 double std_vector_sum(std::vector<double> vec);
 double std_vector_mean(std::vector<double> vec);
@@ -165,7 +165,7 @@ std::map<K, int> construct_lookup_map(std::vector<K> keys) {
     return construct_lookup_map(keys, create_sequence(keys.size()));
 }
 
-std::map<int, std::vector<double>> construct_data_map(const MatrixD data);
+std::map<int, std::vector<double> > construct_data_map(const MatrixD data);
 std::map<int, int> remove_and_reorder(std::map<int, int> global_to_local,
                                       int global_to_remove);
 
@@ -176,17 +176,17 @@ std::vector<double> reorder_per_indices(std::vector<double> raw_values,
 std::vector<double> reorder_per_map(std::vector<double> raw_values,
                                     std::vector<int> global_column_indices,
                                     std::map<int, int> global_to_local);
-std::vector<std::vector<double>> reorder_per_map(
-                                  std::vector<std::vector<double>> raw_values,
+std::vector<std::vector<double> > reorder_per_map(
+                                  std::vector<std::vector<double> > raw_values,
                                   std::vector<int> global_column_indices, std::map<int, int> global_to_local);
 
-std::vector<std::vector<int>> draw_crp_init(std::vector<int>
+std::vector<std::vector<int> > draw_crp_init(std::vector<int>
                            global_row_indices,
                            double alpha,
                            RandomNumberGenerator& rng,
                            std::string initialization = FROM_THE_PRIOR);
 
-std::vector<std::vector<std::vector<int>>> draw_crp_init(
+std::vector<std::vector<std::vector<int> > > draw_crp_init(
     std::vector<int> global_row_indices,
     std::vector<double> alphas,
     RandomNumberGenerator& rng,
@@ -231,8 +231,8 @@ std::string stringify(T element) {
 int intify(std::string str);
 
 template <class K, class V>
-std::map<V, std::set<K>> group_by_value(const std::map<K, V> in_map) {
-    std::map<V, std::set<K>> out_map;
+std::map<V, std::set<K> > group_by_value(const std::map<K, V> in_map) {
+    std::map<V, std::set<K> > out_map;
     typename std::map<K, V>::const_iterator it;
     for (it = in_map.begin(); it != in_map.end(); it++) {
         K k = it->first;
@@ -281,9 +281,9 @@ boost::numeric::ublas::matrix<T> vector_to_matrix(std::vector<T> vT) {
 }
 
 template <class T>
-int count_elements(std::vector<std::vector<T>> v_v_T) {
+int count_elements(std::vector<std::vector<T> > v_v_T) {
     int num_elements = 0;
-    typename std::vector<std::vector<T>>::iterator it;
+    typename std::vector<std::vector<T> >::iterator it;
     for (it = v_v_T.begin(); it != v_v_T.end(); it++) {
         num_elements += (*it).size();
     }

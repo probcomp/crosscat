@@ -33,9 +33,9 @@ State::State(const MatrixD& data,
              vector<int> global_row_indices,
              vector<int> global_col_indices,
              map<int, CM_Hypers> HYPERS_M,
-             vector<vector<int>> column_partition,
+             vector<vector<int> > column_partition,
              double COLUMN_CRP_ALPHA,
-             vector<vector<vector<int>>> row_partition_v,
+             vector<vector<vector<int> > > row_partition_v,
              vector<double> row_crp_alpha_v,
              vector<double> specified_s_grid,
              vector<double> specified_mu_grid,
@@ -95,12 +95,12 @@ State::State(const MatrixD& data,
     //
     init_column_hypers(global_col_indices);
     column_crp_alpha = sample_column_crp_alpha();
-    vector<vector<int>> column_partition = generate_col_partition(
+    vector<vector<int> > column_partition = generate_col_partition(
             global_col_indices,
             col_initialization);
     vector<double> row_crp_alpha_v = sample_row_crp_alphas(
                                          column_partition.size());
-    vector<vector<vector<int>>> row_partition_v = generate_row_partitions(
+    vector<vector<vector<int> > > row_partition_v = generate_row_partitions(
                 global_row_indices,
                 row_crp_alpha_v, row_initialization);
     init_views(data,
@@ -310,7 +310,7 @@ vector<int> State::get_row_partition_model_counts_i(int view_idx) const {
     return (**it).get_row_partition_model_counts();
 }
 
-vector<vector<map<string, double>>> State::get_column_component_suffstats_i(
+vector<vector<map<string, double> > > State::get_column_component_suffstats_i(
     int view_idx) const {
     // ordering should be same as column_names
     set<View*>::const_iterator it = views.begin();
@@ -350,8 +350,8 @@ vector<int> State::get_column_partition_counts() const {
     return get_view_counts();
 }
 
-vector<vector<int>> State::get_X_D() const {
-    vector<vector<int>> X_D;
+vector<vector<int> > State::get_X_D() const {
+    vector<vector<int> > X_D;
     set<View*>::iterator it;
     for (it = views.begin(); it != views.end(); it++) {
         View& v = **it;
@@ -361,10 +361,10 @@ vector<vector<int>> State::get_X_D() const {
     return X_D;
 }
 
-map<int, vector<int>> State::get_column_groups() const {
+map<int, vector<int> > State::get_column_groups() const {
     map<View*, int> view_to_int = set_to_map(views);
-    map<View*, set<int>> view_to_set = group_by_value(view_lookup);
-    map<int, vector<int>> view_idx_to_vec;
+    map<View*, set<int> > view_to_set = group_by_value(view_lookup);
+    map<int, vector<int> > view_idx_to_vec;
     set<View*>::iterator it;
     for (it = views.begin(); it != views.end(); it++) {
         View* p_v = *it;
@@ -378,7 +378,7 @@ map<int, vector<int>> State::get_column_groups() const {
 }
 
 double State::transition_view_i(int which_view,
-                                map<int, vector<double>> row_data_map) {
+                                map<int, vector<double> > row_data_map) {
     // assumes views set ordering stays constant between calls
     set<View*>::iterator it = views.begin();
     std::advance(it, which_view);
@@ -395,7 +395,7 @@ double State::transition_view_i(int which_view, const MatrixD& data) {
     vector<int> view_cols = get_indices_to_reorder(global_column_indices,
                             v.global_to_local);
     const MatrixD data_subset = extract_columns(data, view_cols);
-    map<int, vector<double>> data_subset_map = construct_data_map(data_subset);
+    map<int, vector<double> > data_subset_map = construct_data_map(data_subset);
     return v.transition(data_subset_map);
 }
 
@@ -409,7 +409,7 @@ double State::transition_views(const MatrixD& data) {
         vector<int> view_cols = get_indices_to_reorder(global_column_indices,
                                 v.global_to_local);
         const MatrixD data_subset = extract_columns(data, view_cols);
-        map<int, vector<double>> data_subset_map = construct_data_map(data_subset);
+        map<int, vector<double> > data_subset_map = construct_data_map(data_subset);
         score_delta += v.transition(data_subset_map);
     }
     return score_delta;
@@ -434,7 +434,7 @@ double State::transition_row_partition_assignments(const MatrixD& data,
         vector<int> view_cols = get_indices_to_reorder(global_column_indices,
                                 v.global_to_local);
         const MatrixD data_subset = extract_columns(data, view_cols);
-        map<int, vector<double>> row_data_map = construct_data_map(data_subset);
+        map<int, vector<double> > row_data_map = construct_data_map(data_subset);
         vector<int>::iterator vi_it;
         for (vi_it = which_rows.begin(); vi_it != which_rows.end(); vi_it++) {
             // for each SPECIFIED row
@@ -457,7 +457,7 @@ double State::transition_views_zs(const MatrixD& data) {
         vector<int> view_cols = get_indices_to_reorder(global_column_indices,
                                 v.global_to_local);
         const MatrixD data_subset = extract_columns(data, view_cols);
-        map<int, vector<double>> data_subset_map = construct_data_map(data_subset);
+        map<int, vector<double> > data_subset_map = construct_data_map(data_subset);
         score_delta += v.transition_zs(data_subset_map);
     }
     data_score += score_delta;
@@ -743,18 +743,18 @@ vector<double> State::sample_row_crp_alphas(int N_views) {
     return row_crp_alpha_v;
 }
 
-vector<vector<int>> State::generate_col_partition(vector<int>
+vector<vector<int> > State::generate_col_partition(vector<int>
 global_col_indices, string col_initialization) {
-    vector<vector<int>> column_partition = draw_crp_init(global_col_indices,
+    vector<vector<int> > column_partition = draw_crp_init(global_col_indices,
                                            column_crp_alpha, rng,
                                            col_initialization);
     return column_partition;
 }
 
-vector<vector<vector<int>>> State::generate_row_partitions(
+vector<vector<vector<int> > > State::generate_row_partitions(
     vector<int> global_row_indices,
     vector<double> row_crp_alpha_v, string row_initialization) {
-    vector<vector<vector<int>>> row_partition_v = draw_crp_init(global_row_indices,
+    vector<vector<vector<int> > > row_partition_v = draw_crp_init(global_row_indices,
             row_crp_alpha_v, rng, row_initialization);
     return row_partition_v;
 }
@@ -774,15 +774,15 @@ void State::init_column_hypers(vector<int> global_col_indices) {
 void State::init_views(const MatrixD& data,
                        vector<int> global_row_indices,
                        vector<int> global_col_indices,
-                       vector<vector<int>> column_partition,
-                       vector<vector<vector<int>>> row_partition_v,
+                       vector<vector<int> > column_partition,
+                       vector<vector<vector<int> > > row_partition_v,
                        vector<double> row_crp_alpha_v) {
     assert(column_partition.size() == row_partition_v.size());
     assert(column_partition.size() == row_crp_alpha_v.size());
     int num_views = column_partition.size();
     for (int view_idx = 0; view_idx < num_views; view_idx++) {
         vector<int> column_indices = column_partition[view_idx];
-        vector<vector<int>> row_partition = row_partition_v[view_idx];
+        vector<vector<int> > row_partition = row_partition_v[view_idx];
         double row_crp_alpha = row_crp_alpha_v[view_idx];
         const MatrixD data_subset = extract_columns(data, column_indices);
         View *p_v = new View(data_subset,

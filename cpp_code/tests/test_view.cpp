@@ -62,7 +62,7 @@ void print_cluster_memberships(View& v) {
 
 }
 
-void insert_and_print(View& v, map<int, vector<double>> data_map,
+void insert_and_print(View& v, map<int, vector<double> > data_map,
                       int cluster_idx, int row_idx) {
     vector<double> row = data_map[row_idx];
     Cluster& cluster = v.get_cluster(cluster_idx);
@@ -72,7 +72,7 @@ void insert_and_print(View& v, map<int, vector<double>> data_map,
     cout << "v.get_score(): " << v.get_score() << endl;
 }
 
-void remove_all_data(View& v, map<int, vector<double>> data_map) {
+void remove_all_data(View& v, map<int, vector<double> > data_map) {
     vector<int> rows_in_view;
     for (mapICp_it it = v.cluster_lookup.begin(); it != v.cluster_lookup.end();
             it++) {
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     int num_cols = data.size2();
     int num_rows = data.size1();
     //
-    map<int, vector<double>> data_map;
+    map<int, vector<double> > data_map;
     cout << "populating data_map" << endl;
     for (int row_idx = 0; row_idx < num_rows; row_idx++) {
         data_map[row_idx] = extract_row(data, row_idx);
@@ -120,12 +120,12 @@ int main(int argc, char** argv) {
     where_to_push[4] = 0;
     where_to_push[5] = 1;
     //
-    map<int, map<string, double>> hypers_m;
+    map<int, map<string, double> > hypers_m;
     for (int i = 0; i < num_cols; i++) {
         hypers_m[i] = create_default_hypers();
     }
     vector<map<string, double>*> hypers_v;
-    map<int, map<string, double>>::iterator hm_it;
+    map<int, map<string, double> >::iterator hm_it;
     for (hm_it = hypers_m.begin(); hm_it != hypers_m.end(); hm_it++) {
         int key = hm_it->first;
         map<string, double>& hypers = hm_it->second;
@@ -150,8 +150,8 @@ int main(int argc, char** argv) {
     vector<double> row_crp_alpha_grid = create_crp_alpha_grid(num_rows, N_GRID);
     vector<double> r_grid;
     vector<double> nu_grid;
-    map<int, vector<double>> s_grids;
-    map<int, vector<double>> mu_grids;
+    map<int, vector<double> > s_grids;
+    map<int, vector<double> > mu_grids;
     construct_continuous_base_hyper_grids(N_GRID, num_rows, r_grid, nu_grid);
     for (vector<int>::iterator it = global_column_indices.begin();
             it != global_column_indices.end(); it++) {

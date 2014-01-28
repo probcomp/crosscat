@@ -52,12 +52,12 @@ int main(int argc, char** argv) {
     int num_cols = 3;
 
     // create the objects
-    map<int, map<string, double>> hypers_m;
+    map<int, map<string, double> > hypers_m;
     for (int i = 0; i < num_cols; i++) {
         hypers_m[i] = create_default_hypers();
     }
     vector<map<string, double>*> hypers_v;
-    map<int, map<string, double>>::iterator hm_it;
+    map<int, map<string, double> >::iterator hm_it;
     for (hm_it = hypers_m.begin(); hm_it != hypers_m.end(); hm_it++) {
         int key = hm_it->first;
         map<string, double>& hypers = hm_it->second;
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     cout << "end empty cluster print" << endl << endl << endl;
 
     // generate random data;
-    vector<vector<double>> rows;
+    vector<vector<double> > rows;
     for (int row_idx = 0; row_idx < num_rows; row_idx++) {
         vector<double> row_data;
         for (int col_idx = 0; col_idx < num_cols; col_idx++) {

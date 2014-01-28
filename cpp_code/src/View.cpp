@@ -31,7 +31,7 @@ typedef set<Cluster*> setCp;
 // row partitioning, row_crp_alpha fully specified
 View::View(const MatrixD data,
            map<int, string> GLOBAL_COL_DATATYPES,
-           vector<vector<int>> row_partitioning,
+           vector<vector<int> > row_partitioning,
            vector<int> global_row_indices,
            vector<int> global_col_indices,
            map<int, CM_Hypers>& hypers_m,
@@ -39,8 +39,8 @@ View::View(const MatrixD data,
            vector<double> MULTINOMIAL_ALPHA_GRID,
            vector<double> R_GRID,
            vector<double> NU_GRID,
-           map<int, vector<double>> S_GRIDS,
-           map<int, vector<double>> MU_GRIDS,
+           map<int, vector<double> > S_GRIDS,
+           map<int, vector<double> > MU_GRIDS,
            double CRP_ALPHA,
            int SEED) : crp_alpha(CRP_ALPHA), rng(SEED) {
     crp_score = 0;
@@ -68,8 +68,8 @@ View::View(const MatrixD data,
            vector<double> MULTINOMIAL_ALPHA_GRID,
            vector<double> R_GRID,
            vector<double> NU_GRID,
-           map<int, vector<double>> S_GRIDS,
-           map<int, vector<double>> MU_GRIDS,
+           map<int, vector<double> > S_GRIDS,
+           map<int, vector<double> > MU_GRIDS,
            int SEED) : rng(SEED) {
     crp_score = 0;
     data_score = 0;
@@ -97,8 +97,8 @@ View::View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
            std::vector<double> MULTINOMIAL_ALPHA_GRID,
            std::vector<double> R_GRID,
            std::vector<double> NU_GRID,
-           std::map<int, std::vector<double>> S_GRIDS,
-           std::map<int, std::vector<double>> MU_GRIDS,
+           std::map<int, std::vector<double> > S_GRIDS,
+           std::map<int, std::vector<double> > MU_GRIDS,
            int SEED) : rng(SEED) {
     crp_score = 0;
     data_score = 0;
@@ -217,9 +217,9 @@ vector<int> View::get_row_partition_model_counts() const {
     return get_cluster_counts();
 }
 
-vector<map<string, double>> View::get_column_component_suffstats_i(
+vector<map<string, double> > View::get_column_component_suffstats_i(
 int global_col_idx) const {
-    vector<map<string, double>> column_component_suffstats;
+    vector<map<string, double> > column_component_suffstats;
     set<Cluster*>::const_iterator it = clusters.begin();
     for (; it != clusters.end(); it++) {
         int local_col_idx = get(global_to_local, global_col_idx);
@@ -229,13 +229,13 @@ int global_col_idx) const {
     return column_component_suffstats;
 }
 
-vector<vector<map<string, double>>> View::get_column_component_suffstats()
+vector<vector<map<string, double> > > View::get_column_component_suffstats()
 const {
-    vector<vector<map<string, double>>> column_component_suffstats;
+    vector<vector<map<string, double> > > column_component_suffstats;
     map<int, int>::const_iterator it;
     for (it = global_to_local.begin(); it != global_to_local.end(); it++) {
         int global_col_idx = it->first;
-        vector<map<string, double>> column_component_suffstats_i = \
+        vector<map<string, double> > column_component_suffstats_i = \
                                  get_column_component_suffstats_i(global_col_idx);
         column_component_suffstats.push_back(column_component_suffstats_i);
     }
@@ -325,7 +325,7 @@ std::vector<double> View::calc_hyper_conditionals(int which_col,
         std::string which_hyper,
         std::vector<double> hyper_grid) const {
     setCp::iterator it;
-    vector<vector<double>> vec_vec;
+    vector<vector<double> > vec_vec;
     for (it = clusters.begin(); it != clusters.end(); it++) {
         vector<double> logps = (**it).calc_hyper_conditionals(which_col, which_hyper,
                                hyper_grid);
@@ -396,7 +396,7 @@ double View::transition_hypers() {
     return score_delta;
 }
 
-double View::transition(std::map<int, std::vector<double>> row_data_map) {
+double View::transition(std::map<int, std::vector<double> > row_data_map) {
     vector<int> which_transitions = create_sequence(3);
     //FIXME: use own shuffle so seed control is in effect
     std::random_shuffle(which_transitions.begin(), which_transitions.end());
@@ -481,7 +481,7 @@ double View::remove_row(vector<double> vd, int row_idx) {
     return score_delta;
 }
 
-void View::set_row_partitioning(vector<vector<int>> row_partitioning) {
+void View::set_row_partitioning(vector<vector<int> > row_partitioning) {
     int num_clusters = row_partitioning.size();
     vector<double> blank_row;
     for (int cluster_idx = 0; cluster_idx < num_clusters; cluster_idx++) {
@@ -497,7 +497,7 @@ void View::set_row_partitioning(vector<vector<int>> row_partitioning) {
 }
 
 void View::set_row_partitioning(vector<int> global_row_indices) {
-    vector<vector<int>> crp_init = draw_crp_init(global_row_indices, crp_alpha,
+    vector<vector<int> > crp_init = draw_crp_init(global_row_indices, crp_alpha,
                                    rng);
     set_row_partitioning(crp_init);
 }
@@ -583,7 +583,7 @@ double View::transition_z(vector<double> vd, int row_idx) {
     return score_delta;
 }
 
-double View::transition_zs(map<int, vector<double>> row_data_map) {
+double View::transition_zs(map<int, vector<double> > row_data_map) {
     double score_delta = 0;
     vector<int> shuffled_row_indices = shuffle_row_indices();
     vector<int>::iterator it = shuffled_row_indices.begin();
@@ -630,8 +630,8 @@ vector<int> View::shuffle_row_indices() {
     return shuffled_order;
 }
 
-vector<vector<int>> View::get_cluster_groupings() const {
-    vector<vector<int>> cluster_groupings;
+vector<vector<int> > View::get_cluster_groupings() const {
+    vector<vector<int> > cluster_groupings;
     set<Cluster*>::iterator it;
     for (it = clusters.begin(); it != clusters.end(); it++) {
         Cluster& c = **it;
@@ -675,7 +675,7 @@ string View::to_string(string join_str, bool top_level) const {
 }
 
 void View::print_score_matrix() {
-    vector<vector<double>> scores_v;
+    vector<vector<double> > scores_v;
     set<Cluster*>::iterator c_it;
     for (c_it = clusters.begin(); c_it != clusters.end(); c_it++) {
         Cluster& c = **c_it;
