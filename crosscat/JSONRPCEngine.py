@@ -36,7 +36,7 @@ class JSONRPCEngine(EngineTemplate.EngineTemplate):
 
     """
 
-    def __init__(self, seed=0, URI=None):
+    def __init__(self, seed=None, URI=None):
         super(JSONRPCEngine, self).__init__(seed=seed)
         self.URI = URI
         return

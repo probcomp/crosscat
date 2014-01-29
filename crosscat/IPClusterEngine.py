@@ -39,7 +39,7 @@ class IPClusterEngine(LE.LocalEngine):
 
     """
 
-    def __init__(self, config_filename=None, profile=None, seed=0, sshkey=None, packer='json'):
+    def __init__(self, config_filename=None, profile=None, seed=None, sshkey=None, packer='json'):
         """Initialize a IPClusterEngine
 
         Do IPython.parallel operations to set up cluster and generate mapper.

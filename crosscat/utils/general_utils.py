@@ -21,6 +21,7 @@ import itertools
 import inspect
 from timeit import default_timer
 import datetime
+import random
 
 class Timer(object):
     def __init__(self, task='action', verbose=True):
@@ -40,7 +41,9 @@ class Timer(object):
         if self.verbose:
             print '%s took:\t% 7d ms' % (self.task, self.elapsed)
 
-def int_generator(start=0):
+def int_generator(start=None):
+    if start is None:
+        start = random.randrange(32767)
     next_i = start
     while True:
         yield next_i

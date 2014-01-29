@@ -38,7 +38,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
     """
 
-    def __init__(self, seed=0):
+    def __init__(self, seed=None):
         """Initialize a LocalEngine
 
         This is really just setting the initial seed to be used for

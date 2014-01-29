@@ -31,7 +31,7 @@ class MultiprocessingEngine(LE.LocalEngine):
 
     """
 
-    def __init__(self, seed=0, cpu_count=None):
+    def __init__(self, seed=None, cpu_count=None):
         """Initialize a MultiprocessingEngine
 
         This is really just setting the initial seed to be used for

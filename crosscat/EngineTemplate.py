@@ -22,7 +22,7 @@ import crosscat.utils.general_utils as gu
 
 class EngineTemplate(object):
 
-    def __init__(self, seed=0):
+    def __init__(self, seed=None):
         self.seed_generator = gu.int_generator(seed)
 
     def get_next_seed(self):
