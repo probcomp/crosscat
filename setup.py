@@ -1,14 +1,19 @@
 #!/usr/bin/python
 import os
+import sys
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+#
+import numpy
+
 
 # http://stackoverflow.com/a/18992595
-import sys
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
-    os.environ['CC'] = 'ccache gcc'
+    has_ccache = os.system('which ccache') == 0
+    if has_ccache:
+        os.environ['CC'] = 'ccache gcc'
 
 # http://stackoverflow.com/a/13176803
 # monkey-patch for parallel compilation
@@ -55,7 +60,7 @@ os.chdir(this_dir)
 # locations
 pyx_src_dir = 'crosscat/cython_code'
 cpp_src_dir = 'cpp_code/src'
-include_dirs = ['cpp_code/include/CrossCat']
+include_dirs = ['cpp_code/include/CrossCat', numpy.get_include()]
 
 
 # specify sources
