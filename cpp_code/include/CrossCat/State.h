@@ -33,10 +33,6 @@
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
-const static double r0_0 = 1.0;
-const static double nu0_0 = 2.0;
-const static double s0_0 = 2.0;
-const static double mu0_0 = 0.0;
 const static std::vector<double> empty_vector_double;
 
 /**
