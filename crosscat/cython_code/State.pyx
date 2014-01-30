@@ -349,7 +349,7 @@ cdef class p_State:
                              args_dict = get_args_dict(args_list, locals())
                              score_delta += which_method(**args_dict)
                         else:
-                             print_str = 'INVALID TRANSITION TYPE TO' \
+                             print_str = 'INVALID TRANSITION TYPE TO ' \
                                  'State.transition: %s' % which_transition
                              print print_str
          return score_delta
