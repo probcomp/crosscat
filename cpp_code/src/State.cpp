@@ -371,8 +371,8 @@ vector<double> State::get_draw(int row_idx, int random_seed) const {
         double randu = rng.next();
         vector<double> draw_i = v.get_draw(row_idx, randu);
         vector<int> global_col_indices_i = v.get_global_col_indices();
-        append(_draw, draw_i);
-        append(global_col_indices, global_col_indices_i);
+        _draw = append(_draw, draw_i);
+        global_col_indices = append(global_col_indices, global_col_indices_i);
     }
     int num_cols = get_num_cols();
     vector<double> draw(num_cols);
