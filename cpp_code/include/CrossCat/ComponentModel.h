@@ -43,8 +43,8 @@ public:
     int get_count() const;
     std::map<std::string, double> get_suffstats() const;
     virtual std::map<std::string, double> _get_suffstats() const;
-    double get_draw(int random_seed) const;
-    double get_draw_constrained(int random_seed,
+    virtual double get_draw(int random_seed) const;
+    virtual double get_draw_constrained(int random_seed,
                                 std::vector<double> constraints) const;
     //
     //
