@@ -45,16 +45,11 @@ def determine_Q(M_c, query_names, num_rows, impute_row=None):
     Q = [(row_idx, col_idx) for col_idx in query_col_indices]
     return Q
 
-def sample_T(engine, M_c, X_L, X_D):
+def sample_T(engine, M_c, T, X_L, X_D):
     num_rows = len(X_D[0])
-    num_cols = len(X_L['column_partition']['assignments'])
-    query_cols = range(num_cols)
-    col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
-    query_names = col_names[query_cols]
     generated_T = []
     for row_i in range(num_rows):
-        Q = determine_Q(M_c, query_names, row_i)
-        sample = engine.simple_predictive_sample(M_c, X_L, X_D, None, Q, 1)[0]
+        sample, T, X_L, X_D = engine.sample_and_insert(M_c, T, X_L, X_D, row_i)
         generated_T.append(sample)
     return generated_T
 
@@ -85,7 +80,7 @@ def run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 )
     diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
             diagnostics_funcs)
-    T = sample_T(engine, M_c, X_L, X_D)
+    T = sample_T(engine, M_c, T, X_L, X_D)
     return M_c, T, X_L, X_D
 
 def arbitrate_plot_rand_idx(plot_rand_idx, num_iters):
