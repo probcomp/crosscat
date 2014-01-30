@@ -200,6 +200,7 @@ public:
      */
     std::vector<double> get_draw(int row_idx, int random_seed) const;
 
+    double insert_row(std::vector<double> row_data, int matching_row_idx, int row_idx=-1);
     //
     // mutators
     //

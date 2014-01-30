@@ -126,6 +126,7 @@ public:
     double set_crp_alpha(double new_crp_alpha);
     Cluster& get_new_cluster();
     double insert_row(std::vector<double> vd, Cluster& cd, int row_idx);
+    double insert_row(std::vector<double> vd, int matching_row_idx, int row_idx);
     double insert_row(std::vector<double> vd, int row_idx);
     double remove_row(std::vector<double> vd, int row_idx);
     double remove_col(int global_col_idx);

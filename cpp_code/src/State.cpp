@@ -132,6 +132,21 @@ vector<int> State::get_view_counts() const {
     return view_counts;
 }
 
+double State::insert_row(vector<double> row_data, int matching_row_idx, int row_idx) {
+    if(row_idx==-1) {
+        row_idx = (int) (**views.begin()).cluster_lookup.size();
+    }
+    set<View*>::iterator it;
+    double score_delta = 0;
+    for(it=views.begin(); it!=views.end(); it++) {
+        View &v = **it;
+        vector<int> global_col_indices = v.get_global_col_indices();
+        vector<double> data_subset = extract_columns(row_data, global_col_indices);
+        score_delta += v.insert_row(data_subset, matching_row_idx, row_idx);
+    }
+    return score_delta;
+}
+
 double State::insert_feature(int feature_idx, vector<double> feature_data,
                              View& which_view) {
     string col_datatype = global_col_datatypes[feature_idx];

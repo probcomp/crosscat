@@ -474,6 +474,12 @@ double View::insert_row(vector<double> vd, Cluster& which_cluster,
     return score_delta;
 }
 
+double View::insert_row(vector<double> vd, int matching_row_idx, int row_idx) {
+    Cluster& which_cluster = *cluster_lookup[matching_row_idx];
+    double score_delta = insert_row(vd, which_cluster, row_idx);
+    return score_delta;
+}
+
 double View::insert_row(vector<double> vd, int row_idx) {
     vector<double> unorm_logps = calc_cluster_vector_predictive_logps(vd);
     double rand_u = draw_rand_u();
