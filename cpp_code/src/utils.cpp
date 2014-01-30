@@ -182,11 +182,6 @@ vector<double> extract_col(const matrix<double> data, int col_idx) {
   return col;
 }
 
-vector<double> append(vector<double> vec1, vector<double> vec2) {
-  vec1.insert(vec1.end(), vec2.begin(), vec2.end());
-  return vec1;
-}  
-
 vector<int> extract_global_ordering(map<int, int> global_to_local) {
   vector<int> global_indices(global_to_local.size(), -1);
   map<int,int>::iterator it;
