@@ -71,6 +71,8 @@ cdef matrix[double]* convert_data_to_cpp(np.ndarray[np.float64_t, ndim=2] data):
 cdef extern from "State.h":
      cdef cppclass State:
           # mutators
+          double insert_row(vector[double] row_data, int matching_row_idx, int
+                  row_idx)
           double transition(matrix[double] data)
           double transition_column_crp_alpha()
           double transition_features(matrix[double] data, vector[int] which_cols)
@@ -325,6 +327,8 @@ cdef class p_State:
             view_state.append(view_state_i)
         return view_state
     # mutators
+    def insert_row(self, row_data, matching_row_idx, row_idx=-1):
+        return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
     def transition(self, which_transitions=(), n_steps=1,
                    c=(), r=(), max_iterations=-1, max_time=-1):
          seed = None
