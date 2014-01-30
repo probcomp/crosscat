@@ -361,6 +361,29 @@ vector<vector<int> > State::get_X_D() const {
     return X_D;
 }
 
+vector<double> State::get_draw(int row_idx, int random_seed) const {
+    RandomNumberGenerator rng(random_seed);
+    set<View*>::iterator it;
+    vector<double> _draw;
+    vector<int> global_col_indices;
+    for (it = views.begin(); it != views.end(); it++) {
+        View& v = **it;
+        double randu = rng.next();
+        vector<double> draw_i = v.get_draw(row_idx, randu);
+        vector<int> global_col_indices_i = v.get_global_col_indices();
+        append(_draw, draw_i);
+        append(global_col_indices, global_col_indices_i);
+    }
+    int num_cols = get_num_cols();
+    vector<double> draw(num_cols);
+    for(int idx=0; idx<num_cols; idx++) {
+        int col_idx = global_col_indices[idx];
+        double value = _draw[idx];
+        draw[col_idx] = value;
+    }
+    return draw;
+}
+
 map<int, vector<int> > State::get_column_groups() const {
     map<View*, int> view_to_int = set_to_map(views);
     map<View*, set<int> > view_to_set = group_by_value(view_lookup);

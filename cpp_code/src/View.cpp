@@ -242,6 +242,16 @@ const {
     return column_component_suffstats;
 }
 
+vector<int> View::get_global_col_indices() {
+    int num_cols = get_num_cols();
+    vector<int> global_col_indices;
+    for(int local_col_idx=0; local_col_idx<num_cols; local_col_idx++) {
+        int global_col_idx = get_key_of_value(global_to_local, local_col_idx);
+        global_col_indices.push_back(global_col_idx);
+    }
+    return global_col_indices;
+}
+
 Cluster& View::get_cluster(int cluster_idx) {
     assert(cluster_idx <= clusters.size());
     bool not_new = ((unsigned int) cluster_idx) < clusters.size();
@@ -252,6 +262,12 @@ Cluster& View::get_cluster(int cluster_idx) {
     } else {
         return get_new_cluster();
     }
+}
+
+vector<double> View::get_draw(int row_idx, int random_seed) const {
+    Cluster &cluster = *get(cluster_lookup, row_idx);
+    vector<double> draw = cluster.get_draw(random_seed);
+    return draw;
 }
 
 vector<int> View::get_cluster_counts() const {

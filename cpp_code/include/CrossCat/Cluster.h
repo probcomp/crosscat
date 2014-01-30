@@ -50,6 +50,7 @@ public:
     CM_Hypers get_hypers_i(int idx) const;
     std::set<int> get_row_indices_set() const;
     std::vector<int> get_row_indices_vector() const;
+    std::vector<double> get_draw(int random_seed) const;
     //
     // calculators
     std::vector<double> calc_marginal_logps() const;

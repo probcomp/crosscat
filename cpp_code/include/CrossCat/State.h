@@ -195,6 +195,10 @@ public:
      * Each cluster membership is itself a list denoting which cluster a row belongs to
      */
     std::vector<std::vector<int> > get_X_D() const;
+    /**
+     * Draw a sample row based on an existing row
+     */
+    std::vector<double> get_draw(int row_idx, int random_seed) const;
 
     //
     // mutators
