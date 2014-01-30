@@ -183,6 +183,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             ret_tuple = X_L_list, X_D_list
         return ret_tuple
 
+    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
+        random_seed = self.get_next_seed()
+        p_State = State.p_State(M_c, T, X_L, X_D)
+        draw = p_State.get_draw(matching_row_idx, random_seed)
+        p_State.insert_row(draw, matching_row_idx)
+        T.append(draw)
+        X_L, X_D = p_State.get_X_L(), p_State.get_X_D()
+        return draw, T, X_L, X_D
+
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
 
