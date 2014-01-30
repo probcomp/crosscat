@@ -88,6 +88,7 @@ cdef extern from "State.h":
           double get_column_crp_score()
           double get_data_score()
           double get_marginal_logp()
+          vector[double] get_draw(int row_idx, int random_seed)
           int get_num_views()
           c_map[int, vector[int]] get_column_groups()
           string to_string(string join_str, bool top_level)
@@ -258,6 +259,8 @@ cdef class p_State:
         return self.thisptr.get_num_views()
     def calc_row_predictive_logp(self, in_vd):
          return self.thisptr.calc_row_predictive_logp(in_vd)
+    def get_draw(self, row_idx, random_seed):
+        return self.thisptr.get_draw(row_idx, random_seed)
     #
     # get_X_L helpers helpers
     def get_row_partition_model_i(self, view_idx):
