@@ -75,8 +75,8 @@ vector<double> Cluster::get_draw(int random_seed) const {
     std::vector<double> draws;
     std::vector<ComponentModel*>::const_iterator it;
     for(it=p_model_v.begin(); it!=p_model_v.end(); it++) {
-        double randu = rng.next();
-        double draw = (*it)->get_draw(randu);
+        int randi = rng.nexti(MAX_INT);
+        double draw = (**it).get_draw(randi);
         draws.push_back(draw);
     }
     return draws;
