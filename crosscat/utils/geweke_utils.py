@@ -212,27 +212,11 @@ def condense_diagnostics_data_list(diagnostics_data_list):
     keys = diagnostics_data_list[0].keys()
     return { key : get_key_condensed(key) for key in keys}
 
-def is_eps(data):
-    data = numpy.array(data)
-    return (0 < data) & (data < 1E-100)
-
-def filter_eps(data):
-    data = numpy.array(data)
-    return data[~is_eps(data)]
-
-def clip_extremes(data):
-    data = numpy.array(data)
-    percentiles = [.5, 99.5]
-    lower, upper = numpy.percentile(data, percentiles)
-    return data.clip(lower, upper)
-
 def generate_log_bins(data, n_bins=31):
-    data = filter_eps(data)
     log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
     return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
 
 def generate_bins_unique(data):
-    data = filter_eps(data)
     bins = sorted(set(data))
     delta = bins[-1] - bins[-2]
     bins.append(bins[-1] + delta)
@@ -262,7 +246,6 @@ def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
         do_labelling=True,
         ):
     data = diagnostics_data[variable_name]
-    data = clip_extremes(data)
     if new_figure:
         pylab.figure()
     pylab.hist(data, bins=n_bins)
@@ -393,45 +376,6 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         pass
     return
 
-def get_kl((max_idx, grid, true_series, inferred_series)):
-    # assume grid, series{1,2} are numpy arrays; series{1,2} with same length
-    kld = numpy.nan
-    try:
-        if len(grid) < 2:
-            raise Exception()
-        bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-        true_density, binz = numpy.histogram(true_series[:max_idx], bins, density=True)
-        inferred_density, binz = numpy.histogram(inferred_series[:max_idx], bins, density=True)
-        true_has_support = sum(true_density==0) == 0
-        inferred_has_support = sum(inferred_density==0) == 0
-        if true_has_support and inferred_has_support:
-            # inferred has support every true does
-            log_true_density = numpy.log(true_density)
-            log_inferred_density = numpy.log(inferred_density)
-            kld = qtu.KL_divergence_arrays(grid, log_true_density,
-                    log_inferred_density, False)
-            pass
-    except Exception, e:
-        pass
-    return kld
-
-def get_kl_series(grid, _true, _inferred):
-    pool = multiprocessing.Pool()
-    mapper = pool.map
-    _true[is_eps(_true)] = 0
-    _inferred[is_eps(_inferred)] = 0
-    start_at = 10
-    N = len(_true)
-    #
-    ns = range(start_at, N + 1)
-    arg_tuples = [(n, grid, _true, _inferred) for n in ns]
-    prepend = [numpy.nan] * start_at
-    append = mapper(get_kl, arg_tuples)
-    kl_series = prepend + append
-    #
-    pool.close(); pool.join()
-    return kl_series
-
 def make_same_length(*args):
     return zip(*zip(*args))
 
@@ -459,6 +403,9 @@ def _get_kl(grid, true_series, inferred_series):
         pass
     return kld
 
+def _get_kl_tuple((grid, true_series, inferred_series)):
+    return _get_kl(grid, true_series, inferred_series)
+
 def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = make_same_length(forward, not_forward)
     forward, not_forward = map(numpy.array, (forward, not_forward))
@@ -467,10 +414,12 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
     #
     log_true_series = get_log_density_series(forward, bins)
     log_inferred_series = get_log_density_series(not_forward, bins)
-    kls = [
-            _get_kl(grid, x, y)
+    arg_tuples = [
+            (grid, x, y)
             for x, y in zip(log_true_series, log_inferred_series)
             ]
+    pool = multiprocessing.Pool()
+    kls = pool.map(_get_kl_tuple, arg_tuples)
     return kls
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
