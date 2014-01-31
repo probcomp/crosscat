@@ -38,13 +38,6 @@ image_format = 'png'
 default_n_grid=31
 
 
-def determine_Q(M_c, query_names, num_rows, impute_row=None):
-    name_to_idx = M_c['name_to_idx']
-    query_col_indices = [name_to_idx[colname] for colname in query_names]
-    row_idx = num_rows + 1 if impute_row is None else impute_row
-    Q = [(row_idx, col_idx) for col_idx in query_col_indices]
-    return Q
-
 def sample_T(engine, M_c, T, X_L, X_D):
     num_rows = len(X_D[0])
     generated_T = []
@@ -442,11 +435,43 @@ def get_kl_series(grid, _true, _inferred):
 def make_same_length(*args):
     return zip(*zip(*args))
 
+def get_log_density_series(values, bins):
+    bin_widths = numpy.diff(bins)
+    #
+    get_count = lambda values: numpy.histogram(values, bins)[0]
+    counts = map(get_count, values)
+    counts = numpy.vstack(counts).cumsum(axis=0)
+    #
+    ratios = counts / numpy.arange(1., len(counts) + 1.)[:, numpy.newaxis]
+    densities = ratios / bin_widths[numpy.newaxis, :]
+    log_densities = numpy.log(densities)
+    return log_densities
+
+def _get_kl(grid, true_series, inferred_series):
+    kld = numpy.nan
+    bad_value = -numpy.inf
+    has_support = lambda series: sum(series==bad_value) == 0
+    true_has_support = has_support(true_series)
+    inferred_has_support = has_support(inferred_series)
+    if true_has_support and inferred_has_support:
+        kld = qtu.KL_divergence_arrays(grid, true_series,
+                inferred_series, False)
+        pass
+    return kld
+
 def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = make_same_length(forward, not_forward)
     forward, not_forward = map(numpy.array, (forward, not_forward))
-    grid = numpy.array(sorted(set(forward)))
-    return get_kl_series(grid, forward, not_forward)
+    grid = numpy.array(sorted(set(forward).union(not_forward)))
+    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+    #
+    log_true_series = get_log_density_series(forward, bins)
+    log_inferred_series = get_log_density_series(not_forward, bins)
+    kls = [
+            _get_kl(grid, x, y)
+            for x, y in zip(log_true_series, log_inferred_series)
+            ]
+    return kls
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     generate_part = lambda (key, value): key + '=' + str(value)
