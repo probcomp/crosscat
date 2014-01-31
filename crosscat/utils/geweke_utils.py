@@ -537,7 +537,7 @@ if __name__ == '__main__':
     # run geweke: forward sample only
     print 'generating forward samples'
     forward_diagnostics_data = forward_sample_from_prior(inf_seed,
-            total_num_iters, M_c, T, probe_columns=probe_columns,
+            num_iters, M_c, T, probe_columns=probe_columns,
             specified_s_grid=s_grid, specified_mu_grid=mu_grid,
             N_GRID=n_grid,
             do_multiprocessing=True,
