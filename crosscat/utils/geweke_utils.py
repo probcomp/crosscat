@@ -381,11 +381,15 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
 def make_same_length(*args):
     return zip(*zip(*args))
 
+def get_count((values, bins)):
+    return numpy.histogram(values, bins)[0]
+
 def get_log_density_series(values, bins):
     bin_widths = numpy.diff(bins)
     #
-    get_count = lambda values: numpy.histogram(values, bins)[0]
-    counts = map(get_count, values)
+    pool = multiprocessing.Pool()
+    counts = pool.map(get_count, [(el, bins) for el in values])
+    pool.close(); pool.join()
     counts = numpy.vstack(counts).cumsum(axis=0)
     #
     ratios = counts / numpy.arange(1., len(counts) + 1.)[:, numpy.newaxis]
@@ -422,6 +426,7 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
             ]
     pool = multiprocessing.Pool()
     kls = pool.map(_get_kl_tuple, arg_tuples)
+    pool.close(); pool.join()
     return kls
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
