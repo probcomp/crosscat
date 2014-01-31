@@ -46,6 +46,15 @@ map<string, double> ComponentModel::_get_suffstats() const {
     map<string, double> suffstats;
     return suffstats;
 }
+double ComponentModel::get_draw(int random_seed) const {
+    assert(0);
+    return NaN;
+}
+double ComponentModel::get_draw_constrained(int random_seed,
+        std::vector<double> constraints) const {
+    assert(0);
+    return NaN;
+}
 //
 double ComponentModel::insert_element(double element) {
     assert(0);

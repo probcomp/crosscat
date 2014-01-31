@@ -132,6 +132,21 @@ vector<int> State::get_view_counts() const {
     return view_counts;
 }
 
+double State::insert_row(vector<double> row_data, int matching_row_idx, int row_idx) {
+    if(row_idx==-1) {
+        row_idx = (int) (**views.begin()).cluster_lookup.size();
+    }
+    set<View*>::iterator it;
+    double score_delta = 0;
+    for(it=views.begin(); it!=views.end(); it++) {
+        View &v = **it;
+        vector<int> global_col_indices = v.get_global_col_indices();
+        vector<double> data_subset = extract_columns(row_data, global_col_indices);
+        score_delta += v.insert_row(data_subset, matching_row_idx, row_idx);
+    }
+    return score_delta;
+}
+
 double State::insert_feature(int feature_idx, vector<double> feature_data,
                              View& which_view) {
     string col_datatype = global_col_datatypes[feature_idx];
@@ -359,6 +374,29 @@ vector<vector<int> > State::get_X_D() const {
         X_D.push_back(canonical_clustering);
     }
     return X_D;
+}
+
+vector<double> State::get_draw(int row_idx, int random_seed) const {
+    RandomNumberGenerator rng(random_seed);
+    set<View*>::iterator it;
+    vector<double> _draw;
+    vector<int> global_col_indices;
+    for (it = views.begin(); it != views.end(); it++) {
+        View& v = **it;
+        int randi = rng.nexti(MAX_INT);
+        vector<double> draw_i = v.get_draw(row_idx, randi);
+        vector<int> global_col_indices_i = v.get_global_col_indices();
+        _draw = append(_draw, draw_i);
+        global_col_indices = append(global_col_indices, global_col_indices_i);
+    }
+    int num_cols = get_num_cols();
+    vector<double> draw(num_cols);
+    for(int idx=0; idx<num_cols; idx++) {
+        int col_idx = global_col_indices[idx];
+        double value = _draw[idx];
+        draw[col_idx] = value;
+    }
+    return draw;
 }
 
 map<int, vector<int> > State::get_column_groups() const {
