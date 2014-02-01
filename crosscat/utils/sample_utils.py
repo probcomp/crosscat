@@ -69,38 +69,33 @@ def simple_predictive_probability(M_c, X_L, X_D, Y, Q):
     return x
 
 
-def simple_predictive_probability_observed(M_c, X_L, X_D, Y, which_row,
-                                      which_columns, elements):
-    get_which_view = lambda which_column: \
-        X_L['column_partition']['assignments'][which_column]
-    column_to_view = dict()
-    for which_column in which_columns:
-        column_to_view[which_column] = get_which_view(which_column)
+def simple_predictive_probability_observed(M_c, X_L, X_D, Y, query_row,
+                                      query_columns, elements):
+    n_queries = len(query_columns)
 
-    view_to_cluster_model = dict()
-    for which_view in list(set(column_to_view.values())):
-        which_cluster = X_D[which_view][which_row]
-        cluster_model = create_cluster_model_from_X_L(M_c, X_L, which_view,
-                                                      which_cluster)
-        view_to_cluster_model[which_view] = cluster_model
+    answer = numpy.zeros(n_queries)
 
-    Ps = numpy.zeros(len(which_columns)) 
-
-    q = 0 # query index
-    for which_column in which_columns:
-        which_view = column_to_view[which_column]
-        cluster_model = view_to_cluster_model[which_view]
-        component_model = cluster_model[which_column]
-        draw_constraints = get_draw_constraints(X_L, X_D, Y,which_row, which_column)
-
-        logp = component_model.calc_element_predictive_logp_constrained(elements[q],draw_constraints)
+    for n in range(n_queries):
+        query_column = query_columns[n]
+        x = elements[n]
         
-        Ps[q] = logp
-        q += 1
+        # get the view to which this column is assigned
+        view_idx = X_L['column_partition']['assignments'][query_column]
+        # get cluster
+        cluster_idx = X_D[view_idx][query_row]
+        # get the cluster model for this cluster
+        cluster_model = create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx)
+        # get the specific cluster model for this column
+        component_model = cluster_model[query_column]
+        # construct draw conataints
+        draw_constraints = get_draw_constraints(X_L, X_D, Y, query_row, query_column)
 
-    ans = Ps
-    
-    return ans
+        # return the PDF value (exp)
+        p_x = component_model.calc_element_predictive_logp_constrained(x, draw_constraints)
+        
+        answer[n] = p_x
+        
+    return answer
 
 def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_columns, elements):
 
