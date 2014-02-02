@@ -22,6 +22,8 @@ import inspect
 from timeit import default_timer
 import datetime
 import random
+import multiprocessing
+
 
 class Timer(object):
     def __init__(self, task='action', verbose=True):
@@ -40,6 +42,27 @@ class Timer(object):
         self.elapsed = self.elapsed_secs * 1000 # millisecs
         if self.verbose:
             print '%s took:\t% 7d ms' % (self.task, self.elapsed)
+
+class MapperContext(object):
+    def __init__(self, do_multiprocessing=True, *args, **kwargs):
+        self.pool = None
+        self.map = map
+        if do_multiprocessing:
+            self.pool = multiprocessing.Pool(*args, **kwargs)
+            self.map = self.pool.map
+            pass
+        return
+
+    def __enter__(self):
+        return self.map
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        assert exc_type is None and exc_value is None and traceback is None
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            pass
+        return
 
 def int_generator(start=None):
     if start is None:
