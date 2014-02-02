@@ -30,6 +30,7 @@ import numpy
 import pylab
 #
 import crosscat.LocalEngine as LE
+import crosscat.utils.general_utils as gu
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
 import crosscat.utils.plot_utils as pu
@@ -54,9 +55,9 @@ def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
     return diagnostics_data
 
 def generate_diagnostics_funcs_for_column(X_L, column_idx):
+    discard_keys = ['fixed', 'K']
     keys = set(X_L['column_hypers'][column_idx].keys())
-    keys.discard('fixed')
-    keys.discard('K')
+    keys = keys.difference(discard_keys)
     def helper(column_idx, key):
         func_name = 'col_%s_%s' % (column_idx, key)
         func = lambda X_L: X_L['column_hypers'][column_idx][key]
@@ -137,8 +138,6 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
         specified_s_grid, specified_mu_grid,
         N_GRID=default_n_grid,
         ):
-    # specify multiprocessing or not by setting mapper
-    mapper, pool = get_mapper(num_chains)
     # run geweke: transition-erase loop
     helper = functools.partial(run_geweke_chain, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=probe_columns,
@@ -149,9 +148,10 @@ def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
             plot_rand_idx=(num_chains==1),
             )
     seeds = range(num_chains)
-    diagnostics_data_list = mapper(helper, seeds)
-    # if pool is not None:
-    #     pool.close(); pool.join()
+    do_multiprocessing = num_chains != 1
+    with gu.MapperContext(do_multiprocessing) as mapper:
+        diagnostics_data_list = mapper(helper, seeds)
+        pass
     return diagnostics_data_list
 
 def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
@@ -179,8 +179,8 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
 
 def get_n_samples_per_worker(n_samples, cpu_count):
     n_samples_per_worker = n_samples / cpu_count
-    ret_list = numpy.array([n_samples_per_worker] * cpu_count)
-    delta = n_samples - n_samples_per_worker * cpu_count
+    ret_list = numpy.repeat(n_samples_per_worker, cpu_count)
+    delta = n_samples - ret_list.sum()
     ret_list[range(delta)] += 1
     return ret_list
 
@@ -195,16 +195,12 @@ def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
             specified_mu_grid=specified_mu_grid,
             N_GRID=N_GRID,
             )
-    cpu_count, mapper, pool = 1, map, None
-    if do_multiprocessing:
-        cpu_count = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool()
-        mapper = pool.map
-        pass
-    seeds = numpy.random.randint(32676, size=cpu_count)
-    n_samples_list = get_n_samples_per_worker(n_samples, cpu_count)
-    forward_sample_data_list = mapper(helper, zip(seeds, n_samples_list))
-    forward_sample_data = condense_diagnostics_data_list(forward_sample_data_list)
+    cpu_count = 1 if not do_multiprocessing else multiprocessing.cpu_count()
+    with gu.MapperContext(do_multiprocessing) as mapper:
+        seeds = numpy.random.randint(32676, size=cpu_count)
+        n_samples_list = get_n_samples_per_worker(n_samples, cpu_count)
+        forward_sample_data_list = mapper(helper, zip(seeds, n_samples_list))
+        forward_sample_data = condense_diagnostics_data_list(forward_sample_data_list)
     return forward_sample_data
 
 def condense_diagnostics_data_list(diagnostics_data_list):
@@ -387,9 +383,9 @@ def get_count((values, bins)):
 def get_log_density_series(values, bins):
     bin_widths = numpy.diff(bins)
     #
-    pool = multiprocessing.Pool()
-    counts = pool.map(get_count, [(el, bins) for el in values])
-    pool.close(); pool.join()
+    with gu.MapperContext() as mapper:
+        counts = mapper(get_count, [(el, bins) for el in values])
+        pass
     counts = numpy.vstack(counts).cumsum(axis=0)
     #
     ratios = counts / numpy.arange(1., len(counts) + 1.)[:, numpy.newaxis]
@@ -424,9 +420,9 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
             (grid, x, y)
             for x, y in zip(log_true_series, log_inferred_series)
             ]
-    pool = multiprocessing.Pool()
-    kls = pool.map(_get_kl_tuple, arg_tuples)
-    pool.close(); pool.join()
+    with gu.MapperContext() as mapper:
+        kls = mapper(_get_kl_tuple, arg_tuples)
+        pass
     return kls
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
