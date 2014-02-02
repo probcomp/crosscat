@@ -495,8 +495,8 @@ if __name__ == '__main__':
     pylab.show()
     # parse input
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_rows', default=40, type=int)
-    parser.add_argument('--num_cols', default=4, type=int)
+    parser.add_argument('--num_rows', default=10, type=int)
+    parser.add_argument('--num_cols', default=2, type=int)
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
