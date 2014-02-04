@@ -443,14 +443,6 @@ def get_mapper(num_chains):
         mapper = pool.map
     return mapper, pool
 
-def arbitrate_num_chains(num_chains, num_iters):
-    if num_chains != 1:
-        if num_chains is None:
-            num_chains = multiprocessing.cpu_count()
-            pass
-        num_iters = num_iters /num_chains
-    return num_chains, num_iters
-
 def write_parameters_to_text(filename, parameters, directory=''):
     full_filename = os.path.join(directory, filename)
     text = get_parameters_as_text(parameters)
@@ -500,7 +492,7 @@ if __name__ == '__main__':
     parser.add_argument('--inf_seed', default=0, type=int)
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
-    parser.add_argument('--num_iters', default=10000, type=int)
+    parser.add_argument('--num_iters', default=1000, type=int)
     parser.add_argument('--max_mu_grid', default=100, type=int)
     parser.add_argument('--max_s_grid', default=1000, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
@@ -517,7 +509,8 @@ if __name__ == '__main__':
     n_grid = args.n_grid
 
 
-    num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
+    if num_chains is None:
+        num_chains = multiprocessing.cpu_count()
     total_num_iters = num_chains * num_iters
     probe_columns = (0, 1) if num_cols > 1 else (0,)
 
@@ -559,8 +552,7 @@ if __name__ == '__main__':
             max_mu_grid=max_mu_grid,
             max_s_grid=max_s_grid,
             n_grid=n_grid,
-            total_num_iters=total_num_iters,
-            chain_num_iters=num_iters,
+            num_iters=num_iters,
             num_chains=num_chains,
             )
     directory = generate_directory_name(**plot_parameters)
@@ -591,3 +583,16 @@ if __name__ == '__main__':
     save_data['diagnostics_data_list'] = diagnostics_data_list
     save_data['kl_series_list_dict'] = kl_series_list_dict
     fu.pickle(save_data, 'data.pkl', dir=directory)
+
+    from scipy import stats
+    ks_stats_list = list()
+    for diagnostics_data in diagnostics_data_list:
+        ks_stats = dict()
+        for variable_name in diagnostics_data.keys():
+            stat, p = stats.ks_2samp(diagnostics_data[variable_name],
+                    forward_diagnostics_data[variable_name])
+            ks_stats[variable_name] = stat, p
+            pass
+        ks_stats_list.append(ks_stats)
+        pass
+    print ks_stats_list
