@@ -233,12 +233,12 @@ There are two ways the development can proceed:
     - Pros:
         - Faster--No writing temporary code to fit round pegs in square holes
     - Cons:
-        - If the new engine produces different results than the old engine, it may be more difficult to pinpoint thir cause.
+        - If the new engine produces different results than the old engine, it may be more difficult to pinpoint the cause.
  2. Incremental refactoring. Implement the redesign as a seriese of changes to the existing code.
     - Pros:
         - Leaves the code in a working state (reduces probability of failure)
     - Cons:
-        - Slower requires though on how to move toward and end state without breaking functionality
+        - Slower requires thought on how to move toward an end state without breaking functionality
 
 If development proceeds as incremental refactoring, the development will proceed in the following steps:
 
