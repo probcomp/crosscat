@@ -39,6 +39,9 @@ import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 image_format = 'png'
 default_n_grid=31
+parameters_filename = 'parameters.txt'
+summary_filename = 'summary.pkl'
+raw_data_filename = 'raw_data.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -427,7 +430,7 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
 
 def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
     generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, kwargs.iteritems())
+    parts = map(generate_part, sorted(kwargs.iteritems()))
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
 
@@ -581,16 +584,21 @@ if __name__ == '__main__':
             for key, value in final_kls.iteritems()
             }
     save_parameters = plot_parameters.copy()
-    save_parameters['final_kls'] = final_kls
     save_parameters['summary_kls'] = summary_kls
-    write_parameters_to_text('parameters.txt', save_parameters, directory=directory)
+    write_parameters_to_text(parameters_filename, save_parameters, directory=directory)
+    #
+    summary_dict = dict(
+            config=plot_parameters,
+            summary_kls=summary_kls,
+            )
+    fu.pickle(summary_dict, summary_filename, dir=directory)
 
     # save data
     save_data = save_parameters.copy()
     save_data['forward_diagnostics_data'] = forward_diagnostics_data
     save_data['diagnostics_data_list'] = diagnostics_data_list
     save_data['kl_series_list_dict'] = kl_series_list_dict
-    fu.pickle(save_data, 'data.pkl', dir=directory)
+    fu.pickle(save_data, raw_data_filename, dir=directory)
 
 
 def get_sorted_counts(values):
