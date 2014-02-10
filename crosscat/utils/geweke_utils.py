@@ -542,6 +542,18 @@ def post_process(forward_diagnostics_data, diagnostics_data_list):
             summary_kls=summary_kls,
             )
 
+def arbitrate_args(args):
+    if args.num_chains is None:
+        args.num_chains = multiprocessing.cpu_count()
+    if args.probe_columns is None:
+        args.probe_columns = (0, 1) if args.num_cols > 1 else (0,)
+    if args.cctypes is None:
+        args.cctypes = ['continuous'] + ['multinomial'] * (args.num_cols - 1)
+    assert len(args.cctypes) == args.num_cols
+    args.max_mu_grid, args.max_s_grid = arbitrate_mu_s(args.num_rows,
+            args.max_mu_grid, args.max_s_grid)
+    return args
+
 
 if __name__ == '__main__':
     import argparse
@@ -559,8 +571,9 @@ if __name__ == '__main__':
     parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
     parser.add_argument('--cctypes', nargs='*', default=None, type=str)
-    parser.add_argument('--probe_cols', nargs='*', default=None, type=str)
+    parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
     args = parser.parse_args()
+    args = arbitrate_args(args)
     #
     num_rows = args.num_rows
     num_cols = args.num_cols
@@ -572,28 +585,15 @@ if __name__ == '__main__':
     max_s_grid = args.max_s_grid
     n_grid = args.n_grid
     cctypes = args.cctypes
-    probe_cols = args.probe_cols
+    probe_columns = args.probe_columns
 
 
-    if num_chains is None:
-        num_chains = multiprocessing.cpu_count()
-        pass
-    total_num_iters = num_chains * num_iters
-
-    if probe_cols is None:
-        probe_columns = (0, 1) if num_cols > 1 else (0,)
-
-    if cctypes is None:
-        cctypes = ['continuous'] + ['multinomial'] * (num_cols - 1)
-
-    assert len(cctypes) == num_cols
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     #T = numpy.zeros((num_rows, num_cols)).tolist()
     T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
 
     # specify grid
-    max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
     # may be an issue if this n_grid doesn't match the other grids in the c++
     mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
     s_grid = numpy.linspace(1, max_s_grid, n_grid)
@@ -607,15 +607,7 @@ if __name__ == '__main__':
             )
 
     # prep for saving
-    config = dict(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            n_grid=n_grid,
-            num_iters=num_iters,
-            num_chains=num_chains,
-            )
+    config = args.__dict__
     directory = generate_directory_name(**config)
     summary = dict(
             summary_kls=processed_data['summary_kls'],
@@ -626,18 +618,21 @@ if __name__ == '__main__':
             )
     all_data.update(processed_data)
 
-
     # save plots
     print 'saving plots'
-    parameters_to_show = dict(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            n_grid=n_grid,
-            num_iters=num_iters,
-            num_chains=num_chains,
-            )
+    parameters_to_show = [
+            'num_rows',
+            'num_cols',
+            'max_mu_grid',
+            'max_s_grid',
+            'n_grid',
+            'num_iters',
+            'num_chains',
+            ]
+    parameters_to_show = {
+            parameter : config[parameter]
+            for parameter in parameters_to_show
+            }
     save_kwargs = dict(directory=directory)
     plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
