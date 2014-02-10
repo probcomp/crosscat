@@ -301,18 +301,17 @@ plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
         col_0_r=do_hist,
         col_0_nu=do_hist,
         )
-def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
-        parameters=None, save_kwargs=None):
+
+def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+        kl_series_list, variable_name,
+        parameters=None, save_kwargs=None,
+        ):
     plotter = plotter_lookup[variable_name]
     mapped_variable_name = map_variable_name(variable_name)
     which_idx = numpy.random.randint(len(diagnostics_data_list))
     diagnostics_data = diagnostics_data_list[which_idx]
     forward = forward_diagnostics_data[variable_name]
     not_forward_list = [el[variable_name] for el in diagnostics_data_list]
-    kl_series_list = [
-            get_fixed_gibbs_kl_series(forward, not_forward)
-            for not_forward in not_forward_list
-            ]
     pylab.figure()
     #
     pylab.subplot(311)
@@ -328,7 +327,6 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
     #
     pylab.subplot(313)
     map(pylab.plot, kl_series_list)
-    show_parameters(parameters)
     pylab.xlabel('iteration')
     pylab.ylabel('KL')
     if parameters is not None:
@@ -345,23 +343,24 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
             pass
         save_current_figure(filename, format=image_format, **save_kwargs)
         pass
-    return kl_series_list
+    return
 
 def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
-        parameters=None, save_kwargs=None):
-    kl_series_list_dict = dict()
-    for variable_name in forward_diagnostics_data:
+        kl_series_list_dict,
+        parameters=None, save_kwargs=None,
+        ):
+    for variable_name in forward_diagnostics_data.keys():
         print 'plotting for variable: %s' % variable_name
         try:
-            kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+            kl_series_list = kl_series_list_dict[variable_name]
+            plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+                    kl_series_list,
                     variable_name, parameters, save_kwargs)
-            kl_series_list_dict[variable_name] = kl_series_list
         except Exception, e:
             print 'Failed to plot_diagnostic_data for %s' % variable_name
             print e
             pass
-        pass
-    return kl_series_list_dict
+    return
 
 def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
     for variable_name in diagnostics_data.keys():
@@ -555,25 +554,17 @@ if __name__ == '__main__':
             N_GRID=n_grid,
             )
 
-    # save plots
-    print 'saving plots'
-    plot_parameters = dict(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            n_grid=n_grid,
-            num_iters=num_iters,
-            num_chains=num_chains,
-            )
-    directory = generate_directory_name(**plot_parameters)
-    save_kwargs = dict(directory=directory)
-    kl_series_list_dict = plot_all_diagnostic_data(
-            forward_diagnostics_data, diagnostics_data_list,
-            plot_parameters, save_kwargs)
-
-    # process and save parameters
-    print 'saving parameters'
+    # post process data
+    kl_series_list_dict = dict()
+    for variable_name in forward_diagnostics_data:
+        forward = forward_diagnostics_data[variable_name]
+        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
+        kl_series_list = [
+                get_fixed_gibbs_kl_series(forward, not_forward)
+                for not_forward in not_forward_list
+                ]
+        kl_series_list_dict[variable_name] = kl_series_list
+        pass
     get_final = lambda indexable: indexable[-1]
     final_kls = {
             key : map(get_final, value)
@@ -583,22 +574,52 @@ if __name__ == '__main__':
             key : numpy.mean(value)
             for key, value in final_kls.iteritems()
             }
-    save_parameters = plot_parameters.copy()
-    save_parameters['summary_kls'] = summary_kls
-    write_parameters_to_text(parameters_filename, save_parameters, directory=directory)
-    #
-    summary_dict = dict(
-            config=plot_parameters,
+
+    # prep for saving
+    config = dict(
+            num_rows=num_rows,
+            num_cols=num_cols,
+            max_mu_grid=max_mu_grid,
+            max_s_grid=max_s_grid,
+            n_grid=n_grid,
+            num_iters=num_iters,
+            num_chains=num_chains,
+            )
+    directory = generate_directory_name(**config)
+    summary = dict(
             summary_kls=summary_kls,
             )
-    fu.pickle(summary_dict, summary_filename, dir=directory)
+    raw_data = dict(
+            forward_diagnostics_data=forward_diagnostics_data,
+            diagnostics_data_list=diagnostics_data_list,
+            kl_series_list_dict=kl_series_list_dict,
+            )
 
-    # save data
-    save_data = save_parameters.copy()
-    save_data['forward_diagnostics_data'] = forward_diagnostics_data
-    save_data['diagnostics_data_list'] = diagnostics_data_list
-    save_data['kl_series_list_dict'] = kl_series_list_dict
-    fu.pickle(save_data, raw_data_filename, dir=directory)
+    # save plots
+    print 'saving plots'
+    parameters_to_show = dict(
+            num_rows=num_rows,
+            num_cols=num_cols,
+            max_mu_grid=max_mu_grid,
+            max_s_grid=max_s_grid,
+            n_grid=n_grid,
+            num_iters=num_iters,
+            num_chains=num_chains,
+            )
+    save_kwargs = dict(directory=directory)
+    plot_all_diagnostic_data(
+            forward_diagnostics_data, diagnostics_data_list,
+            kl_series_list_dict,
+            parameters_to_show, save_kwargs)
+
+    # save other files
+    print 'saving summary, data'
+    to_save = dict(config=config, summary=summary)
+    write_parameters_to_text(parameters_filename, to_save, directory=directory)
+    fu.pickle(to_save, summary_filename, dir=directory)
+    #
+    to_save = dict(config=config, summary=summary, raw_data=raw_data)
+    fu.pickle(to_save, raw_data_filename, dir=directory)
 
 
 def get_sorted_counts(values):
