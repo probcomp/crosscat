@@ -115,4 +115,8 @@ def print_ts(in_str):
     now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_str = '%s:: %s' % (now_str, in_str)
     print print_str
-    
+
+def ensure_listlike(input):
+    if not isinstance(input, (list, tuple,)):
+        input = [input]
+    return input
