@@ -26,7 +26,7 @@ def read_all_configs(dirname='.'):
     return config_list
 
 def generate_filepath(config):
-    _dirname = geweke_utils.generate_directory_name(**config)
+    _dirname = geweke_utils.generate_directory_name(config)
     filepath = os.path.join(_dirname, result_filename)
     return filepath
 

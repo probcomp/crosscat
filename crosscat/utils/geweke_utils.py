@@ -427,9 +427,9 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         pass
     return kls
 
-def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
+def generate_directory_name(config, directory_prefix='geweke_plots'):
     generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, sorted(kwargs.iteritems()))
+    parts = map(generate_part, sorted(config.iteritems()))
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
 
@@ -602,7 +602,7 @@ if __name__ == '__main__':
             run_geweke(config)
 
     # prep for saving
-    directory = generate_directory_name(**config)
+    directory = generate_directory_name(config)
     summary = generate_summary(processed_data)
     all_data = dict(
             forward_diagnostics_data=forward_diagnostics_data,
