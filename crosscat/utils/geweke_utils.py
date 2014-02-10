@@ -68,7 +68,7 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     diagnostics_funcs = { helper(column_idx, key) for key in keys }
     return diagnostics_funcs
 
-def run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+def run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
         N_GRID,
         ):
@@ -108,7 +108,7 @@ def generate_diagnostics_funcs(X_L, probe_columns):
         pass
     return diagnostics_funcs
 
-def run_geweke_chain(seed, M_c, T, num_iters,
+def run_posterior_chain(seed, M_c, T, num_iters,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         N_GRID=default_n_grid,
         plot_rand_idx=None,
@@ -124,7 +124,7 @@ def run_geweke_chain(seed, M_c, T, num_iters,
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
-        M_c, T, X_L, X_D = run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+        M_c, T, X_L, X_D = run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid,
                 N_GRID=N_GRID,
                 )
@@ -137,12 +137,12 @@ def run_geweke_chain(seed, M_c, T, num_iters,
         pass
     return diagnostics_data
 
-def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
+def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
         specified_s_grid, specified_mu_grid,
         N_GRID=default_n_grid,
         ):
     # run geweke: transition-erase loop
-    helper = functools.partial(run_geweke_chain, M_c=M_c, T=T, num_iters=num_iters,
+    helper = functools.partial(run_posterior_chain, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=probe_columns,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
@@ -583,7 +583,7 @@ if __name__ == '__main__':
 
     # run geweke: transition-erase loop
     print 'generating posterior samples'
-    diagnostics_data_list = run_geweke(M_c, T, num_chains, num_iters, probe_columns,
+    diagnostics_data_list = run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
             s_grid, mu_grid,
             N_GRID=n_grid,
             )
