@@ -493,9 +493,11 @@ if __name__ == '__main__':
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=1000, type=int)
-    parser.add_argument('--max_mu_grid', default=100, type=int)
-    parser.add_argument('--max_s_grid', default=1000, type=int)
+    parser.add_argument('--max_mu_grid', default=10, type=int)
+    parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--cctypes', nargs='*', default=None, type=str)
+    parser.add_argument('--probe_cols', nargs='*', default=None, type=str)
     args = parser.parse_args()
     #
     num_rows = args.num_rows
@@ -507,16 +509,22 @@ if __name__ == '__main__':
     max_mu_grid = args.max_mu_grid
     max_s_grid = args.max_s_grid
     n_grid = args.n_grid
+    cctypes = args.cctypes
+    probe_cols = args.probe_cols
 
 
     if num_chains is None:
         num_chains = multiprocessing.cpu_count()
+        pass
     total_num_iters = num_chains * num_iters
-    probe_columns = (0, 1) if num_cols > 1 else (0,)
 
+    if probe_cols is None:
+        probe_columns = (0, 1) if num_cols > 1 else (0,)
 
-    cctypes = ['multinomial'] * num_cols
-    cctypes[0] = 'continuous'
+    if cctypes is None:
+        cctypes = ['continuous'] + ['multinomial'] * (num_cols - 1)
+
+    assert len(cctypes) == num_cols
     num_values_list = [2] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     #T = numpy.zeros((num_rows, num_cols)).tolist()
@@ -596,3 +604,17 @@ if __name__ == '__main__':
         ks_stats_list.append(ks_stats)
         pass
     print ks_stats_list
+
+
+def get_sorted_counts(values):
+    tuples = sorted(collections.Counter(values).items())
+    counts = [tuple[1] for tuple in tuples]
+    # print counts
+    return counts
+
+def get_chisquare(not_forward, forward=None):
+    args = (not_forward, forward)
+    args = filter(None, args)
+    args = map(get_sorted_counts, args)
+    return stats.chisquare(*args)
+
