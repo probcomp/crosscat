@@ -138,7 +138,7 @@ def run_posterior_chain(seed, M_c, T, num_iters,
     return diagnostics_data
 
 def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
-        specified_s_grid, specified_mu_grid,
+        s_grid, mu_grid,
         N_GRID=default_n_grid,
         ):
     # run geweke: transition-erase loop
@@ -445,7 +445,7 @@ def get_mapper(num_chains):
         mapper = pool.map
     return mapper, pool
 
-def write_parameters_to_text(filename, parameters, directory=''):
+def write_parameters_to_text(parameters, filename, directory=''):
     full_filename = os.path.join(directory, filename)
     text = get_parameters_as_text(parameters)
     with open(full_filename, 'w') as fh:
@@ -483,12 +483,27 @@ def pp_plot(_f, _p, nbins):
     pylab.ylim([0,1])
     return
 
-def run_geweke(inf_seed,
-        num_iters, M_c, T, probe_columns,
-        s_grid, mu_grid,
-        n_grid,
-        do_multiprocessing=True,
-        ):
+def run_geweke(config):
+    num_rows = config['num_rows']
+    num_cols = config['num_cols']
+    inf_seed = config['inf_seed']
+    gen_seed = config['gen_seed']
+    num_chains = config['num_chains']
+    num_iters = config['num_iters']
+    max_mu_grid = config['max_mu_grid']
+    max_s_grid = config['max_s_grid']
+    n_grid = config['n_grid']
+    cctypes = config['cctypes']
+    probe_columns = config['probe_columns']
+
+
+    num_values_list = [2] * num_cols
+    M_c = gen_M_c(cctypes, num_values_list)
+    T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
+    # may be an issue if this n_grid doesn't match the other grids in the c++
+    mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
+    s_grid = numpy.linspace(1, max_s_grid, n_grid)
+
     # run geweke: forward sample only
     print 'generating forward samples'
     forward_diagnostics_data = forward_sample_from_prior(inf_seed,
@@ -554,6 +569,12 @@ def arbitrate_args(args):
             args.max_mu_grid, args.max_s_grid)
     return args
 
+def generate_summary(processed_data):
+    summary = dict(
+            summary_kls=processed_data['summary_kls'],
+            )
+    return summary
+
 
 if __name__ == '__main__':
     import argparse
@@ -574,49 +595,20 @@ if __name__ == '__main__':
     parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
     args = parser.parse_args()
     args = arbitrate_args(args)
-    #
-    num_rows = args.num_rows
-    num_cols = args.num_cols
-    inf_seed = args.inf_seed
-    gen_seed = args.gen_seed
-    num_chains = args.num_chains
-    num_iters = args.num_iters
-    max_mu_grid = args.max_mu_grid
-    max_s_grid = args.max_s_grid
-    n_grid = args.n_grid
-    cctypes = args.cctypes
-    probe_columns = args.probe_columns
+    config = args.__dict__
 
-
-    num_values_list = [2] * num_cols
-    M_c = gen_M_c(cctypes, num_values_list)
-    #T = numpy.zeros((num_rows, num_cols)).tolist()
-    T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
-
-    # specify grid
-    # may be an issue if this n_grid doesn't match the other grids in the c++
-    mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.linspace(1, max_s_grid, n_grid)
-
+    # the bulk of the work
     forward_diagnostics_data, diagnostics_data_list, processed_data = \
-            run_geweke(inf_seed,
-            num_iters, M_c, T, probe_columns,
-            s_grid, mu_grid,
-            n_grid,
-            do_multiprocessing=True,
-            )
+            run_geweke(config)
 
     # prep for saving
-    config = args.__dict__
     directory = generate_directory_name(**config)
-    summary = dict(
-            summary_kls=processed_data['summary_kls'],
-            )
+    summary = generate_summary(processed_data)
     all_data = dict(
             forward_diagnostics_data=forward_diagnostics_data,
             diagnostics_data_list=diagnostics_data_list,
+            processed_data=processed_data,
             )
-    all_data.update(processed_data)
 
     # save plots
     print 'saving plots'
@@ -642,7 +634,7 @@ if __name__ == '__main__':
     # save other files
     print 'saving summary, data'
     to_save = dict(config=config, summary=summary)
-    write_parameters_to_text(parameters_filename, to_save, directory=directory)
+    write_parameters_to_text(to_save, parameters_filename, directory=directory)
     fu.pickle(to_save, summary_filename, dir=directory)
     #
     to_save = dict(config=config, summary=summary, all_data=all_data)
