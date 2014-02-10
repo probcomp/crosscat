@@ -41,7 +41,7 @@ image_format = 'png'
 default_n_grid=31
 parameters_filename = 'parameters.txt'
 summary_filename = 'summary.pkl'
-raw_data_filename = 'raw_data.pkl'
+all_data_filename = 'all_data.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -483,6 +483,40 @@ def pp_plot(_f, _p, nbins):
     pylab.ylim([0,1])
     return
 
+def generate_kl_series_list_dict(forward_diagnostics_data,
+        diagnostics_data_list):
+    kl_series_list_dict = dict()
+    for variable_name in forward_diagnostics_data:
+        forward = forward_diagnostics_data[variable_name]
+        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
+        kl_series_list = [
+                get_fixed_gibbs_kl_series(forward, not_forward)
+                for not_forward in not_forward_list
+                ]
+        kl_series_list_dict[variable_name] = kl_series_list
+        pass
+    return kl_series_list_dict
+
+def post_process(forward_diagnostics_data, diagnostics_data_list):
+    get_final = lambda indexable: indexable[-1]
+    #
+    kl_series_list_dict = generate_kl_series_list_dict(forward_diagnostics_data,
+            diagnostics_data_list)
+    final_kls = {
+            key : map(get_final, value)
+            for key, value in kl_series_list_dict.iteritems()
+            }
+    summary_kls = {
+            key : numpy.mean(value)
+            for key, value in final_kls.iteritems()
+            }
+    return dict(
+            kl_series_list_dict=kl_series_list_dict,
+            final_kls=final_kls,
+            summary_kls=summary_kls,
+            )
+
+
 if __name__ == '__main__':
     import argparse
     pylab.ion()
@@ -555,25 +589,8 @@ if __name__ == '__main__':
             )
 
     # post process data
-    kl_series_list_dict = dict()
-    for variable_name in forward_diagnostics_data:
-        forward = forward_diagnostics_data[variable_name]
-        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
-        kl_series_list = [
-                get_fixed_gibbs_kl_series(forward, not_forward)
-                for not_forward in not_forward_list
-                ]
-        kl_series_list_dict[variable_name] = kl_series_list
-        pass
-    get_final = lambda indexable: indexable[-1]
-    final_kls = {
-            key : map(get_final, value)
-            for key, value in kl_series_list_dict.iteritems()
-            }
-    summary_kls = {
-            key : numpy.mean(value)
-            for key, value in final_kls.iteritems()
-            }
+    print 'post prcessing data'
+    processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
 
     # prep for saving
     config = dict(
@@ -587,13 +604,14 @@ if __name__ == '__main__':
             )
     directory = generate_directory_name(**config)
     summary = dict(
-            summary_kls=summary_kls,
+            summary_kls=processed_data['summary_kls'],
             )
-    raw_data = dict(
+    all_data = dict(
             forward_diagnostics_data=forward_diagnostics_data,
             diagnostics_data_list=diagnostics_data_list,
-            kl_series_list_dict=kl_series_list_dict,
             )
+    all_data.update(processed_data)
+
 
     # save plots
     print 'saving plots'
@@ -609,7 +627,7 @@ if __name__ == '__main__':
     save_kwargs = dict(directory=directory)
     plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
-            kl_series_list_dict,
+            processed_data['kl_series_list_dict'],
             parameters_to_show, save_kwargs)
 
     # save other files
@@ -618,8 +636,8 @@ if __name__ == '__main__':
     write_parameters_to_text(parameters_filename, to_save, directory=directory)
     fu.pickle(to_save, summary_filename, dir=directory)
     #
-    to_save = dict(config=config, summary=summary, raw_data=raw_data)
-    fu.pickle(to_save, raw_data_filename, dir=directory)
+    to_save = dict(config=config, summary=summary, all_data=all_data)
+    fu.pickle(to_save, all_data_filename, dir=directory)
 
 
 def get_sorted_counts(values):
