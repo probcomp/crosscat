@@ -12,7 +12,7 @@ result_filename = geweke_utils.summary_filename
 def find_configs(dirname, filename=result_filename):
     root_has_filename = lambda (root, ds, filenames): filenames.count(filename)
     get_filepath = lambda (root, ds, fs): os.path.join(root, filename)
-    tuples = filter(has_filename, os.walk(dirname))
+    tuples = filter(root_has_filename, os.walk(dirname))
     filepaths = map(get_filepath, tuples)
     return filepaths
 
