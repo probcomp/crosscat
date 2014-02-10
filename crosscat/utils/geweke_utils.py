@@ -592,19 +592,6 @@ if __name__ == '__main__':
     save_data['kl_series_list_dict'] = kl_series_list_dict
     fu.pickle(save_data, 'data.pkl', dir=directory)
 
-    from scipy import stats
-    ks_stats_list = list()
-    for diagnostics_data in diagnostics_data_list:
-        ks_stats = dict()
-        for variable_name in diagnostics_data.keys():
-            stat, p = stats.ks_2samp(diagnostics_data[variable_name],
-                    forward_diagnostics_data[variable_name])
-            ks_stats[variable_name] = stat, p
-            pass
-        ks_stats_list.append(ks_stats)
-        pass
-    print ks_stats_list
-
 
 def get_sorted_counts(values):
     tuples = sorted(collections.Counter(values).items())
@@ -618,3 +605,31 @@ def get_chisquare(not_forward, forward=None):
     args = map(get_sorted_counts, args)
     return stats.chisquare(*args)
 
+def generate_ks_stats_list(diagnostics_data_list, forward_diagnostics_data):
+    from scipy import stats
+    ks_stats_list = list()
+    for diagnostics_data in diagnostics_data_list:
+        ks_stats = dict()
+        for variable_name in diagnostics_data.keys():
+            stat, p = stats.ks_2samp(diagnostics_data[variable_name],
+                    forward_diagnostics_data[variable_name])
+            ks_stats[variable_name] = stat, p
+            pass
+        ks_stats_list.append(ks_stats)
+        pass
+    return ks_stats_list
+
+def generate_chi2_stats_list(diagnostics_data_list, forward_diagnostics_data):
+    chi2_stats_list = list()
+    for diagnostics_data in diagnostics_data_list:
+        chi2_stats = dict()
+        for variable_name in forward_diagnostics_data.keys():
+            not_forward = diagnostics_data[variable_name]
+            forward = forward_diagnostics_data[variable_name]
+            #chi2 = get_chisquare(not_forward, forward)
+            chi2 = get_chisquare(not_forward)
+            chi2_stats[variable_name] = chi2
+            pass
+        chi2_stats_list.append(chi2_stats)
+        pass
+    return chi2_stats_list
