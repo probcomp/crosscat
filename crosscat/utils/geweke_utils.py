@@ -446,7 +446,7 @@ def get_mapper(num_chains):
         mapper = pool.map
     return mapper, pool
 
-def write_parameters_to_text(parameters, filename, directory=''):
+def write_parameters_to_text(parameters, filename, directory='./'):
     full_filename = os.path.join(directory, filename)
     text = get_parameters_as_text(parameters)
     with open(full_filename, 'w') as fh:
@@ -611,7 +611,7 @@ def generate_filepath(config, filename=summary_filename):
     directory = generate_directory_name(config)
     return os.path.join(directory, filename)
 
-def write_result(result_dict, directory=''):
+def write_result(result_dict, directory='./'):
     summary = result_dict['summary']
     config = result_dict['config']
     #
@@ -631,7 +631,7 @@ def write_result(result_dict, directory=''):
     fu.pickle(to_save, filepath, dir=directory)
     return
 
-def read_result(config, dirname='', only_summary=True):
+def read_result(config, dirname='./', only_summary=True):
     _filename = summary_filename if only_summary else all_data_filename
     filepath = generate_filepath(config, _filename)
     result_dict = fu.unpickle(filepath, dir=dirname)
