@@ -615,7 +615,8 @@ def write_result(result_dict, directory=''):
     summary = result_dict['summary']
     config = result_dict['config']
     #
-    fu.ensure_dir(generate_directory_name(config))
+    _directory = generate_directory_name(config)
+    fu.ensure_dir(os.path.join(directory, _directory))
     #
     to_save = dict(config=config, summary=summary)
     filepath = generate_filepath(config, parameters_filename)
