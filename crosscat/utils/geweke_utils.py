@@ -25,6 +25,7 @@ import functools
 import operator
 import re
 import os
+import argparse
 #
 import numpy
 import pylab
@@ -594,16 +595,27 @@ def plot_result(result_dict):
             parameters, save_kwargs)
     return
 
-def write_result(result_dict):
+def generate_filepath(config, filename=summary_filename):
+    directory = generate_directory_name(config)
+    return os.path.join(directory, filename)
+
+def write_result(result_dict, directory=''):
     summary = result_dict['summary']
     config = result_dict['config']
-    directory = generate_directory_name(config)
+    #
+    fu.ensure_dir(generate_directory_name(config))
     #
     to_save = dict(config=config, summary=summary)
-    write_parameters_to_text(to_save, parameters_filename, directory=directory)
-    fu.pickle(to_save, summary_filename, dir=directory)
+    filepath = generate_filepath(config, parameters_filename)
+    write_parameters_to_text(to_save, filepath, directory=directory)
     #
-    fu.pickle(result_dict, all_data_filename, dir=directory)
+    to_save = dict(config=config, summary=summary)
+    filepath = generate_filepath(config, summary_filename)
+    fu.pickle(to_save, filepath, dir=directory)
+    #
+    to_save = result_dict
+    filepath = generate_filepath(config, all_data_filename)
+    fu.pickle(to_save, filepath, dir=directory)
     return
 
 def read_result(config, dirname='', only_summary=True):
@@ -612,6 +624,21 @@ def read_result(config, dirname='', only_summary=True):
     filepath = os.path.join(_dirname, _filename)
     result_dict = fu.unpickle(filepath, dir=dirname)
     return result_dict
+
+def generate_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num_rows', default=10, type=int)
+    parser.add_argument('--num_cols', default=2, type=int)
+    parser.add_argument('--inf_seed', default=0, type=int)
+    parser.add_argument('--gen_seed', default=0, type=int)
+    parser.add_argument('--num_chains', default=None, type=int)
+    parser.add_argument('--num_iters', default=1000, type=int)
+    parser.add_argument('--max_mu_grid', default=10, type=int)
+    parser.add_argument('--max_s_grid', default=100, type=int)
+    parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--cctypes', nargs='*', default=None, type=str)
+    parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
+    return parser
 
 def arbitrate_args(args):
     if args.num_chains is None:
@@ -666,22 +693,8 @@ def generate_chi2_stats_list(diagnostics_data_list, forward_diagnostics_data):
 
 
 if __name__ == '__main__':
-    import argparse
-    pylab.ion()
-    pylab.show()
     # parse input
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_rows', default=10, type=int)
-    parser.add_argument('--num_cols', default=2, type=int)
-    parser.add_argument('--inf_seed', default=0, type=int)
-    parser.add_argument('--gen_seed', default=0, type=int)
-    parser.add_argument('--num_chains', default=None, type=int)
-    parser.add_argument('--num_iters', default=1000, type=int)
-    parser.add_argument('--max_mu_grid', default=10, type=int)
-    parser.add_argument('--max_s_grid', default=100, type=int)
-    parser.add_argument('--n_grid', default=31, type=int)
-    parser.add_argument('--cctypes', nargs='*', default=None, type=str)
-    parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
+    parser = generate_parser()
     args = parser.parse_args()
     args = arbitrate_args(args)
     config = args.__dict__
