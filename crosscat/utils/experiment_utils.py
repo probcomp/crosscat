@@ -2,7 +2,7 @@ import os
 import operator
 #
 import crosscat.utils.geweke_utils as geweke_utils
-from crosscat.utils.file_utils import unpickle
+from crosscat.utils.file_utils import unpickle, ensure_dir
 from crosscat.utils.general_utils import ensure_listlike
 
 
@@ -34,22 +34,23 @@ def read_all_configs(dirname='.'):
     config_list = map(read_config, filepaths)
     return config_list
 
-def read_results(config_list, *args, **kwargs):
-    _read_result = lambda config: reader(config, *args, **kwargs)
+def read_results(config_list, dirname='.'):
+    _read_result = lambda config: reader(config, dirname)
     config_list = ensure_listlike(config_list)
     results = map(_read_result, config_list)
     return results
 
-def write_results(results, *args, **kwargs):
-    _write_result = lambda result: writer(result, *args, **kwargs)
+def write_results(results, dirname='.'):
+    _write_result = lambda result: writer(result, dirname)
     map(_write_result, results)
     return
 
-def do_experiments(runner, writer, config_list, *args, **kwargs):
+def do_experiments(runner, writer, config_list, dirname='.'):
     def do_experiment(config):
         result = runner(config)
-        writer(result, *args, **kwargs)
+        writer(result, dirname)
         return
+    ensure_dir(dirname)
     config_list = ensure_listlike(config_list)
     map(do_experiment, config_list)
     return
@@ -67,10 +68,11 @@ if __name__ == '__main__':
             ['--num_rows', '20', '--num_cols', '2', '--num_iters', '300', ],
             ['--num_rows', '20', '--num_cols', '3', '--num_iters', '300', ],
             ]
+    dirname = 'my_expt_bank'
     configs_list = map(args_to_config, args_list)
-    do_experiments(runner, writer, configs_list)
+    do_experiments(runner, writer, configs_list, dirname)
 
-    configs_list = read_all_configs()
+    configs_list = read_all_configs(dirname)
     has_three_cols = lambda config: config['num_cols'] == 3
     configs_list = filter(has_three_cols, configs_list)
-    results = read_results(configs_list)
+    results = read_results(configs_list, dirname)
