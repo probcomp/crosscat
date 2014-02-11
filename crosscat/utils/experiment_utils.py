@@ -14,12 +14,12 @@ runner = geweke_utils.run_geweke
 def find_configs(dirname, filename=result_filename):
     root_has_filename = lambda (root, ds, filenames): filenames.count(filename)
     get_filepath = lambda (root, ds, fs): os.path.join(root, filename)
-    def is_one_deep(filepath):
+    def is_this_dirname(filepath):
         _dir, _file = os.path.split(filepath)
         return os.path.split(_dir)[0] == dirname
     tuples = filter(root_has_filename, os.walk(dirname))
     filepaths = map(get_filepath, tuples)
-    filepaths = filter(is_one_deep, filepaths)
+    filepaths = filter(is_this_dirname, filepaths)
     return filepaths
 
 def read_all_configs(dirname='.'):
