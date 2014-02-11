@@ -1,5 +1,4 @@
 import os
-import collections
 #
 import crosscat.utils.file_utils as file_utils
 import crosscat.utils.geweke_utils as geweke_utils
@@ -7,7 +6,6 @@ import crosscat.utils.general_utils as general_utils
 
 
 result_filename = geweke_utils.summary_filename
-generate_directory_name = geweke_utils.generate_directory_name
 writer = geweke_utils.write_result
 reader = geweke_utils.read_result
 runner = geweke_utils.run_geweke
@@ -69,5 +67,7 @@ if __name__ == '__main__':
     configs_list = map(args_to_config, args_list)
     do_experiments(runner, writer, configs_list)
 
-    config_list = read_all_configs()
-    results = read_results(config_list[:-1])
+    configs_list = read_all_configs()
+    has_three_cols = lambda config: config['num_cols'] == 3
+    configs_list = filter(has_three_cols, configs_list)
+    results = read_results(configs_list)
