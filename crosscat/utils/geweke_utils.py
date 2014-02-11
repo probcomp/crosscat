@@ -483,6 +483,45 @@ def pp_plot(_f, _p, nbins):
     pylab.ylim([0,1])
     return
 
+def generate_kl_series_list_dict(forward_diagnostics_data,
+        diagnostics_data_list):
+    kl_series_list_dict = dict()
+    for variable_name in forward_diagnostics_data:
+        forward = forward_diagnostics_data[variable_name]
+        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
+        kl_series_list = [
+                get_fixed_gibbs_kl_series(forward, not_forward)
+                for not_forward in not_forward_list
+                ]
+        kl_series_list_dict[variable_name] = kl_series_list
+        pass
+    return kl_series_list_dict
+
+def post_process(forward_diagnostics_data, diagnostics_data_list):
+    get_final = lambda indexable: indexable[-1]
+    #
+    kl_series_list_dict = generate_kl_series_list_dict(forward_diagnostics_data,
+            diagnostics_data_list)
+    final_kls = {
+            key : map(get_final, value)
+            for key, value in kl_series_list_dict.iteritems()
+            }
+    summary_kls = {
+            key : numpy.mean(value)
+            for key, value in final_kls.iteritems()
+            }
+    return dict(
+            kl_series_list_dict=kl_series_list_dict,
+            final_kls=final_kls,
+            summary_kls=summary_kls,
+            )
+
+def generate_summary(processed_data):
+    summary = dict(
+            summary_kls=processed_data['summary_kls'],
+            )
+    return summary
+
 def run_geweke(config):
     num_rows = config['num_rows']
     num_cols = config['num_cols']
@@ -521,41 +560,58 @@ def run_geweke(config):
     # post process data
     print 'post prcessing data'
     processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
-    #
-    return forward_diagnostics_data, diagnostics_data_list, processed_data
-
-def generate_kl_series_list_dict(forward_diagnostics_data,
-        diagnostics_data_list):
-    kl_series_list_dict = dict()
-    for variable_name in forward_diagnostics_data:
-        forward = forward_diagnostics_data[variable_name]
-        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
-        kl_series_list = [
-                get_fixed_gibbs_kl_series(forward, not_forward)
-                for not_forward in not_forward_list
-                ]
-        kl_series_list_dict[variable_name] = kl_series_list
-        pass
-    return kl_series_list_dict
-
-def post_process(forward_diagnostics_data, diagnostics_data_list):
-    get_final = lambda indexable: indexable[-1]
-    #
-    kl_series_list_dict = generate_kl_series_list_dict(forward_diagnostics_data,
-            diagnostics_data_list)
-    final_kls = {
-            key : map(get_final, value)
-            for key, value in kl_series_list_dict.iteritems()
-            }
-    summary_kls = {
-            key : numpy.mean(value)
-            for key, value in final_kls.iteritems()
-            }
-    return dict(
-            kl_series_list_dict=kl_series_list_dict,
-            final_kls=final_kls,
-            summary_kls=summary_kls,
+    summary = generate_summary(processed_data)
+    all_data = dict(
+            forward_diagnostics_data=forward_diagnostics_data,
+            diagnostics_data_list=diagnostics_data_list,
+            processed_data=processed_data,
             )
+    return dict(
+            config=config,
+            summary=summary,
+            all_data=all_data,
+            )
+
+parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
+    'n_grid', 'num_iters', 'num_chains',]
+def plot_result(result_dict):
+    # extract variables
+    config = result_dict['config']
+    all_data = result_dict['all_data']
+    forward_diagnostics_data = all_data['forward_diagnostics_data']
+    diagnostics_data_list = all_data['diagnostics_data_list']
+    processed_data = all_data['processed_data']
+    kl_series_list_dict = processed_data['kl_series_list_dict']
+    #
+    directory = generate_directory_name(config)
+    save_kwargs = dict(directory=directory)
+    get_tuple = lambda parameter: (parameter, config[parameter])
+    parameters = dict(map(get_tuple, parameters_to_show))
+    #
+    plot_all_diagnostic_data(
+            forward_diagnostics_data, diagnostics_data_list,
+            kl_series_list_dict,
+            parameters, save_kwargs)
+    return
+
+def write_result(result_dict):
+    summary = result_dict['summary']
+    config = result_dict['config']
+    directory = generate_directory_name(config)
+    #
+    to_save = dict(config=config, summary=summary)
+    write_parameters_to_text(to_save, parameters_filename, directory=directory)
+    fu.pickle(to_save, summary_filename, dir=directory)
+    #
+    fu.pickle(result_dict, all_data_filename, dir=directory)
+    return
+
+def read_result(config, dirname='', only_summary=True):
+    _dirname = generate_directory_name(config)
+    _filename = summary_filename if only_summary else all_data_filename
+    filepath = os.path.join(_dirname, _filename)
+    result_dict = fu.unpickle(filepath, dir=dirname)
+    return result_dict
 
 def arbitrate_args(args):
     if args.num_chains is None:
@@ -569,17 +625,11 @@ def arbitrate_args(args):
             args.max_mu_grid, args.max_s_grid)
     return args
 
-def generate_summary(processed_data):
-    summary = dict(
-            summary_kls=processed_data['summary_kls'],
-            )
-    return summary
-
 def get_chisquare(not_forward, forward=None):
     def get_sorted_counts(values):
+        get_count = lambda (value, count): count
         tuples = sorted(collections.Counter(values).items())
-        counts = [tuple[1] for tuple in tuples]
-        return counts
+        return map(get_count, counts)
     args = (not_forward, forward)
     args = filter(None, args)
     args = map(get_sorted_counts, args)
@@ -637,47 +687,6 @@ if __name__ == '__main__':
     config = args.__dict__
 
     # the bulk of the work
-    forward_diagnostics_data, diagnostics_data_list, processed_data = \
-            run_geweke(config)
-
-    # prep for saving
-    directory = generate_directory_name(config)
-    summary = generate_summary(processed_data)
-    all_data = dict(
-            forward_diagnostics_data=forward_diagnostics_data,
-            diagnostics_data_list=diagnostics_data_list,
-            processed_data=processed_data,
-            )
-
-    # save plots
-    print 'saving plots'
-    parameters_to_show = [
-            'num_rows',
-            'num_cols',
-            'max_mu_grid',
-            'max_s_grid',
-            'n_grid',
-            'num_iters',
-            'num_chains',
-            ]
-    parameters_to_show = {
-            parameter : config[parameter]
-            for parameter in parameters_to_show
-            }
-    save_kwargs = dict(directory=directory)
-    plot_all_diagnostic_data(
-            forward_diagnostics_data, diagnostics_data_list,
-            processed_data['kl_series_list_dict'],
-            parameters_to_show, save_kwargs)
-
-    # save other files
-    print 'saving summary, data'
-    to_save = dict(config=config, summary=summary)
-    write_parameters_to_text(to_save, parameters_filename, directory=directory)
-    fu.pickle(to_save, summary_filename, dir=directory)
-    #
-    to_save = dict(config=config, summary=summary, all_data=all_data)
-    fu.pickle(to_save, all_data_filename, dir=directory)
-
-
-
+    result_dict = run_geweke(config)
+    plot_result(result_dict)
+    write_result(result_dict)
