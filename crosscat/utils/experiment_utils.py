@@ -1,30 +1,33 @@
 import os
+import operator
 #
-import crosscat.utils.file_utils as file_utils
 import crosscat.utils.geweke_utils as geweke_utils
-import crosscat.utils.general_utils as general_utils
+from crosscat.utils.file_utils import unpickle
+from crosscat.utils.general_utils import ensure_listlike
 
 
-result_filename = geweke_utils.summary_filename
+is_config_file = geweke_utils.is_summary_file
 writer = geweke_utils.write_result
 reader = geweke_utils.read_result
 runner = geweke_utils.run_geweke
 
 
-def find_configs(dirname, filename=result_filename):
-    root_has_filename = lambda (root, ds, filenames): filenames.count(filename)
-    get_filepath = lambda (root, ds, fs): os.path.join(root, filename)
+def find_configs(dirname):
+    def get_config_files((root, directories, filenames)):
+        join = lambda filename: os.path.join(root, filename)
+        filenames = map(join, filenames)
+        return filter(is_config_file, filenames)
     def is_this_dirname(filepath):
         _dir, _file = os.path.split(filepath)
         return os.path.split(_dir)[0] == dirname
-    tuples = filter(root_has_filename, os.walk(dirname))
-    filepaths = map(get_filepath, tuples)
+    filepaths_list = map(get_config_files, os.walk(dirname))
+    filepaths = reduce(operator.add, filepaths_list)
     filepaths = filter(is_this_dirname, filepaths)
     return filepaths
 
 def read_all_configs(dirname='.'):
     def read_config(filepath):
-        result = file_utils.unpickle(filepath, dir=dirname)
+        result = unpickle(filepath, dir=dirname)
         config = result['config']
         return config
     filepaths = find_configs(dirname)
@@ -33,7 +36,7 @@ def read_all_configs(dirname='.'):
 
 def read_results(config_list, *args, **kwargs):
     _read_result = lambda config: reader(config, *args, **kwargs)
-    config_list = general_utils.ensure_listlike(config_list)
+    config_list = ensure_listlike(config_list)
     results = map(_read_result, config_list)
     return results
 
@@ -47,7 +50,7 @@ def do_experiments(runner, writer, config_list, *args, **kwargs):
         result = runner(config)
         writer(result, *args, **kwargs)
         return
-    config_list = general_utils.ensure_listlike(config_list)
+    config_list = ensure_listlike(config_list)
     map(do_experiment, config_list)
     return
 
