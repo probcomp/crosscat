@@ -31,21 +31,21 @@ def read_all_configs(dirname='.'):
     config_list = map(read_config, filepaths)
     return config_list
 
-def read_results(config_list, dirname=''):
-    _read_result = lambda config: reader(config, dirname)
+def read_results(config_list, *args, **kwargs):
+    _read_result = lambda config: reader(config, *args, **kwargs)
     config_list = general_utils.ensure_listlike(config_list)
     results = map(_read_result, config_list)
     return results
 
-def write_results(results, dirname=''):
-    _write_result = lambda result: writer(result, dirname)
+def write_results(results, *args, **kwargs):
+    _write_result = lambda result: writer(result, *args, **kwargs)
     map(_write_result, results)
     return
 
-def do_experiments(runner, writer, config_list, dirname=''):
+def do_experiments(runner, writer, config_list, *args, **kwargs):
     def do_experiment(config):
         result = runner(config)
-        writer(result, dirname)
+        writer(result, *args, **kwargs)
         return
     config_list = general_utils.ensure_listlike(config_list)
     map(do_experiment, config_list)
