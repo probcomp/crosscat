@@ -27,7 +27,7 @@ def find_configs(dirname):
 
 def read_all_configs(dirname='.'):
     def read_config(filepath):
-        result = unpickle(filepath, dir=dirname)
+        result = unpickle(filepath)
         config = result['config']
         return config
     filepaths = find_configs(dirname)
