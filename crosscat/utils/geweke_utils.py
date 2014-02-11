@@ -595,6 +595,18 @@ def plot_result(result_dict):
             parameters, save_kwargs)
     return
 
+def is_parameters_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == parameters_filename
+
+def is_summary_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == summary_filename
+
+def is_all_data_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == all_data_filename
+
 def generate_filepath(config, filename=summary_filename):
     directory = generate_directory_name(config)
     return os.path.join(directory, filename)
@@ -619,9 +631,8 @@ def write_result(result_dict, directory=''):
     return
 
 def read_result(config, dirname='', only_summary=True):
-    _dirname = generate_directory_name(config)
     _filename = summary_filename if only_summary else all_data_filename
-    filepath = os.path.join(_dirname, _filename)
+    filepath = generate_filepath(config, _filename)
     result_dict = fu.unpickle(filepath, dir=dirname)
     return result_dict
 
