@@ -15,9 +15,10 @@ In this case, 'reader' and 'writer' implicilty have a naming convention.
 
 import os
 import operator
+import functools
 #
 from crosscat.utils.file_utils import unpickle, ensure_dir
-from crosscat.utils.general_utils import ensure_listlike
+from crosscat.utils.general_utils import ensure_listlike, MapperContext, MyPool
 
 
 def find_configs(dirname):
@@ -99,7 +100,12 @@ def write_results(results, dirname='./'):
     map(_write_result, results)
     return
 
-def do_experiments(runner, writer, config_list, dirname='./'):
+def do_experiment(config, dirname):
+    result = runner(config)
+    writer(result, dirname)
+    return
+
+def do_experiments(runner, writer, config_list, dirname='./', mapper=map):
     """Runs and writes provided 'config's using provided runner, writer
 
     Args:
@@ -115,16 +121,14 @@ def do_experiments(runner, writer, config_list, dirname='./'):
         None
     """
 
-    def do_experiment(config):
-        result = runner(config)
-        writer(result, dirname)
-        return
     ensure_dir(dirname)
     config_list = ensure_listlike(config_list)
-    map(do_experiment, config_list)
+    _do_experiment = functools.partial(do_experiment, dirname=dirname)
+    mapper(_do_experiment, config_list)
     return
 
 if __name__ == '__main__':
+    # demonstrate using geweke_utils
     import crosscat.utils.geweke_utils as geweke_utils
 
     is_config_file = geweke_utils.is_summary_file
@@ -143,7 +147,8 @@ if __name__ == '__main__':
 
     # demonstrate generating experiments
     configs_list = map(args_to_config, args_list)
-    do_experiments(runner, writer, configs_list, dirname)
+    with MapperContext(Pool=MyPool) as mapper:
+        do_experiments(runner, writer, configs_list, dirname, mapper)
 
     # demonstrate reading experiments
     configs_list = read_all_configs(dirname)
