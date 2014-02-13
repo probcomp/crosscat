@@ -100,20 +100,15 @@ def write_results(results, dirname='./'):
     map(_write_result, results)
     return
 
-def do_experiment(config, dirname):
-    result = runner(config)
-    writer(result, dirname)
-    return
-
-def do_experiments(runner, writer, config_list, dirname='./', mapper=map):
-    """Runs and writes provided 'config's using provided runner, writer
+def do_experiment(config, runner, writer, dirname):
+    """Runs and writes provided 'config' using provided runner, writer
 
     Args:
+        config: ('config') 'config' to run with runner
         runner: ('config' -> 'result') function that takes config and returns
             result.  This is where the computation occurs.
         writer: ('result' -> None) function that takes single result and writes
             it to local filesystem
-        config_list: (list of 'config's) list of 'config's to run with runner
         dirname: (string) local filesystem directory to write serialize
             'result's to
 
@@ -121,9 +116,32 @@ def do_experiments(runner, writer, config_list, dirname='./', mapper=map):
         None
     """
 
+    result = runner(config)
+    writer(result, dirname)
+    return
+
+def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
+    """Runs and writes provided 'config's using provided runner, writer, mapper
+
+    Args:
+        config_list: (list of 'config's) 'config's to run with runner
+        runner: ('config' -> 'result') function that takes config and returns
+            result.  This is where the computation occurs.
+        writer: ('result' -> None) function that takes single result and writes
+            it to local filesystem
+        dirname: (string) local filesystem directory to write serialize
+            'result's to
+        mapper: (function, args -> outputs) mapper to use.  Enables use of
+            multiprocessing or ipython.parallel
+
+    Returns:
+        None
+    """
+
     ensure_dir(dirname)
     config_list = ensure_listlike(config_list)
-    _do_experiment = functools.partial(do_experiment, dirname=dirname)
+    _do_experiment = functools.partial(do_experiment, runner=runner,
+            writer=writer, dirname=dirname)
     mapper(_do_experiment, config_list)
     return
 
@@ -146,9 +164,9 @@ if __name__ == '__main__':
     dirname = 'my_expt_bank'
 
     # demonstrate generating experiments
-    configs_list = map(args_to_config, args_list)
+    config_list = map(args_to_config, args_list)
     with MapperContext(Pool=MyPool) as mapper:
-        do_experiments(runner, writer, configs_list, dirname, mapper)
+        do_experiments(config_list, runner, writer, dirname, mapper)
 
     # demonstrate reading experiments
     configs_list = read_all_configs(dirname)
