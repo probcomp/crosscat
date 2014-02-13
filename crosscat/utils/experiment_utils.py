@@ -46,7 +46,7 @@ def find_configs(dirname):
     filepaths = filter(is_this_dirname, filepaths)
     return filepaths
 
-def read_all_configs(dirname='.'):
+def read_all_configs(dirname='./'):
     """Reads and extracts 'config's from all files that contain 'config's in a
     directory
 
@@ -66,7 +66,7 @@ def read_all_configs(dirname='.'):
     config_list = map(read_config, filepaths)
     return config_list
 
-def read_results(config_list, dirname='.'):
+def read_results(config_list, dirname='./'):
     """Reads and extracts 'result's from all files that contain 'result's in a
     directory
 
@@ -83,7 +83,7 @@ def read_results(config_list, dirname='.'):
     results = map(_read_result, config_list)
     return results
 
-def write_results(results, dirname='.'):
+def write_results(results, dirname='./'):
     """Writes all 'result's into a specified directory
 
     Args:
@@ -99,7 +99,7 @@ def write_results(results, dirname='.'):
     map(_write_result, results)
     return
 
-def do_experiments(runner, writer, config_list, dirname='.'):
+def do_experiments(runner, writer, config_list, dirname='./'):
     """Runs and writes provided 'config's using provided runner, writer
 
     Args:
