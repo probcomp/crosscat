@@ -28,6 +28,19 @@ runner = geweke_utils.run_geweke
 
 
 def find_configs(dirname):
+    """Searches a directory for files that contain 'config's
+
+    Utilizes provided is_config_file.  Looks ONLY in the specified directory,
+    not recursively
+
+    Args:
+        dirname: (string) local filesystem directory to look in
+
+    Returns:
+        filepaths: (list of strings) list of filepaths that could be passed to
+        'open'
+    """
+
     def get_config_files((root, directories, filenames)):
         join = lambda filename: os.path.join(root, filename)
         filenames = map(join, filenames)
@@ -41,6 +54,17 @@ def find_configs(dirname):
     return filepaths
 
 def read_all_configs(dirname='.'):
+    """Reads and extracts 'config's from all files that contain 'config's in a
+    directory
+
+    Args:
+        dirname: (string) local filesystem directory to look in
+
+    Returns:
+        config_list: (list of 'config's) list of all 'config's found
+
+    """
+
     def read_config(filepath):
         result = unpickle(filepath)
         config = result['config']
@@ -50,17 +74,54 @@ def read_all_configs(dirname='.'):
     return config_list
 
 def read_results(config_list, dirname='.'):
+    """Reads and extracts 'result's from all files that contain 'result's in a
+    directory
+
+    Args:
+        dirname: (string) local filesystem directory to look in
+
+    Returns:
+        results: (list of 'result's) list of all 'result's found
+
+    """
+
     _read_result = lambda config: reader(config, dirname)
     config_list = ensure_listlike(config_list)
     results = map(_read_result, config_list)
     return results
 
 def write_results(results, dirname='.'):
+    """Writes all 'result's into a specified directory
+
+    Args:
+        results: (list of 'result's) list of all 'result's to write
+        dirname: (string) local filesystem directory to look in
+
+    Returns:
+        None
+
+    """
+
     _write_result = lambda result: writer(result, dirname)
     map(_write_result, results)
     return
 
 def do_experiments(runner, writer, config_list, dirname='.'):
+    """Runs and writes provided 'config's using provided runner, writer
+
+    Args:
+        runner: ('config' -> 'result') function that takes config and returns
+            result.  This is where the computation occurs.
+        writer: ('result' -> None) function that takes single result and writes
+            it to local filesystem
+        config_list: (list of 'config's) list of 'config's to run with runner
+        dirname: (string) local filesystem directory to write serialize
+            'result's to
+
+    Returns:
+        None
+    """
+
     def do_experiment(config):
         result = runner(config)
         writer(result, dirname)
