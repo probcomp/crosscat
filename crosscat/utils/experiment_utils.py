@@ -123,6 +123,10 @@ def do_experiment(config, runner, writer, dirname):
 def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
     """Runs and writes provided 'config's using provided runner, writer, mapper
 
+    Same as do_experiment but takes list of 'config's and optional mapper
+    argument.  Optional mapper argument allows multiprocessing or
+    IPython.parallel
+
     Args:
         config_list: (list of 'config's) 'config's to run with runner
         runner: ('config' -> 'result') function that takes config and returns
@@ -131,8 +135,7 @@ def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
             it to local filesystem
         dirname: (string) local filesystem directory to write serialize
             'result's to
-        mapper: (function, args -> outputs) mapper to use.  Enables use of
-            multiprocessing or ipython.parallel
+        mapper: (function, args -> outputs) mapper to use
 
     Returns:
         None
