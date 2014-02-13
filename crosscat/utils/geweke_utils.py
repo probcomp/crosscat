@@ -664,6 +664,13 @@ def arbitrate_args(args):
             args.max_mu_grid, args.max_s_grid)
     return args
 
+def args_to_config(args):
+    parser = generate_parser()
+    args = parser.parse_args(args)
+    args = arbitrate_args(args)
+    config = args.__dict__
+    return config
+
 def get_chisquare(not_forward, forward=None):
     def get_sorted_counts(values):
         get_count = lambda (value, count): count

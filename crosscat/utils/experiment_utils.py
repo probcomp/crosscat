@@ -16,15 +16,8 @@ In this case, 'reader' and 'writer' implicilty have a naming convention.
 import os
 import operator
 #
-import crosscat.utils.geweke_utils as geweke_utils
 from crosscat.utils.file_utils import unpickle, ensure_dir
 from crosscat.utils.general_utils import ensure_listlike
-
-
-is_config_file = geweke_utils.is_summary_file
-writer = geweke_utils.write_result
-reader = geweke_utils.read_result
-runner = geweke_utils.run_geweke
 
 
 def find_configs(dirname):
@@ -131,13 +124,15 @@ def do_experiments(runner, writer, config_list, dirname='.'):
     map(do_experiment, config_list)
     return
 
-def args_to_config(args):
-    parser = geweke_utils.generate_parser()
-    args = parser.parse_args(args)
-    args = geweke_utils.arbitrate_args(args)
-    return args.__dict__
-
 if __name__ == '__main__':
+    import crosscat.utils.geweke_utils as geweke_utils
+
+    is_config_file = geweke_utils.is_summary_file
+    writer = geweke_utils.write_result
+    reader = geweke_utils.read_result
+    runner = geweke_utils.run_geweke
+    args_to_config = geweke_utils.args_to_config
+
     args_list = [
             ['--num_rows', '10', '--num_cols', '2', '--num_iters', '300', ],
             ['--num_rows', '10', '--num_cols', '3', '--num_iters', '300', ],
@@ -145,9 +140,12 @@ if __name__ == '__main__':
             ['--num_rows', '20', '--num_cols', '3', '--num_iters', '300', ],
             ]
     dirname = 'my_expt_bank'
+
+    # demonstrate generating experiments
     configs_list = map(args_to_config, args_list)
     do_experiments(runner, writer, configs_list, dirname)
 
+    # demonstrate reading experiments
     configs_list = read_all_configs(dirname)
     has_three_cols = lambda config: config['num_cols'] == 3
     configs_list = filter(has_three_cols, configs_list)
