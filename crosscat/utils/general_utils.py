@@ -34,7 +34,7 @@ class NoDaemonProcess(multiprocessing.Process):
         pass
     daemon = property(_get_daemon, _set_daemon)
 
-class MyPool(multiprocessing.pool.Pool):
+class NoDaemonPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 
 class Timer(object):
