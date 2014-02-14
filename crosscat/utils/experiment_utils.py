@@ -17,17 +17,67 @@ import os
 import operator
 import functools
 #
-from crosscat.utils.file_utils import unpickle, ensure_dir
-from crosscat.utils.general_utils import ensure_listlike, MapperContext, MyPool
+from crosscat.utils.file_utils import pickle, unpickle, ensure_dir
+from crosscat.utils.general_utils import ensure_listlike, MapperContext, NoDaemonPool
 
 
-def find_configs(dirname):
-    """Searches a directory for files that contain 'config's
+########################
+# file system storage implementation
+def _fs_write_result(config_to_filepath, result, dirname='./'):
+    """Write a result to the local filesystem
 
-    Utilizes provided is_config_file.  Looks ONLY in the specified directory,
-    not recursively
+    File written depends on output of config_to_filepath AND directory
 
     Args:
+        config_to_filepath: ('config' -> string) function to generate location
+            in local filesystem to write to.  Possibly modified by 'dirname'
+            argument
+        result: 'result' to be written to local filesystem.  Must be
+            serializable via pickle
+        dirname: (string) directory to prepend to output of config_to_filepath
+
+    Returns:
+        None
+    """
+
+    config = result['config']
+    filepath = config_to_filepath(config)
+    # filepath may contain directories
+    full_filepath = os.path.join(dirname, filepath)
+    _dirname = os.path.split(full_filepath)[0]
+    ensure_dir(_dirname)
+    #
+    pickle(result, filepath, dir=dirname)
+    return
+
+def _fs_read_result(config_to_filepath, config, dirname='./'):
+    """Read a result from the local filesystem
+
+    File read depends on output of config_to_filepath AND dirname
+
+    Args:
+        config_to_filepath: ('config' -> string) function to generate location
+            in local filesystem to read from.  Possibly modified by 'dirname'
+            argument
+        config: 'config' used to generate filepath
+        dirname: (string) directory to prepend to output of config_to_filepath
+
+    Returns:
+        None
+    """
+
+    filepath = config_to_filepath(config)
+    result = unpickle(filepath, dirname)
+    return result
+
+def _fs_find_results(is_result_filepath, dirname='./'):
+    """Searches a directory for files that contain 'config's
+
+    Looks ONLY in the specified directory, not recursively.
+
+    Args:
+        is_result_filepath: (string -> bool) function to determine if reading
+            filepath would generate a 'result'
         dirname: (string) local filesystem directory to look in
 
     Returns:
@@ -35,23 +85,26 @@ def find_configs(dirname):
         'open'
     """
 
-    def get_config_files((root, directories, filenames)):
-        join = lambda filename: os.path.join(root, filename)
-        filenames = map(join, filenames)
-        return filter(is_config_file, filenames)
+    def get_result_files((root, directories, filenames)):
+        my_join = lambda filename: os.path.join(root, filename)
+        filepaths = map(my_join, filenames)
+        filepaths = filter(is_result_filepath, filepaths)
+        return filepaths
     def is_this_dirname(filepath):
         _dir, _file = os.path.split(filepath)
         return os.path.split(_dir)[0] == dirname
-    filepaths_list = map(get_config_files, os.walk(dirname))
+    filepaths_list = map(get_result_files, os.walk(dirname))
     filepaths = reduce(operator.add, filepaths_list)
     filepaths = filter(is_this_dirname, filepaths)
     return filepaths
 
-def read_all_configs(dirname='./'):
+def _fs_read_all_configs(is_result_filepath, dirname='./'):
     """Reads and extracts 'config's from all files that contain 'config's in a
     directory
 
     Args:
+        is_result_filepath: (string -> bool) function to determine if reading
+            filepath would generate a 'result'
         dirname: (string) local filesystem directory to look in
 
     Returns:
@@ -63,15 +116,23 @@ def read_all_configs(dirname='./'):
         result = unpickle(filepath)
         config = result['config']
         return config
-    filepaths = find_configs(dirname)
+    filepaths = _fs_find_results(is_result_filepath, dirname)
     config_list = map(read_config, filepaths)
     return config_list
 
-def read_results(config_list, dirname='./'):
+
+########################
+# core functions
+def read_results(reader, config_list, dirname='./'):
     """Reads and extracts 'result's from all files that contain 'result's in a
     directory
 
     Args:
+        config_list: (list of 'config's) list of 'config's to read using reader
+        reader: ('config', string -> 'result') function to read 'result' from
+            persistent storage.
+        given a
+            'config' and a dirname
         dirname: (string) local filesystem directory to look in
 
     Returns:
@@ -79,38 +140,21 @@ def read_results(config_list, dirname='./'):
 
     """
 
-    _read_result = lambda config: reader(config, dirname)
     config_list = ensure_listlike(config_list)
+    _read_result = functools.partial(reader, dirname=dirname)
     results = map(_read_result, config_list)
     return results
 
-def write_results(results, dirname='./'):
-    """Writes all 'result's into a specified directory
-
-    Args:
-        results: (list of 'result's) list of all 'result's to write
-        dirname: (string) local filesystem directory to look in
-
-    Returns:
-        None
-
-    """
-
-    _write_result = lambda result: writer(result, dirname)
-    map(_write_result, results)
-    return
-
-def do_experiment(config, runner, writer, dirname):
+def do_experiment(config, runner, writer, dirname='./'):
     """Runs and writes provided 'config' using provided runner, writer
 
     Args:
         config: ('config') 'config' to run with runner
         runner: ('config' -> 'result') function that takes config and returns
             result.  This is where the computation occurs.
-        writer: ('result' -> None) function that takes single result and writes
-            it to local filesystem
-        dirname: (string) local filesystem directory to write serialize
-            'result's to
+        writer: ('result', string -> None) function that takes single result and writes
+            to some persistent storage
+        dirname: (string) directory to write serialized 'result's to
 
     Returns:
         None
@@ -151,12 +195,16 @@ def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
 if __name__ == '__main__':
     # demonstrate using geweke_utils
     import crosscat.utils.geweke_utils as geweke_utils
-
-    is_config_file = geweke_utils.is_summary_file
-    writer = geweke_utils.write_result
-    reader = geweke_utils.read_result
+    is_result_filepath = geweke_utils.is_summary_file
+    config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
+    #
     args_to_config = geweke_utils.args_to_config
+
+    writer = functools.partial(_fs_write_result, config_to_filepath)
+    reader = functools.partial(_fs_read_result, config_to_filepath)
+    read_all_configs = functools.partial(_fs_read_all_configs,
+            is_result_filepath)
 
     args_list = [
             ['--num_rows', '10', '--num_cols', '2', '--num_iters', '300', ],
@@ -165,14 +213,14 @@ if __name__ == '__main__':
             ['--num_rows', '20', '--num_cols', '3', '--num_iters', '300', ],
             ]
     dirname = 'my_expt_bank'
+    config_list = map(args_to_config, args_list)
 
     # demonstrate generating experiments
-    config_list = map(args_to_config, args_list)
-    with MapperContext(Pool=MyPool) as mapper:
+    with MapperContext(Pool=NoDaemonPool) as mapper:
         do_experiments(config_list, runner, writer, dirname, mapper)
 
     # demonstrate reading experiments
     configs_list = read_all_configs(dirname)
     has_three_cols = lambda config: config['num_cols'] == 3
     configs_list = filter(has_three_cols, configs_list)
-    results = read_results(configs_list, dirname)
+    results = read_results(reader, configs_list, dirname)
