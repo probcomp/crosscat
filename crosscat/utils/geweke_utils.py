@@ -607,7 +607,7 @@ def is_all_data_file(filename):
     filename = os.path.split(filename)[-1]
     return filename == all_data_filename
 
-def generate_filepath(config, filename=summary_filename):
+def config_to_filepath(config, filename=summary_filename):
     directory = generate_directory_name(config)
     return os.path.join(directory, filename)
 
@@ -619,21 +619,21 @@ def write_result(result_dict, directory='./'):
     fu.ensure_dir(os.path.join(directory, _directory))
     #
     to_save = dict(config=config, summary=summary)
-    filepath = generate_filepath(config, parameters_filename)
+    filepath = config_to_filepath(config, parameters_filename)
     write_parameters_to_text(to_save, filepath, directory=directory)
     #
     to_save = dict(config=config, summary=summary)
-    filepath = generate_filepath(config, summary_filename)
+    filepath = config_to_filepath(config, summary_filename)
     fu.pickle(to_save, filepath, dir=directory)
     #
     to_save = result_dict
-    filepath = generate_filepath(config, all_data_filename)
+    filepath = config_to_filepath(config, all_data_filename)
     fu.pickle(to_save, filepath, dir=directory)
     return
 
 def read_result(config, dirname='./', only_summary=True):
     _filename = summary_filename if only_summary else all_data_filename
-    filepath = generate_filepath(config, _filename)
+    filepath = config_to_filepath(config, _filename)
     result_dict = fu.unpickle(filepath, dir=dirname)
     return result_dict
 
