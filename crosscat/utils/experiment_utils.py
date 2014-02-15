@@ -18,7 +18,7 @@ import operator
 import functools
 #
 from crosscat.utils.file_utils import pickle, unpickle, ensure_dir
-from crosscat.utils.general_utils import ensure_listlike, MapperContext, NoDaemonPool
+from crosscat.utils.general_utils import ensure_listlike
 
 
 ####################################
@@ -179,7 +179,8 @@ def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
             it to local filesystem
         dirname: (string) local filesystem directory to write serialize
             'result's to
-        mapper: (function, args -> outputs) mapper to use
+        mapper: (function, args -> outputs) mapper to use.  If runner spawns
+        daemonic processes, mapper must be non-daemonic.
 
     Returns:
         None
@@ -193,8 +194,10 @@ def do_experiments(config_list, runner, writer, dirname='./', mapper=map):
     return
 
 if __name__ == '__main__':
-    # demonstrate using geweke_utils
     import crosscat.utils.geweke_utils as geweke_utils
+    from crosscat.utils.general_utils import MapperContext, NoDaemonPool
+
+    # demonstrate using geweke_utils
     is_result_filepath = geweke_utils.is_summary_file
     config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
@@ -219,6 +222,7 @@ if __name__ == '__main__':
 
     # run experiments
     with MapperContext(Pool=NoDaemonPool) as mapper:
+        # use non-daemonic mapper since run_geweke spawns daemonic processes
         do_experiments(config_list, runner, writer, dirname, mapper)
 
     # demonstrate reading experiments
