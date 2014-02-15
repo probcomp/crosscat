@@ -1,15 +1,14 @@
 """A framework for running engine-agnostic experiments.
 
-The experiment engine must provide 'runner', 'reader', 'writer' functions and
-optionally a function to identify 'config' files, is_config_file.  The 'runner'
-converts 'config's into 'result's.  'writer' and 'reader' serialize and
+The experiment engine must provide 'runner', 'reader', 'writer' functions.  The
+'runner' converts 'config's into 'result's.  'writer' and 'reader' serialize and
 deserialize 'result's.
 
-A 'result' must be a dictionary with at least one key: 'config' which includes
+A 'result' must be a dictionary with at least one key, 'config', which includes
 the actual config used to generate the 'result'.
 
-is_config_file is for the special case of searching for results stored to disk.
-In this case, 'reader' and 'writer' implicilty have a naming convention.
+fs_* functions provide template examples of writer, reader, and other support
+functions that use the local filesystem for persistent storage.
 
 """
 
