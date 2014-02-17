@@ -64,6 +64,7 @@ install_jenkins_plugin git-client 1.6.0
 install_jenkins_plugin git 2.0.1
 install_jenkins_plugin github-api 1.44
 install_jenkins_plugin github 1.8
+install_jenkins_plugin jenkins-flowdock-plugin 1.1.3
 restart_jenkins
 #
 # wait for jenkins to respond before returning
