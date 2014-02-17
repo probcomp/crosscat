@@ -23,7 +23,19 @@ from timeit import default_timer
 import datetime
 import random
 import multiprocessing
+import multiprocessing.pool
 
+#http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class NoDaemonPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 class Timer(object):
     def __init__(self, task='action', verbose=True):
@@ -44,11 +56,12 @@ class Timer(object):
             print '%s took:\t% 7d ms' % (self.task, self.elapsed)
 
 class MapperContext(object):
-    def __init__(self, do_multiprocessing=True, *args, **kwargs):
+    def __init__(self, do_multiprocessing=True, Pool=multiprocessing.Pool,
+            *args, **kwargs):
         self.pool = None
         self.map = map
         if do_multiprocessing:
-            self.pool = multiprocessing.Pool(*args, **kwargs)
+            self.pool = Pool(*args, **kwargs)
             self.map = self.pool.map
             pass
         return
@@ -115,4 +128,8 @@ def print_ts(in_str):
     now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_str = '%s:: %s' % (now_str, in_str)
     print print_str
-    
+
+def ensure_listlike(input):
+    if not isinstance(input, (list, tuple,)):
+        input = [input]
+    return input

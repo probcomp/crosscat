@@ -25,6 +25,7 @@ import functools
 import operator
 import re
 import os
+import argparse
 #
 import numpy
 import pylab
@@ -39,6 +40,9 @@ import crosscat.tests.quality_tests.quality_test_utils as qtu
 
 image_format = 'png'
 default_n_grid=31
+parameters_filename = 'parameters.txt'
+summary_filename = 'summary.pkl'
+all_data_filename = 'all_data.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -65,7 +69,7 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     diagnostics_funcs = { helper(column_idx, key) for key in keys }
     return diagnostics_funcs
 
-def run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+def run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         diagnostics_funcs, specified_s_grid, specified_mu_grid,
         N_GRID,
         ):
@@ -105,7 +109,7 @@ def generate_diagnostics_funcs(X_L, probe_columns):
         pass
     return diagnostics_funcs
 
-def run_geweke_chain(seed, M_c, T, num_iters,
+def run_posterior_chain(seed, M_c, T, num_iters,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         N_GRID=default_n_grid,
         plot_rand_idx=None,
@@ -121,7 +125,7 @@ def run_geweke_chain(seed, M_c, T, num_iters,
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
-        M_c, T, X_L, X_D = run_geweke_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
+        M_c, T, X_L, X_D = run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 diagnostics_funcs, specified_s_grid, specified_mu_grid,
                 N_GRID=N_GRID,
                 )
@@ -134,12 +138,12 @@ def run_geweke_chain(seed, M_c, T, num_iters,
         pass
     return diagnostics_data
 
-def run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-        specified_s_grid, specified_mu_grid,
+def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
+        s_grid, mu_grid,
         N_GRID=default_n_grid,
         ):
     # run geweke: transition-erase loop
-    helper = functools.partial(run_geweke_chain, M_c=M_c, T=T, num_iters=num_iters,
+    helper = functools.partial(run_posterior_chain, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=probe_columns,
             specified_s_grid=s_grid,
             specified_mu_grid=mu_grid,
@@ -298,18 +302,17 @@ plotter_lookup = collections.defaultdict(lambda: do_log_hist_bin_unique,
         col_0_r=do_hist,
         col_0_nu=do_hist,
         )
-def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variable_name,
-        parameters=None, save_kwargs=None):
+
+def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+        kl_series_list, variable_name,
+        parameters=None, save_kwargs=None,
+        ):
     plotter = plotter_lookup[variable_name]
     mapped_variable_name = map_variable_name(variable_name)
     which_idx = numpy.random.randint(len(diagnostics_data_list))
     diagnostics_data = diagnostics_data_list[which_idx]
     forward = forward_diagnostics_data[variable_name]
     not_forward_list = [el[variable_name] for el in diagnostics_data_list]
-    kl_series_list = [
-            get_fixed_gibbs_kl_series(forward, not_forward)
-            for not_forward in not_forward_list
-            ]
     pylab.figure()
     #
     pylab.subplot(311)
@@ -325,7 +328,6 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
     #
     pylab.subplot(313)
     map(pylab.plot, kl_series_list)
-    show_parameters(parameters)
     pylab.xlabel('iteration')
     pylab.ylabel('KL')
     if parameters is not None:
@@ -342,23 +344,24 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list, variab
             pass
         save_current_figure(filename, format=image_format, **save_kwargs)
         pass
-    return kl_series_list
+    return
 
 def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
-        parameters=None, save_kwargs=None):
-    kl_series_list_dict = dict()
-    for variable_name in forward_diagnostics_data:
+        kl_series_list_dict,
+        parameters=None, save_kwargs=None,
+        ):
+    for variable_name in forward_diagnostics_data.keys():
         print 'plotting for variable: %s' % variable_name
         try:
-            kl_series_list = plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+            kl_series_list = kl_series_list_dict[variable_name]
+            plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
+                    kl_series_list,
                     variable_name, parameters, save_kwargs)
-            kl_series_list_dict[variable_name] = kl_series_list
         except Exception, e:
             print 'Failed to plot_diagnostic_data for %s' % variable_name
             print e
             pass
-        pass
-    return kl_series_list_dict
+    return
 
 def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
     for variable_name in diagnostics_data.keys():
@@ -425,9 +428,9 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         pass
     return kls
 
-def generate_directory_name(directory_prefix='geweke_plots', **kwargs):
+def generate_directory_name(config, directory_prefix='geweke_plots'):
     generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, kwargs.iteritems())
+    parts = map(generate_part, sorted(config.iteritems()))
     directory_name = '_'.join([directory_prefix, ''.join(parts)])
     return directory_name
 
@@ -443,15 +446,7 @@ def get_mapper(num_chains):
         mapper = pool.map
     return mapper, pool
 
-def arbitrate_num_chains(num_chains, num_iters):
-    if num_chains != 1:
-        if num_chains is None:
-            num_chains = multiprocessing.cpu_count()
-            pass
-        num_iters = num_iters /num_chains
-    return num_chains, num_iters
-
-def write_parameters_to_text(filename, parameters, directory=''):
+def write_parameters_to_text(parameters, filename, directory='./'):
     full_filename = os.path.join(directory, filename)
     text = get_parameters_as_text(parameters)
     with open(full_filename, 'w') as fh:
@@ -489,89 +484,25 @@ def pp_plot(_f, _p, nbins):
     pylab.ylim([0,1])
     return
 
-if __name__ == '__main__':
-    import argparse
-    pylab.ion()
-    pylab.show()
-    # parse input
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_rows', default=10, type=int)
-    parser.add_argument('--num_cols', default=2, type=int)
-    parser.add_argument('--inf_seed', default=0, type=int)
-    parser.add_argument('--gen_seed', default=0, type=int)
-    parser.add_argument('--num_chains', default=None, type=int)
-    parser.add_argument('--num_iters', default=10000, type=int)
-    parser.add_argument('--max_mu_grid', default=100, type=int)
-    parser.add_argument('--max_s_grid', default=1000, type=int)
-    parser.add_argument('--n_grid', default=31, type=int)
-    args = parser.parse_args()
-    #
-    num_rows = args.num_rows
-    num_cols = args.num_cols
-    inf_seed = args.inf_seed
-    gen_seed = args.gen_seed
-    num_chains = args.num_chains
-    num_iters = args.num_iters
-    max_mu_grid = args.max_mu_grid
-    max_s_grid = args.max_s_grid
-    n_grid = args.n_grid
+def generate_kl_series_list_dict(forward_diagnostics_data,
+        diagnostics_data_list):
+    kl_series_list_dict = dict()
+    for variable_name in forward_diagnostics_data:
+        forward = forward_diagnostics_data[variable_name]
+        not_forward_list = [el[variable_name] for el in diagnostics_data_list]
+        kl_series_list = [
+                get_fixed_gibbs_kl_series(forward, not_forward)
+                for not_forward in not_forward_list
+                ]
+        kl_series_list_dict[variable_name] = kl_series_list
+        pass
+    return kl_series_list_dict
 
-
-    num_chains, num_iters = arbitrate_num_chains(num_chains, num_iters)
-    total_num_iters = num_chains * num_iters
-    probe_columns = (0, 1) if num_cols > 1 else (0,)
-
-
-    cctypes = ['multinomial'] * num_cols
-    cctypes[0] = 'continuous'
-    num_values_list = [2] * num_cols
-    M_c = gen_M_c(cctypes, num_values_list)
-    #T = numpy.zeros((num_rows, num_cols)).tolist()
-    T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
-
-    # specify grid
-    max_mu_grid, max_s_grid = arbitrate_mu_s(num_rows, max_mu_grid, max_s_grid)
-    # may be an issue if this n_grid doesn't match the other grids in the c++
-    mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
-    s_grid = numpy.linspace(1, max_s_grid, n_grid)
-
-    # run geweke: forward sample only
-    print 'generating forward samples'
-    forward_diagnostics_data = forward_sample_from_prior(inf_seed,
-            num_iters, M_c, T, probe_columns=probe_columns,
-            specified_s_grid=s_grid, specified_mu_grid=mu_grid,
-            N_GRID=n_grid,
-            do_multiprocessing=True,
-            )
-
-    # run geweke: transition-erase loop
-    print 'generating posterior samples'
-    diagnostics_data_list = run_geweke(M_c, T, num_chains, num_iters, probe_columns,
-            s_grid, mu_grid,
-            N_GRID=n_grid,
-            )
-
-    # save plots
-    print 'saving plots'
-    plot_parameters = dict(
-            num_rows=num_rows,
-            num_cols=num_cols,
-            max_mu_grid=max_mu_grid,
-            max_s_grid=max_s_grid,
-            n_grid=n_grid,
-            total_num_iters=total_num_iters,
-            chain_num_iters=num_iters,
-            num_chains=num_chains,
-            )
-    directory = generate_directory_name(**plot_parameters)
-    save_kwargs = dict(directory=directory)
-    kl_series_list_dict = plot_all_diagnostic_data(
-            forward_diagnostics_data, diagnostics_data_list,
-            plot_parameters, save_kwargs)
-
-    # process and save parameters
-    print 'saving parameters'
+def post_process(forward_diagnostics_data, diagnostics_data_list):
     get_final = lambda indexable: indexable[-1]
+    #
+    kl_series_list_dict = generate_kl_series_list_dict(forward_diagnostics_data,
+            diagnostics_data_list)
     final_kls = {
             key : map(get_final, value)
             for key, value in kl_series_list_dict.iteritems()
@@ -580,14 +511,214 @@ if __name__ == '__main__':
             key : numpy.mean(value)
             for key, value in final_kls.iteritems()
             }
-    save_parameters = plot_parameters.copy()
-    save_parameters['final_kls'] = final_kls
-    save_parameters['summary_kls'] = summary_kls
-    write_parameters_to_text('parameters.txt', save_parameters, directory=directory)
+    return dict(
+            kl_series_list_dict=kl_series_list_dict,
+            final_kls=final_kls,
+            summary_kls=summary_kls,
+            )
 
-    # save data
-    save_data = save_parameters.copy()
-    save_data['forward_diagnostics_data'] = forward_diagnostics_data
-    save_data['diagnostics_data_list'] = diagnostics_data_list
-    save_data['kl_series_list_dict'] = kl_series_list_dict
-    fu.pickle(save_data, 'data.pkl', dir=directory)
+def generate_summary(processed_data):
+    summary = dict(
+            summary_kls=processed_data['summary_kls'],
+            )
+    return summary
+
+def run_geweke(config):
+    num_rows = config['num_rows']
+    num_cols = config['num_cols']
+    inf_seed = config['inf_seed']
+    gen_seed = config['gen_seed']
+    num_chains = config['num_chains']
+    num_iters = config['num_iters']
+    max_mu_grid = config['max_mu_grid']
+    max_s_grid = config['max_s_grid']
+    n_grid = config['n_grid']
+    cctypes = config['cctypes']
+    probe_columns = config['probe_columns']
+
+
+    num_values_list = [2] * num_cols
+    M_c = gen_M_c(cctypes, num_values_list)
+    T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
+    # may be an issue if this n_grid doesn't match the other grids in the c++
+    mu_grid = numpy.linspace(-max_mu_grid, max_mu_grid, n_grid)
+    s_grid = numpy.linspace(1, max_s_grid, n_grid)
+
+    # run geweke: forward sample only
+    print 'generating forward samples'
+    forward_diagnostics_data = forward_sample_from_prior(inf_seed,
+            num_iters, M_c, T, probe_columns,
+            s_grid, mu_grid,
+            do_multiprocessing=True,
+            N_GRID=n_grid,
+            )
+    # run geweke: transition-erase loop
+    print 'generating posterior samples'
+    diagnostics_data_list = run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
+            s_grid, mu_grid,
+            N_GRID=n_grid,
+            )
+    # post process data
+    print 'post prcessing data'
+    processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
+    summary = generate_summary(processed_data)
+    all_data = dict(
+            forward_diagnostics_data=forward_diagnostics_data,
+            diagnostics_data_list=diagnostics_data_list,
+            processed_data=processed_data,
+            )
+    return dict(
+            config=config,
+            summary=summary,
+            all_data=all_data,
+            )
+
+parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
+    'n_grid', 'num_iters', 'num_chains',]
+def plot_result(result_dict):
+    # extract variables
+    config = result_dict['config']
+    all_data = result_dict['all_data']
+    forward_diagnostics_data = all_data['forward_diagnostics_data']
+    diagnostics_data_list = all_data['diagnostics_data_list']
+    processed_data = all_data['processed_data']
+    kl_series_list_dict = processed_data['kl_series_list_dict']
+    #
+    directory = generate_directory_name(config)
+    save_kwargs = dict(directory=directory)
+    get_tuple = lambda parameter: (parameter, config[parameter])
+    parameters = dict(map(get_tuple, parameters_to_show))
+    #
+    plot_all_diagnostic_data(
+            forward_diagnostics_data, diagnostics_data_list,
+            kl_series_list_dict,
+            parameters, save_kwargs)
+    return
+
+def is_parameters_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == parameters_filename
+
+def is_summary_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == summary_filename
+
+def is_all_data_file(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == all_data_filename
+
+def config_to_filepath(config, filename=summary_filename):
+    directory = generate_directory_name(config)
+    return os.path.join(directory, filename)
+
+def write_result(result_dict, directory='./'):
+    summary = result_dict['summary']
+    config = result_dict['config']
+    #
+    _directory = generate_directory_name(config)
+    fu.ensure_dir(os.path.join(directory, _directory))
+    #
+    to_save = dict(config=config, summary=summary)
+    filepath = config_to_filepath(config, parameters_filename)
+    write_parameters_to_text(to_save, filepath, directory=directory)
+    #
+    to_save = dict(config=config, summary=summary)
+    filepath = config_to_filepath(config, summary_filename)
+    fu.pickle(to_save, filepath, dir=directory)
+    #
+    to_save = result_dict
+    filepath = config_to_filepath(config, all_data_filename)
+    fu.pickle(to_save, filepath, dir=directory)
+    return
+
+def read_result(config, dirname='./', only_summary=True):
+    _filename = summary_filename if only_summary else all_data_filename
+    filepath = config_to_filepath(config, _filename)
+    result_dict = fu.unpickle(filepath, dir=dirname)
+    return result_dict
+
+def generate_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num_rows', default=10, type=int)
+    parser.add_argument('--num_cols', default=2, type=int)
+    parser.add_argument('--inf_seed', default=0, type=int)
+    parser.add_argument('--gen_seed', default=0, type=int)
+    parser.add_argument('--num_chains', default=None, type=int)
+    parser.add_argument('--num_iters', default=1000, type=int)
+    parser.add_argument('--max_mu_grid', default=10, type=int)
+    parser.add_argument('--max_s_grid', default=100, type=int)
+    parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--cctypes', nargs='*', default=None, type=str)
+    parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
+    return parser
+
+def arbitrate_args(args):
+    if args.num_chains is None:
+        args.num_chains = multiprocessing.cpu_count()
+    if args.probe_columns is None:
+        args.probe_columns = (0, 1) if args.num_cols > 1 else (0,)
+    if args.cctypes is None:
+        args.cctypes = ['continuous'] + ['multinomial'] * (args.num_cols - 1)
+    assert len(args.cctypes) == args.num_cols
+    args.max_mu_grid, args.max_s_grid = arbitrate_mu_s(args.num_rows,
+            args.max_mu_grid, args.max_s_grid)
+    return args
+
+def args_to_config(args):
+    parser = generate_parser()
+    args = parser.parse_args(args)
+    args = arbitrate_args(args)
+    config = args.__dict__
+    return config
+
+def get_chisquare(not_forward, forward=None):
+    def get_sorted_counts(values):
+        get_count = lambda (value, count): count
+        tuples = sorted(collections.Counter(values).items())
+        return map(get_count, counts)
+    args = (not_forward, forward)
+    args = filter(None, args)
+    args = map(get_sorted_counts, args)
+    return stats.chisquare(*args)
+
+def generate_ks_stats_list(diagnostics_data_list, forward_diagnostics_data):
+    from scipy import stats
+    ks_stats_list = list()
+    for diagnostics_data in diagnostics_data_list:
+        ks_stats = dict()
+        for variable_name in diagnostics_data.keys():
+            stat, p = stats.ks_2samp(diagnostics_data[variable_name],
+                    forward_diagnostics_data[variable_name])
+            ks_stats[variable_name] = stat, p
+            pass
+        ks_stats_list.append(ks_stats)
+        pass
+    return ks_stats_list
+
+def generate_chi2_stats_list(diagnostics_data_list, forward_diagnostics_data):
+    chi2_stats_list = list()
+    for diagnostics_data in diagnostics_data_list:
+        chi2_stats = dict()
+        for variable_name in forward_diagnostics_data.keys():
+            not_forward = diagnostics_data[variable_name]
+            forward = forward_diagnostics_data[variable_name]
+            #chi2 = get_chisquare(not_forward, forward)
+            chi2 = get_chisquare(not_forward)
+            chi2_stats[variable_name] = chi2
+            pass
+        chi2_stats_list.append(chi2_stats)
+        pass
+    return chi2_stats_list
+
+
+if __name__ == '__main__':
+    # parse input
+    parser = generate_parser()
+    args = parser.parse_args()
+    args = arbitrate_args(args)
+    config = args.__dict__
+
+    # the bulk of the work
+    result_dict = run_geweke(config)
+    plot_result(result_dict)
+    write_result(result_dict)
