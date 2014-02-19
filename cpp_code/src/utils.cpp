@@ -389,8 +389,8 @@ void construct_continuous_base_hyper_grids(int n_grid,
 					   int data_num_vectors,
 					   vector<double> &r_grid,
 					   vector<double> &nu_grid) {
-  r_grid = linspace(1, data_num_vectors, n_grid);
-  nu_grid = linspace(1, data_num_vectors, n_grid);
+  r_grid = log_linspace(1, data_num_vectors, n_grid);
+  nu_grid = log_linspace(1, data_num_vectors, n_grid);
 }
 
 void construct_continuous_specific_hyper_grid(int n_grid,
