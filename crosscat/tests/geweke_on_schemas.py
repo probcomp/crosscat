@@ -4,7 +4,7 @@ import functools
 #
 import crosscat.utils.geweke_utils as geweke_utils
 import crosscat.utils.experiment_utils as experiment_utils
-from crosscat.utils.general_utils import MapperContext, NoDaemonPool
+from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
 def generate_args_list(base_num_rows, num_iters):
@@ -60,11 +60,30 @@ _writer = experiment_utils.fs_write_result
 writer = functools.partial(_writer, config_to_filepath)
 
 
+def print_all_summaries(filter_func=None):
+    # you could read results like this
+    _read_all_configs = experiment_utils.fs_read_all_configs
+    _reader = experiment_utils.fs_read_result
+    read_results = experiment_utils.read_results
+    read_all_configs = functools.partial(_read_all_configs, is_result_filepath)
+    reader = functools.partial(_reader, config_to_filepath)
+    config_list = read_all_configs(dirname)
+    config_list = filter(filter_func, config_list)
+    results = read_results(reader, config_list, dirname)
+    for result in results:
+        print
+        print result['config']
+        print result['summary']
+        print
+        pass
+    return
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
-    parser.add_argument('--base_num_rows', default=10, type=int)
-    parser.add_argument('--num_iters', default=1000, type=int)
+    parser.add_argument('--base_num_rows', default=40, type=int)
+    parser.add_argument('--num_iters', default=400, type=int)
     args = parser.parse_args()
     dirname = args.dirname
     base_num_rows = args.base_num_rows
@@ -74,16 +93,12 @@ if __name__ == '__main__':
     args_to_config = geweke_utils.args_to_config
     args_list = generate_args_list(base_num_rows, num_iters)
     config_list = map(args_to_config, args_list)
-    with MapperContext(Pool=NoDaemonPool) as mapper:
-        # use non-daemonic mapper since run_geweke spawns daemonic processes
-        do_experiments(config_list, runner, writer, dirname, mapper)
+
+    with Timer('experiments') as timer:
+        with MapperContext(Pool=NoDaemonPool) as mapper:
+            # use non-daemonic mapper since run_geweke spawns daemonic processes
+            do_experiments(config_list, runner, writer, dirname, mapper)
+            pass
         pass
 
-    # you could read results like this
-    # _read_all_configs = experiment_utils.fs_read_all_configs
-    # _reader = experiment_utils.fs_read_result
-    # read_results = experiment_utils.read_results
-    # read_all_configs = functools.partial(_read_all_configs, is_result_filepath)
-    # reader = functools.partial(_reader, config_to_filepath)
-    # config_list = read_all_configs(dirname)
-    # results = read_results(reader, config_list, dirname)
+    print_all_summaries()
