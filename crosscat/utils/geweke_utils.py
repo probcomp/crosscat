@@ -575,7 +575,7 @@ def run_geweke(config):
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
-def plot_result(result_dict):
+def plot_result(result_dict, directory='./'):
     # extract variables
     config = result_dict['config']
     all_data = result_dict['all_data']
@@ -584,8 +584,8 @@ def plot_result(result_dict):
     processed_data = all_data['processed_data']
     kl_series_list_dict = processed_data['kl_series_list_dict']
     #
-    directory = generate_directory_name(config)
-    save_kwargs = dict(directory=directory)
+    _directory = generate_directory_name(config)
+    save_kwargs = dict(directory=os.path.join(directory, _directory))
     get_tuple = lambda parameter: (parameter, config[parameter])
     parameters = dict(map(get_tuple, parameters_to_show))
     #
