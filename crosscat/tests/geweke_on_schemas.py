@@ -82,7 +82,8 @@ if __name__ == '__main__':
     # you could read results like this
     # _read_all_configs = experiment_utils.fs_read_all_configs
     # _reader = experiment_utils.fs_read_result
+    # read_results = experiment_utils.read_results
     # read_all_configs = functools.partial(_read_all_configs, is_result_filepath)
     # reader = functools.partial(_reader, config_to_filepath)
     # config_list = read_all_configs(dirname)
-    # results = eu.read_results(reader, config_list, dirname)
+    # results = read_results(reader, config_list, dirname)
