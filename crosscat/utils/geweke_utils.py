@@ -436,11 +436,15 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         pass
     return kls
 
-def generate_directory_name(config, directory_prefix='geweke_plots'):
+def config_to_intelligible_string(config):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, sorted(config.iteritems()))
-    intermediate = ''.join(parts)
-    intermediate = hashlib.md5(intermediate).hexdigest()[:10]
+    intelligible_string = ''.join(parts)
+    return intelligible_string
+
+def generate_directory_name(config, directory_prefix='geweke_plots'):
+    intelligible_string = config_to_intelligible_string(config)
+    intermediate = hashlib.md5(intelligible_string).hexdigest()[:10]
     directory_name = '_'.join([directory_prefix, intermediate])
     return directory_name
 
