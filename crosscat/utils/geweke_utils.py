@@ -19,10 +19,12 @@
 #
 import matplotlib
 matplotlib.use('Agg')
+#
 import multiprocessing
 import collections
 import functools
 import operator
+import hashlib
 import re
 import os
 import argparse
@@ -437,7 +439,9 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
 def generate_directory_name(config, directory_prefix='geweke_plots'):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, sorted(config.iteritems()))
-    directory_name = '_'.join([directory_prefix, ''.join(parts)])
+    intermediate = ''.join(parts)
+    intermediate = hashlib.md5(intermediate).hexdigest()[:10]
+    directory_name = '_'.join([directory_prefix, intermediate])
     return directory_name
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
