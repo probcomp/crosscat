@@ -415,16 +415,22 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = make_same_length(forward, not_forward)
     forward, not_forward = map(numpy.array, (forward, not_forward))
     grid = numpy.array(sorted(set(forward).union(not_forward)))
-    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-    #
-    log_true_series = get_log_density_series(forward, bins)
-    log_inferred_series = get_log_density_series(not_forward, bins)
-    arg_tuples = [
-            (grid, x, y)
-            for x, y in zip(log_true_series, log_inferred_series)
-            ]
-    with gu.MapperContext() as mapper:
-        kls = mapper(_get_kl_tuple, arg_tuples)
+    kls = numpy.repeat(numpy.nan, len(forward))
+    try:
+        bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+        #
+        log_true_series = get_log_density_series(forward, bins)
+        log_inferred_series = get_log_density_series(not_forward, bins)
+        arg_tuples = [
+                (grid, x, y)
+                for x, y in zip(log_true_series, log_inferred_series)
+                ]
+        with gu.MapperContext() as mapper:
+            kls = mapper(_get_kl_tuple, arg_tuples)
+            pass
+    except Exception, e:
+        # this definitley happens if len(grid) == 1; as in column crp alpha for
+        # single column model
         pass
     return kls
 
