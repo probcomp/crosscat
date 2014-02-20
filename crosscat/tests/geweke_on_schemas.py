@@ -3,7 +3,7 @@ import itertools
 import functools
 #
 import crosscat.utils.geweke_utils as geweke_utils
-import crosscat.utils.experiment_utils as eu
+import crosscat.utils.experiment_utils as experiment_utils
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool
 
 
@@ -51,33 +51,38 @@ def generate_args_list(base_num_rows, num_iters):
     return args_list
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
-parser.add_argument('--base_num_rows', default=100, type=int)
-parser.add_argument('--num_iters', default=100, type=int)
-args = parser.parse_args()
-dirname = args.dirname
-base_num_rows = args.base_num_rows
-num_iters = args.num_iters
-
-
 is_result_filepath = geweke_utils.is_summary_file
 config_to_filepath = geweke_utils.config_to_filepath
 runner = geweke_utils.run_geweke
-#
-args_to_config = geweke_utils.args_to_config
+do_experiments = experiment_utils.do_experiments
+# use provided local file system writer
+_writer = experiment_utils.fs_write_result
+writer = functools.partial(_writer, config_to_filepath)
 
 
-# use provided local file system writer, reader
-writer = functools.partial(eu.fs_write_result, config_to_filepath)
-reader = functools.partial(eu.fs_read_result, config_to_filepath)
-read_all_configs = functools.partial(eu.fs_read_all_configs,
-        is_result_filepath)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
+    parser.add_argument('--base_num_rows', default=10, type=int)
+    parser.add_argument('--num_iters', default=1000, type=int)
+    args = parser.parse_args()
+    dirname = args.dirname
+    base_num_rows = args.base_num_rows
+    num_iters = args.num_iters
 
 
-# actual work
-args_list = generate_args_list(base_num_rows, num_iters)
-config_list = map(args_to_config, args_list)
-with MapperContext(Pool=NoDaemonPool) as mapper:
-    # use non-daemonic mapper since run_geweke spawns daemonic processes
-    eu.do_experiments(config_list, runner, writer, dirname, mapper)
+    args_to_config = geweke_utils.args_to_config
+    args_list = generate_args_list(base_num_rows, num_iters)
+    config_list = map(args_to_config, args_list)
+    with MapperContext(Pool=NoDaemonPool) as mapper:
+        # use non-daemonic mapper since run_geweke spawns daemonic processes
+        do_experiments(config_list, runner, writer, dirname, mapper)
+        pass
+
+    # you could read results like this
+    # _read_all_configs = experiment_utils.fs_read_all_configs
+    # _reader = experiment_utils.fs_read_result
+    # read_all_configs = functools.partial(_read_all_configs, is_result_filepath)
+    # reader = functools.partial(_reader, config_to_filepath)
+    # config_list = read_all_configs(dirname)
+    # results = eu.read_results(reader, config_list, dirname)
