@@ -534,10 +534,11 @@ def run_geweke(config):
     max_s_grid = config['max_s_grid']
     n_grid = config['n_grid']
     cctypes = config['cctypes']
+    num_multinomial_values = config['num_multinomial_values']
     probe_columns = config['probe_columns']
 
 
-    num_values_list = [2] * num_cols
+    num_values_list = [num_multinomial_values] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
     # may be an issue if this n_grid doesn't match the other grids in the c++
@@ -648,6 +649,7 @@ def generate_parser():
     parser.add_argument('--max_mu_grid', default=10, type=int)
     parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--num_multinomial_values', default=2, type=int)
     parser.add_argument('--cctypes', nargs='*', default=None, type=str)
     parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
     return parser
