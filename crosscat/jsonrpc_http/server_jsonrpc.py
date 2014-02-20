@@ -63,38 +63,38 @@ import crosscat.utils.general_utils as gu
 
 class ExampleServer(ServerEvents):
 
-	get_next_seed = gu.int_generator(start=0)
-	methods = set(gu.get_method_names(LE.LocalEngine))
+    get_next_seed = gu.int_generator(start=0)
+    methods = set(gu.get_method_names(LE.LocalEngine))
 
-	# inherited hooks
-	def log(self, responses, txrequest, error):
-		print(txrequest.code, end=' ')
-		if isinstance(responses, list):
-			for response in responses:
-				msg = self._get_msg(response)
-				print(txrequest, msg)
-		else:
-			msg = self._get_msg(responses)
-			print(txrequest, msg)
+    # inherited hooks
+    def log(self, responses, txrequest, error):
+        print(txrequest.code, end=' ')
+        if isinstance(responses, list):
+            for response in responses:
+                msg = self._get_msg(response)
+                print(txrequest, msg)
+        else:
+            msg = self._get_msg(responses)
+            print(txrequest, msg)
 
-	def findmethod(self, method, args=None, kwargs=None):
-		if method in self.methods:
-			next_seed = self.get_next_seed.next()
-			engine = LE.LocalEngine(next_seed)
-			return getattr(engine, method)
-		else:
-			return None
+    def findmethod(self, method, args=None, kwargs=None):
+        if method in self.methods:
+            next_seed = self.get_next_seed.next()
+            engine = LE.LocalEngine(next_seed)
+            return getattr(engine, method)
+        else:
+            return None
 
-	# helper methods
-	def _get_msg(self, response):
-		ret_str = str(response)
-		if hasattr(response, 'id'):
-			ret_str = str(response.id)
-			if response.result:
-				ret_str += '; result: %s' % str(response.result)
-			else:
-				ret_str += '; error: %s' % str(response.error)
-		return ret_str
+    # helper methods
+    def _get_msg(self, response):
+        ret_str = str(response)
+        if hasattr(response, 'id'):
+            ret_str = str(response.id)
+            if response.result:
+                ret_str += '; result: %s' % str(response.result)
+            else:
+                ret_str += '; error: %s' % str(response.error)
+        return ret_str
 
 root = JSON_RPC().customize(ExampleServer)
 site = server.Site(root)
