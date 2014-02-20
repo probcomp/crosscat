@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+ *   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
  *
  *   Lead Developers: Dan Lovell and Jay Baxter
  *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -33,10 +33,6 @@
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
-const static double r0_0 = 1.0;
-const static double nu0_0 = 2.0;
-const static double s0_0 = 2.0;
-const static double mu0_0 = 0.0;
 const static std::vector<double> empty_vector_double;
 
 /**
@@ -199,7 +195,12 @@ public:
      * Each cluster membership is itself a list denoting which cluster a row belongs to
      */
     std::vector<std::vector<int> > get_X_D() const;
+    /**
+     * Draw a sample row based on an existing row
+     */
+    std::vector<double> get_draw(int row_idx, int random_seed) const;
 
+    double insert_row(std::vector<double> row_data, int matching_row_idx, int row_idx=-1);
     //
     // mutators
     //

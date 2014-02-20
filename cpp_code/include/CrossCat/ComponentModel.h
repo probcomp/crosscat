@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+ *   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
  *
  *   Lead Developers: Dan Lovell and Jay Baxter
  *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -43,6 +43,9 @@ public:
     int get_count() const;
     std::map<std::string, double> get_suffstats() const;
     virtual std::map<std::string, double> _get_suffstats() const;
+    virtual double get_draw(int random_seed) const;
+    virtual double get_draw_constrained(int random_seed,
+                                std::vector<double> constraints) const;
     //
     //
     // calculators

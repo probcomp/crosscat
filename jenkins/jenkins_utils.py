@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -72,8 +72,8 @@ def write_file(config, config_filename):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--base_url', default='http://localhost:8080', type=str)
-	parser.add_argument('--job_name', default='crosscat', type=str)
-	parser.add_argument('--config_filename', default='config.xml', type=str)
+	parser.add_argument('--job_name', default='crosscat-unit-tests', type=str)
+	parser.add_argument('--config_filename', default='crosscat-unit-tests.config.xml', type=str)
 	parser.add_argument('-create', action='store_true')
 	parser.add_argument('-delete', action='store_true')
 	parser.add_argument('-put', action='store_true')

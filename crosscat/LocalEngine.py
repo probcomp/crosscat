@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -54,6 +54,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
             row_initialization, n_chains,
             specified_s_grid, specified_mu_grid,
+            N_GRID,
             ):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
@@ -65,12 +66,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([row_initialization]),
                 itertools.cycle([specified_s_grid]),
                 itertools.cycle([specified_mu_grid]),
+                itertools.cycle([N_GRID]),
                 )
         return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
             row_initialization=-1, n_chains=1,
             specified_s_grid=(), specified_mu_grid=(),
+            N_GRID=31,
             ):
         """Sample a latent state from prior
 
@@ -89,6 +92,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
                 row_initialization, n_chains,
                 specified_s_grid, specified_mu_grid,
+                N_GRID,
                 )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
@@ -99,6 +103,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
             n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
             specified_s_grid, specified_mu_grid,
+            N_GRID,
             ):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
@@ -117,6 +122,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 itertools.cycle([every_N]),
                 itertools.cycle([specified_s_grid]),
                 itertools.cycle([specified_mu_grid]),
+                itertools.cycle([N_GRID]),
                 )
         return arg_tuples
 
@@ -124,6 +130,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 max_iterations=-1, max_time=-1, do_diagnostics=False,
                 diagnostics_every_N=1,
                 specified_s_grid=(), specified_mu_grid=(),
+                N_GRID=31,
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
@@ -161,6 +168,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 kernel_list, n_steps, c, r, max_iterations, max_time,
                 diagnostic_func_dict, diagnostics_every_N,
                 specified_s_grid, specified_mu_grid,
+                N_GRID,
                 )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
@@ -174,6 +182,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             ret_tuple = X_L_list, X_D_list
         return ret_tuple
+
+    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
+        random_seed = self.get_next_seed()
+        p_State = State.p_State(M_c, T, X_L, X_D)
+        draw = p_State.get_draw(matching_row_idx, random_seed)
+        p_State.insert_row(draw, matching_row_idx)
+        T.append(draw)
+        X_L, X_D = p_State.get_X_L(), p_State.get_X_D()
+        return draw, T, X_L, X_D
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
@@ -428,11 +445,13 @@ def munge_diagnostics(diagnostics_dict_list):
 # FIXME: change LocalEngine.initialze to match ordering here
 def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
             specified_s_grid, specified_mu_grid,
+            N_GRID,
             ):
     p_State = State.p_State(M_c, T, initialization=initialization,
             row_initialization=row_initialization, SEED=SEED,
             specified_s_grid=specified_s_grid,
             specified_mu_grid=specified_mu_grid,
+            N_GRID=N_GRID,
             )
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
@@ -446,10 +465,12 @@ def _do_initialize_tuple(arg_tuple):
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                max_iterations, max_time,
                specified_s_grid, specified_mu_grid,
+               N_GRID,
                ):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
             specified_s_grid=specified_s_grid,
             specified_mu_grid=specified_mu_grid,
+            N_GRID=N_GRID,
             )
     p_State.transition(kernel_list, n_steps, c, r,
                        max_iterations, max_time)
@@ -476,6 +497,7 @@ none_summary = lambda p_State: None
 def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
         max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
         specified_s_grid=(), specified_mu_grid=(),
+        N_GRID=31,
         ):
     diagnostics_dict = collections.defaultdict(list)
     if diagnostic_func_dict is None:
@@ -486,6 +508,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
             specified_s_grid=specified_s_grid,
             specified_mu_grid=specified_mu_grid,
+            N_GRID=N_GRID,
             )
     for child_n_steps in child_n_steps_list:
         p_State.transition(kernel_list, child_n_steps, c, r,

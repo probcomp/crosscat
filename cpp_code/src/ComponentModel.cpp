@@ -1,5 +1,5 @@
 /*
-*   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+*   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 *
 *   Lead Developers: Dan Lovell and Jay Baxter
 *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -45,6 +45,15 @@ map<string, double> ComponentModel::_get_suffstats() const {
     assert(0);
     map<string, double> suffstats;
     return suffstats;
+}
+double ComponentModel::get_draw(int random_seed) const {
+    assert(0);
+    return NaN;
+}
+double ComponentModel::get_draw_constrained(int random_seed,
+        std::vector<double> constraints) const {
+    assert(0);
+    return NaN;
 }
 //
 double ComponentModel::insert_element(double element) {

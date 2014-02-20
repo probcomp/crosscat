@@ -1,5 +1,5 @@
 /*
-*   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+*   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 *
 *   Lead Developers: Dan Lovell and Jay Baxter
 *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -68,6 +68,18 @@ set<int> Cluster::get_row_indices_set() const {
 
 vector<int> Cluster::get_row_indices_vector() const {
     return set_to_vector(row_indices);
+}
+
+vector<double> Cluster::get_draw(int random_seed) const {
+    RandomNumberGenerator rng(random_seed);
+    std::vector<double> draws;
+    std::vector<ComponentModel*>::const_iterator it;
+    for(it=p_model_v.begin(); it!=p_model_v.end(); it++) {
+        int randi = rng.nexti(MAX_INT);
+        double draw = (**it).get_draw(randi);
+        draws.push_back(draw);
+    }
+    return draws;
 }
 
 std::vector<double> Cluster::calc_marginal_logps() const {

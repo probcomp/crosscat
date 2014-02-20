@@ -11,7 +11,9 @@ if [[ -z $cluster_name ]]; then
 	cluster_name=crosscat
 fi
 if [[ -z $local_crosscat_dir ]]; then
-	local_crosscat_dir=/opt/crosscat
+	my_abs_path=$(readlink -f "$0")
+	my_dirname=$(dirname $my_abs_path)
+	local_crosscat_dir=$(dirname $(cd $my_dirname && git rev-parse --git-dir))
 fi
 # set derived variables
 local_jenkins_dir=$local_crosscat_dir/jenkins
@@ -38,11 +40,15 @@ starcluster sshmaster $cluster_name bash crosscat/jenkins/setup_jenkins.sh
 # jenkins server must be up and ready
 jenkins_uri=http://$hostname:8080
 jenkins_utils_script=$local_jenkins_dir/jenkins_utils.py
-config_filename=$local_jenkins_dir/config.xml
-python $jenkins_utils_script \
+config_filename_suffix=.config.xml
+for config_filename in $local_jenkins_dir/*$config_filename_suffix; do
+	job_name=$(basename ${config_filename%$config_filename_suffix})
+	python $jenkins_utils_script \
 	--base_url $jenkins_uri \
 	--config_filename $config_filename \
+	--job_name $job_name \
 	-create
+done
 
 
 # notify user what hostname is

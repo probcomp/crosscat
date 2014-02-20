@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+ *   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
  *
  *   Lead Developers: Dan Lovell and Jay Baxter
  *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -101,7 +101,11 @@ double calc_sum_sq_deviation(std::vector<double> values);
 std::vector<double> extract_row(const MatrixD data, int row_idx);
 std::vector<double> extract_col(const MatrixD data, int col_idx);
 
-std::vector<double> append(std::vector<double> vec1, std::vector<double> vec2);
+template <class T>
+std::vector<T> append(std::vector<T> vec1, std::vector<T> vec2) {
+  vec1.insert(vec1.end(), vec2.begin(), vec2.end());
+  return vec1;
+}
 
 template <class K, class V>
 bool in(const std::map<K, V> m, K key) {

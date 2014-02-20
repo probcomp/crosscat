@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -22,6 +22,20 @@ import inspect
 from timeit import default_timer
 import datetime
 import random
+import multiprocessing
+import multiprocessing.pool
+
+#http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class NoDaemonPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 class Timer(object):
     def __init__(self, task='action', verbose=True):
@@ -40,6 +54,28 @@ class Timer(object):
         self.elapsed = self.elapsed_secs * 1000 # millisecs
         if self.verbose:
             print '%s took:\t% 7d ms' % (self.task, self.elapsed)
+
+class MapperContext(object):
+    def __init__(self, do_multiprocessing=True, Pool=multiprocessing.Pool,
+            *args, **kwargs):
+        self.pool = None
+        self.map = map
+        if do_multiprocessing:
+            self.pool = Pool(*args, **kwargs)
+            self.map = self.pool.map
+            pass
+        return
+
+    def __enter__(self):
+        return self.map
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        assert exc_type is None and exc_value is None and traceback is None
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            pass
+        return
 
 def int_generator(start=None):
     if start is None:
@@ -92,4 +128,8 @@ def print_ts(in_str):
     now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_str = '%s:: %s' % (now_str, in_str)
     print print_str
-    
+
+def ensure_listlike(input):
+    if not isinstance(input, (list, tuple,)):
+        input = [input]
+    return input

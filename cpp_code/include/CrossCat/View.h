@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+ *   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
  *
  *   Lead Developers: Dan Lovell and Jay Baxter
  *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -94,8 +94,10 @@ public:
     std::vector<int> get_row_partition_model_counts() const;
     std::vector<std::map<std::string, double> > get_column_component_suffstats_i(
             int global_col_idx) const;
-    std::vector<std::vector<std::map<std::string, double> > >
-    get_column_component_suffstats() const;
+    std::vector<std::vector<std::map<std::string, double> > > \
+        get_column_component_suffstats() const;
+    std::vector<int> get_global_col_indices();
+    std::vector<double> get_draw(int row_idx, int random_seed) const;
     //
     // getters (internal use)
     Cluster& get_cluster(int cluster_idx);
@@ -124,6 +126,7 @@ public:
     double set_crp_alpha(double new_crp_alpha);
     Cluster& get_new_cluster();
     double insert_row(std::vector<double> vd, Cluster& cd, int row_idx);
+    double insert_row(std::vector<double> vd, int matching_row_idx, int row_idx);
     double insert_row(std::vector<double> vd, int row_idx);
     double remove_row(std::vector<double> vd, int row_idx);
     double remove_col(int global_col_idx);
