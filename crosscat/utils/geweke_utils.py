@@ -19,10 +19,12 @@
 #
 import matplotlib
 matplotlib.use('Agg')
+#
 import multiprocessing
 import collections
 import functools
 import operator
+import hashlib
 import re
 import os
 import argparse
@@ -415,23 +417,35 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
     forward, not_forward = make_same_length(forward, not_forward)
     forward, not_forward = map(numpy.array, (forward, not_forward))
     grid = numpy.array(sorted(set(forward).union(not_forward)))
-    bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
-    #
-    log_true_series = get_log_density_series(forward, bins)
-    log_inferred_series = get_log_density_series(not_forward, bins)
-    arg_tuples = [
-            (grid, x, y)
-            for x, y in zip(log_true_series, log_inferred_series)
-            ]
-    with gu.MapperContext() as mapper:
-        kls = mapper(_get_kl_tuple, arg_tuples)
+    kls = numpy.repeat(numpy.nan, len(forward))
+    try:
+        bins = numpy.append(grid, grid[-1] + numpy.diff(grid)[-1])
+        #
+        log_true_series = get_log_density_series(forward, bins)
+        log_inferred_series = get_log_density_series(not_forward, bins)
+        arg_tuples = [
+                (grid, x, y)
+                for x, y in zip(log_true_series, log_inferred_series)
+                ]
+        with gu.MapperContext() as mapper:
+            kls = mapper(_get_kl_tuple, arg_tuples)
+            pass
+    except Exception, e:
+        # this definitley happens if len(grid) == 1; as in column crp alpha for
+        # single column model
         pass
     return kls
 
-def generate_directory_name(config, directory_prefix='geweke_plots'):
+def config_to_intelligible_string(config):
     generate_part = lambda (key, value): key + '=' + str(value)
     parts = map(generate_part, sorted(config.iteritems()))
-    directory_name = '_'.join([directory_prefix, ''.join(parts)])
+    intelligible_string = ''.join(parts)
+    return intelligible_string
+
+def generate_directory_name(config, directory_prefix='geweke_plots'):
+    intelligible_string = config_to_intelligible_string(config)
+    intermediate = hashlib.md5(intelligible_string).hexdigest()[:10]
+    directory_name = '_'.join([directory_prefix, intermediate])
     return directory_name
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
@@ -534,10 +548,11 @@ def run_geweke(config):
     max_s_grid = config['max_s_grid']
     n_grid = config['n_grid']
     cctypes = config['cctypes']
+    num_multinomial_values = config['num_multinomial_values']
     probe_columns = config['probe_columns']
 
 
-    num_values_list = [2] * num_cols
+    num_values_list = [num_multinomial_values] * num_cols
     M_c = gen_M_c(cctypes, num_values_list)
     T = numpy.random.uniform(0, 10, (num_rows, num_cols)).tolist()
     # may be an issue if this n_grid doesn't match the other grids in the c++
@@ -648,6 +663,7 @@ def generate_parser():
     parser.add_argument('--max_mu_grid', default=10, type=int)
     parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--num_multinomial_values', default=2, type=int)
     parser.add_argument('--cctypes', nargs='*', default=None, type=str)
     parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
     return parser
