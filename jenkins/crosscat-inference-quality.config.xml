@@ -4,7 +4,7 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.1">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.3">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -39,7 +39,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>python setup.py install
+      <command>python setup.py build_ext --inplace
 python crosscat/utils/geweke_utils.py</command>
     </hudson.tasks.Shell>
   </builders>

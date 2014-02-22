@@ -4,7 +4,7 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.1">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.3">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -39,7 +39,8 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>bash jenkins/jenkins_script.sh</command>
+      <command>python setup.py build_ext --inplace
+cd crosscat/tests/unit_tests &amp;&amp; nosetests --with-xunit</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
