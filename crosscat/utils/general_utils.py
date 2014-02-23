@@ -70,12 +70,11 @@ class MapperContext(object):
         return self.map
 
     def __exit__(self, exc_type, exc_value, traceback):
-        assert exc_type is None and exc_value is None and traceback is None
         if self.pool is not None:
             self.pool.close()
             self.pool.join()
             pass
-        return
+        return False
 
 def int_generator(start=None):
     if start is None:
