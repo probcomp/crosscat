@@ -25,15 +25,15 @@ def generate_args_list(base_num_rows, num_iters):
                 [col_type] * num_cols
         args_list.append(args)
         pass
-#    # pairs of datatypes
-#    iter_over = itertools.product(col_type_pairs, num_cols_list)
-#    for (col_type_a, col_type_b), num_cols in iter_over:
-#        args = base_args + \
-#                ['--num_cols', str(2 * num_cols), '--cctypes'] + \
-#                [col_type_a] * num_cols + \
-#                [col_type_b] * num_cols
-#        args_list.append(args)
-#        pass
+    # pairs of datatypes
+    iter_over = itertools.product(col_type_pairs, num_cols_list)
+    for (col_type_a, col_type_b), num_cols in iter_over:
+        args = base_args + \
+                ['--num_cols', str(2 * num_cols), '--cctypes'] + \
+                [col_type_a] * num_cols + \
+                [col_type_b] * num_cols
+        args_list.append(args)
+        pass
 #    # individual schemas
 #    num_cols = 100
 #    args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
@@ -101,4 +101,4 @@ if __name__ == '__main__':
             pass
         pass
 
-    print_all_summaries()
+    # print_all_summaries()
