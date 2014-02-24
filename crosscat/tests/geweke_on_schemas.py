@@ -50,13 +50,23 @@ def generate_args_list(base_num_rows, num_iters):
 #    args_list.append(args)
     return args_list
 
-def plot_all_configs(dirname='./'):
+def plot_all_results(read_all_configs, read_results, dirname='./',
+        filter_func=None):
+    config_list = read_all_configs(dirname)
+    config_list = filter(filter_func, config_list)
+    results = read_results(config_list, dirname)
+    with Timer('plotting') as timer:
+        with MapperContext(Pool=NoDaemonPool) as mapper:
+            # use non-daemonic mapper since plot_result spawns daemonic processes
+            plotter = functools.partial(geweke_utils.plot_result,
+                    directory=dirname)
+            mapper(plotter, results)
+            pass
+        pass
     pass
 
-def print_all_summaries(is_result_filepath, config_to_filepath,
-        filter_func=None, dirname='./'):
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
+def print_all_summaries(read_all_configs, read_results, dirname='./',
+        filter_func=None):
     config_list = read_all_configs(dirname)
     config_list = filter(filter_func, config_list)
     results = read_results(config_list, dirname)
@@ -74,12 +84,12 @@ if __name__ == '__main__':
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
     parser.add_argument('--base_num_rows', default=40, type=int)
     parser.add_argument('--num_iters', default=400, type=int)
-    parser.add_argument('--generate_plots', action='store_true')
+    parser.add_argument('--no_plots', action='store_false')
     args = parser.parse_args()
     dirname = args.dirname
     base_num_rows = args.base_num_rows
     num_iters = args.num_iters
-    generate_plots = args.generate_plots
+    generate_plots = not args.no_plots
 
 
     is_result_filepath = geweke_utils.is_summary_file
@@ -89,6 +99,8 @@ if __name__ == '__main__':
     #
     do_experiments = experiment_utils.do_experiments
     writer = experiment_utils.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
 
 
     args_list = generate_args_list(base_num_rows, num_iters)
@@ -100,8 +112,8 @@ if __name__ == '__main__':
             pass
         pass
 
-    if generate_plots:
-        print 'would have run plot_all_configs'
-        pass
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
 
-    print_all_summaries(is_result_filepath, config_to_filepath, dirname=dirname)
+    if generate_plots:
+        plot_all_results(read_all_configs, read_results, dirname)
