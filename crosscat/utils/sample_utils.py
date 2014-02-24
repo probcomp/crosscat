@@ -165,13 +165,13 @@ def column_structural_typicality(X_L_list, col_id):
                 count += 1
     return float(count) / (len(X_L_list) * len(X_L_list[0]['column_partition']['assignments']))
 
-def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon=.001):
+def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
     Returns the simple predictive probability, averaged over each sample.
     """
     avg_prob = 0
     for X_L, X_D in zip(X_L_list, X_D_list):
-        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon=.001)
+        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q)
     return float(avg_prob)/len(X_L_list)
 
 
