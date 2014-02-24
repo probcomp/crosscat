@@ -50,26 +50,16 @@ def generate_args_list(base_num_rows, num_iters):
 #    args_list.append(args)
     return args_list
 
+def plot_all_configs(dirname='./'):
+    pass
 
-is_result_filepath = geweke_utils.is_summary_file
-config_to_filepath = geweke_utils.config_to_filepath
-runner = geweke_utils.run_geweke
-do_experiments = experiment_utils.do_experiments
-# use provided local file system writer
-_writer = experiment_utils.fs_write_result
-writer = functools.partial(_writer, config_to_filepath)
-
-
-def print_all_summaries(filter_func=None):
-    # you could read results like this
-    _read_all_configs = experiment_utils.fs_read_all_configs
-    _reader = experiment_utils.fs_read_result
-    read_results = experiment_utils.read_results
-    read_all_configs = functools.partial(_read_all_configs, is_result_filepath)
-    reader = functools.partial(_reader, config_to_filepath)
+def print_all_summaries(is_result_filepath, config_to_filepath,
+        filter_func=None, dirname='./'):
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
     config_list = read_all_configs(dirname)
     config_list = filter(filter_func, config_list)
-    results = read_results(reader, config_list, dirname)
+    results = read_results(config_list, dirname)
     for result in results:
         print
         print result['config']
@@ -84,16 +74,25 @@ if __name__ == '__main__':
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
     parser.add_argument('--base_num_rows', default=40, type=int)
     parser.add_argument('--num_iters', default=400, type=int)
+    parser.add_argument('--generate_plots', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
     base_num_rows = args.base_num_rows
     num_iters = args.num_iters
+    generate_plots = args.generate_plots
 
 
+    is_result_filepath = geweke_utils.is_summary_file
+    config_to_filepath = geweke_utils.config_to_filepath
+    runner = geweke_utils.run_geweke
     args_to_config = geweke_utils.args_to_config
+    #
+    do_experiments = experiment_utils.do_experiments
+    writer = experiment_utils.get_fs_writer(config_to_filepath)
+
+
     args_list = generate_args_list(base_num_rows, num_iters)
     config_list = map(args_to_config, args_list)
-
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
@@ -101,4 +100,8 @@ if __name__ == '__main__':
             pass
         pass
 
-    # print_all_summaries()
+    if generate_plots:
+        print 'would have run plot_all_configs'
+        pass
+
+    print_all_summaries(is_result_filepath, config_to_filepath, dirname=dirname)
