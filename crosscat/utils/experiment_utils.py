@@ -119,6 +119,16 @@ def fs_read_all_configs(is_result_filepath, dirname='./'):
     config_list = map(_read_config, filepaths)
     return config_list
 
+def get_fs_reader_funcs(is_result_filepath, config_to_filepath):
+    read_all_configs = functools.partial(fs_read_all_configs, is_result_filepath)
+    reader = functools.partial(fs_read_result, config_to_filepath)
+    _read_results = functools.partial(read_results, reader)
+    # config_list = read_all_configs(dirname)
+    # results = read_results(config_list, dirname)
+    return read_all_configs, reader, _read_results
+
+def get_fs_writer(config_to_filepath):
+    return functools.partial(fs_write_result, config_to_filepath)
 
 ################
 # core functions
