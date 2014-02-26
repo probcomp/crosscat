@@ -67,7 +67,7 @@ engine = JSONRPCEngine(inf_seed, URI=URI)
 X_L, X_D = engine.initialize(M_c, M_r, T)
 
 # burn in 
-X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1)
+X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions)
 
 ## draw sample states
 #for sample_idx in range(num_samples):
