@@ -50,7 +50,9 @@ from __future__ import print_function
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-
+import functools
+from multiprocessing import Process, Queue
+#
 from twisted.internet import ssl
 import traceback
 from twisted.internet import reactor
@@ -60,6 +62,26 @@ from jsonrpc.server import ServerEvents, JSON_RPC
 import crosscat.LocalEngine as LE
 import crosscat.utils.general_utils as gu
 
+
+def putter(f, q, *args, **kwargs):
+    output = f(*args, **kwargs)
+    q.put(output)
+    q.close()
+    return
+
+def run_in_process(method, seed):
+    def wrapped(*args, **kwargs):
+        engine = LE.LocalEngine(seed)
+        _method = getattr(engine, method)
+        #
+        q = Queue()
+        partial = functools.partial(putter, _method, q)
+        p = Process(target=partial, args=args, kwargs=kwargs)
+        p.start()
+        ret_val = q.get()
+        p.join()
+        return ret_val
+    return wrapped
 
 class ExampleServer(ServerEvents):
 
@@ -80,8 +102,8 @@ class ExampleServer(ServerEvents):
     def findmethod(self, method, args=None, kwargs=None):
         if method in self.methods:
             next_seed = self.get_next_seed.next()
-            engine = LE.LocalEngine(next_seed)
-            return getattr(engine, method)
+            wrapped = run_in_process(method, next_seed)
+            return wrapped
         else:
             return None
 
