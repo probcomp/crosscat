@@ -2,6 +2,8 @@ import argparse
 import itertools
 import functools
 #
+import pandas
+#
 import crosscat.utils.geweke_utils as geweke_utils
 import crosscat.utils.experiment_utils as experiment_utils
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
@@ -78,6 +80,14 @@ def print_all_summaries(read_all_configs, read_results, dirname='./',
         pass
     return
 
+def result_to_series(result):
+    base = result['config'].copy()
+    base.update(result['summary']['summary_kls'])
+    return pandas.Series(base)
+
+def results_to_frame(results):
+    series_list = map(result_to_series, results)
+    return pandas.DataFrame(series_list)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
