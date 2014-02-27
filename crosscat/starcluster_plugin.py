@@ -32,6 +32,9 @@ def execute_as_user(node, user, command_str, **kwargs):
     node.ssh.execute(cmd_str, **kwargs)
 
 
+crosscat_repo_url = 'https://github.com/mit-probabilistic-computing-project/crosscat.git'
+
+
 class crosscatSetup(ClusterSetup):
 
     def __init__(self):
@@ -39,21 +42,26 @@ class crosscatSetup(ClusterSetup):
         pass
 
     def run(self, nodes, master, user, user_shell, volumes):
-         # NOTE: nodes includes master
+        # set up some paths
+        crosscat_dir = os.path.join('/home/', user, 'crosscat')
+        install_script = os.path.join(crosscat_dir, 'scripts',
+                'install_scripts', 'install.sh')
+        setup_script = os.path.join(crosscat_dir, 'setup.py')
         for node in nodes:
+            # NOTE: nodes includes master
             log.info("Installing CrossCat as root on %s" % node.alias)
             #
-            # FIXME: should be capturing out, err from script executions
             cmd_strs = [
-                # FIXME: could add an if [[ ! -d crosscat ]]; then ... done
-                # to squelch 'git clone' error messages
-                'rm -rf crosscat',
-                'git clone https://github.com/mit-probabilistic-computing-project/crosscat.git',
-                'bash crosscat/scripts/install_scripts/install.sh',
-                'python crosscat/setup.py install',
+                'rm -rf %s' % crosscat_dir,
+                'git clone %s %s' % (crosscat_repo_url, crosscat_dir),
+                'bash %s' % install_script,
+                'python %s install' % setup_script,
+                'chown -R %s %s' % (user, crosscat_dir),
             ]
             for cmd_str in cmd_strs:
-                node.ssh.execute(cmd_str)
+                node.ssh.execute(cmd_str + ' >out 2>err')
+                pass
+            pass
         for node in nodes:
             log.info("Setting up CrossCat as user on %s" % node.alias)
             #
@@ -62,13 +70,9 @@ class crosscatSetup(ClusterSetup):
                 'echo backend: Agg > ~/.matplotlib/matplotlibrc',
             ]
             for cmd_str in cmd_strs:
+                # node.shell(user=user, command=cmd_str)
                 cmd_str = 'bash -c "source /etc/profile && %s"' % cmd_str
                 execute_as_user(node, user, cmd_str)
-#               # run server
-#               cmd_str = 'bash -i %s'
-#               cmd_str %= S.path.run_server_script.replace(S.path.this_repo_dir, S.path.remote_code_dir)
-#               run_as_user(node, user, cmd_str)
-#               #
-#               cmd_str = "bash -i %s %s" % (S.path.run_webserver_script.replace(S.path.this_repo_dir, S.path.remote_code_dir),
-#                                            S.path.web_resources_dir.replace(S.path.this_repo_dir, S.path.remote_code_dir))
-#               run_as_user(node, user, cmd_str)
+                pass
+            pass
+        return
