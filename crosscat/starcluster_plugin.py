@@ -24,14 +24,6 @@ from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 
 
-# maybe should prefix the command with "source /etc/profile"
-# as starclusters' sshutils.ssh.execute(..., source_profile=True) does
-def execute_as_user(node, user, command_str, **kwargs):
-    cmd_str = 'sudo -H -u %s %s'
-    cmd_str %= (user, command_str)
-    node.ssh.execute(cmd_str, **kwargs)
-
-
 crosscat_repo_url = 'https://github.com/mit-probabilistic-computing-project/crosscat.git'
 
 
@@ -70,9 +62,7 @@ class crosscatSetup(ClusterSetup):
                 'echo backend: Agg > ~/.matplotlib/matplotlibrc',
             ]
             for cmd_str in cmd_strs:
-                # node.shell(user=user, command=cmd_str)
-                cmd_str = 'bash -c "source /etc/profile && %s"' % cmd_str
-                execute_as_user(node, user, cmd_str)
+                node.shell(user=user, command=cmd_str)
                 pass
             pass
         return
