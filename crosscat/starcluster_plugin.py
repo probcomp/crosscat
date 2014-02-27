@@ -48,6 +48,7 @@ class crosscatSetup(ClusterSetup):
                 'git clone %s %s' % (crosscat_repo_url, crosscat_dir),
                 'bash %s' % install_script,
                 'python %s install' % setup_script,
+                'python %s build_ext --inplace' % setup_script,
                 'chown -R %s %s' % (user, crosscat_dir),
             ]
             for cmd_str in cmd_strs:
