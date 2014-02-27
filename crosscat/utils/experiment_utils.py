@@ -20,6 +20,15 @@ from crosscat.utils.file_utils import pickle, unpickle, ensure_dir
 from crosscat.utils.general_utils import ensure_listlike
 
 
+def _is_valid_result(result):
+    test_funcs = [
+            operator.isMappingType,
+            lambda x: operator.getitem(x, 'config'),
+            # could do pickle.dumps, but that would be a bit compute heavy
+            ]
+    bools = [test_func(result) for test_func in test_funcs]
+    return all(bools)
+
 ####################################
 # file system storage implementation
 def fs_write_result(config_to_filepath, result, dirname='./'):
@@ -32,13 +41,14 @@ def fs_write_result(config_to_filepath, result, dirname='./'):
             in local filesystem to write to.  Possibly modified by 'dirname'
             argument
         result: 'result' to be written to local filesystem.  Must be
-            serializable via pickle
+            serializable via pickle.  Must have a value for the key 'config'
         dirname: (string) directory to prepend to output of config_to_filepath
 
     Returns:
         None
     """
 
+    assert _is_valid_result(result)
     config = result['config']
     filepath = config_to_filepath(config)
     # filepath may contain directories
