@@ -24,7 +24,13 @@ from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 
 
-crosscat_repo_url = 'https://github.com/mit-probabilistic-computing-project/crosscat.git'
+project_name = 'crosscat'
+#
+repo_url = 'https://github.com/mit-probabilistic-computing-project/%s.git' % project_name
+get_repo_dir = lambda user: os.path.join('/home', user, project_name)
+get_install_script = lambda user: \
+        os.path.join(get_repo_dir(user), 'scripts', 'install_scripts', 'install.sh')
+get_setup_script = lambda user: os.path.join(get_repo_dir(user), 'setup.py')
 
 
 class crosscatSetup(ClusterSetup):
@@ -35,28 +41,27 @@ class crosscatSetup(ClusterSetup):
 
     def run(self, nodes, master, user, user_shell, volumes):
         # set up some paths
-        crosscat_dir = os.path.join('/home/', user, 'crosscat')
-        install_script = os.path.join(crosscat_dir, 'scripts',
-                'install_scripts', 'install.sh')
-        setup_script = os.path.join(crosscat_dir, 'setup.py')
+        repo_dir = get_repo_dir(user)
+        install_script = get_install_script(user)
+        setup_script = get_setup_script(user)
         for node in nodes:
             # NOTE: nodes includes master
-            log.info("Installing CrossCat as root on %s" % node.alias)
+            log.info("Installing %s as root on %s" % (project_name, node.alias))
             #
             cmd_strs = [
-                'rm -rf %s' % crosscat_dir,
-                'git clone %s %s' % (crosscat_repo_url, crosscat_dir),
+                'rm -rf %s' % repo_dir,
+                'git clone %s %s' % (repo_url, repo_dir),
                 'bash %s' % install_script,
                 'python %s install' % setup_script,
                 'python %s build_ext --inplace' % setup_script,
-                'chown -R %s %s' % (user, crosscat_dir),
+                'chown -R %s %s' % (user, repo_dir),
             ]
             for cmd_str in cmd_strs:
                 node.ssh.execute(cmd_str + ' >out 2>err')
                 pass
             pass
         for node in nodes:
-            log.info("Setting up CrossCat as user on %s" % node.alias)
+            log.info("Setting up %s as %s on %s" % (project_name, user, node.alias))
             #
             cmd_strs = [
                 'mkdir -p ~/.matplotlib',
