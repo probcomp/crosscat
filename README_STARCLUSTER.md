@@ -1,5 +1,5 @@
-CrossCat
-==============
+CrossCat on StarCluster
+=======================
 
 This package is configured to be installed as a StarCluster plugin.  Roughly, the following are prerequisites.
 
