@@ -24,40 +24,25 @@ This package is configured to be installed as a StarCluster plugin.  Roughly, th
 
      starcluster -c [NONEXISTANT_FILE] help
 
-# **NOTE**: starcluster_plugin.py is currently broken.
 A starcluster_plugin.py file in included in this repo.  Assuming the above prerequisites are fulfilled,
 
-    local> starcluster start -c crosscat [CLUSTER_NAME]
+    local> starcluster start -s 1 -c crosscat [CLUSTER_NAME]
 
-should start a single c1.medium StarCluster server on EC2, install the necessary software, compile the engine, and start an engine listening on port 8007.
+should start a single c1.medium StarCluster server on EC2, install the necessary software and compile the engine.
 
 Everything will be set up for a user named 'crosscat'.  Required python packages will be installed to the system python.
 
 
-Starting the engine (Note: the engine is started on boot)
+Starting the engine
 ---------------------------
     local> starcluster sshmaster [CLUSTER_NAME] -u crosscat
-    crosscat> pkill -f server_jsonrpc
-    crosscat> cd jsonrpc_http
-    crosscat> # capture stdout, stderr separately
-    crosscat> python server_jsonrpc.py >server_jsonrpc.out 2>server_jsonrpc.err &
-    crosscat> # test with 'python stub_client_jsonrpc.py'
-
-Running tests
----------------------------
-    local> starcluster sshmaster [CLUSTER_NAME] -u crosscat
-    crosscat> # capture stdout, stderr separately
-    crosscat> make runtests >tests.out 2>tests.err
-
-Building local binary
--------------------------------------------------
-    local> starcluster sshmaster [CLUSTER_NAME] -u crosscat
-    crosscat> make bin
+    crosscat> bash /path/to/crosscat/scripts/service_scripts/run_server.sh
+    crosscat> # test with 'python test_engine.py'
 
 Setting up password login via ssh
 ---------------------------------
     local> starcluster sshmaster [CLUSTER_NAME]
-    root> bash /home/crosscat/crosscat/setup_password_login.sh <PASSWORD>
+    root> bash /home/crosscat/scripts/install_scripts/setup_password_login.sh -p <PASSWORD>
 
 ## [Creating an AMI](http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/ApiReference-cmd-CreateImage.html) from booted instance
 
@@ -90,21 +75,3 @@ sudo add-apt-repository ppa:git-core/ppa
 sudo apt-get update
 sudo apt-get install -y git
 --->
-
-[Saving the database state](http://www.postgresql.org/docs/9.1/static/backup-dump.html)
------------------------
-Saving the state
-
-    crosscat> pg_dump <DBNAME> | gzip > <FILENAME>.gz
-
-Restoring the state
-
-    crosscat> gunzip -c <FILENAME>.gz | psql <NEW_DBNAME>
-
-Creating a new database, specifying owner as crosscat, -O crosscat, if not done as crosscat
-
-    crosscat> createdb <DBNAME>
-
-To load into crosscat, you must first delete the database.  WARNING: you will lose everything in the current database.
-
-    crosscat> dropdb crosscat
