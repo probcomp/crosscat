@@ -24,50 +24,51 @@ from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 
 
-# maybe should prefix the command with "source /etc/profile"
-# as starclusters' sshutils.ssh.execute(..., source_profile=True) does
-def execute_as_user(node, user, command_str, **kwargs):
-     cmd_str = 'sudo -H -u %s %s'
-     cmd_str %= (user, command_str)
-     node.ssh.execute(cmd_str, **kwargs)
+project_name = 'crosscat'
+#
+repo_url = 'https://github.com/mit-probabilistic-computing-project/%s.git' % project_name
+get_repo_dir = lambda user: os.path.join('/home', user, project_name)
+get_install_script = lambda user: \
+        os.path.join(get_repo_dir(user), 'scripts', 'install_scripts', 'install.sh')
+get_setup_script = lambda user: os.path.join(get_repo_dir(user), 'setup.py')
 
 
 class crosscatSetup(ClusterSetup):
-     def __init__(self):
-         # TODO: Could be generalized to "install a python package plugin"
-         pass
 
-     def run(self, nodes, master, user, user_shell, volumes):
-          # NOTE: nodes includes master
-         for node in nodes:
-               log.info("Installing CrossCat as root on %s" % node.alias)
-               #
-               # FIXME: should be capturing out, err from script executions
-               cmd_strs = [
-                       # FIXME: could add an if [[ ! -d crosscat ]]; then ... done
-                       # to squelch 'git clone' error messages
-                       'rm -rf crosscat',
-                       'git clone https://github.com/mit-probabilistic-computing-project/crosscat.git',
-                       'bash crosscat/scripts/install_scripts/install.sh',
-                       'python crosscat/setup.py install',
-                       ]
-               for cmd_str in cmd_strs:
-                   node.ssh.execute(cmd_str)
-         for node in nodes:
-               log.info("Setting up CrossCat as user on %s" % node.alias)
-               #
-               cmd_strs = [
-                   'mkdir -p ~/.matplotlib',
-                   'echo backend: Agg > ~/.matplotlib/matplotlibrc',
-                    ]
-               for cmd_str in cmd_strs:
-                   cmd_str = 'bash -c "source /etc/profile && %s"' % cmd_str
-                   execute_as_user(node, user, cmd_str)
-#               # run server
-#               cmd_str = 'bash -i %s'
-#               cmd_str %= S.path.run_server_script.replace(S.path.this_repo_dir, S.path.remote_code_dir)
-#               run_as_user(node, user, cmd_str)
-#               #
-#               cmd_str = "bash -i %s %s" % (S.path.run_webserver_script.replace(S.path.this_repo_dir, S.path.remote_code_dir),
-#                                            S.path.web_resources_dir.replace(S.path.this_repo_dir, S.path.remote_code_dir))
-#               run_as_user(node, user, cmd_str)
+    def __init__(self):
+        # TODO: Could be generalized to "install a python package plugin"
+        pass
+
+    def run(self, nodes, master, user, user_shell, volumes):
+        # set up some paths
+        repo_dir = get_repo_dir(user)
+        install_script = get_install_script(user)
+        setup_script = get_setup_script(user)
+        for node in nodes:
+            # NOTE: nodes includes master
+            log.info("Installing %s as root on %s" % (project_name, node.alias))
+            #
+            cmd_strs = [
+                'rm -rf %s' % repo_dir,
+                'git clone %s %s' % (repo_url, repo_dir),
+                'bash %s' % install_script,
+                'python %s install' % setup_script,
+                'python %s build_ext --inplace' % setup_script,
+                'chown -R %s %s' % (user, repo_dir),
+            ]
+            for cmd_str in cmd_strs:
+                node.ssh.execute(cmd_str + ' >out 2>err')
+                pass
+            pass
+        for node in nodes:
+            log.info("Setting up %s as %s on %s" % (project_name, user, node.alias))
+            #
+            cmd_strs = [
+                'mkdir -p ~/.matplotlib',
+                'echo backend: Agg > ~/.matplotlib/matplotlibrc',
+            ]
+            for cmd_str in cmd_strs:
+                node.shell(user=user, command=cmd_str)
+                pass
+            pass
+        return
