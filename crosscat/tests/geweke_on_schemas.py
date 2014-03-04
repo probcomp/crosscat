@@ -5,7 +5,7 @@ import functools
 import pandas
 #
 import crosscat.utils.geweke_utils as geweke_utils
-import crosscat.utils.experiment_utils as experiment_utils
+import experiment_runner.experiment_utils as experiment_utils
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
