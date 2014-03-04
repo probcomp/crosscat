@@ -33,7 +33,11 @@ class EngineTemplate(object):
         return X_L, X_D
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1):
+                max_iterations=-1, max_time=-1, do_diagnostics=False,
+                diagnostics_every_N=1,
+                specified_s_grid=(), specified_mu_grid=(),
+                N_GRID=31,
+                ):
         X_L_prime, X_D_prime = dict(), []
         return X_L_prime, X_D_prime
 
