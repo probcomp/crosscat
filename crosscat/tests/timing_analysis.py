@@ -28,7 +28,6 @@ if __name__ == '__main__':
             )
 
 
-    dirname = 'timing_tests'
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
