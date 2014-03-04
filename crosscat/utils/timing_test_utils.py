@@ -17,11 +17,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import os
+import hashlib
+import itertools
+#
 import numpy
-
+#
 import crosscat.utils.data_utils as du
 import crosscat.utils.xnet_utils as xu
-import crosscat.LocalEngine as LE
+from crosscat.LocalEngine import LocalEngine
 import crosscat.cython_code.State as State
 
 
@@ -39,7 +43,7 @@ def get_generative_clustering(M_c, M_r, T,
         ]
     gen_X_L_assignments = numpy.repeat(range(num_views), (num_cols / num_views))
     # initialize to generate an X_L to manipulate
-    local_engine = LE.LocalEngine()
+    local_engine = LocalEngine()
     bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T,
                                                          initialization='apart')
     bad_X_L['column_partition']['assignments'] = gen_X_L_assignments
@@ -99,5 +103,113 @@ def write_hadoop_input(input_filename, X_L, X_D, n_steps, SEED):
             n_tasks += 1
     return n_tasks
 
+all_kernels = State.transition_name_to_method_name_and_args.keys()
+_kernel_list = [[kernel] for kernel in all_kernels]
+base_config = dict(
+        gen_seed=0, inf_seed=0,
+        num_rows=10, num_cols=10, num_clusters=1, num_views=1,
+        kernel_list=(), n_steps=10,
+        )
+
+def gen_config(**kwargs):
+    config = base_config.copy()
+    config.update(kwargs)
+    return config
+
+def gen_configs(**kwargs):
+    keys = kwargs.keys()
+    values_lists = kwargs.values()
+    make_dict = lambda values: dict(zip(keys, values))
+    kwargs_list = map(make_dict, itertools.product(*values_lists))
+    configs = [gen_config(**_kwargs) for _kwargs in kwargs_list]
+    return configs
+
+def _munge_config(config):
+    generate_args = config.copy()
+    generate_args['num_splits'] = generate_args.pop('num_views')
+    #
+    analyze_args = dict()
+    analyze_args['n_steps'] = generate_args.pop('n_steps')
+    analyze_args['kernel_list'] = generate_args.pop('kernel_list')
+    #
+    inf_seed = generate_args.pop('inf_seed')
+    return generate_args, analyze_args, inf_seed
+
+def runner(config):
+    generate_args, analyze_args, inf_seed = _munge_config(config)
+    # generate synthetic data
+    T, M_c, M_r, X_L, X_D = generate_clean_state(max_mean=10, max_std=1,
+            **generate_args)
+    table_shape = map(len, (T, T[0]))
+    start_dims = du.get_state_shape(X_L)
+    # run engine with do_timing = True
+    engine = LocalEngine(inf_seed)
+    X_L, X_D, (elapsed_secs,) = engine.analyze(M_c, T, X_L, X_D,
+            do_timing=True,
+            **analyze_args
+            )
+    #
+    end_dims = du.get_state_shape(X_L)
+    ret_dict = dict(
+        config=config,
+        table_shape=table_shape,
+        start_dims=start_dims,
+        end_dims=end_dims,
+        elapsed_secs=elapsed_secs,
+        )
+    return ret_dict
+
+result_filename = 'result.pkl'
+directory_prefix='timing_analysis'
+digest_length = 10
+
+def is_result_filepath(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == result_filename
+
+def config_to_intelligible_string(config):
+    generate_part = lambda (key, value): key + '=' + str(value)
+    parts = map(generate_part, sorted(config.iteritems()))
+    intelligible_string = ''.join(parts)
+    return intelligible_string
+
+def generate_directory_name(config, directory_prefix=directory_prefix):
+    intelligible_string = config_to_intelligible_string(config)
+    intermediate = hashlib.md5(intelligible_string).hexdigest()[:digest_length]
+    directory_name = '_'.join([directory_prefix, intermediate])
+    return directory_name
+
+def config_to_filepath(config, filename=result_filename):
+    directory = generate_directory_name(config)
+    return os.path.join(directory, filename)
+
+if __name__ == '__main__':
+    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    import experiment_runner.experiment_utils as experiment_utils
 
 
+    do_experiments = experiment_utils.do_experiments
+    writer = experiment_utils.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
+
+
+    config_list = gen_configs(
+            kernel_list = _kernel_list,
+            num_rows=[10, 100],
+            )
+
+
+    dirname = 'timing_tests'
+    with Timer('experiments') as timer:
+        with MapperContext(Pool=NoDaemonPool) as mapper:
+            # use non-daemonic mapper since run_geweke spawns daemonic processes
+            do_experiments(config_list, runner, writer, dirname, mapper)
+            pass
+        pass
+
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
+
+    all_configs = read_all_configs(dirname)
+    all_results = read_results(all_configs, dirname)
