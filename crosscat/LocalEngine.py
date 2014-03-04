@@ -25,6 +25,7 @@ import numpy
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
+import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
@@ -464,8 +465,12 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
         specified_s_grid=(), specified_mu_grid=(),
         N_GRID=31,
+        do_timing=False,
         ):
     diagnostics_dict = collections.defaultdict(list)
+    if do_timing:
+        diagnostic_func_dict = dict()
+        every_N = None
     if diagnostic_func_dict is None:
         diagnostic_func_dict = dict()
         every_N = None
@@ -476,15 +481,22 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
             specified_mu_grid=specified_mu_grid,
             N_GRID=N_GRID,
             )
-    for child_n_steps in child_n_steps_list:
-        p_State.transition(kernel_list, child_n_steps, c, r,
-                max_iterations, max_time)
-        for diagnostic_name, diagnostic_func in diagnostic_func_dict.iteritems():
-            diagnostic_value = diagnostic_func(p_State)
-            diagnostics_dict[diagnostic_name].append(diagnostic_value)
+    with gu.Timer('all transitions', verbose=False) as timer:
+        for child_n_steps in child_n_steps_list:
+            p_State.transition(kernel_list, child_n_steps, c, r,
+                    max_iterations, max_time)
+            for diagnostic_name, diagnostic_func in diagnostic_func_dict.iteritems():
+                diagnostic_value = diagnostic_func(p_State)
+                diagnostics_dict[diagnostic_name].append(diagnostic_value)
+                pass
+            pass
+        pass
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
-    return X_L_prime, X_D_prime, diagnostics_dict
+    ret_tuple = X_L_prime, X_D_prime, diagnostics_dict
+    if do_timing:
+        ret_tuple = ret_tuple + (timer.elapsed_secs, )
+    return ret_tuple
 
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     is_multistate = su.get_is_multistate(X_L, X_D)
