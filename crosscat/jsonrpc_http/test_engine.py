@@ -35,7 +35,7 @@ parser.add_argument('--num_rows', default=300, type=int)
 parser.add_argument('--num_splits', default=2, type=int)
 parser.add_argument('--max_mean', default=10, type=float)
 parser.add_argument('--max_std', default=0.3, type=float)
-parser.add_argument('--num_transitions', default=300, type=int)
+parser.add_argument('--num_transitions', default=30, type=int)
 parser.add_argument('--N_GRID', default=31, type=int)
 parser.add_argument('--URI', default='http://localhost:8007', type=str)
 args = parser.parse_args()
@@ -66,8 +66,14 @@ engine = JSONRPCEngine(inf_seed, URI=URI)
 # initialize
 X_L, X_D = engine.initialize(M_c, M_r, T)
 
-# burn in 
+# analyze without do_diagnostics or do_timing
 X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions)
+
+# analyze with do_diagnostics
+X_L, X_D, diagnostics_dict = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions, do_diagnostics=True)
+
+# analyze with do_timing
+X_L, X_D, timing_list = engine.analyze(M_c, T, X_L, X_D, n_steps=num_transitions, do_timing=True)
 
 ## draw sample states
 #for sample_idx in range(num_samples):
