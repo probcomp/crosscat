@@ -1,7 +1,12 @@
 #!/usr/bin/python
 import os
 import sys
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    print 'FAILED: from setuptools import setup'
+    print 'TRYING: from distutils.core import setup'
+    from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 #
@@ -148,6 +153,8 @@ setup(
         url='TBA',
         long_description='TBA.',
         packages=packages,
+        dependency_links=['https://github.com/mit-probabilistic-computing-project/experiment_runner/tarball/master#egg=experiment_runner-0.1'],
+        install_requires=['experiment_runner'],
         package_dir={'crosscat':'crosscat/'},
         ext_modules=ext_modules,
         cmdclass = {'build_ext': build_ext}
