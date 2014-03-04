@@ -6,7 +6,7 @@ import experiment_runner.experiment_utils as experiment_utils
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dirname', default='timing_tests', type=str)
+    parser.add_argument('--dirname', default='timing_analysis', type=str)
     parser.add_argument('--no_plots', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
