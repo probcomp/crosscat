@@ -555,7 +555,7 @@ if __name__ == '__main__':
         multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
             X_L_list, X_D_list, T_test))
 
-    X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
+    X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
             n_steps=n_steps, do_diagnostics=True)
 
     # print results
