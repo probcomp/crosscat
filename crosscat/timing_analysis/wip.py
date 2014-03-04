@@ -6,14 +6,8 @@ import crosscat.utils.timing_test_utils as ttu
 
 
 base_config = dict(
-        gen_seed=0,
-        inf_seed=0,
-        #
-        num_rows=10,
-        num_cols=10,
-        num_clusters=1,
-        num_views=1,
-        #
+        gen_seed=0, inf_seed=0,
+        num_rows=10, num_cols=10, num_clusters=1, num_views=1,
         n_steps=10,
         )
 
@@ -26,8 +20,8 @@ def gen_configs(**kwargs):
     keys = kwargs.keys()
     values_lists = kwargs.values()
     make_dict = lambda values: dict(zip(keys, values))
-    dicts = map(make_dict, itertools.product(*values_lists))
-    configs = [gen_config(**_kwargs) for _kwargs in dicts]
+    kwargs_list = map(make_dict, itertools.product(*values_lists))
+    configs = [gen_config(**_kwargs) for _kwargs in kwargs_list]
     return configs
 
 def _munge_config(config):
