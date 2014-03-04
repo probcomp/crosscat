@@ -1,3 +1,5 @@
+import itertools
+#
 from crosscat.LocalEngine import LocalEngine
 import crosscat.utils.data_utils as du
 import crosscat.utils.timing_test_utils as ttu
@@ -17,10 +19,16 @@ base_config = dict(
 
 def gen_config(**kwargs):
     config = base_config.copy()
-    for k, v in kwargs.iteritems():
-        config[k] = v
-        pass
+    config.update(kwargs)
     return config
+
+def gen_configs(**kwargs):
+    keys = kwargs.keys()
+    values_lists = kwargs.values()
+    make_dict = lambda values: dict(zip(keys, values))
+    dicts = map(make_dict, itertools.product(*values_lists))
+    configs = [gen_config(**_kwargs) for _kwargs in dicts]
+    return configs
 
 def _munge_config(config):
     generate_args = config.copy()
@@ -56,10 +64,21 @@ def runner(config):
         )
     return ret_dict
 
-if __name__ == '__main__':
-    config = gen_config(kernel_list=())
-    result = runner(config)
-    print result
+all_kernels = [
+    'column_partition_hyperparameter',
+    'column_partition_assignments',
+    'column_hyperparameters',
+    'row_partition_hyperparameters',
+    'row_partition_assignments',
+    ]
 
-    pass
+
+if __name__ == '__main__':
+    configs = gen_configs(
+            kernel_list=[[kernel] for kernel in all_kernels],
+            num_rows=[10, 100],
+            )
+    results = map(runner, configs)
+    for el in zip(configs, results):
+        print; print el; print
 
