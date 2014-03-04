@@ -182,3 +182,34 @@ def generate_directory_name(config, directory_prefix=directory_prefix):
 def config_to_filepath(config, filename=result_filename):
     directory = generate_directory_name(config)
     return os.path.join(directory, filename)
+
+if __name__ == '__main__':
+    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    import experiment_runner.experiment_utils as experiment_utils
+
+
+    do_experiments = experiment_utils.do_experiments
+    writer = experiment_utils.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
+
+
+    config_list = gen_configs(
+            kernel_list = _kernel_list,
+            num_rows=[10, 100],
+            )
+
+
+    dirname = 'timing_tests'
+    with Timer('experiments') as timer:
+        with MapperContext(Pool=NoDaemonPool) as mapper:
+            # use non-daemonic mapper since run_geweke spawns daemonic processes
+            do_experiments(config_list, runner, writer, dirname, mapper)
+            pass
+        pass
+
+    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
+
+    all_configs = read_all_configs(dirname)
+    all_results = read_results(all_configs, dirname)
