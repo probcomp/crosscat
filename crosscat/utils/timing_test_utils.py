@@ -17,6 +17,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import os
+import hashlib
 import itertools
 #
 import numpy
@@ -101,10 +103,12 @@ def write_hadoop_input(input_filename, X_L, X_D, n_steps, SEED):
             n_tasks += 1
     return n_tasks
 
+all_kernels = State.transition_name_to_method_name_and_args.keys()
+_kernel_list = [[kernel] for kernel in all_kernels]
 base_config = dict(
         gen_seed=0, inf_seed=0,
         num_rows=10, num_cols=10, num_clusters=1, num_views=1,
-        n_steps=10,
+        kernel_list=(), n_steps=10,
         )
 
 def gen_config(**kwargs):
@@ -154,3 +158,27 @@ def runner(config):
         elapsed_secs=elapsed_secs,
         )
     return ret_dict
+
+result_filename = 'result.pkl'
+directory_prefix='timing_analysis'
+digest_length = 10
+
+def is_result_filepath(filename):
+    filename = os.path.split(filename)[-1]
+    return filename == result_filename
+
+def config_to_intelligible_string(config):
+    generate_part = lambda (key, value): key + '=' + str(value)
+    parts = map(generate_part, sorted(config.iteritems()))
+    intelligible_string = ''.join(parts)
+    return intelligible_string
+
+def generate_directory_name(config, directory_prefix=directory_prefix):
+    intelligible_string = config_to_intelligible_string(config)
+    intermediate = hashlib.md5(intelligible_string).hexdigest()[:digest_length]
+    directory_name = '_'.join([directory_prefix, intermediate])
+    return directory_name
+
+def config_to_filepath(config, filename=result_filename):
+    directory = generate_directory_name(config)
+    return os.path.join(directory, filename)
