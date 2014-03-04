@@ -32,6 +32,7 @@ import crosscat.utils.diagnostic_utils
 
 
 class LocalEngine(EngineTemplate.EngineTemplate):
+
     """A simple interface to the Cython-wrapped C++ engine
 
     LocalEngine holds no state other than a seed generator.
@@ -53,29 +54,29 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
-            row_initialization, n_chains,
-            specified_s_grid, specified_mu_grid,
-            N_GRID,
-            ):
+                                  row_initialization, n_chains,
+                                  specified_s_grid, specified_mu_grid,
+                                  N_GRID,
+                                  ):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
-                seeds,
-                itertools.cycle([M_c]),
-                itertools.cycle([M_r]),
-                itertools.cycle([T]),
-                itertools.cycle([initialization]),
-                itertools.cycle([row_initialization]),
-                itertools.cycle([specified_s_grid]),
-                itertools.cycle([specified_mu_grid]),
-                itertools.cycle([N_GRID]),
-                )
+            seeds,
+            itertools.cycle([M_c]),
+            itertools.cycle([M_r]),
+            itertools.cycle([T]),
+            itertools.cycle([initialization]),
+            itertools.cycle([row_initialization]),
+            itertools.cycle([specified_s_grid]),
+            itertools.cycle([specified_mu_grid]),
+            itertools.cycle([N_GRID]),
+        )
         return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
-            row_initialization=-1, n_chains=1,
-            specified_s_grid=(), specified_mu_grid=(),
-            N_GRID=31,
-            ):
+                   row_initialization=-1, n_chains=1,
+                   specified_s_grid=(), specified_mu_grid=(),
+                   N_GRID=31,
+                   ):
         """Sample a latent state from prior
 
         :param M_c: The column metadata
@@ -90,11 +91,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
 
         # FIXME: why is M_r passed?
-        arg_tuples = self.get_initialize_arg_tuples(M_c, M_r, T, initialization,
-                row_initialization, n_chains,
-                specified_s_grid, specified_mu_grid,
-                N_GRID,
-                )
+        arg_tuples = self.get_initialize_arg_tuples(
+            M_c, M_r, T, initialization,
+            row_initialization, n_chains,
+            specified_s_grid, specified_mu_grid,
+            N_GRID,
+        )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
@@ -102,29 +104,29 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
-            n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
-            specified_s_grid, specified_mu_grid,
-            N_GRID,
-            ):
+                               n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
+                               specified_s_grid, specified_mu_grid,
+                               N_GRID,
+                               ):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
-                seeds,
-                X_L_list, X_D_list,
-                itertools.cycle([M_c]),
-                itertools.cycle([T]),
-                itertools.cycle([kernel_list]),
-                itertools.cycle([n_steps]),
-                itertools.cycle([c]),
-                itertools.cycle([r]),
-                itertools.cycle([max_iterations]),
-                itertools.cycle([max_time]),
-                itertools.cycle([diagnostic_func_dict]),
-                itertools.cycle([every_N]),
-                itertools.cycle([specified_s_grid]),
-                itertools.cycle([specified_mu_grid]),
-                itertools.cycle([N_GRID]),
-                )
+            seeds,
+            X_L_list, X_D_list,
+            itertools.cycle([M_c]),
+            itertools.cycle([T]),
+            itertools.cycle([kernel_list]),
+            itertools.cycle([n_steps]),
+            itertools.cycle([c]),
+            itertools.cycle([r]),
+            itertools.cycle([max_iterations]),
+            itertools.cycle([max_time]),
+            itertools.cycle([diagnostic_func_dict]),
+            itertools.cycle([every_N]),
+            itertools.cycle([specified_s_grid]),
+            itertools.cycle([specified_mu_grid]),
+            itertools.cycle([N_GRID]),
+        )
         return arg_tuples
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
@@ -163,14 +165,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
-        diagnostic_func_dict, reprocess_diagnostics_func = do_diagnostics_to_func_dict(do_diagnostics)
+        diagnostic_func_dict, reprocess_diagnostics_func = do_diagnostics_to_func_dict(
+            do_diagnostics)
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
-                kernel_list, n_steps, c, r, max_iterations, max_time,
-                diagnostic_func_dict, diagnostics_every_N,
-                specified_s_grid, specified_mu_grid,
-                N_GRID,
-                )
+                                                 kernel_list, n_steps, c, r, max_iterations, max_time,
+                                                 diagnostic_func_dict, diagnostics_every_N,
+                                                 specified_s_grid, specified_mu_grid,
+                                                 N_GRID,
+                                                 )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
         if not was_multistate:
@@ -215,9 +218,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
         get_next_seed = self.get_next_seed
-        samples = _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed)
+        samples = _do_simple_predictive_sample(
+            M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return samples
-
 
     def simple_predictive_probability(self, M_c, X_L, X_D, Y, Q):
         """Calculate the probability of a cell taking a value given a latent state
@@ -291,7 +294,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :param row_id: id of the target row
         :type row_id: int
         :returns: float, the typicality, from 0 to 1
-        """        
+        """
         return su.row_structural_typicality(X_L_list, X_D_list, row_id)
 
     def column_structural_typicality(self, X_L_list, col_id):
@@ -303,7 +306,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :param col_id: id of the target col
         :type col_id: int
         :returns: float, the typicality, from 0 to 1
-        """        
+        """
         return su.column_structural_typicality(X_L_list, col_id)
 
     def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
@@ -379,10 +382,13 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             assert isinstance(X_D, (list, tuple))
             # TODO: multistate impute doesn't exist yet
             #e,confidence = su.impute_and_confidence_multistate(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-            e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+            e, confidence = su.impute_and_confidence(
+                M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         else:
-            e,confidence = su.impute_and_confidence(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
-        return (e,confidence)
+            e, confidence = su.impute_and_confidence(
+                M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+        return (e, confidence)
+
 
 def do_diagnostics_to_func_dict(do_diagnostics):
     diagnostic_func_dict = None
@@ -393,60 +399,70 @@ def do_diagnostics_to_func_dict(do_diagnostics):
         else:
             diagnostic_func_dict = dict(default_diagnostic_func_dict)
         if 'reprocess_diagnostics_func' in diagnostic_func_dict:
-            reprocess_diagnostics_func = diagnostic_func_dict.pop('reprocess_diagnostics_func')
+            reprocess_diagnostics_func = diagnostic_func_dict.pop(
+                'reprocess_diagnostics_func')
     return diagnostic_func_dict, reprocess_diagnostics_func
+
 
 def get_value_in_each_dict(key, dict_list):
     return numpy.array([dict_i[key] for dict_i in dict_list]).T
+
 
 def munge_diagnostics(diagnostics_dict_list):
     # all dicts should have the same keys
     diagnostic_names = diagnostics_dict_list[0].keys()
     diagnostics_dict = {
-            diagnostic_name : get_value_in_each_dict(diagnostic_name, diagnostics_dict_list)
-            for diagnostic_name in diagnostic_names
-            }
+        diagnostic_name: get_value_in_each_dict(diagnostic_name, diagnostics_dict_list)
+        for diagnostic_name in diagnostic_names
+    }
     return diagnostics_dict
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.initialze to match ordering here
+
+
 def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
-            specified_s_grid, specified_mu_grid,
-            N_GRID,
-            ):
+                   specified_s_grid, specified_mu_grid,
+                   N_GRID,
+                   ):
     p_State = State.p_State(M_c, T, initialization=initialization,
-            row_initialization=row_initialization, SEED=SEED,
-            specified_s_grid=specified_s_grid,
-            specified_mu_grid=specified_mu_grid,
-            N_GRID=N_GRID,
-            )
+                            row_initialization=row_initialization, SEED=SEED,
+                            specified_s_grid=specified_s_grid,
+                            specified_mu_grid=specified_mu_grid,
+                            N_GRID=N_GRID,
+                            )
     X_L = p_State.get_X_L()
     X_D = p_State.get_X_D()
     return X_L, X_D
+
 
 def _do_initialize_tuple(arg_tuple):
     return _do_initialize(*arg_tuple)
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
+
+
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-               max_iterations, max_time,
-               specified_s_grid, specified_mu_grid,
-               N_GRID,
-               ):
+                max_iterations, max_time,
+                specified_s_grid, specified_mu_grid,
+                N_GRID,
+                ):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
-            specified_s_grid=specified_s_grid,
-            specified_mu_grid=specified_mu_grid,
-            N_GRID=N_GRID,
-            )
+                            specified_s_grid=specified_s_grid,
+                            specified_mu_grid=specified_mu_grid,
+                            N_GRID=N_GRID,
+                            )
     p_State.transition(kernel_list, n_steps, c, r,
                        max_iterations, max_time)
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
 
+
 def _do_analyze_tuple(arg_tuple):
     return _do_analyze_with_diagnostic(*arg_tuple)
+
 
 def get_child_n_steps_list(n_steps, every_N):
     if every_N is None:
@@ -461,12 +477,15 @@ none_summary = lambda p_State: None
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
-def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-        max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
-        specified_s_grid=(), specified_mu_grid=(),
+
+
+def _do_analyze_with_diagnostic(
+    SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+    max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
+    specified_s_grid=(), specified_mu_grid=(),
         N_GRID=31,
         do_timing=False,
-        ):
+):
     diagnostics_dict = collections.defaultdict(list)
     if do_timing:
         diagnostic_func_dict = dict()
@@ -477,14 +496,14 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
-            specified_s_grid=specified_s_grid,
-            specified_mu_grid=specified_mu_grid,
-            N_GRID=N_GRID,
-            )
+                            specified_s_grid=specified_s_grid,
+                            specified_mu_grid=specified_mu_grid,
+                            N_GRID=N_GRID,
+                            )
     with gu.Timer('all transitions', verbose=False) as timer:
         for child_n_steps in child_n_steps_list:
             p_State.transition(kernel_list, child_n_steps, c, r,
-                    max_iterations, max_time)
+                               max_iterations, max_time)
             for diagnostic_name, diagnostic_func in diagnostic_func_dict.iteritems():
                 diagnostic_value = diagnostic_func(p_State)
                 diagnostics_dict[diagnostic_name].append(diagnostic_value)
@@ -498,6 +517,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         ret_tuple = ret_tuple + (timer.elapsed_secs, )
     return ret_tuple
 
+
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     is_multistate = su.get_is_multistate(X_L, X_D)
     if is_multistate:
@@ -510,21 +530,22 @@ def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
 
 
 default_diagnostic_func_dict = dict(
-        # fully qualify path b/c dview.sync_imports can't deal with 'as' imports
-        logscore=crosscat.utils.diagnostic_utils.get_logscore,
-        num_views=crosscat.utils.diagnostic_utils.get_num_views,
-        column_crp_alpha=crosscat.utils.diagnostic_utils.get_column_crp_alpha,
-        # any outputs required by reproess_diagnostics_func must be generated as well
-        column_partition_assignments=crosscat.utils.diagnostic_utils.get_column_partition_assignments,
-        reprocess_diagnostics_func=crosscat.utils.diagnostic_utils.default_reprocess_diagnostics_func,
-        )
+    # fully qualify path b/c dview.sync_imports can't deal with 'as'
+    # imports
+    logscore=crosscat.utils.diagnostic_utils.get_logscore,
+    num_views=crosscat.utils.diagnostic_utils.get_num_views,
+    column_crp_alpha=crosscat.utils.diagnostic_utils.get_column_crp_alpha,
+    # any outputs required by reproess_diagnostics_func must be generated
+    # as well
+    column_partition_assignments=crosscat.utils.diagnostic_utils.get_column_partition_assignments,
+    reprocess_diagnostics_func=crosscat.utils.diagnostic_utils.default_reprocess_diagnostics_func,
+)
 
 
 if __name__ == '__main__':
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
     import crosscat.utils.timing_test_utils as ttu
-
 
     # settings
     gen_seed = 0
@@ -538,37 +559,41 @@ if __name__ == '__main__':
     n_chains = 3
     n_test = 100
 
-
     # generate some data
     T, M_r, M_c, data_inverse_permutation_indices = du.gen_factorial_data_objects(
-            gen_seed, num_clusters, num_cols, num_rows, num_views,
-            max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
+        gen_seed, num_clusters, num_cols, num_rows, num_views,
+        max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
-            data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
+        data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
     X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
-            data_inverse_permutation_indices, num_clusters, num_views)
+                                                     data_inverse_permutation_indices, num_clusters, num_views)
     T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
     #
-    generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(M_c, T,
-            X_L_gen, X_D_gen, T_test)
-
+    generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(
+        M_c, T,
+        X_L_gen, X_D_gen, T_test)
 
     # run some tests
     engine = LocalEngine(seed=inf_seed)
     multi_state_ARIs = []
     multi_state_mean_test_lls = []
     X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
-    multi_state_ARIs.append(ctu.get_column_ARIs(X_L_list, view_assignment_truth))
+    multi_state_ARIs.append(
+        ctu.get_column_ARIs(X_L_list, view_assignment_truth))
     multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
-        X_L_list, X_D_list, T_test))
+                                                                        X_L_list, X_D_list, T_test))
     for time_i in range(n_times):
-        X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=n_steps)
-        multi_state_ARIs.append(ctu.get_column_ARIs(X_L_list, view_assignment_truth))
-        multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
-            X_L_list, X_D_list, T_test))
+        X_L_list, X_D_list = engine.analyze(
+            M_c, T, X_L_list, X_D_list, n_steps=n_steps)
+        multi_state_ARIs.append(
+            ctu.get_column_ARIs(X_L_list, view_assignment_truth))
+        multi_state_mean_test_lls.append(
+            ctu.calc_mean_test_log_likelihoods(M_c, T,
+                                               X_L_list, X_D_list, T_test))
 
-    X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list,
-            n_steps=n_steps, do_diagnostics=True)
+    X_L_list, X_D_list, diagnostics_dict = engine.analyze(
+        M_c, T, X_L_list, X_D_list,
+        n_steps=n_steps, do_diagnostics=True)
 
     # print results
     print 'generative_mean_test_log_likelihood'
