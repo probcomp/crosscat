@@ -107,6 +107,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
                                specified_s_grid, specified_mu_grid,
                                N_GRID,
+                               do_timing,
                                ):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
@@ -126,6 +127,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([specified_s_grid]),
             itertools.cycle([specified_mu_grid]),
             itertools.cycle([N_GRID]),
+            itertools.cycle([do_timing]),
         )
         return arg_tuples
 
@@ -134,6 +136,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 diagnostics_every_N=1,
                 specified_s_grid=(), specified_mu_grid=(),
                 N_GRID=31,
+                do_timing=False,
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
@@ -165,6 +168,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
 
+        if do_timing:
+            # diagnostics and timing are exclusive
+            do_diagnostics = False
         diagnostic_func_dict, reprocess_diagnostics_func = do_diagnostics_to_func_dict(
             do_diagnostics)
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
@@ -173,18 +179,23 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                                  diagnostic_func_dict, diagnostics_every_N,
                                                  specified_s_grid, specified_mu_grid,
                                                  N_GRID,
+                                                 do_timing,
                                                  )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
+        if do_timing:
+            timing_list = diagnostics_dict_list
         if not was_multistate:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        ret_tuple = X_L_list, X_D_list
+        #
         if diagnostic_func_dict is not None:
             diagnostics_dict = munge_diagnostics(diagnostics_dict_list)
             if reprocess_diagnostics_func is not None:
                 diagnostics_dict = reprocess_diagnostics_func(diagnostics_dict)
-            ret_tuple = X_L_list, X_D_list, diagnostics_dict
-        else:
-            ret_tuple = X_L_list, X_D_list
+            ret_tuple = ret_tuple + (diagnostics_dict, )
+        if do_timing:
+            ret_tuple = ret_tuple + (timing_list, )
         return ret_tuple
 
     def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
@@ -479,17 +490,13 @@ none_summary = lambda p_State: None
 # FIXME: change LocalEngine.analyze to match ordering here
 
 
-def _do_analyze_with_diagnostic(
-    SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-    max_iterations, max_time, diagnostic_func_dict=None, every_N=1,
-    specified_s_grid=(), specified_mu_grid=(),
-        N_GRID=31,
-        do_timing=False,
-):
+def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
+        max_iterations, max_time, diagnostic_func_dict, every_N,
+        specified_s_grid, specified_mu_grid,
+        N_GRID,
+        do_timing,
+        ):
     diagnostics_dict = collections.defaultdict(list)
-    if do_timing:
-        diagnostic_func_dict = dict()
-        every_N = None
     if diagnostic_func_dict is None:
         diagnostic_func_dict = dict()
         every_N = None
@@ -512,10 +519,12 @@ def _do_analyze_with_diagnostic(
         pass
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
-    ret_tuple = X_L_prime, X_D_prime, diagnostics_dict
+    #
     if do_timing:
-        ret_tuple = ret_tuple + (timer.elapsed_secs, )
-    return ret_tuple
+        # diagnostics and timing are exclusive
+        diagnostics_dict = timer.elapsed_secs
+        pass
+    return X_L_prime, X_D_prime, diagnostics_dict
 
 
 def _do_simple_predictive_sample(M_c, X_L, X_D, Y, Q, n, get_next_seed):
