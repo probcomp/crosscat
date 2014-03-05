@@ -206,12 +206,12 @@ def group_results(timing_rows, get_fixed_parameters, get_variable_parameter):
     return dict_of_dicts
 
 num_cols_to_color = {'2':'k', '4':'b', '8':'c', '16':'r', '32':'m', '64':'g', '128':'c', '256':'k'}
-num_rows_to_color = {'100':'b', '200':'g', '400':'r', '1000':'m', '4000':'y', '10000':'g'}
-num_clusters_to_marker = {'1': 's', '2':'v', '10':'x', '20':'o', '40':'s', '50':'v'}
-num_views_to_marker = {'1':'x', '2':'o', '4':'v'}
-num_rows_to_marker = {'100':'x', '200':'*', '400':'o', '1000':'v', '4000':'1', '10000':'*'}
 num_cols_to_marker = {'2':'s', '4':'x', '8':'*', '16':'o', '32':'v', '64':'1', '128':'*',
     '256':'s'}
+num_rows_to_color = {'100':'b', '200':'g', '400':'r', '1000':'m', '4000':'y', '10000':'g'}
+num_rows_to_marker = {'100':'x', '200':'*', '400':'o', '1000':'v', '4000':'1', '10000':'*'}
+num_clusters_to_marker = {'1':'s', '2':'v', '4':'x', '10':'x', '20':'o', '40':'s', '50':'v'}
+num_views_to_marker = {'1':'x', '2':'o', '4':'v', '8':'*'}
 #
 plot_parameter_lookup = dict(
     rows=dict(
