@@ -23,4 +23,4 @@ if __name__ == '__main__':
     # read in the data
     all_configs = read_all_configs(dirname)
     all_results = read_results(all_configs, dirname)
-    ttu.plot_results(all_results, plot_filename)
+    ttu.plot_results(all_results, vary_what, plot_filename)
