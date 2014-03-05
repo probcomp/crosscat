@@ -3,14 +3,29 @@ from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
 import experiment_runner.experiment_utils as experiment_utils
 
 
+default_num_rows = [100, 400, 1000, 4000]
+default_num_cols = [8, 16, 32]
+default_num_clusters = [1, 2]
+default_num_views = [1, 2]
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='timing_analysis', type=str)
+    parser.add_argument('--num_rows', nargs='+', default=default_num_rows, type=int)
+    parser.add_argument('--num_cols', nargs='+', default=default_num_cols, type=int)
+    parser.add_argument('--num_clusters', nargs='+', default=default_num_clusters, type=int)
+    parser.add_argument('--num_views', nargs='+', default=default_num_views, type=int)
     parser.add_argument('--no_plots', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
+    num_rows = args.num_rows
+    num_cols = args.num_cols
+    num_clusters = args.num_clusters
+    num_views = args.num_views
     generate_plots = not args.no_plots
+
 
     is_result_filepath = ttu.is_result_filepath
     config_to_filepath = ttu.config_to_filepath
@@ -24,10 +39,10 @@ if __name__ == '__main__':
 
     config_list = ttu.gen_configs(
             kernel_list = ttu._kernel_list,
-            num_rows=[100, 400, 1000, 4000],
-            num_cols=[8, 16, 32],
-            num_clusters=[1, 2],
-            num_views=[1, 2],
+            num_rows=num_rows,
+            num_cols=num_cols,
+            num_clusters=num_clusters,
+            num_views=num_views,
             n_steps=[10],
             )
 
