@@ -45,8 +45,6 @@ if __name__ == '__main__':
             num_views=num_views,
             n_steps=[10],
             )
-
-
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
@@ -54,16 +52,15 @@ if __name__ == '__main__':
             pass
         pass
 
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
-
-    all_configs = read_all_configs(dirname)
-    _all_results = read_results(all_configs, dirname)
-    is_same_shape = lambda result: result['start_dims'] == result['end_dims']
-    use_results = filter(is_same_shape, _all_results)
-    results_frame = experiment_utils.results_to_frame(use_results)
 
     if generate_plots:
+        # read the data back in
+        all_configs = read_all_configs(dirname)
+        _all_results = read_results(all_configs, dirname)
+        is_same_shape = lambda result: result['start_dims'] == result['end_dims']
+        use_results = filter(is_same_shape, _all_results)
+        results_frame = experiment_utils.results_to_frame(use_results)
+        # generate each type of plot
         for vary_what in ['rows', 'cols', 'clusters', 'views']:
             plot_filename = 'vary_%s' % vary_what
             ttu.plot_results(use_results, vary_what, plot_filename)
