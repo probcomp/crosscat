@@ -13,6 +13,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='timing_analysis', type=str)
+    parser.add_argument('--plot_prefix', default=None, type=str)
     parser.add_argument('--num_rows', nargs='+', default=default_num_rows, type=int)
     parser.add_argument('--num_cols', nargs='+', default=default_num_cols, type=int)
     parser.add_argument('--num_clusters', nargs='+', default=default_num_clusters, type=int)
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_plots', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
+    plot_prefix = args.plot_prefix
     num_rows = args.num_rows
     num_cols = args.num_cols
     num_clusters = args.num_clusters
@@ -61,8 +63,9 @@ if __name__ == '__main__':
         use_results = filter(is_same_shape, _all_results)
         results_frame = experiment_utils.results_to_frame(use_results)
         # generate each type of plot
+        filter_join = lambda join_with, list: join_with.join(filter(None, list))
         for vary_what in ['rows', 'cols', 'clusters', 'views']:
-            plot_filename = 'vary_%s' % vary_what
+            plot_filename = filter_join('_', [plot_prefix, 'vary', vary_what])
             ttu.plot_results(use_results, vary_what, plot_filename)
             pass
         pass
