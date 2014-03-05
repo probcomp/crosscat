@@ -1,11 +1,8 @@
-import argparse
 from collections import namedtuple
 from collections import defaultdict
-from collections import Counter
 #
 import pylab
 #
-import crosscat.utils.data_utils as du
 import crosscat.utils.plot_utils as pu
 
 
@@ -19,7 +16,6 @@ do_strip = lambda string: string.strip()
 def group_results(timing_rows, get_fixed_parameters, get_variable_parameter):
     dict_of_dicts = defaultdict(dict)
     for timing_row in timing_rows:
-        # timing_row = series_to_namedtuple(timing_row)
         fixed_parameters = get_fixed_parameters(timing_row)
         variable_parameter = get_variable_parameter(timing_row)
         dict_of_dicts[fixed_parameters][variable_parameter] = timing_row
