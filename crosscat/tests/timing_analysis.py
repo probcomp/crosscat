@@ -24,7 +24,11 @@ if __name__ == '__main__':
 
     config_list = ttu.gen_configs(
             kernel_list = ttu._kernel_list,
-            num_rows=[10, 100],
+            num_rows=[100, 200, 400],
+            num_cols=[2, 4, 8],
+            num_clusters=[1, 2],
+            num_views=[1, 2],
+            n_steps=[20, 40],
             )
 
 
