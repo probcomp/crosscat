@@ -39,7 +39,10 @@ if __name__ == '__main__':
             is_result_filepath, config_to_filepath)
 
     all_configs = read_all_configs(dirname)
-    all_results = read_results(all_configs, dirname)
+    _all_results = read_results(all_configs, dirname)
+    is_same_shape = lambda result: result['start_dims'] == result['end_dims']
+    use_results = filter(is_same_shape, _all_results)
+    results_frame = experiment_utils.results_to_frame(use_results)
 
 #    if generate_plots:
 #        plot_all_results(read_all_configs, read_results, dirname)
