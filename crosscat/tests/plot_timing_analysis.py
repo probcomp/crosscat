@@ -15,16 +15,6 @@ get_num_cols = lambda timing_row: timing_row.num_cols
 get_num_views = lambda timing_row: timing_row.num_views
 get_num_clusters = lambda timing_row: timing_row.num_clusters
 do_strip = lambda string: string.strip()
-#
-def parse_timing_file(filename):
-    header, rows = du.read_csv(filename)
-    _timing_row = namedtuple('timing_row', ' '.join(header))
-    timing_rows = []
-    for row in rows:
-        row = map(do_strip, row)
-        timing_row = _timing_row(*row)
-        timing_rows.append(timing_row)
-    return timing_rows
 
 def group_results(timing_rows, get_fixed_parameters, get_variable_parameter):
     dict_of_dicts = defaultdict(dict)
