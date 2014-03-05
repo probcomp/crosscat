@@ -48,5 +48,9 @@ if __name__ == '__main__':
     use_results = filter(is_same_shape, _all_results)
     results_frame = experiment_utils.results_to_frame(use_results)
 
-#    if generate_plots:
-#        plot_all_results(read_all_configs, read_results, dirname)
+    if generate_plots:
+        for vary_what in ['rows', 'cols', 'clusters', 'views']:
+            plot_filename = 'vary_%s' % vary_what
+            ttu.plot_results(use_results, vary_what, plot_filename)
+            pass
+        pass
