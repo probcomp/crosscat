@@ -108,23 +108,21 @@ def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
         marker_dict[get_marker_parameter(timing_row)]
     vary_what = plot_parameters['vary_what']
     which_kernel = plot_parameters['which_kernel']
-    #
-    fh = pylab.figure()
-    for configuration, run_data in dict_of_dicts.iteritems():
+    def plot_run_data(configuration, run_data):
         x = sorted(run_data.keys())
         _y = [run_data[el] for el in x]
         y = map(get_time_per_step, _y)
         #
-        plot_args = dict()
         first_timing_row = run_data.values()[0]
         color = timing_row_to_color(first_timing_row)
-        plot_args['color'] = color
         marker = timing_row_to_marker(first_timing_row)
-        plot_args['marker'] = marker
         label = str(configuration)
-        plot_args['label'] = label
-        #
-        pylab.plot(x, y, **plot_args)
+        pylab.plot(x, y, color=color, marker=marker, label=label)
+        return
+    #
+    fh = pylab.figure()
+    for configuration, run_data in dict_of_dicts.iteritems():
+        plot_run_data(configuration, run_data)
     #
     pylab.xlabel('# %s' % vary_what)
     pylab.ylabel('time per step (seconds)')
@@ -134,8 +132,6 @@ def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
     pu.legend_outside_from_dicts(marker_dict, color_dict,
                                  marker_label_prepend=marker_label_prepend, color_label_prepend=color_label_prepend,
                                  bbox_to_anchor=(0.5, -.1), label_cmp=label_cmp)
-                                 
-                                 
 
     if plot_filename is not None:
         pu.savefig_legend_outside(plot_filename)
