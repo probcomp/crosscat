@@ -1,6 +1,7 @@
 import argparse
 from functools import partial
 #
+import numpy
 import pylab
 pylab.ion()
 pylab.show()
@@ -42,11 +43,10 @@ gen_preplexity = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T)
 
 # run inference
 calc_perplexity = lambda p_State: \
-    ctu.calc_mean_test_log_likelihood(M_c, T, p_State.get_X_L(),
-            p_State.get_X_D(), T)
+        numpy.mean(map(p_State.calc_row_predictive_logp, T))
 calc_test_log_likelihood = lambda p_State: \
-    ctu.calc_mean_test_log_likelihood(M_c, T, p_State.get_X_L(),
-            p_State.get_X_D(), T_test)
+        numpy.mean(map(p_State.calc_row_predictive_logp, T_test))
+#
 diagnostic_func_dict = dict(
         perplexity=calc_perplexity,
         test_log_likelihood=calc_test_log_likelihood,
