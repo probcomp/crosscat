@@ -405,7 +405,7 @@ def do_diagnostics_to_func_dict(do_diagnostics):
     diagnostic_func_dict = None
     reprocess_diagnostics_func = None
     if do_diagnostics:
-        if type(do_diagnostics) == dict:
+        if isinstance(do_diagnostics, (dict,)):
             diagnostic_func_dict = do_diagnostics
         else:
             diagnostic_func_dict = dict(default_diagnostic_func_dict)
