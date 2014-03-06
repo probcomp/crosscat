@@ -148,7 +148,7 @@ def create_test_set(M_c, T, X_L, X_D, n_test, seed_seed=0):
 #        by making p_State constructor actually use only suffstats
 def calc_mean_test_log_likelihood(M_c, T, X_L, X_D, T_test):
     state = State.p_State(M_c, T, X_L, X_D)
-    test_log_likelihoods = map(state.calc_row_predictive_logp, T)
+    test_log_likelihoods = map(state.calc_row_predictive_logp, T_test)
     mean_test_log_likelihood = numpy.mean(test_log_likelihoods)
     return mean_test_log_likelihood
 def calc_mean_test_log_likelihoods(M_c, T, X_L_list, X_D_list, T_test):
