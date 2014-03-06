@@ -8,6 +8,7 @@ pylab.show()
 #
 from crosscat.LocalEngine import LocalEngine
 import crosscat.utils.data_utils as du
+import crosscat.utils.geweke_utils as gu
 import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.convergence_test_utils as ctu
 
@@ -34,8 +35,8 @@ n_test = num_rows / 10
 # generate data
 T, M_c, M_r, gen_X_L, gen_X_D = ttu.generate_clean_state(gen_seed, num_clusters,
         num_cols, num_rows, num_views)
-T_test = ctu.create_test_set(M_c, T, gen_X_L, gen_X_D, n_test, seed_seed=0)
 engine = LocalEngine()
+T_test = gu.sample_T(engine, M_c, T, gen_X_L, gen_X_D)
 X_L, X_D = engine.initialize(M_c, M_r, T)
 gen_mtll = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T_test)
 gen_preplexity = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T)
