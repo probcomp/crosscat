@@ -114,8 +114,6 @@ if __name__ == '__main__':
             pass
         pass
 
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
     if generate_plots:
         plot_all_results(read_all_configs, read_results, dirname)
