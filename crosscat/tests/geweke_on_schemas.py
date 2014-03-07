@@ -105,7 +105,7 @@ if __name__ == '__main__':
     is_result_filepath = geweke_utils.is_summary_file
     config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
-    args_to_config = geweke_utils.args_to_config
+    arg_list_to_config = geweke_utils.arg_list_to_config
     #
     do_experiments = experiment_utils.do_experiments
     writer = experiment_utils.get_fs_writer(config_to_filepath)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
 
     args_list = generate_args_list(base_num_rows, num_iters)
-    config_list = map(args_to_config, args_list)
+    config_list = map(arg_list_to_config, args_list)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes

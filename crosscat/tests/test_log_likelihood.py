@@ -30,9 +30,9 @@ def arbitrate_args(args):
         args.n_test = args.num_rows / 10
     return args
 
-def args_to_config(args):
+def arg_list_to_config(arg_list):
     parser = generate_parser()
-    args = parser.parse_args(args)
+    args = parser.parse_args(arg_list)
     args = arbitrate_args(args)
     config = args.__dict__
     return config
