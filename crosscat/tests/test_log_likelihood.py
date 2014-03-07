@@ -100,8 +100,8 @@ if __name__ == '__main__':
 
     # demonstrate use of experiment runner
     do_experiments = eu.do_experiments
-    is_result_filepath, config_to_filepath = eu.get_fs_helper_funcs(
-            result_filename, directory_prefix)
+    is_result_filepath, generate_dirname, config_to_filepath = \
+            eu.get_fs_helper_funcs(result_filename, directory_prefix)
     writer = eu.get_fs_writer(config_to_filepath)
     read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
             is_result_filepath, config_to_filepath)
