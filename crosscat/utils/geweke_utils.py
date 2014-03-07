@@ -588,6 +588,11 @@ def run_geweke(config):
             all_data=all_data,
             )
 
+def result_to_series(result):
+    base = result['config'].copy()
+    base.update(result['summary']['summary_kls'])
+    return pandas.Series(base)
+
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
 def plot_result(result_dict, directory='./'):

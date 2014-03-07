@@ -80,11 +80,6 @@ def print_all_summaries(read_all_configs, read_results, dirname='./',
         pass
     return
 
-def result_to_series(result):
-    base = result['config'].copy()
-    base.update(result['summary']['summary_kls'])
-    return pandas.Series(base)
-
 def results_to_frame(results):
     series_list = map(result_to_series, results)
     return pandas.DataFrame(series_list)
