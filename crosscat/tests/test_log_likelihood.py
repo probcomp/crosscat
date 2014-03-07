@@ -15,6 +15,9 @@ import crosscat.utils.convergence_test_utils as ctu
 import experiment_runner.experiment_utils as eu
 
 
+result_filename = 'result.pkl'
+directory_prefix='test_log_likelihood'
+
 noneify = set(['n_test'])
 base_config = dict(
     gen_seed=0,
@@ -81,6 +84,7 @@ def plot_result(result):
     pylab.axhline(gen_test_set_ll, color='r', linestyle='--')
     return
 
+
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
     # do single experiment
@@ -91,3 +95,34 @@ if __name__ == '__main__':
 
     result = test_log_likelihood_quality_test(config)
     plot_result(result)
+
+
+    # demonstrate use of experiment runner
+    do_experiments = eu.do_experiments
+    is_result_filepath, config_to_filepath = eu.get_fs_helper_funcs(
+            result_filename, directory_prefix)
+    writer = eu.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
+            is_result_filepath, config_to_filepath)
+
+
+    gen_configs_kwargs = dict(
+            num_clusters=[1, 2, 4],
+            num_rows = [20, 40, 100]
+            )
+    config_list = eu.gen_configs(base_config, **gen_configs_kwargs)
+    dirname = 'test_log_likelihood'
+    runner = test_log_likelihood_quality_test
+    with Timer('experiments') as timer:
+        with MapperContext(Pool=NoDaemonPool) as _mapper:
+            mapper = map
+            # use non-daemonic mapper since run_geweke spawns daemonic processes
+            do_experiments(config_list, runner, writer, dirname, mapper)
+            pass
+        pass
+
+
+    all_configs = read_all_configs(dirname)
+    all_results = read_results(all_configs, dirname)
+    map(plot_result, all_results)
+
