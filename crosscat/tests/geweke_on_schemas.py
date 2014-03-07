@@ -57,7 +57,7 @@ def plot_results(results, dirname='./'):
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since plot_result spawns daemonic processes
             plotter = functools.partial(geweke_utils.plot_result,
-                    directory=dirname)
+                    dirname=dirname)
             mapper(plotter, results)
             pass
         pass

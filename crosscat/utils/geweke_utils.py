@@ -411,11 +411,11 @@ def config_to_intelligible_string(config):
     intelligible_string = ''.join(parts)
     return intelligible_string
 
-def generate_directory_name(config, directory_prefix='geweke_plots'):
+def generate_dirname(config, dirname_prefix='geweke_plots'):
     intelligible_string = config_to_intelligible_string(config)
     intermediate = hashlib.md5(intelligible_string).hexdigest()[:10]
-    directory_name = '_'.join([directory_prefix, intermediate])
-    return directory_name
+    dirname = '_'.join([dirname_prefix, intermediate])
+    return dirname
 
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
     if max_s_grid == -1:
@@ -429,8 +429,8 @@ def get_mapper(num_chains):
         mapper = pool.map
     return mapper, pool
 
-def write_parameters_to_text(parameters, filename, directory='./'):
-    full_filename = os.path.join(directory, filename)
+def write_parameters_to_text(parameters, filename, dirname='./'):
+    full_filename = os.path.join(dirname, filename)
     text = gu.get_dict_as_text(parameters)
     with open(full_filename, 'w') as fh:
         fh.writelines(text + '\n')
@@ -566,7 +566,7 @@ def result_to_series(result):
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
-def plot_result(result_dict, directory='./'):
+def plot_result(result_dict, dirname='./'):
     # extract variables
     config = result_dict['config']
     all_data = result_dict['all_data']
@@ -575,8 +575,8 @@ def plot_result(result_dict, directory='./'):
     processed_data = all_data['processed_data']
     kl_series_list_dict = processed_data['kl_series_list_dict']
     #
-    _directory = generate_directory_name(config)
-    save_kwargs = dict(directory=os.path.join(directory, _directory))
+    _dirname = generate_dirname(config)
+    save_kwargs = dict(dir=os.path.join(dirname, _dirname))
     get_tuple = lambda parameter: (parameter, config[parameter])
     parameters = dict(map(get_tuple, parameters_to_show))
     #
@@ -599,27 +599,27 @@ def is_all_data_file(filename):
     return filename == all_data_filename
 
 def config_to_filepath(config, filename=summary_filename):
-    directory = generate_directory_name(config)
-    return os.path.join(directory, filename)
+    dirname = generate_dirname(config)
+    return os.path.join(dirname, filename)
 
-def write_result(result_dict, directory='./'):
+def write_result(result_dict, dirname='./'):
     summary = result_dict['summary']
     config = result_dict['config']
     #
-    _directory = generate_directory_name(config)
-    fu.ensure_dir(os.path.join(directory, _directory))
+    _dirname = generate_dirname(config)
+    fu.ensure_dir(os.path.join(dirname, _dirname))
     #
     to_save = dict(config=config, summary=summary)
     filepath = config_to_filepath(config, parameters_filename)
-    write_parameters_to_text(to_save, filepath, directory=directory)
+    write_parameters_to_text(to_save, filepath, dirname=dirname)
     #
     to_save = dict(config=config, summary=summary)
     filepath = config_to_filepath(config, summary_filename)
-    fu.pickle(to_save, filepath, dir=directory)
+    fu.pickle(to_save, filepath, dir=dirname)
     #
     to_save = result_dict
     filepath = config_to_filepath(config, all_data_filename)
-    fu.pickle(to_save, filepath, dir=directory)
+    fu.pickle(to_save, filepath, dir=dirname)
     return
 
 def read_result(config, dirname='./', only_summary=True):
