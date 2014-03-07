@@ -67,19 +67,6 @@ def plot_all_results(read_all_configs, read_results, dirname='./',
         pass
     pass
 
-def print_all_summaries(read_all_configs, read_results, dirname='./',
-        filter_func=None):
-    config_list = read_all_configs(dirname)
-    config_list = filter(filter_func, config_list)
-    results = read_results(config_list, dirname)
-    for result in results:
-        print
-        print result['config']
-        print result['summary']
-        print
-        pass
-    return
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
