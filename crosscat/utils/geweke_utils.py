@@ -590,6 +590,7 @@ def run_geweke(config):
     return result
 
 def result_to_series(result):
+    import pandas
     base = result['config'].copy()
     base.update(result['summary']['summary_kls'])
     return pandas.Series(base)
