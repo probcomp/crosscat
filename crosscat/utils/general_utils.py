@@ -139,3 +139,9 @@ def ensure_listlike(input):
     if not isinstance(input, (list, tuple,)):
         input = [input]
     return input
+
+def get_dict_as_text(parameters):
+    create_line = lambda (key, value): key + ' = ' + str(value)
+    lines = map(create_line, parameters.iteritems())
+    text = '\n'.join(lines)
+    return text

@@ -295,3 +295,11 @@ def plot_diagnostics(diagnostics_dict, hline_lookup=None, which_diagnostics=None
         pylab.xlabel('iter')
         pylab.ylabel(which_diagnostic)
     return fh
+
+def show_parameters(parameters):
+    if len(parameters) == 0: return
+    ax = pylab.gca()
+    text = gu.get_dict_as_text(parameters)
+    pylab.text(0, 1, text, transform=ax.transAxes,
+            va='top', size='small', linespacing=1.0)
+    return

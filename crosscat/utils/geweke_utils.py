@@ -250,20 +250,6 @@ def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
         do_hist_labelling(variable_name)
     return
 
-create_line = lambda (key, value): key + ' = ' + str(value)
-def get_parameters_as_text(parameters):
-    lines = map(create_line, parameters.iteritems())
-    text = '\n'.join(lines)
-    return text
-
-def show_parameters(parameters):
-    if len(parameters) == 0: return
-    ax = pylab.gca()
-    text = get_parameters_as_text(parameters)
-    pylab.text(0, 1, text, transform=ax.transAxes,
-            va='top', size='small', linespacing=1.0)
-    return
-
 hyper_name_mapper = dict(
         s='precision hyperparameter value',
         nu='precision hyperparameter psuedo count',
@@ -316,7 +302,7 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
     pylab.xlabel('iteration')
     pylab.ylabel('KL')
     if parameters is not None:
-        show_parameters(parameters)
+        pu.show_parameters(parameters)
         pass
     if save_kwargs is not None:
         filename = variable_name + '_hist'
@@ -353,7 +339,7 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
         plotter = plotter_lookup[variable_name]
         plotter(variable_name, diagnostics_data)
         if parameters is not None:
-            show_parameters(parameters)
+            pu.show_parameters(parameters)
             pass
         if save_kwargs is not None:
             filename = variable_name + '_hist'
@@ -445,7 +431,7 @@ def get_mapper(num_chains):
 
 def write_parameters_to_text(parameters, filename, directory='./'):
     full_filename = os.path.join(directory, filename)
-    text = get_parameters_as_text(parameters)
+    text = gu.get_dict_as_text(parameters)
     with open(full_filename, 'w') as fh:
         fh.writelines(text + '\n')
         pass
