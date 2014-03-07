@@ -99,9 +99,10 @@ def roundrobin(*iterables):
 
 def divide_N_fairly(N, num_partitions):
     _n = N / num_partitions
-    ns = numpy.repeat(_n, num_partitions)
-    delta = N - ns.sum()
-    ns[range(delta)] += 1
+    ns = [_n] * num_partitions
+    delta = N - sum(ns)
+    for idx in range(delta):
+        ns[idx] += 1
     return ns
 
 # introspection helpers
