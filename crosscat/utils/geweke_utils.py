@@ -271,16 +271,6 @@ def show_parameters(parameters):
             va='top', size='small', linespacing=1.0)
     return
 
-def save_current_figure(filename_no_format, directory, close_after_save=True,
-        format=image_format):
-    fu.ensure_dir(directory)
-    full_filename = os.path.join(directory, filename_no_format + '.' + format)
-    pylab.savefig(full_filename)
-    if close_after_save:
-        pylab.close()
-        pass
-    return
-
 hyper_name_mapper = dict(
         s='precision hyperparameter value',
         nu='precision hyperparameter psuedo count',
@@ -337,14 +327,14 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         pass
     if save_kwargs is not None:
         filename = variable_name + '_hist'
-        save_current_figure(filename, format=image_format, **save_kwargs)
+        pu.save_current_figure(filename, format=image_format, **save_kwargs)
         #
         filename = variable_name + '_pp'
         pylab.figure()
         for not_forward in not_forward_list:
             pp_plot(forward, not_forward, 100)
             pass
-        save_current_figure(filename, format=image_format, **save_kwargs)
+        pu.save_current_figure(filename, format=image_format, **save_kwargs)
         pass
     return
 
@@ -374,7 +364,7 @@ def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=Non
             pass
         if save_kwargs is not None:
             filename = variable_name + '_hist'
-            save_current_figure(filename, format=image_format, **save_kwargs)
+            pu.save_current_figure(filename, format=image_format, **save_kwargs)
             pass
         pass
     return
