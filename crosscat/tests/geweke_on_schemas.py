@@ -52,11 +52,7 @@ def generate_args_list(base_num_rows, num_iters):
 #    args_list.append(args)
     return args_list
 
-def plot_all_results(read_all_configs, read_results, dirname='./',
-        filter_func=None):
-    config_list = read_all_configs(dirname)
-    config_list = filter(filter_func, config_list)
-    results = read_results(config_list, dirname)
+def plot_results(results, dirname='./'):
     with Timer('plotting') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since plot_result spawns daemonic processes
@@ -65,8 +61,7 @@ def plot_all_results(read_all_configs, read_results, dirname='./',
             mapper(plotter, results)
             pass
         pass
-    pass
-
+    return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -103,4 +98,7 @@ if __name__ == '__main__':
 
 
     if generate_plots:
-        plot_all_results(read_all_configs, read_results, dirname)
+        config_list = read_all_configs(dirname)
+        results = read_results(config_list, dirname)
+        plot_results(results, dirname)
+        pass
