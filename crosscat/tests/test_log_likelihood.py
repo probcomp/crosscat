@@ -70,6 +70,7 @@ def test_log_likelihood_quality_test(config):
     return result
 
 def plot_result(result):
+    pylab.figure()
     diagnostics_dict = result['diagnostics_dict']
     gen_data_ll = result['gen_data_ll']
     gen_test_set_ll = result['gen_test_set_ll']
