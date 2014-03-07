@@ -62,6 +62,7 @@ def test_log_likelihood_quality_test(config):
             do_diagnostics=diagnostic_func_dict, n_steps=n_steps)
 
     result = dict(
+            config=config,
             diagnostics_dict=diagnostics_dict,
             gen_data_ll=gen_data_ll,
             gen_test_set_ll=gen_test_set_ll,
