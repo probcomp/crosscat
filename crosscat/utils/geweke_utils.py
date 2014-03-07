@@ -582,11 +582,12 @@ def run_geweke(config):
             diagnostics_data_list=diagnostics_data_list,
             processed_data=processed_data,
             )
-    return dict(
+    result = dict(
             config=config,
             summary=summary,
             all_data=all_data,
             )
+    return result
 
 def result_to_series(result):
     base = result['config'].copy()
