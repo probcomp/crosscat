@@ -12,30 +12,21 @@ import crosscat.utils.data_utils as du
 import crosscat.utils.geweke_utils as gu
 import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.convergence_test_utils as ctu
+import experiment_runner.experiment_utils as eu
 
 
-def generate_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--gen_seed', default=0, type=int)
-    parser.add_argument('--num_rows', default=100, type=int)
-    parser.add_argument('--num_cols', default=4, type=int)
-    parser.add_argument('--num_clusters', default=5, type=int)
-    parser.add_argument('--num_views', default=1, type=int)
-    parser.add_argument('--n_steps', default=10, type=int)
-    parser.add_argument('--n_test', default=None, type=int)
-    return parser
+noneify = set(['n_test'])
+base_config = dict(
+    gen_seed=0,
+    num_rows=100, num_cols=4,
+    num_clusters=5, num_views=1,
+    n_steps=10, n_test=10,
+    )
 
 def arbitrate_args(args):
     if args.n_test is None:
         args.n_test = args.num_rows / 10
     return args
-
-def arg_list_to_config(arg_list):
-    parser = generate_parser()
-    args = parser.parse_args(arg_list)
-    args = arbitrate_args(args)
-    config = args.__dict__
-    return config
 
 def test_log_likelihood_quality_test(config):
     gen_seed = config['gen_seed']
@@ -89,7 +80,9 @@ def plot_result(result):
     return
 
 if __name__ == '__main__':
-    parser = generate_parser()
+    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    # do single experiment
+    parser = eu.generate_parser(base_config, noneify)
     args = parser.parse_args()
     args = arbitrate_args(args)
     config = args.__dict__
