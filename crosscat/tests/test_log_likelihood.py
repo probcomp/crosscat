@@ -87,6 +87,7 @@ def plot_result(result):
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+
     # do single experiment
     parser = eu.generate_parser(base_config, noneify)
     args = parser.parse_args()
@@ -114,8 +115,7 @@ if __name__ == '__main__':
     dirname = 'test_log_likelihood'
     runner = test_log_likelihood_quality_test
     with Timer('experiments') as timer:
-        with MapperContext(Pool=NoDaemonPool) as _mapper:
-            mapper = map
+        with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
             do_experiments(config_list, runner, writer, dirname, mapper)
             pass
