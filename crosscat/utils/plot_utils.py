@@ -28,11 +28,11 @@ import crosscat.utils.general_utils as gu
 import crosscat.utils.file_utils as fu
 
 
-def my_savefig(filename, dir='./', close=True):
+def my_savefig(filename, dir='./', close=True, format=None):
     if filename is not None:
         fu.ensure_dir(directory)
         full_filename = os.path.join(dir, filename)
-        pylab.savefig(full_filename)
+        pylab.savefig(full_filename, format=format)
         if close:
             pylab.close()
 
