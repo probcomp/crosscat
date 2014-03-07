@@ -5,7 +5,7 @@ import functools
 import pandas
 #
 import crosscat.utils.geweke_utils as geweke_utils
-import experiment_runner.experiment_utils as experiment_utils
+import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
@@ -79,11 +79,13 @@ if __name__ == '__main__':
     is_result_filepath = geweke_utils.is_summary_file
     config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
-    arg_list_to_config = geweke_utils.arg_list_to_config
+    arg_list_to_config = partial(eu.arg_list_to_config,
+            geweke_utils.generate_parser(),
+            arbitrate_args=geweke_utils.arbitrate_args)
     #
-    do_experiments = experiment_utils.do_experiments
-    writer = experiment_utils.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+    do_experiments = eu.do_experiments
+    writer = eu.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
             is_result_filepath, config_to_filepath)
 
 
