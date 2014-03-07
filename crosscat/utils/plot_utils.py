@@ -30,7 +30,7 @@ import crosscat.utils.file_utils as fu
 
 def save_current_figure(filename, dir='./', close=True, format=None):
     if filename is not None:
-        fu.ensure_dir(directory)
+        fu.ensure_dir(dir)
         full_filename = os.path.join(dir, filename)
         pylab.savefig(full_filename, format=format)
         if close:
