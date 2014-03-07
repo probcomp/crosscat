@@ -28,7 +28,7 @@ import crosscat.utils.general_utils as gu
 import crosscat.utils.file_utils as fu
 
 
-def my_savefig(filename, dir='./', close=True, format=None):
+def save_current_figure(filename, dir='./', close=True, format=None):
     if filename is not None:
         fu.ensure_dir(directory)
         full_filename = os.path.join(dir, filename)
@@ -56,7 +56,7 @@ def plot_T(T_array, M_c, filename=None, dir='./', close=True):
 
     pylab.show()
     
-    my_savefig(filename, dir, close)
+    save_current_figure(filename, dir, close)
 
 def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True):
 
@@ -113,7 +113,7 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True):
 
         pylab.show()
         if view_idx!=0: pylab.gca().set_yticklabels([])
-    my_savefig(filename, dir, close)
+    save_current_figure(filename, dir, close)
 
 def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist.png', plotcolor='red', truth=None, x_axis_lim=None):
 
@@ -156,7 +156,7 @@ def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist
 
     if x_axis_lim != None:
         pylab.xlim(x_axis_lim)
-    my_savefig(filename, '', False)
+    save_current_figure(filename, './', False)
     return pylab.gca().get_xlim()
 
 def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
