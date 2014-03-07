@@ -80,9 +80,6 @@ def print_all_summaries(read_all_configs, read_results, dirname='./',
         pass
     return
 
-def results_to_frame(results):
-    series_list = map(result_to_series, results)
-    return pandas.DataFrame(series_list)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
