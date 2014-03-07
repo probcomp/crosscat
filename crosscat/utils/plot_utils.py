@@ -25,10 +25,12 @@ pylab.ion()
 import hcluster
 #
 import crosscat.utils.general_utils as gu
+import crosscat.utils.file_utils as fu
 
 
-def my_savefig(filename, dir='', close=True):
+def my_savefig(filename, dir='./', close=True):
     if filename is not None:
+        fu.ensure_dir(directory)
         full_filename = os.path.join(dir, filename)
         pylab.savefig(full_filename)
         if close:
@@ -40,7 +42,7 @@ def get_aspect_ratio(T_array):
     aspect_ratio = float(num_cols)/num_rows
     return aspect_ratio
 
-def plot_T(T_array, M_c, filename=None, dir='', close=True):
+def plot_T(T_array, M_c, filename=None, dir='./', close=True):
     num_cols = len(T_array[0])
     column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_cols)]
     column_names = numpy.array(column_names)
@@ -56,7 +58,7 @@ def plot_T(T_array, M_c, filename=None, dir='', close=True):
     
     my_savefig(filename, dir, close)
 
-def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='', close=True):
+def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True):
 
     num_cols = len(X_L['column_partition']['assignments'])
     column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_cols)]
