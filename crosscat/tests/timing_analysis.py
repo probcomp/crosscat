@@ -1,3 +1,5 @@
+import argparse
+#
 import crosscat.utils.timing_test_utils as ttu
 from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
 import experiment_runner.experiment_utils as experiment_utils
@@ -8,9 +10,7 @@ default_num_cols = [8, 16, 32]
 default_num_clusters = [1, 2]
 default_num_views = [1, 2]
 
-
-if __name__ == '__main__':
-    import argparse
+def generate_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='timing_analysis', type=str)
     parser.add_argument('--plot_prefix', default=None, type=str)
@@ -19,6 +19,11 @@ if __name__ == '__main__':
     parser.add_argument('--num_clusters', nargs='+', default=default_num_clusters, type=int)
     parser.add_argument('--num_views', nargs='+', default=default_num_views, type=int)
     parser.add_argument('--no_plots', action='store_true')
+    return parser
+
+
+if __name__ == '__main__':
+    parser = generate_parser()
     args = parser.parse_args()
     dirname = args.dirname
     plot_prefix = args.plot_prefix
