@@ -38,13 +38,13 @@ import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
 import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
+import experiment_runner.experiment_utils as eu
 
 
 image_format = 'png'
 default_n_grid=31
-parameters_filename = 'parameters.txt'
-summary_filename = 'summary.pkl'
-all_data_filename = 'all_data.pkl'
+dirname_prefix='geweke_plots'
+result_filename = 'summary.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -405,18 +405,6 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         pass
     return kls
 
-def config_to_intelligible_string(config):
-    generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, sorted(config.iteritems()))
-    intelligible_string = ''.join(parts)
-    return intelligible_string
-
-def generate_dirname(config, dirname_prefix='geweke_plots'):
-    intelligible_string = config_to_intelligible_string(config)
-    intermediate = hashlib.md5(intelligible_string).hexdigest()[:10]
-    dirname = '_'.join([dirname_prefix, intermediate])
-    return dirname
-
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
     if max_s_grid == -1:
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
@@ -586,47 +574,8 @@ def plot_result(result_dict, dirname='./'):
             parameters, save_kwargs)
     return
 
-def is_parameters_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == parameters_filename
-
-def is_summary_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == summary_filename
-
-def is_all_data_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == all_data_filename
-
-def config_to_filepath(config, filename=summary_filename):
-    dirname = generate_dirname(config)
-    return os.path.join(dirname, filename)
-
-def write_result(result_dict, dirname='./'):
-    summary = result_dict['summary']
-    config = result_dict['config']
-    #
-    _dirname = generate_dirname(config)
-    fu.ensure_dir(os.path.join(dirname, _dirname))
-    #
-    to_save = dict(config=config, summary=summary)
-    filepath = config_to_filepath(config, parameters_filename)
-    write_parameters_to_text(to_save, filepath, dirname=dirname)
-    #
-    to_save = dict(config=config, summary=summary)
-    filepath = config_to_filepath(config, summary_filename)
-    fu.pickle(to_save, filepath, dir=dirname)
-    #
-    to_save = result_dict
-    filepath = config_to_filepath(config, all_data_filename)
-    fu.pickle(to_save, filepath, dir=dirname)
-    return
-
-def read_result(config, dirname='./', only_summary=True):
-    _filename = summary_filename if only_summary else all_data_filename
-    filepath = config_to_filepath(config, _filename)
-    result_dict = fu.unpickle(filepath, dir=dirname)
-    return result_dict
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 
 def generate_parser():
     parser = argparse.ArgumentParser()
@@ -655,13 +604,6 @@ def arbitrate_args(args):
     args.max_mu_grid, args.max_s_grid = arbitrate_mu_s(args.num_rows,
             args.max_mu_grid, args.max_s_grid)
     return args
-
-def arg_list_to_config(args):
-    parser = generate_parser()
-    args = parser.parse_args(args)
-    args = arbitrate_args(args)
-    config = args.__dict__
-    return config
 
 def get_chisquare(not_forward, forward=None):
     def get_sorted_counts(values):
@@ -713,4 +655,4 @@ if __name__ == '__main__':
     # the bulk of the work
     result_dict = run_geweke(config)
     plot_result(result_dict)
-    write_result(result_dict)
+    #write_result(result_dict)

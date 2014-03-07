@@ -76,7 +76,7 @@ if __name__ == '__main__':
     generate_plots = not args.no_plots
 
 
-    is_result_filepath = geweke_utils.is_summary_file
+    is_result_filepath = geweke_utils.is_result_filepath
     config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
     arg_list_to_config = partial(eu.arg_list_to_config,
