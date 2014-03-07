@@ -97,6 +97,13 @@ def roundrobin(*iterables):
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
 
+def divide_N_fairly(N, num_partitions):
+    _n = N / num_partitions
+    ns = numpy.repeat(_n, num_partitions)
+    delta = N - ns.sum()
+    ns[range(delta)] += 1
+    return ns
+
 # introspection helpers
 def is_obj_method_name(obj, method_name):
     attr = getattr(obj, method_name)

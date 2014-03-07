@@ -183,13 +183,6 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         pass
     return diagnostics_data
 
-def get_n_samples_per_worker(n_samples, cpu_count):
-    n_samples_per_worker = n_samples / cpu_count
-    ret_list = numpy.repeat(n_samples_per_worker, cpu_count)
-    delta = n_samples - ret_list.sum()
-    ret_list[range(delta)] += 1
-    return ret_list
-
 def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         do_multiprocessing=True,
@@ -204,7 +197,7 @@ def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
     cpu_count = 1 if not do_multiprocessing else multiprocessing.cpu_count()
     with gu.MapperContext(do_multiprocessing) as mapper:
         seeds = numpy.random.randint(32676, size=cpu_count)
-        n_samples_list = get_n_samples_per_worker(n_samples, cpu_count)
+        n_samples_list = gu.divide_N_fairly(n_samples, cpu_count)
         forward_sample_data_list = mapper(helper, zip(seeds, n_samples_list))
         forward_sample_data = condense_diagnostics_data_list(forward_sample_data_list)
     return forward_sample_data
