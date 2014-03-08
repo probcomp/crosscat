@@ -18,12 +18,9 @@
 #   limitations under the License.
 #
 import os
-import hashlib
-import itertools
 import functools
 from collections import namedtuple, defaultdict
 #
-import numpy
 import pylab
 #
 import crosscat.utils.data_utils as du
