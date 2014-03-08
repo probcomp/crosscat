@@ -87,11 +87,11 @@ def plotter(result):
 
 def _generate_parser():
     default_gen_seed = [0, 1]
-    default_num_rows = [40, 100, 200, 500]
+    default_num_rows = [100, 200, 500, 1000]
     default_num_cols = [10, 20, 40]
-    default_num_clusters = [1, 2, 4, 10, 20]
-    default_num_views = [1, 2, 5]
-    default_n_steps = [20]
+    default_num_clusters = [1, 2, 4, 10, 20, 50]
+    default_num_views = [1, 2, 5, 10]
+    default_n_steps = [40]
     default_n_test = [20]
     parser = argparse.ArgumentParser()
     parser.add_argument('--gen_seed', nargs='+', default=default_gen_seed, type=int)
@@ -114,8 +114,7 @@ def _munge_args(args):
     dirname = kwargs.pop('dirname')
     return kwargs, do_plots, dirname
 
-def summary_plotter(results, dirname='./'):
-    frame = eu.results_to_frame(results)
+def summary_plotter(results, dirname='./', save=True):
     def _scatter(x, y):
         pylab.figure()
         pylab.scatter(x, y)
@@ -123,16 +122,20 @@ def summary_plotter(results, dirname='./'):
         xlim = pylab.gca().get_xlim()
         pylab.plot(xlim, xlim)
         return
-    def _plot_and_save(frame, variable_suffix, dirname='./'):
-        x = frame['final_' + variable_suffix]
-        y = frame['gen_' + variable_suffix]
+    def _plot(frame, variable_suffix, filename=None, dirname='./'):
+        x = frame['gen_' + variable_suffix]
+        y = frame['final_' + variable_suffix]
         _scatter(x, y)
         pylab.title(variable_suffix)
-        filename = variable_suffix
-        pu.save_current_figure(filename, dir=dirname, close=True)
+        if filename is not None:
+            pu.save_current_figure(filename, dir=dirname, close=True)
+            pass
         return
-    _plot_and_save(frame, 'test_set_ll', dirname)
-    _plot_and_save(frame, 'data_ll', dirname)
+    frame = eu.results_to_frame(results)
+    for variable_suffix in ['test_set_ll', 'data_ll']:
+        filename = variable_suffix if save else None
+        _plot(frame, variable_suffix, filename=filename, dirname=dirname)
+        pass
     return
 
 
@@ -163,8 +166,7 @@ if __name__ == '__main__':
     if do_plots:
         config_list = read_all_configs(dirname)
         results = read_results(config_list, dirname)
-        eu.plot_results(plotter, results, generate_dirname,
-                saver=pu.save_current_figure, filename='over_iters',
-                dirname=dirname)
-        #
-        summary_plotter(results, dirname)
+        summary_plotter(results, dirname=dirname)
+#        eu.plot_results(plotter, results, generate_dirname,
+#                saver=pu.save_current_figure, filename='over_iters',
+#                dirname=dirname)
