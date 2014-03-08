@@ -166,8 +166,7 @@ if __name__ == '__main__':
     if do_plots:
         config_list = read_all_configs(dirname)
         results = read_results(config_list, dirname)
-        eu.plot_results(plotter, results, generate_dirname,
-                saver=pu.save_current_figure, filename='over_iters',
-                dirname=dirname)
-        #
-        summary_plotter(results, dirname)
+        summary_plotter(results, dirname=dirname)
+#        eu.plot_results(plotter, results, generate_dirname,
+#                saver=pu.save_current_figure, filename='over_iters',
+#                dirname=dirname)
