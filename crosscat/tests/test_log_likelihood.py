@@ -82,6 +82,7 @@ def plot_result(result):
     pylab.plot(diagnostics_dict['test_set_ll'], 'r')
     pylab.axhline(gen_data_ll, color='g', linestyle='--')
     pylab.axhline(gen_test_set_ll, color='r', linestyle='--')
+    # FIXME: save the result
     return
 
 
