@@ -17,7 +17,7 @@ import experiment_runner.experiment_utils as eu
 
 result_filename = 'result.pkl'
 directory_prefix='test_log_likelihood'
-
+#
 noneify = set(['n_test'])
 base_config = dict(
     gen_seed=0,
@@ -25,14 +25,8 @@ base_config = dict(
     num_clusters=5, num_views=1,
     n_steps=10, n_test=10,
     )
-gen_configs = partial(eu.gen_configs, base_config)
 
-def arbitrate_args(args):
-    if args.n_test is None:
-        args.n_test = args.num_rows / 10
-    return args
-
-def test_log_likelihood_quality_test(config):
+def runner(config):
     # helpers
     def munge_config(config):
         kwargs = config.copy()
@@ -81,7 +75,7 @@ def test_log_likelihood_quality_test(config):
             )
     return result
 
-def plot_result(result):
+def plotter(result):
     pylab.figure()
     diagnostics_dict = result['diagnostics_dict']
     gen_data_ll = result['gen_data_ll']
@@ -91,10 +85,9 @@ def plot_result(result):
     pylab.plot(diagnostics_dict['test_set_ll'], 'r')
     pylab.axhline(gen_data_ll, color='g', linestyle='--')
     pylab.axhline(gen_test_set_ll, color='r', linestyle='--')
-    # FIXME: save the result
     return
 
-def generate_parser():
+def _generate_parser():
     default_gen_seed = [0]
     default_num_rows = [20, 40, 100]
     default_num_cols = [10]
@@ -120,36 +113,34 @@ def generate_parser():
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    import crosscat.utils.plot_utils as pu
 
     # parse args
-    parser = generate_parser()
+    parser = _generate_parser()
     args = parser.parse_args()
     args_dict = args.__dict__
     do_plots = not args_dict.pop('no_plots')
     dirname = args_dict.pop('dirname')
 
     # demonstrate use of experiment runner
-    do_experiments = eu.do_experiments
     is_result_filepath, generate_dirname, config_to_filepath = \
             eu.get_fs_helper_funcs(result_filename, directory_prefix)
     writer = eu.get_fs_writer(config_to_filepath)
     read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
             is_result_filepath, config_to_filepath)
-    runner = test_log_likelihood_quality_test
 
     # run experiment
     config_list = eu.gen_configs(base_config, **args_dict)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
-            do_experiments(config_list, runner, writer, dirname, mapper)
+            eu.do_experiments(config_list, runner, writer, dirname, mapper)
             pass
         pass
 
-    # summarize
-    all_configs = read_all_configs(dirname)
-    all_results = read_results(all_configs, dirname)
-    frame = eu.results_to_frame(all_results)
-
     if do_plots:
-        map(plot_result, all_results)
+        config_list = read_all_configs(dirname)
+        results = read_results(config_list, dirname)
+        eu.plot_results(plotter, results, generate_dirname,
+                saver=pu.save_current_figure, filename='over_iters',
+                dirname=dirname)
