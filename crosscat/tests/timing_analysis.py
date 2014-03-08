@@ -55,4 +55,5 @@ if __name__ == '__main__':
         _all_results = read_results(all_configs, dirname)
         is_same_shape = lambda result: result['start_dims'] == result['end_dims']
         use_results = filter(is_same_shape, _all_results)
-        ttu.plot_results(use_results, dirname=dirname)
+        # add plot_prefix so plots show up at top of list of files/folders
+        ttu.plot_results(use_results, plot_prefix='_', dirname=dirname)
