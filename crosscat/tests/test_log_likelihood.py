@@ -33,38 +33,42 @@ def arbitrate_args(args):
     return args
 
 def test_log_likelihood_quality_test(config):
-    gen_seed = config['gen_seed']
-    num_rows = config['num_rows']
-    num_cols = config['num_cols']
-    num_clusters = config['num_clusters']
-    num_views = config['num_views']
-    n_steps = config['n_steps']
-    n_test = config['n_test']
-
-    # generate data
-    T, M_c, M_r, gen_X_L, gen_X_D = du.generate_clean_state(gen_seed, num_clusters,
-            num_cols, num_rows, num_views)
-    engine = LocalEngine()
-    sampled_T = gu.sample_T(engine, M_c, T, gen_X_L, gen_X_D)
-    T_test = random.sample(sampled_T, n_test)
-    gen_data_ll = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T)
-    gen_test_set_ll = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T_test)
-
-    # run inference
+    # helpers
+    def munge_config(config):
+        kwargs = config.copy()
+        kwargs['num_splits'] = kwargs.pop('num_views')
+        n_steps = kwargs.pop('n_steps')
+        n_test = kwargs.pop('n_test')
+        return kwargs, n_steps, n_test
     def calc_ll(T, p_State):
         log_likelihoods = map(p_State.calc_row_predictive_logp, T)
         mean_log_likelihood = numpy.mean(log_likelihoods)
         return mean_log_likelihood
+    def gen_data(**kwargs):
+        T, M_c, M_r, gen_X_L, gen_X_D = du.generate_clean_state(**kwargs)
+        #
+        engine = LocalEngine()
+        sampled_T = gu.sample_T(engine, M_c, T, gen_X_L, gen_X_D)
+        T_test = random.sample(sampled_T, n_test)
+        gen_data_ll = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T)
+        gen_test_set_ll = ctu.calc_mean_test_log_likelihood(M_c, T, gen_X_L, gen_X_D, T_test)
+        #
+        return T, M_c, M_r, T_test, gen_data_ll, gen_test_set_ll
+    kwargs, n_steps, n_test = munge_config(config)
+    T, M_c, M_r, T_test, gen_data_ll, gen_test_set_ll = gen_data(**kwargs)
+    # set up to run inference
     calc_data_ll = partial(calc_ll, T)
     calc_test_set_ll = partial(calc_ll, T_test)
     diagnostic_func_dict = dict(
             data_ll=calc_data_ll,
             test_set_ll=calc_test_set_ll,
             )
+    # run inference
+    engine = LocalEngine()
     X_L, X_D = engine.initialize(M_c, M_r, T)
     X_L, X_D, diagnostics_dict = engine.analyze(M_c, T, X_L, X_D,
             do_diagnostics=diagnostic_func_dict, n_steps=n_steps)
-
+    # package result
     final_data_ll = diagnostics_dict['data_ll'][-1][-1]
     final_test_set_ll = diagnostics_dict['test_set_ll'][-1][-1]
     result = dict(
