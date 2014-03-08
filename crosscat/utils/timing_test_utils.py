@@ -283,13 +283,13 @@ def _plot_results(results, vary_what='views', plot_filename=None):
     plot_grouped_data(dict_of_dicts, plot_parameters)
     return
 
-def plot_results(results, plot_prefix=None, dirname='./'):
+def plot_results(results, save=True, plot_prefix=None, dirname='./'):
     # generate each type of plot
     filter_join = lambda join_with, list: join_with.join(filter(None, list))
     for vary_what in ['rows', 'cols', 'clusters', 'views']:
         plot_filename = filter_join('_', [plot_prefix, 'vary', vary_what])
         _plot_results(results, vary_what, plot_filename)
-        if dirname is not None:
+        if save:
             pu.savefig_legend_outside(plot_filename, dir=dirname)
             pass
         pass
