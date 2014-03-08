@@ -124,8 +124,8 @@ def summary_plotter(results, dirname='./'):
         pylab.plot(xlim, xlim)
         return
     def _plot_and_save(frame, variable_suffix, dirname='./'):
-        x = frame['final_' + variable_suffix]
-        y = frame['gen_' + variable_suffix]
+        x = frame['gen_' + variable_suffix]
+        y = frame['final_' + variable_suffix]
         _scatter(x, y)
         pylab.title(variable_suffix)
         filename = variable_suffix
