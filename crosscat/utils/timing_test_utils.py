@@ -199,7 +199,7 @@ plot_parameter_lookup = dict(
 
 get_first_label_value = lambda label: label[1+label.index('='):label.index(';')]
 label_cmp = lambda x, y: cmp(int(get_first_label_value(x)), int(get_first_label_value(y)))
-def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
+def plot_grouped_data(dict_of_dicts, plot_parameters):
     get_color_parameter = plot_parameters['get_color_parameter']
     color_dict = plot_parameters['color_dict']
     color_label_prepend = plot_parameters['color_label_prepend']
@@ -234,14 +234,9 @@ def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
 
     # pu.legend_outside(bbox_to_anchor=(0.5, -.1), ncol=4, label_cmp=label_cmp)
     pu.legend_outside_from_dicts(marker_dict, color_dict,
-                                 marker_label_prepend=marker_label_prepend, color_label_prepend=color_label_prepend,
-                                 bbox_to_anchor=(0.5, -.1), label_cmp=label_cmp)
-
-    if plot_filename is not None:
-        pu.savefig_legend_outside(plot_filename)
-    else:
-        pylab.ion()
-        pylab.show()
+            marker_label_prepend=marker_label_prepend,
+            color_label_prepend=color_label_prepend, bbox_to_anchor=(0.5, -.1),
+            label_cmp=label_cmp)
     return fh
 
 def _munge_frame(frame):
