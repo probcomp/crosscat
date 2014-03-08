@@ -66,10 +66,15 @@ base_config = dict(
         num_rows=10, num_cols=10, num_clusters=1, num_views=1,
         kernel_list=(), n_steps=10,
         )
-is_result_filepath, generate_dirname, config_to_filepath = \
-        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 gen_config = functools.partial(eu.gen_config, base_config)
 gen_configs = functools.partial(eu.gen_configs, base_config)
+#
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
+writer = eu.get_fs_writer(config_to_filepath)
+read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
+        is_result_filepath, config_to_filepath)
+
 
 def _munge_config(config):
     generate_args = config.copy()
@@ -284,13 +289,6 @@ def plot_results(results, vary_what='views', plot_filename=None):
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
-    import experiment_runner.experiment_utils as experiment_utils
-
-
-    do_experiments = experiment_utils.do_experiments
-    writer = experiment_utils.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
 
     config_list = gen_configs(
@@ -307,8 +305,6 @@ if __name__ == '__main__':
             pass
         pass
 
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
     all_configs = read_all_configs(dirname)
     all_results = read_results(all_configs, dirname)
