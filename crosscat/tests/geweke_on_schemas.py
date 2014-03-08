@@ -1,6 +1,6 @@
 import argparse
 import itertools
-import functools
+from functools import partial
 #
 import pandas
 #
@@ -56,7 +56,7 @@ def plot_results(results, dirname='./'):
     with Timer('plotting') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since plot_result spawns daemonic processes
-            plotter = functools.partial(geweke_utils.plot_result,
+            plotter = partial(geweke_utils.plot_result,
                     dirname=dirname)
             mapper(plotter, results)
             pass
