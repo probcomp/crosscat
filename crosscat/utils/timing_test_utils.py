@@ -309,7 +309,7 @@ if __name__ == '__main__':
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
-            do_experiments(config_list, runner, writer, dirname, mapper)
+            eu.do_experiments(config_list, runner, writer, dirname, mapper)
             pass
         pass
 
