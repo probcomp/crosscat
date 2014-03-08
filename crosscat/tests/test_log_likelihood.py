@@ -65,11 +65,15 @@ def test_log_likelihood_quality_test(config):
     X_L, X_D, diagnostics_dict = engine.analyze(M_c, T, X_L, X_D,
             do_diagnostics=diagnostic_func_dict, n_steps=n_steps)
 
+    final_data_ll = diagnostics_dict['data_ll'][-1][-1]
+    final_test_set_ll = diagnostics_dict['test_set_ll'][-1][-1]
     result = dict(
             config=config,
             diagnostics_dict=diagnostics_dict,
             gen_data_ll=gen_data_ll,
             gen_test_set_ll=gen_test_set_ll,
+            final_data_ll=final_data_ll,
+            final_test_set_ll=final_test_set_ll,
             )
     return result
 
@@ -138,8 +142,10 @@ if __name__ == '__main__':
             pass
         pass
 
-    if do_plots:
-        all_configs = read_all_configs(dirname)
-        all_results = read_results(all_configs, dirname)
-        map(plot_result, all_results)
+    # summarize
+    all_configs = read_all_configs(dirname)
+    all_results = read_results(all_configs, dirname)
+    frame = eu.results_to_frame(all_results)
 
+    if do_plots:
+        map(plot_result, all_results)
