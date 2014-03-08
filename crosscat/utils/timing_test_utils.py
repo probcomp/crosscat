@@ -18,12 +18,9 @@
 #   limitations under the License.
 #
 import os
-import hashlib
-import itertools
-from collections import namedtuple
-from collections import defaultdict
+import functools
+from collections import namedtuple, defaultdict
 #
-import numpy
 import pylab
 #
 import crosscat.utils.data_utils as du
@@ -31,56 +28,8 @@ import crosscat.utils.xnet_utils as xu
 from crosscat.LocalEngine import LocalEngine
 import crosscat.cython_code.State as State
 import crosscat.utils.plot_utils as pu
+import experiment_runner.experiment_utils as eu
 
-
-def get_generative_clustering(M_c, M_r, T,
-                              data_inverse_permutation_indices,
-                              num_clusters, num_views):
-    # NOTE: this function only works because State.p_State doesn't use
-    #       column_component_suffstats
-    num_rows = len(T)
-    num_cols = len(T[0])
-    X_D_helper = numpy.repeat(range(num_clusters), (num_rows / num_clusters))
-    gen_X_D = [
-        X_D_helper[numpy.argsort(data_inverse_permutation_index)]
-        for data_inverse_permutation_index in data_inverse_permutation_indices
-        ]
-    gen_X_L_assignments = numpy.repeat(range(num_views), (num_cols / num_views))
-    # initialize to generate an X_L to manipulate
-    local_engine = LocalEngine()
-    bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T,
-                                                         initialization='apart')
-    bad_X_L['column_partition']['assignments'] = gen_X_L_assignments
-    # manually constrcut state in in generative configuration
-    state = State.p_State(M_c, T, bad_X_L, gen_X_D)
-    gen_X_L = state.get_X_L()
-    gen_X_D = state.get_X_D()
-    # run inference on hyperparameters to leave them in a reasonable state
-    kernel_list = (
-        'row_partition_hyperparameters',
-        'column_hyperparameters',
-        'column_partition_hyperparameter',
-        )
-    gen_X_L, gen_X_D = local_engine.analyze(M_c, T, gen_X_L, gen_X_D, n_steps=1,
-                                            kernel_list=kernel_list)
-    #
-    return gen_X_L, gen_X_D
-
-def generate_clean_state(gen_seed, num_clusters,
-                         num_cols, num_rows, num_splits,
-                         max_mean=10, max_std=1,
-                         plot=False):
-    # generate the data
-    T, M_r, M_c, data_inverse_permutation_indices = \
-        du.gen_factorial_data_objects(gen_seed, num_clusters,
-                                      num_cols, num_rows, num_splits,
-                                      max_mean=10, max_std=1,
-                                      send_data_inverse_permutation_indices=True)
-    # recover generative clustering
-    X_L, X_D = get_generative_clustering(M_c, M_r, T,
-                                         data_inverse_permutation_indices,
-                                         num_clusters, num_splits)
-    return T, M_c, M_r, X_L, X_D
 
 def generate_hadoop_dicts(which_kernels, X_L, X_D, args_dict):
     for which_kernel in which_kernels:
@@ -107,6 +56,9 @@ def write_hadoop_input(input_filename, X_L, X_D, n_steps, SEED):
             n_tasks += 1
     return n_tasks
 
+
+result_filename = 'result.pkl'
+dirname_prefix ='timing_analysis'
 all_kernels = State.transition_name_to_method_name_and_args.keys()
 _kernel_list = [[kernel] for kernel in all_kernels]
 base_config = dict(
@@ -114,19 +66,15 @@ base_config = dict(
         num_rows=10, num_cols=10, num_clusters=1, num_views=1,
         kernel_list=(), n_steps=10,
         )
+gen_config = functools.partial(eu.gen_config, base_config)
+gen_configs = functools.partial(eu.gen_configs, base_config)
+#
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
+writer = eu.get_fs_writer(config_to_filepath)
+read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
+        is_result_filepath, config_to_filepath)
 
-def gen_config(**kwargs):
-    config = base_config.copy()
-    config.update(kwargs)
-    return config
-
-def gen_configs(**kwargs):
-    keys = kwargs.keys()
-    values_lists = kwargs.values()
-    make_dict = lambda values: dict(zip(keys, values))
-    kwargs_list = map(make_dict, itertools.product(*values_lists))
-    configs = [gen_config(**_kwargs) for _kwargs in kwargs_list]
-    return configs
 
 def _munge_config(config):
     generate_args = config.copy()
@@ -142,7 +90,7 @@ def _munge_config(config):
 def runner(config):
     generate_args, analyze_args, inf_seed = _munge_config(config)
     # generate synthetic data
-    T, M_c, M_r, X_L, X_D = generate_clean_state(max_mean=10, max_std=1,
+    T, M_c, M_r, X_L, X_D = du.generate_clean_state(max_mean=10, max_std=1,
             **generate_args)
     table_shape = map(len, (T, T[0]))
     start_dims = du.get_state_shape(X_L)
@@ -163,29 +111,6 @@ def runner(config):
         )
     return ret_dict
 
-result_filename = 'result.pkl'
-directory_prefix='timing_analysis'
-digest_length = 10
-
-def is_result_filepath(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == result_filename
-
-def config_to_intelligible_string(config):
-    generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, sorted(config.iteritems()))
-    intelligible_string = ''.join(parts)
-    return intelligible_string
-
-def generate_directory_name(config, directory_prefix=directory_prefix):
-    intelligible_string = config_to_intelligible_string(config)
-    intermediate = hashlib.md5(intelligible_string).hexdigest()[:digest_length]
-    directory_name = '_'.join([directory_prefix, intermediate])
-    return directory_name
-
-def config_to_filepath(config, filename=result_filename):
-    directory = generate_directory_name(config)
-    return os.path.join(directory, filename)
 
 #############
 # begin nasty plotting support section
@@ -274,7 +199,7 @@ plot_parameter_lookup = dict(
 
 get_first_label_value = lambda label: label[1+label.index('='):label.index(';')]
 label_cmp = lambda x, y: cmp(int(get_first_label_value(x)), int(get_first_label_value(y)))
-def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
+def plot_grouped_data(dict_of_dicts, plot_parameters):
     get_color_parameter = plot_parameters['get_color_parameter']
     color_dict = plot_parameters['color_dict']
     color_label_prepend = plot_parameters['color_label_prepend']
@@ -309,14 +234,9 @@ def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
 
     # pu.legend_outside(bbox_to_anchor=(0.5, -.1), ncol=4, label_cmp=label_cmp)
     pu.legend_outside_from_dicts(marker_dict, color_dict,
-                                 marker_label_prepend=marker_label_prepend, color_label_prepend=color_label_prepend,
-                                 bbox_to_anchor=(0.5, -.1), label_cmp=label_cmp)
-
-    if plot_filename is not None:
-        pu.savefig_legend_outside(plot_filename)
-    else:
-        pylab.ion()
-        pylab.show()
+            marker_label_prepend=marker_label_prepend,
+            color_label_prepend=color_label_prepend, bbox_to_anchor=(0.5, -.1),
+            label_cmp=label_cmp)
     return fh
 
 def _munge_frame(frame):
@@ -334,7 +254,7 @@ def series_to_namedtuple(series):
 # end nasty plotting support section
 #############
 
-def plot_results(results, vary_what='views', plot_filename=None):
+def _plot_results(results, vary_what='views', plot_filename=None):
     import experiment_runner.experiment_utils as experiment_utils
     # configure parsing/plotting
     plot_parameters = plot_parameter_lookup[vary_what]
@@ -360,17 +280,23 @@ def plot_results(results, vary_what='views', plot_filename=None):
     # plot
     dict_of_dicts = group_results(these_timing_rows, get_fixed_parameters,
                                   get_variable_parameter)
-    plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename)
+    plot_grouped_data(dict_of_dicts, plot_parameters)
+    return
+
+def plot_results(results, plot_prefix=None, dirname='./'):
+    # generate each type of plot
+    filter_join = lambda join_with, list: join_with.join(filter(None, list))
+    for vary_what in ['rows', 'cols', 'clusters', 'views']:
+        plot_filename = filter_join('_', [plot_prefix, 'vary', vary_what])
+        _plot_results(results, vary_what, plot_filename)
+        if dirname is not None:
+            pu.savefig_legend_outside(plot_filename, dir=dirname)
+            pass
+        pass
+    return
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
-    import experiment_runner.experiment_utils as experiment_utils
-
-
-    do_experiments = experiment_utils.do_experiments
-    writer = experiment_utils.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
 
     config_list = gen_configs(
@@ -383,12 +309,11 @@ if __name__ == '__main__':
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
-            do_experiments(config_list, runner, writer, dirname, mapper)
+            eu.do_experiments(config_list, runner, writer, dirname, mapper)
             pass
         pass
 
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
     all_configs = read_all_configs(dirname)
     all_results = read_results(all_configs, dirname)
+    frame = eu.results_to_frame(all_results)

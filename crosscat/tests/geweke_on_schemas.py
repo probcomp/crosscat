@@ -1,11 +1,9 @@
 import argparse
 import itertools
-import functools
-#
-import pandas
+from functools import partial
 #
 import crosscat.utils.geweke_utils as geweke_utils
-import experiment_runner.experiment_utils as experiment_utils
+import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
@@ -52,42 +50,16 @@ def generate_args_list(base_num_rows, num_iters):
 #    args_list.append(args)
     return args_list
 
-def plot_all_results(read_all_configs, read_results, dirname='./',
-        filter_func=None):
-    config_list = read_all_configs(dirname)
-    config_list = filter(filter_func, config_list)
-    results = read_results(config_list, dirname)
+def plot_results(results, dirname='./'):
     with Timer('plotting') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since plot_result spawns daemonic processes
-            plotter = functools.partial(geweke_utils.plot_result,
-                    directory=dirname)
+            plotter = partial(geweke_utils.plot_result,
+                    dirname=dirname)
             mapper(plotter, results)
             pass
         pass
-    pass
-
-def print_all_summaries(read_all_configs, read_results, dirname='./',
-        filter_func=None):
-    config_list = read_all_configs(dirname)
-    config_list = filter(filter_func, config_list)
-    results = read_results(config_list, dirname)
-    for result in results:
-        print
-        print result['config']
-        print result['summary']
-        print
-        pass
     return
-
-def result_to_series(result):
-    base = result['config'].copy()
-    base.update(result['summary']['summary_kls'])
-    return pandas.Series(base)
-
-def results_to_frame(results):
-    series_list = map(result_to_series, results)
-    return pandas.DataFrame(series_list)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -102,19 +74,21 @@ if __name__ == '__main__':
     generate_plots = not args.no_plots
 
 
-    is_result_filepath = geweke_utils.is_summary_file
+    is_result_filepath = geweke_utils.is_result_filepath
     config_to_filepath = geweke_utils.config_to_filepath
     runner = geweke_utils.run_geweke
-    args_to_config = geweke_utils.args_to_config
+    arg_list_to_config = partial(eu.arg_list_to_config,
+            geweke_utils.generate_parser(),
+            arbitrate_args=geweke_utils.arbitrate_args)
     #
-    do_experiments = experiment_utils.do_experiments
-    writer = experiment_utils.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
+    do_experiments = eu.do_experiments
+    writer = eu.get_fs_writer(config_to_filepath)
+    read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
             is_result_filepath, config_to_filepath)
 
 
     args_list = generate_args_list(base_num_rows, num_iters)
-    config_list = map(args_to_config, args_list)
+    config_list = map(arg_list_to_config, args_list)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
@@ -122,8 +96,9 @@ if __name__ == '__main__':
             pass
         pass
 
-    read_all_configs, reader, read_results = experiment_utils.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
 
     if generate_plots:
-        plot_all_results(read_all_configs, read_results, dirname)
+        config_list = read_all_configs(dirname)
+        results = read_results(config_list, dirname)
+        plot_results(results, dirname)
+        pass

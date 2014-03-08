@@ -97,6 +97,14 @@ def roundrobin(*iterables):
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
 
+def divide_N_fairly(N, num_partitions):
+    _n = N / num_partitions
+    ns = [_n] * num_partitions
+    delta = N - sum(ns)
+    for idx in range(delta):
+        ns[idx] += 1
+    return ns
+
 # introspection helpers
 def is_obj_method_name(obj, method_name):
     attr = getattr(obj, method_name)
@@ -132,3 +140,9 @@ def ensure_listlike(input):
     if not isinstance(input, (list, tuple,)):
         input = [input]
     return input
+
+def get_dict_as_text(parameters):
+    create_line = lambda (key, value): key + ' = ' + str(value)
+    lines = map(create_line, parameters.iteritems())
+    text = '\n'.join(lines)
+    return text

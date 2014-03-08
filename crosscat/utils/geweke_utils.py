@@ -24,7 +24,6 @@ import multiprocessing
 import collections
 import functools
 import operator
-import hashlib
 import re
 import os
 import argparse
@@ -35,16 +34,15 @@ import pylab
 import crosscat.LocalEngine as LE
 import crosscat.utils.general_utils as gu
 import crosscat.utils.data_utils as du
-import crosscat.utils.file_utils as fu
 import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
+import experiment_runner.experiment_utils as eu
 
 
 image_format = 'png'
 default_n_grid=31
-parameters_filename = 'parameters.txt'
-summary_filename = 'summary.pkl'
-all_data_filename = 'all_data.pkl'
+dirname_prefix='geweke_plots'
+result_filename = 'result.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -133,9 +131,9 @@ def run_posterior_chain(seed, M_c, T, num_iters,
                 )
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
-            filename = 'T_%s.%s' % (idx, image_format)
+            filename = 'T_%s' % idx
             pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
-                    close=True)
+                    close=True, format=image_format)
             pass
         pass
     return diagnostics_data
@@ -183,13 +181,6 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
         pass
     return diagnostics_data
 
-def get_n_samples_per_worker(n_samples, cpu_count):
-    n_samples_per_worker = n_samples / cpu_count
-    ret_list = numpy.repeat(n_samples_per_worker, cpu_count)
-    delta = n_samples - ret_list.sum()
-    ret_list[range(delta)] += 1
-    return ret_list
-
 def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
         probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
         do_multiprocessing=True,
@@ -204,7 +195,7 @@ def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
     cpu_count = 1 if not do_multiprocessing else multiprocessing.cpu_count()
     with gu.MapperContext(do_multiprocessing) as mapper:
         seeds = numpy.random.randint(32676, size=cpu_count)
-        n_samples_list = get_n_samples_per_worker(n_samples, cpu_count)
+        n_samples_list = gu.divide_N_fairly(n_samples, cpu_count)
         forward_sample_data_list = mapper(helper, zip(seeds, n_samples_list))
         forward_sample_data = condense_diagnostics_data_list(forward_sample_data_list)
     return forward_sample_data
@@ -215,10 +206,6 @@ def condense_diagnostics_data_list(diagnostics_data_list):
         return reduce(operator.add, map(get_key, diagnostics_data_list))
     keys = diagnostics_data_list[0].keys()
     return { key : get_key_condensed(key) for key in keys}
-
-def generate_log_bins(data, n_bins=31):
-    log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
-    return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
 
 def generate_bins_unique(data):
     bins = sorted(set(data))
@@ -255,30 +242,6 @@ def do_hist(variable_name, diagnostics_data, n_bins=31, new_figure=True,
     pylab.hist(data, bins=n_bins)
     if do_labelling:
         do_hist_labelling(variable_name)
-    return
-
-create_line = lambda (key, value): key + ' = ' + str(value)
-def get_parameters_as_text(parameters):
-    lines = map(create_line, parameters.iteritems())
-    text = '\n'.join(lines)
-    return text
-
-def show_parameters(parameters):
-    if len(parameters) == 0: return
-    ax = pylab.gca()
-    text = get_parameters_as_text(parameters)
-    pylab.text(0, 1, text, transform=ax.transAxes,
-            va='top', size='small', linespacing=1.0)
-    return
-
-def save_current_figure(filename_no_format, directory, close_after_save=True,
-        format=image_format):
-    fu.ensure_dir(directory)
-    full_filename = os.path.join(directory, filename_no_format + '.' + format)
-    pylab.savefig(full_filename)
-    if close_after_save:
-        pylab.close()
-        pass
     return
 
 hyper_name_mapper = dict(
@@ -333,18 +296,18 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
     pylab.xlabel('iteration')
     pylab.ylabel('KL')
     if parameters is not None:
-        show_parameters(parameters)
+        pu.show_parameters(parameters)
         pass
     if save_kwargs is not None:
         filename = variable_name + '_hist'
-        save_current_figure(filename, format=image_format, **save_kwargs)
+        pu.save_current_figure(filename, format=image_format, **save_kwargs)
         #
         filename = variable_name + '_pp'
         pylab.figure()
         for not_forward in not_forward_list:
             pp_plot(forward, not_forward, 100)
             pass
-        save_current_figure(filename, format=image_format, **save_kwargs)
+        pu.save_current_figure(filename, format=image_format, **save_kwargs)
         pass
     return
 
@@ -363,20 +326,6 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             print 'Failed to plot_diagnostic_data for %s' % variable_name
             print e
             pass
-    return
-
-def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
-    for variable_name in diagnostics_data.keys():
-        plotter = plotter_lookup[variable_name]
-        plotter(variable_name, diagnostics_data)
-        if parameters is not None:
-            show_parameters(parameters)
-            pass
-        if save_kwargs is not None:
-            filename = variable_name + '_hist'
-            save_current_figure(filename, format=image_format, **save_kwargs)
-            pass
-        pass
     return
 
 def make_same_length(*args):
@@ -436,33 +385,14 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         pass
     return kls
 
-def config_to_intelligible_string(config):
-    generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, sorted(config.iteritems()))
-    intelligible_string = ''.join(parts)
-    return intelligible_string
-
-def generate_directory_name(config, directory_prefix='geweke_plots'):
-    intelligible_string = config_to_intelligible_string(config)
-    intermediate = hashlib.md5(intelligible_string).hexdigest()[:10]
-    directory_name = '_'.join([directory_prefix, intermediate])
-    return directory_name
-
 def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
     if max_s_grid == -1:
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
 
-def get_mapper(num_chains):
-    mapper, pool = map, None
-    if num_chains != 1:
-        pool = multiprocessing.Pool(num_chains)
-        mapper = pool.map
-    return mapper, pool
-
-def write_parameters_to_text(parameters, filename, directory='./'):
-    full_filename = os.path.join(directory, filename)
-    text = get_parameters_as_text(parameters)
+def write_parameters_to_text(parameters, filename, dirname='./'):
+    full_filename = os.path.join(dirname, filename)
+    text = gu.get_dict_as_text(parameters)
     with open(full_filename, 'w') as fh:
         fh.writelines(text + '\n')
         pass
@@ -531,12 +461,6 @@ def post_process(forward_diagnostics_data, diagnostics_data_list):
             summary_kls=summary_kls,
             )
 
-def generate_summary(processed_data):
-    summary = dict(
-            summary_kls=processed_data['summary_kls'],
-            )
-    return summary
-
 def run_geweke(config):
     num_rows = config['num_rows']
     num_cols = config['num_cols']
@@ -576,31 +500,32 @@ def run_geweke(config):
     # post process data
     print 'post prcessing data'
     processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
-    summary = generate_summary(processed_data)
-    all_data = dict(
+    result = dict(
+            config=config,
             forward_diagnostics_data=forward_diagnostics_data,
             diagnostics_data_list=diagnostics_data_list,
             processed_data=processed_data,
             )
-    return dict(
-            config=config,
-            summary=summary,
-            all_data=all_data,
-            )
+    return result
+
+def result_to_series(result):
+    import pandas
+    base = result['config'].copy()
+    base.update(result['processed_data']['summary_kls'])
+    return pandas.Series(base)
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
-def plot_result(result_dict, directory='./'):
+def plot_result(result, dirname='./'):
     # extract variables
-    config = result_dict['config']
-    all_data = result_dict['all_data']
-    forward_diagnostics_data = all_data['forward_diagnostics_data']
-    diagnostics_data_list = all_data['diagnostics_data_list']
-    processed_data = all_data['processed_data']
+    config = result['config']
+    forward_diagnostics_data = result['forward_diagnostics_data']
+    diagnostics_data_list = result['diagnostics_data_list']
+    processed_data = result['processed_data']
     kl_series_list_dict = processed_data['kl_series_list_dict']
     #
-    _directory = generate_directory_name(config)
-    save_kwargs = dict(directory=os.path.join(directory, _directory))
+    _dirname = generate_dirname(config)
+    save_kwargs = dict(dir=os.path.join(dirname, _dirname))
     get_tuple = lambda parameter: (parameter, config[parameter])
     parameters = dict(map(get_tuple, parameters_to_show))
     #
@@ -610,47 +535,8 @@ def plot_result(result_dict, directory='./'):
             parameters, save_kwargs)
     return
 
-def is_parameters_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == parameters_filename
-
-def is_summary_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == summary_filename
-
-def is_all_data_file(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == all_data_filename
-
-def config_to_filepath(config, filename=summary_filename):
-    directory = generate_directory_name(config)
-    return os.path.join(directory, filename)
-
-def write_result(result_dict, directory='./'):
-    summary = result_dict['summary']
-    config = result_dict['config']
-    #
-    _directory = generate_directory_name(config)
-    fu.ensure_dir(os.path.join(directory, _directory))
-    #
-    to_save = dict(config=config, summary=summary)
-    filepath = config_to_filepath(config, parameters_filename)
-    write_parameters_to_text(to_save, filepath, directory=directory)
-    #
-    to_save = dict(config=config, summary=summary)
-    filepath = config_to_filepath(config, summary_filename)
-    fu.pickle(to_save, filepath, dir=directory)
-    #
-    to_save = result_dict
-    filepath = config_to_filepath(config, all_data_filename)
-    fu.pickle(to_save, filepath, dir=directory)
-    return
-
-def read_result(config, dirname='./', only_summary=True):
-    _filename = summary_filename if only_summary else all_data_filename
-    filepath = config_to_filepath(config, _filename)
-    result_dict = fu.unpickle(filepath, dir=dirname)
-    return result_dict
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 
 def generate_parser():
     parser = argparse.ArgumentParser()
@@ -679,13 +565,6 @@ def arbitrate_args(args):
     args.max_mu_grid, args.max_s_grid = arbitrate_mu_s(args.num_rows,
             args.max_mu_grid, args.max_s_grid)
     return args
-
-def args_to_config(args):
-    parser = generate_parser()
-    args = parser.parse_args(args)
-    args = arbitrate_args(args)
-    config = args.__dict__
-    return config
 
 def get_chisquare(not_forward, forward=None):
     def get_sorted_counts(values):
@@ -737,4 +616,4 @@ if __name__ == '__main__':
     # the bulk of the work
     result_dict = run_geweke(config)
     plot_result(result_dict)
-    write_result(result_dict)
+    #write_result(result_dict)
