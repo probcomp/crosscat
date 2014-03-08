@@ -40,7 +40,7 @@ def test_log_likelihood_quality_test(config):
     n_test = config['n_test']
 
     # generate data
-    T, M_c, M_r, gen_X_L, gen_X_D = ttu.generate_clean_state(gen_seed, num_clusters,
+    T, M_c, M_r, gen_X_L, gen_X_D = du.generate_clean_state(gen_seed, num_clusters,
             num_cols, num_rows, num_views)
     engine = LocalEngine()
     sampled_T = gu.sample_T(engine, M_c, T, gen_X_L, gen_X_D)
