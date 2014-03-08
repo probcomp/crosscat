@@ -254,7 +254,7 @@ def series_to_namedtuple(series):
 # end nasty plotting support section
 #############
 
-def plot_results(results, vary_what='views', plot_filename=None):
+def _plot_results(results, vary_what='views', plot_filename=None):
     import experiment_runner.experiment_utils as experiment_utils
     # configure parsing/plotting
     plot_parameters = plot_parameter_lookup[vary_what]
@@ -280,7 +280,20 @@ def plot_results(results, vary_what='views', plot_filename=None):
     # plot
     dict_of_dicts = group_results(these_timing_rows, get_fixed_parameters,
                                   get_variable_parameter)
-    plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename)
+    plot_grouped_data(dict_of_dicts, plot_parameters)
+    return
+
+def plot_results(results, plot_prefix=None, dirname='./'):
+    # generate each type of plot
+    filter_join = lambda join_with, list: join_with.join(filter(None, list))
+    for vary_what in ['rows', 'cols', 'clusters', 'views']:
+        plot_filename = filter_join('_', [plot_prefix, 'vary', vary_what])
+        _plot_results(results, vary_what, plot_filename)
+        if dirname is not None:
+            pu.savefig_legend_outside(plot_filename, dir=dirname)
+            pass
+        pass
+    return
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
