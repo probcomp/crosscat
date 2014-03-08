@@ -263,11 +263,13 @@ def legend_outside_from_dicts(marker_dict, color_dict,
                     bbox_to_anchor=bbox_to_anchor, prop={"size":14})
     return
 
-def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
+def savefig_legend_outside(filename, ax=None, bbox_inches='tight', dir='./'):
     if ax is None:
         ax = pylab.gca()
     lgd = ax.get_legend()
-    pylab.savefig(filename,
+    fu.ensure_dir(dir)
+    full_filename = os.path.join(dir, filename)
+    pylab.savefig(full_filename,
                   bbox_extra_artists=(lgd,),
                   bbox_inches=bbox_inches,
                   )
