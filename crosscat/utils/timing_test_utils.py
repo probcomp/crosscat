@@ -56,6 +56,9 @@ def write_hadoop_input(input_filename, X_L, X_D, n_steps, SEED):
             n_tasks += 1
     return n_tasks
 
+
+result_filename = 'result.pkl'
+dirname_prefix ='timing_analysis'
 all_kernels = State.transition_name_to_method_name_and_args.keys()
 _kernel_list = [[kernel] for kernel in all_kernels]
 base_config = dict(
@@ -63,7 +66,8 @@ base_config = dict(
         num_rows=10, num_cols=10, num_clusters=1, num_views=1,
         kernel_list=(), n_steps=10,
         )
-
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 gen_config = functools.partial(eu.gen_config, base_config)
 gen_configs = functools.partial(eu.gen_configs, base_config)
 
@@ -102,12 +106,6 @@ def runner(config):
         )
     return ret_dict
 
-result_filename = 'result.pkl'
-dirname_prefix ='timing_analysis'
-digest_length = 10
-
-is_result_filepath, generate_dirname, config_to_filepath = \
-        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 
 #############
 # begin nasty plotting support section
