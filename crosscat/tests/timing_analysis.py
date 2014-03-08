@@ -25,14 +25,10 @@ def generate_parser():
 if __name__ == '__main__':
     parser = generate_parser()
     args = parser.parse_args()
-    dirname = args.dirname
-    plot_prefix = args.plot_prefix
-    num_rows = args.num_rows
-    num_cols = args.num_cols
-    num_clusters = args.num_clusters
-    num_views = args.num_views
-    generate_plots = not args.no_plots
-
+    args = args.__dict__
+    dirname = args.pop('dirname')
+    plot_prefix = args.pop('plot_prefix')
+    generate_plots = not args.pop('no_plots')
 
     is_result_filepath = ttu.is_result_filepath
     config_to_filepath = ttu.config_to_filepath
@@ -46,11 +42,8 @@ if __name__ == '__main__':
 
     config_list = ttu.gen_configs(
             kernel_list = ttu._kernel_list,
-            num_rows=num_rows,
-            num_cols=num_cols,
-            num_clusters=num_clusters,
-            num_views=num_views,
             n_steps=[10],
+            **args
             )
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
