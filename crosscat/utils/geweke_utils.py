@@ -207,10 +207,6 @@ def condense_diagnostics_data_list(diagnostics_data_list):
     keys = diagnostics_data_list[0].keys()
     return { key : get_key_condensed(key) for key in keys}
 
-def generate_log_bins(data, n_bins=31):
-    log_min, log_max = numpy.log(min(data)), numpy.log(max(data))
-    return numpy.exp(numpy.linspace(log_min, log_max, n_bins))
-
 def generate_bins_unique(data):
     bins = sorted(set(data))
     delta = bins[-1] - bins[-2]
@@ -332,20 +328,6 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             pass
     return
 
-def plot_diagnostic_data_hist(diagnostics_data, parameters=None, save_kwargs=None):
-    for variable_name in diagnostics_data.keys():
-        plotter = plotter_lookup[variable_name]
-        plotter(variable_name, diagnostics_data)
-        if parameters is not None:
-            pu.show_parameters(parameters)
-            pass
-        if save_kwargs is not None:
-            filename = variable_name + '_hist'
-            pu.save_current_figure(filename, format=image_format, **save_kwargs)
-            pass
-        pass
-    return
-
 def make_same_length(*args):
     return zip(*zip(*args))
 
@@ -407,13 +389,6 @@ def arbitrate_mu_s(num_rows, max_mu_grid=100, max_s_grid=None):
     if max_s_grid == -1:
         max_s_grid = (max_mu_grid ** 2.) / 3. * num_rows
     return max_mu_grid, max_s_grid
-
-def get_mapper(num_chains):
-    mapper, pool = map, None
-    if num_chains != 1:
-        pool = multiprocessing.Pool(num_chains)
-        mapper = pool.map
-    return mapper, pool
 
 def write_parameters_to_text(parameters, filename, dirname='./'):
     full_filename = os.path.join(dirname, filename)
