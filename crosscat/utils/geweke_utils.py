@@ -42,7 +42,7 @@ import experiment_runner.experiment_utils as eu
 image_format = 'png'
 default_n_grid=31
 dirname_prefix='geweke_plots'
-result_filename = 'summary.pkl'
+result_filename = 'result.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
@@ -461,12 +461,6 @@ def post_process(forward_diagnostics_data, diagnostics_data_list):
             summary_kls=summary_kls,
             )
 
-def generate_summary(processed_data):
-    summary = dict(
-            summary_kls=processed_data['summary_kls'],
-            )
-    return summary
-
 def run_geweke(config):
     num_rows = config['num_rows']
     num_cols = config['num_cols']
@@ -506,34 +500,28 @@ def run_geweke(config):
     # post process data
     print 'post prcessing data'
     processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
-    summary = generate_summary(processed_data)
-    all_data = dict(
+    result = dict(
+            config=config,
             forward_diagnostics_data=forward_diagnostics_data,
             diagnostics_data_list=diagnostics_data_list,
             processed_data=processed_data,
-            )
-    result = dict(
-            config=config,
-            summary=summary,
-            all_data=all_data,
             )
     return result
 
 def result_to_series(result):
     import pandas
     base = result['config'].copy()
-    base.update(result['summary']['summary_kls'])
+    base.update(result['processed_data']['summary_kls'])
     return pandas.Series(base)
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
-def plot_result(result_dict, dirname='./'):
+def plot_result(result, dirname='./'):
     # extract variables
-    config = result_dict['config']
-    all_data = result_dict['all_data']
-    forward_diagnostics_data = all_data['forward_diagnostics_data']
-    diagnostics_data_list = all_data['diagnostics_data_list']
-    processed_data = all_data['processed_data']
+    config = result['config']
+    forward_diagnostics_data = result['forward_diagnostics_data']
+    diagnostics_data_list = result['diagnostics_data_list']
+    processed_data = result['processed_data']
     kl_series_list_dict = processed_data['kl_series_list_dict']
     #
     _dirname = generate_dirname(config)
