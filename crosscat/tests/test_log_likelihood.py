@@ -9,6 +9,7 @@ pylab.show()
 #
 from crosscat.LocalEngine import LocalEngine
 import crosscat.utils.data_utils as du
+import crosscat.utils.plot_utils as pu
 import crosscat.utils.geweke_utils as gu
 import crosscat.utils.convergence_test_utils as ctu
 import experiment_runner.experiment_utils as eu
@@ -115,10 +116,30 @@ def _munge_args(args):
     dirname = kwargs.pop('dirname')
     return kwargs, do_plots, dirname
 
+def summary_plotter(results, dirname='./'):
+    frame = eu.results_to_frame(results)
+    def _scatter(x, y):
+        pylab.figure()
+        pylab.scatter(x, y)
+        pylab.gca().set_aspect(1)
+        xlim = pylab.gca().get_xlim()
+        pylab.plot(xlim, xlim)
+        return
+    def _plot_and_save(frame, variable_suffix, dirname='./'):
+        x = frame['final_' + variable_suffix]
+        y = frame['gen_' + variable_suffix]
+        _scatter(x, y)
+        pylab.title(variable_suffix)
+        filename = variable_suffix
+        pu.save_current_figure(filename, dir=dirname, close=True)
+        return
+    _plot_and_save(frame, 'test_set_ll', dirname)
+    _plot_and_save(frame, 'data_ll', dirname)
+    return
+
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
-    import crosscat.utils.plot_utils as pu
 
     # parse args
     parser = _generate_parser()
@@ -147,3 +168,5 @@ if __name__ == '__main__':
         eu.plot_results(plotter, results, generate_dirname,
                 saver=pu.save_current_figure, filename='over_iters',
                 dirname=dirname)
+        #
+        summary_plotter(results, dirname)
