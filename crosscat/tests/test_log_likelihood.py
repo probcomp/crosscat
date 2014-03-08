@@ -10,7 +10,6 @@ pylab.show()
 from crosscat.LocalEngine import LocalEngine
 import crosscat.utils.data_utils as du
 import crosscat.utils.geweke_utils as gu
-import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.convergence_test_utils as ctu
 import experiment_runner.experiment_utils as eu
 
@@ -110,6 +109,12 @@ def _generate_parser():
     parser.add_argument('--dirname', default='test_log_likelihood', type=str)
     return parser
 
+def _munge_args(args):
+    kwargs = args.__dict__.copy()
+    do_plots = not kwargs.pop('no_plots')
+    dirname = kwargs.pop('dirname')
+    return kwargs, do_plots, dirname
+
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
@@ -118,9 +123,7 @@ if __name__ == '__main__':
     # parse args
     parser = _generate_parser()
     args = parser.parse_args()
-    args_dict = args.__dict__
-    do_plots = not args_dict.pop('no_plots')
-    dirname = args_dict.pop('dirname')
+    kwargs, do_plots, dirname = _munge_args(args)
 
     # demonstrate use of experiment runner
     is_result_filepath, generate_dirname, config_to_filepath = \
@@ -130,7 +133,7 @@ if __name__ == '__main__':
             is_result_filepath, config_to_filepath)
 
     # run experiment
-    config_list = eu.gen_configs(base_config, **args_dict)
+    config_list = eu.gen_configs(base_config, **kwargs)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
