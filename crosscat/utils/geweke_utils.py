@@ -131,9 +131,9 @@ def run_posterior_chain(seed, M_c, T, num_iters,
                 )
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
-            filename = 'T_%s.%s' % (idx, image_format)
+            filename = 'T_%s' % idx
             pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
-                    close=True)
+                    close=True, format=image_format)
             pass
         pass
     return diagnostics_data
