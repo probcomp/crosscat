@@ -2,8 +2,6 @@ import argparse
 import itertools
 from functools import partial
 #
-import pandas
-#
 import crosscat.utils.geweke_utils as geweke_utils
 import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
