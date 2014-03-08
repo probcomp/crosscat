@@ -1,4 +1,5 @@
 import random
+import argparse
 from functools import partial
 #
 import numpy
@@ -24,6 +25,7 @@ base_config = dict(
     num_clusters=5, num_views=1,
     n_steps=10, n_test=10,
     )
+gen_configs = partial(eu.gen_configs, base_config)
 
 def arbitrate_args(args):
     if args.n_test is None:
@@ -84,19 +86,39 @@ def plot_result(result):
     # FIXME: save the result
     return
 
+def generate_parser():
+    default_gen_seed = [0]
+    default_num_rows = [20, 40, 100]
+    default_num_cols = [10]
+    default_num_clusters = [1, 2, 4]
+    default_num_views = [1, 2]
+    default_n_steps = [10]
+    default_n_test = [20]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gen_seed', nargs='+', default=default_gen_seed, type=int)
+    parser.add_argument('--num_rows', nargs='+', default=default_num_rows, type=int)
+    parser.add_argument('--num_cols', nargs='+', default=default_num_cols, type=int)
+    parser.add_argument('--num_clusters', nargs='+',
+            default=default_num_clusters, type=int)
+    parser.add_argument('--num_views', nargs='+', default=default_num_views,
+            type=int)
+    parser.add_argument('--n_steps', nargs='+', default=default_n_steps, type=int)
+    parser.add_argument('--n_test', nargs='+', default=default_n_test, type=int)
+    #
+    parser.add_argument('--no_plots', action='store_true')
+    parser.add_argument('--dirname', default='test_log_likelihood', type=str)
+    return parser
+
 
 if __name__ == '__main__':
     from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
 
-    # do single experiment
-    parser = eu.generate_parser(base_config, noneify)
+    # parse args
+    parser = generate_parser()
     args = parser.parse_args()
-    args = arbitrate_args(args)
-    config = args.__dict__
-
-    result = test_log_likelihood_quality_test(config)
-    plot_result(result)
-
+    args_dict = args.__dict__
+    do_plots = not args_dict.pop('no_plots')
+    dirname = args_dict.pop('dirname')
 
     # demonstrate use of experiment runner
     do_experiments = eu.do_experiments
@@ -105,15 +127,10 @@ if __name__ == '__main__':
     writer = eu.get_fs_writer(config_to_filepath)
     read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
             is_result_filepath, config_to_filepath)
-
-
-    gen_configs_kwargs = dict(
-            num_clusters=[1, 2, 4],
-            num_rows = [20, 40, 100]
-            )
-    config_list = eu.gen_configs(base_config, **gen_configs_kwargs)
-    dirname = 'test_log_likelihood'
     runner = test_log_likelihood_quality_test
+
+    # run experiment
+    config_list = eu.gen_configs(base_config, **args_dict)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
             # use non-daemonic mapper since run_geweke spawns daemonic processes
@@ -121,8 +138,8 @@ if __name__ == '__main__':
             pass
         pass
 
-
-    all_configs = read_all_configs(dirname)
-    all_results = read_results(all_configs, dirname)
-    map(plot_result, all_results)
+    if do_plots:
+        all_configs = read_all_configs(dirname)
+        all_results = read_results(all_configs, dirname)
+        map(plot_result, all_results)
 
