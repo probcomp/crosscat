@@ -114,8 +114,7 @@ def _munge_args(args):
     dirname = kwargs.pop('dirname')
     return kwargs, do_plots, dirname
 
-def summary_plotter(results, dirname='./'):
-    frame = eu.results_to_frame(results)
+def summary_plotter(results, dirname='./', save=True):
     def _scatter(x, y):
         pylab.figure()
         pylab.scatter(x, y)
@@ -123,16 +122,20 @@ def summary_plotter(results, dirname='./'):
         xlim = pylab.gca().get_xlim()
         pylab.plot(xlim, xlim)
         return
-    def _plot_and_save(frame, variable_suffix, dirname='./'):
+    def _plot(frame, variable_suffix, filename=None, dirname='./'):
         x = frame['gen_' + variable_suffix]
         y = frame['final_' + variable_suffix]
         _scatter(x, y)
         pylab.title(variable_suffix)
-        filename = variable_suffix
-        pu.save_current_figure(filename, dir=dirname, close=True)
+        if filename is not None:
+            pu.save_current_figure(filename, dir=dirname, close=True)
+            pass
         return
-    _plot_and_save(frame, 'test_set_ll', dirname)
-    _plot_and_save(frame, 'data_ll', dirname)
+    frame = eu.results_to_frame(results)
+    for variable_suffix in ['test_set_ll', 'data_ll']:
+        filename = variable_suffix if save else None
+        _plot(frame, variable_suffix, filename=filename, dirname=dirname)
+        pass
     return
 
 
