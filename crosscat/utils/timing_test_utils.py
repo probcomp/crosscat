@@ -316,3 +316,4 @@ if __name__ == '__main__':
 
     all_configs = read_all_configs(dirname)
     all_results = read_results(all_configs, dirname)
+    frame = eu.results_to_frame(all_results)
