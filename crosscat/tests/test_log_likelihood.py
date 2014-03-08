@@ -4,8 +4,6 @@ from functools import partial
 #
 import numpy
 import pylab
-pylab.ion()
-pylab.show()
 #
 from crosscat.LocalEngine import LocalEngine
 import crosscat.utils.data_utils as du
