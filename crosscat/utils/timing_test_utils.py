@@ -20,8 +20,8 @@
 import os
 import hashlib
 import itertools
-from collections import namedtuple
-from collections import defaultdict
+import functools
+from collections import namedtuple, defaultdict
 #
 import numpy
 import pylab
@@ -31,6 +31,7 @@ import crosscat.utils.xnet_utils as xu
 from crosscat.LocalEngine import LocalEngine
 import crosscat.cython_code.State as State
 import crosscat.utils.plot_utils as pu
+import experiment_runner.experiment_utils as eu
 
 
 def get_generative_clustering(M_c, M_r, T,
@@ -115,18 +116,8 @@ base_config = dict(
         kernel_list=(), n_steps=10,
         )
 
-def gen_config(**kwargs):
-    config = base_config.copy()
-    config.update(kwargs)
-    return config
-
-def gen_configs(**kwargs):
-    keys = kwargs.keys()
-    values_lists = kwargs.values()
-    make_dict = lambda values: dict(zip(keys, values))
-    kwargs_list = map(make_dict, itertools.product(*values_lists))
-    configs = [gen_config(**_kwargs) for _kwargs in kwargs_list]
-    return configs
+gen_config = functools.partial(eu.gen_config, base_config)
+gen_configs = functools.partial(eu.gen_configs, base_config)
 
 def _munge_config(config):
     generate_args = config.copy()
@@ -164,28 +155,11 @@ def runner(config):
     return ret_dict
 
 result_filename = 'result.pkl'
-directory_prefix='timing_analysis'
+dirname_prefix ='timing_analysis'
 digest_length = 10
 
-def is_result_filepath(filename):
-    filename = os.path.split(filename)[-1]
-    return filename == result_filename
-
-def config_to_intelligible_string(config):
-    generate_part = lambda (key, value): key + '=' + str(value)
-    parts = map(generate_part, sorted(config.iteritems()))
-    intelligible_string = ''.join(parts)
-    return intelligible_string
-
-def generate_directory_name(config, directory_prefix=directory_prefix):
-    intelligible_string = config_to_intelligible_string(config)
-    intermediate = hashlib.md5(intelligible_string).hexdigest()[:digest_length]
-    directory_name = '_'.join([directory_prefix, intermediate])
-    return directory_name
-
-def config_to_filepath(config, filename=result_filename):
-    directory = generate_directory_name(config)
-    return os.path.join(directory, filename)
+is_result_filepath, generate_dirname, config_to_filepath = \
+        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 
 #############
 # begin nasty plotting support section
