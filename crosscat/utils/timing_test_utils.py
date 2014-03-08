@@ -34,55 +34,6 @@ import crosscat.utils.plot_utils as pu
 import experiment_runner.experiment_utils as eu
 
 
-def get_generative_clustering(M_c, M_r, T,
-                              data_inverse_permutation_indices,
-                              num_clusters, num_views):
-    # NOTE: this function only works because State.p_State doesn't use
-    #       column_component_suffstats
-    num_rows = len(T)
-    num_cols = len(T[0])
-    X_D_helper = numpy.repeat(range(num_clusters), (num_rows / num_clusters))
-    gen_X_D = [
-        X_D_helper[numpy.argsort(data_inverse_permutation_index)]
-        for data_inverse_permutation_index in data_inverse_permutation_indices
-        ]
-    gen_X_L_assignments = numpy.repeat(range(num_views), (num_cols / num_views))
-    # initialize to generate an X_L to manipulate
-    local_engine = LocalEngine()
-    bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T,
-                                                         initialization='apart')
-    bad_X_L['column_partition']['assignments'] = gen_X_L_assignments
-    # manually constrcut state in in generative configuration
-    state = State.p_State(M_c, T, bad_X_L, gen_X_D)
-    gen_X_L = state.get_X_L()
-    gen_X_D = state.get_X_D()
-    # run inference on hyperparameters to leave them in a reasonable state
-    kernel_list = (
-        'row_partition_hyperparameters',
-        'column_hyperparameters',
-        'column_partition_hyperparameter',
-        )
-    gen_X_L, gen_X_D = local_engine.analyze(M_c, T, gen_X_L, gen_X_D, n_steps=1,
-                                            kernel_list=kernel_list)
-    #
-    return gen_X_L, gen_X_D
-
-def generate_clean_state(gen_seed, num_clusters,
-                         num_cols, num_rows, num_splits,
-                         max_mean=10, max_std=1,
-                         plot=False):
-    # generate the data
-    T, M_r, M_c, data_inverse_permutation_indices = \
-        du.gen_factorial_data_objects(gen_seed, num_clusters,
-                                      num_cols, num_rows, num_splits,
-                                      max_mean=10, max_std=1,
-                                      send_data_inverse_permutation_indices=True)
-    # recover generative clustering
-    X_L, X_D = get_generative_clustering(M_c, M_r, T,
-                                         data_inverse_permutation_indices,
-                                         num_clusters, num_splits)
-    return T, M_c, M_r, X_L, X_D
-
 def generate_hadoop_dicts(which_kernels, X_L, X_D, args_dict):
     for which_kernel in which_kernels:
         kernel_list = (which_kernel, )
@@ -133,7 +84,7 @@ def _munge_config(config):
 def runner(config):
     generate_args, analyze_args, inf_seed = _munge_config(config)
     # generate synthetic data
-    T, M_c, M_r, X_L, X_D = generate_clean_state(max_mean=10, max_std=1,
+    T, M_c, M_r, X_L, X_D = du.generate_clean_state(max_mean=10, max_std=1,
             **generate_args)
     table_shape = map(len, (T, T[0]))
     start_dims = du.get_state_shape(X_L)
