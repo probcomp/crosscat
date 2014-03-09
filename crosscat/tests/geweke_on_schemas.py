@@ -64,8 +64,8 @@ def plot_results(results, dirname='./'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
-    parser.add_argument('--base_num_rows', default=40, type=int)
-    parser.add_argument('--num_iters', default=400, type=int)
+    parser.add_argument('--base_num_rows', default=20, type=int)
+    parser.add_argument('--num_iters', default=200, type=int)
     parser.add_argument('--no_plots', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
