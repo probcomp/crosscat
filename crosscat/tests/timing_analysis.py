@@ -13,7 +13,7 @@ def _generate_parser():
     parser.add_argument('--num_cols', nargs='+', default=default_num_cols, type=int)
     parser.add_argument('--num_clusters', nargs='+', default=default_num_clusters, type=int)
     parser.add_argument('--num_views', nargs='+', default=default_num_views, type=int)
-    parser.add_argument('--plot_prefix', default='_', type=str)
+    parser.add_argument('--plot_prefix', default=None, type=str)
     parser.add_argument('--no_plots', action='store_true')
     return parser
 
