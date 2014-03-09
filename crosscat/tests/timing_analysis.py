@@ -13,14 +13,16 @@ def _generate_parser():
     parser.add_argument('--num_cols', nargs='+', default=default_num_cols, type=int)
     parser.add_argument('--num_clusters', nargs='+', default=default_num_clusters, type=int)
     parser.add_argument('--num_views', nargs='+', default=default_num_views, type=int)
+    parser.add_argument('--plot_prefix', default='_', type=str)
     parser.add_argument('--no_plots', action='store_true')
     return parser
 
 def _munge_args(args):
     kwargs = args.__dict__.copy()
     dirname = kwargs.pop('dirname')
+    plot_prefix = kwargs.pop('plot_prefix')
     generate_plots = not kwargs.pop('no_plots')
-    return kwargs, dirname, generate_plots
+    return kwargs, dirname, plot_prefix, generate_plots
 
 
 if __name__ == '__main__':
@@ -33,7 +35,7 @@ if __name__ == '__main__':
     # parse args
     parser = _generate_parser()
     args = parser.parse_args()
-    kwargs, dirname, generate_plots = _munge_args(args)
+    kwargs, dirname, plot_prefix, generate_plots = _munge_args(args)
 
 
     config_list = ttu.gen_configs(
@@ -56,4 +58,4 @@ if __name__ == '__main__':
         is_same_shape = lambda result: result['start_dims'] == result['end_dims']
         use_results = filter(is_same_shape, _all_results)
         # add plot_prefix so plots show up at top of list of files/folders
-        ttu.plot_results(use_results, plot_prefix='_', dirname=dirname)
+        ttu.plot_results(use_results, plot_prefix=plot_prefix, dirname=dirname)
