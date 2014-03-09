@@ -86,12 +86,12 @@ def plotter(result):
     return
 
 def _generate_parser():
-    default_gen_seed = [0, 1]
+    default_gen_seed = [0]
     default_num_rows = [100, 200, 500, 1000]
     default_num_cols = [10, 20, 40]
-    default_num_clusters = [1, 2, 4, 10, 20, 50]
-    default_num_views = [1, 2, 5, 10]
-    default_n_steps = [40]
+    default_num_clusters = [1, 10, 50]
+    default_num_views = [1, 5, 10]
+    default_n_steps = [10]
     default_n_test = [20]
     parser = argparse.ArgumentParser()
     parser.add_argument('--gen_seed', nargs='+', default=default_gen_seed, type=int)
