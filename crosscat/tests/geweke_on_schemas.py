@@ -7,7 +7,7 @@ import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
-def generate_args_list(base_num_rows, num_iters):
+def generate_args_list(base_num_rows, num_iters, do_long=False):
     num_iters_str = str(num_iters)
     base_num_rows_str = str(base_num_rows)
     col_type_list = ['continuous', 'multinomial']
@@ -34,20 +34,22 @@ def generate_args_list(base_num_rows, num_iters):
                 [col_type_b] * num_cols
         args_list.append(args)
         pass
-#    # individual schemas
-#    num_cols = 100
-#    args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-#            str(num_cols), '--cctypes'] + ['continuous'] * num_cols
-#    args_list.append(args)
-#    args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-#            str(num_cols), '--num_multinomial_values', '128', '--cctypes'] + \
-#                    ['multinomial'] * num_cols
-#    args_list.append(args)
-#    num_cols = 1000
-#    args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-#            str(num_cols), '--num_multinomial_values', '2', '--cctypes'] + \
-#                    ['multinomial'] * num_cols
-#    args_list.append(args)
+    if do_long:
+        # individual schemas
+        num_cols = 100
+        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
+                str(num_cols), '--cctypes'] + ['continuous'] * num_cols
+        args_list.append(args)
+        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
+                str(num_cols), '--num_multinomial_values', '128', '--cctypes'] + \
+                        ['multinomial'] * num_cols
+        args_list.append(args)
+#        num_cols = 1000
+#        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
+#                str(num_cols), '--num_multinomial_values', '2', '--cctypes'] + \
+#                        ['multinomial'] * num_cols
+#        args_list.append(args)
+        pass
     return args_list
 
 def plot_results(results, dirname='./'):
@@ -67,11 +69,13 @@ if __name__ == '__main__':
     parser.add_argument('--base_num_rows', default=10, type=int)
     parser.add_argument('--num_iters', default=200, type=int)
     parser.add_argument('--no_plots', action='store_true')
+    parser.add_argument('--do_long', action='store_true')
     args = parser.parse_args()
     dirname = args.dirname
     base_num_rows = args.base_num_rows
     num_iters = args.num_iters
     generate_plots = not args.no_plots
+    do_long = args.do_long
 
 
     is_result_filepath = geweke_utils.is_result_filepath
@@ -87,7 +91,7 @@ if __name__ == '__main__':
             is_result_filepath, config_to_filepath)
 
 
-    args_list = generate_args_list(base_num_rows, num_iters)
+    args_list = generate_args_list(base_num_rows, num_iters, do_long)
     config_list = map(arg_list_to_config, args_list)
     with Timer('experiments') as timer:
         with MapperContext(Pool=NoDaemonPool) as mapper:
