@@ -1,4 +1,5 @@
 import argparse
+import operator
 import itertools
 from functools import partial
 #
@@ -7,47 +8,59 @@ import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
+def _generate_args_list(num_rows, num_iters, cctypes):
+    num_cols = len(cctypes)
+    args_list = [
+            '--num_rows', str(num_rows),
+            '--num_cols', str(num_cols),
+            '--num_iters', str(num_iters),
+            '--cctypes'
+            ] + cctypes
+    return args_list
+
+def _gen_cctypes(*args):
+    _cctypes = [[cctype] * N for (cctype, N) in args]
+    return reduce(operator.add, _cctypes)
+
 def generate_args_list(base_num_rows, num_iters, do_long=False):
-    num_iters_str = str(num_iters)
-    base_num_rows_str = str(base_num_rows)
+    num_cols_list = [1, 10]
     col_type_list = ['continuous', 'multinomial']
-    #
-    base_args = ['--num_rows', base_num_rows_str, '--num_iters', num_iters_str]
     col_type_pairs = sorted(itertools.combinations(col_type_list, 2))
     args_list = []
 
     # single datatype
-    num_cols_list = [1, 10]
     iter_over = itertools.product(col_type_list, num_cols_list)
     for col_type, num_cols in iter_over:
-        args = base_args + \
-                ['--num_cols', str(num_cols), '--cctypes'] + \
-                [col_type] * num_cols
+        cctypes = _gen_cctypes((col_type, num_cols))
+        args = _generate_args_list(base_num_rows, num_iters, cctypes)
         args_list.append(args)
         pass
+
     # pairs of datatypes
     iter_over = itertools.product(col_type_pairs, num_cols_list)
     for (col_type_a, col_type_b), num_cols in iter_over:
-        args = base_args + \
-                ['--num_cols', str(2 * num_cols), '--cctypes'] + \
-                [col_type_a] * num_cols + \
-                [col_type_b] * num_cols
+        cctypes = _gen_cctypes((col_type_a, num_cols), (col_type_b, num_cols))
+        args = _generate_args_list(base_num_rows, num_iters, cctypes)
         args_list.append(args)
         pass
+
+    # hard coded runs
     if do_long:
-        # individual schemas
-        num_cols = 100
-        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-                str(num_cols), '--cctypes'] + ['continuous'] * num_cols
+        num_cols_long = 100
+        num_rows_long = 100
+        #
+        cctypes = _gen_cctypes(('continuous', num_cols_long))
+        args = _generate_args_list(num_rows_long, num_iters, cctypes)
         args_list.append(args)
-        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-                str(num_cols), '--num_multinomial_values', '128', '--cctypes'] + \
-                        ['multinomial'] * num_cols
+        #
+        cctypes = _gen_cctypes(('multinomial', num_cols_long))
+        args = _generate_args_list(num_rows_long, num_iters, cctypes)
+        args += ['--num_multinomial_values', '2']
         args_list.append(args)
-#        num_cols = 1000
-#        args = ['--num_rows', '100', '--num_iters', num_iters_str, '--num_cols',
-#                str(num_cols), '--num_multinomial_values', '2', '--cctypes'] + \
-#                        ['multinomial'] * num_cols
+        #
+#        cctypes = _gen_cctypes(('multinomial', num_cols_long))
+#        args = _generate_args_list(num_rows_long, num_iters, cctypes)
+#        args += ['--num_multinomial_values', '128']
 #        args_list.append(args)
         pass
     return args_list
