@@ -528,6 +528,11 @@ def plot_result(result, dirname='./'):
     save_kwargs = dict(dir=os.path.join(dirname, _dirname))
     get_tuple = lambda parameter: (parameter, config[parameter])
     parameters = dict(map(get_tuple, parameters_to_show))
+    if 'cctypes' in config:
+        # FIXME: remove this kludgy if statement
+        counter = collections.Counter(config['cctypes'])
+        parameters['Counter(cctypes)'] = dict(counter.items())
+        pass
     #
     plot_all_diagnostic_data(
             forward_diagnostics_data, diagnostics_data_list,
