@@ -194,13 +194,14 @@ double State::transition_feature_gibbs(int feature_idx, vector<double> feature_d
 double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
   double score_delta = 0;
   
-  // do we create a new veiw or move to an existing view?
-  bool create_new = (draw_rand_u() < .5);
-
   int num_views = views.size();
-
   // get current view
   View *current_view = view_lookup[feature_idx];
+
+  View *p_singleton_view;
+  double original_view_score_delta = -remove_feature(feature_idx, p_singleton_view);
+  score_delta -= original_view_score_delta;
+  View &singleton_view = *p_singleton_view;
 
   // get logp under current view
   CM_Hypers hypers = get(hypers_m, feature_idx);
@@ -211,7 +212,10 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
             crp_log_delta,
             data_log_delta,
             hypers);
+  // score_in_current_view should be the same as original_view_score_delta
 
+  // do we create a new veiw or move to an existing view?
+  bool create_new = (draw_rand_u() < .5);
   if(create_new){
     // propose a new singleton view
     View &new_singleton_view = get_new_view();
@@ -232,7 +236,7 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
       // printf("Created singleton_view (birth)\n");
     }
     // printf("stayed in same view (birth)\n");
-
+    remove_if_empty(new_singleton_view);
   }else{
     // choose a random view
     int new_view_index = draw_rand_i(num_views-1);
@@ -259,6 +263,7 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
     }
   }
 
+  remove_if_empty(*p_singleton_view);
   return score_delta;
 }
 
