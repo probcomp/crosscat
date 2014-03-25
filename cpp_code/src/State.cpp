@@ -181,7 +181,7 @@ double State::remove_feature(int feature_idx, vector<double> feature_data,
   return score_delta;
 }
 
-double State::transition_feature_0(int feature_idx, vector<double> feature_data) {
+double State::transition_feature_gibbs(int feature_idx, vector<double> feature_data) {
   double score_delta = 0;
   View *p_singleton_view;
   score_delta += remove_feature(feature_idx, feature_data, p_singleton_view);
@@ -191,7 +191,7 @@ double State::transition_feature_0(int feature_idx, vector<double> feature_data)
 }
 
 // updated kernel with birth-death process
-double State::transition_feature_1(int feature_idx, vector<double> feature_data) {
+double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
   double score_delta = 0;
   
   // do we create a new veiw or move to an existing view?
@@ -276,9 +276,9 @@ double State::transition_features(const MatrixD &data, vector<int> which_feature
     vector<double> feature_data = extract_col(data, feature_idx);
     // kernel selection
     if(ct_kernel == 0){
-      score_delta += transition_feature_0(feature_idx, feature_data);
+      score_delta += transition_feature_gibbs(feature_idx, feature_data);
     }else if(ct_kernel == 1){
-      score_delta += transition_feature_1(feature_idx, feature_data);
+      score_delta += transition_feature_mh(feature_idx, feature_data);
     }else{
       printf("Invalid CT_KERNEL");
       assert(0==1);

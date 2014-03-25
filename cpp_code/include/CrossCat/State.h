@@ -232,13 +232,13 @@ class State {
    * \param feature_idx The column index that the view should associaate with the data
    * \param feature_data The data that comprises the feature
    */
-  double transition_feature_0(int feature_idx, std::vector<double> feature_data);
+  double transition_feature_gibbs(int feature_idx, std::vector<double> feature_data);
   /**
    * Metropolis birth-death process for assigning columns to view (or creating new views)
    * \param feature_idx The column index that the view should associaate with the data
    * \param feature_data The data that comprises the feature
    */
-  double transition_feature_1(int feature_idx, std::vector<double> feature_data);
+  double transition_feature_mh(int feature_idx, std::vector<double> feature_data);
   /**
    * Instantiate a new view object with properties matching the state
    * (datatypes, #rows, etc) and track in memeber variable views
