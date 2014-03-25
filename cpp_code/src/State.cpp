@@ -200,9 +200,7 @@ double State::transition_feature_1(int feature_idx, vector<double> feature_data)
   int num_views = views.size();
 
   // get current view
-  std::vector<int> view_idx = get_column_partition_assignments();
-  int current_view_index = view_idx[feature_idx];
-  View *current_view = &get_view(current_view_index);
+  View *current_view = view_lookup[feature_idx];
 
   // get logp under current view
   CM_Hypers hypers = get(hypers_m, feature_idx);
