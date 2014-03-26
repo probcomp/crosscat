@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -22,7 +22,7 @@ import crosscat.utils.general_utils as gu
 
 class EngineTemplate(object):
 
-    def __init__(self, seed=0):
+    def __init__(self, seed=None):
         self.seed_generator = gu.int_generator(seed)
 
     def get_next_seed(self):
@@ -33,7 +33,11 @@ class EngineTemplate(object):
         return X_L, X_D
 
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
-                max_iterations=-1, max_time=-1):
+                max_iterations=-1, max_time=-1, do_diagnostics=False,
+                diagnostics_every_N=1,
+                specified_s_grid=(), specified_mu_grid=(),
+                N_GRID=31,
+                ):
         X_L_prime, X_D_prime = dict(), []
         return X_L_prime, X_D_prime
 

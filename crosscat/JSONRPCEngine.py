@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -36,7 +36,7 @@ class JSONRPCEngine(EngineTemplate.EngineTemplate):
 
     """
 
-    def __init__(self, seed=0, URI=None):
+    def __init__(self, seed=None, URI=None):
         super(JSONRPCEngine, self).__init__(seed=seed)
         self.URI = URI
         return

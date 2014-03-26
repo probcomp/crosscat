@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -69,38 +69,33 @@ def simple_predictive_probability(M_c, X_L, X_D, Y, Q):
     return x
 
 
-def simple_predictive_probability_observed(M_c, X_L, X_D, Y, which_row,
-                                      which_columns, elements):
-    get_which_view = lambda which_column: \
-        X_L['column_partition']['assignments'][which_column]
-    column_to_view = dict()
-    for which_column in which_columns:
-        column_to_view[which_column] = get_which_view(which_column)
+def simple_predictive_probability_observed(M_c, X_L, X_D, Y, query_row,
+                                      query_columns, elements):
+    n_queries = len(query_columns)
 
-    view_to_cluster_model = dict()
-    for which_view in list(set(column_to_view.values())):
-        which_cluster = X_D[which_view][which_row]
-        cluster_model = create_cluster_model_from_X_L(M_c, X_L, which_view,
-                                                      which_cluster)
-        view_to_cluster_model[which_view] = cluster_model
+    answer = numpy.zeros(n_queries)
 
-    Ps = numpy.zeros(len(which_columns)) 
-
-    q = 0 # query index
-    for which_column in which_columns:
-        which_view = column_to_view[which_column]
-        cluster_model = view_to_cluster_model[which_view]
-        component_model = cluster_model[which_column]
-        draw_constraints = get_draw_constraints(X_L, X_D, Y,which_row, which_column)
-
-        logp = component_model.calc_element_predictive_logp_constrained(elements[q],draw_constraints)
+    for n in range(n_queries):
+        query_column = query_columns[n]
+        x = elements[n]
         
-        Ps[q] = logp
-        q += 1
+        # get the view to which this column is assigned
+        view_idx = X_L['column_partition']['assignments'][query_column]
+        # get cluster
+        cluster_idx = X_D[view_idx][query_row]
+        # get the cluster model for this cluster
+        cluster_model = create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx)
+        # get the specific cluster model for this column
+        component_model = cluster_model[query_column]
+        # construct draw conataints
+        draw_constraints = get_draw_constraints(X_L, X_D, Y, query_row, query_column)
 
-    ans = Ps
-    
-    return ans
+        # return the PDF value (exp)
+        p_x = component_model.calc_element_predictive_logp_constrained(x, draw_constraints)
+        
+        answer[n] = p_x
+        
+    return answer
 
 def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_columns, elements):
 
@@ -170,13 +165,13 @@ def column_structural_typicality(X_L_list, col_id):
                 count += 1
     return float(count) / (len(X_L_list) * len(X_L_list[0]['column_partition']['assignments']))
 
-def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q, epsilon=.001):
+def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
     Returns the simple predictive probability, averaged over each sample.
     """
     avg_prob = 0
     for X_L, X_D in zip(X_L_list, X_D_list):
-        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q, epsilon=.001)
+        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q)
     return float(avg_prob)/len(X_L_list)
 
 
@@ -353,7 +348,7 @@ def get_component_model_constructor(modeltype):
     
 def create_component_model(column_metadata, column_hypers, suffstats):
     suffstats = copy.deepcopy(suffstats)
-    count = suffstats.pop('N')
+    count = suffstats.pop('N', 0)
     modeltype = column_metadata['modeltype']
     component_model_constructor = get_component_model_constructor(modeltype)
     # FIXME: this is a hack

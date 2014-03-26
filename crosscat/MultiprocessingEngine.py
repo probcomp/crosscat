@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -31,7 +31,7 @@ class MultiprocessingEngine(LE.LocalEngine):
 
     """
 
-    def __init__(self, seed=0, cpu_count=None):
+    def __init__(self, seed=None, cpu_count=None):
         """Initialize a MultiprocessingEngine
 
         This is really just setting the initial seed to be used for

@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -73,7 +73,7 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 # initialze and transition chains
 seeds = range(num_chains)
 engine = LE.LocalEngine(inf_seed)
-X_L_list, X_D_list = engine.initialize(M_c, M_r, T, 'from_the_prior', num_chains)
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, 'from_the_prior', n_chains=num_chains)
 X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=num_transitions)
 
 # save the progress

@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -71,6 +71,8 @@ cdef matrix[double]* convert_data_to_cpp(np.ndarray[np.float64_t, ndim=2] data):
 cdef extern from "State.h":
      cdef cppclass State:
           # mutators
+          double insert_row(vector[double] row_data, int matching_row_idx, int
+                  row_idx)
           double transition(matrix[double] data)
           double transition_column_crp_alpha()
           double transition_features(matrix[double] data, vector[int] which_cols)
@@ -88,6 +90,7 @@ cdef extern from "State.h":
           double get_column_crp_score()
           double get_data_score()
           double get_marginal_logp()
+          vector[double] get_draw(int row_idx, int random_seed)
           int get_num_views()
           c_map[int, vector[int]] get_column_groups()
           string to_string(string join_str, bool top_level)
@@ -112,6 +115,8 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    string col_initialization,
                                    string row_initialization,
+                                   vector[double] specified_s_grid,
+                                   vector[double] specified_mu_grid,
                                    int N_GRID, int SEED, int CT_KERNEL)
      State *new_State "new State" (matrix[double] &data,
                                    vector[string] global_col_datatypes,
@@ -123,6 +128,8 @@ cdef extern from "State.h":
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
+                                   vector[double] specified_s_grid,
+                                   vector[double] specified_mu_grid,
                                    int N_GRID, int SEED, int CT_KERNEL)
      void del_State "delete" (State *s)
 
@@ -171,6 +178,7 @@ cdef class p_State:
 
     def __cinit__(self, M_c, T, X_L=None, X_D=None,
                   initialization='from_the_prior', row_initialization=-1,
+                  specified_s_grid=(), specified_mu_grid=(),
                   N_GRID=31, SEED=0, CT_KERNEL=0):
          column_types, event_counts = extract_column_types_counts(M_c)
          global_row_indices = range(len(T))
@@ -196,6 +204,7 @@ cdef class p_State:
                                        self.gri, self.gci,
                                        col_initialization,
                                        row_initialization,
+                                       specified_s_grid, specified_mu_grid,
                                        N_GRID, SEED, CT_KERNEL)
          else:
               # # !!! MUTATES X_L !!!
@@ -214,6 +223,7 @@ cdef class p_State:
                                        hypers_m,
                                        column_partition, column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
+                                       specified_s_grid, specified_mu_grid,
                                        N_GRID, SEED, CT_KERNEL)
     def __dealloc__(self):
         del_matrix(self.dataptr)
@@ -251,6 +261,8 @@ cdef class p_State:
         return self.thisptr.get_num_views()
     def calc_row_predictive_logp(self, in_vd):
          return self.thisptr.calc_row_predictive_logp(in_vd)
+    def get_draw(self, row_idx, random_seed):
+        return self.thisptr.get_draw(row_idx, random_seed)
     #
     # get_X_L helpers helpers
     def get_row_partition_model_i(self, view_idx):
@@ -315,6 +327,8 @@ cdef class p_State:
             view_state.append(view_state_i)
         return view_state
     # mutators
+    def insert_row(self, row_data, matching_row_idx, row_idx=-1):
+        return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
     def transition(self, which_transitions=(), n_steps=1,
                    c=(), r=(), max_iterations=-1, max_time=-1):
          seed = None
@@ -335,7 +349,7 @@ cdef class p_State:
                              args_dict = get_args_dict(args_list, locals())
                              score_delta += which_method(**args_dict)
                         else:
-                             print_str = 'INVALID TRANSITION TYPE TO' \
+                             print_str = 'INVALID TRANSITION TYPE TO ' \
                                  'State.transition: %s' % which_transition
                              print print_str
          return score_delta

@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -21,6 +21,21 @@ import itertools
 import inspect
 from timeit import default_timer
 import datetime
+import random
+import multiprocessing
+import multiprocessing.pool
+
+#http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class NoDaemonPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 class Timer(object):
     def __init__(self, task='action', verbose=True):
@@ -40,7 +55,30 @@ class Timer(object):
         if self.verbose:
             print '%s took:\t% 7d ms' % (self.task, self.elapsed)
 
-def int_generator(start=0):
+class MapperContext(object):
+    def __init__(self, do_multiprocessing=True, Pool=multiprocessing.Pool,
+            *args, **kwargs):
+        self.pool = None
+        self.map = map
+        if do_multiprocessing:
+            self.pool = Pool(*args, **kwargs)
+            self.map = self.pool.map
+            pass
+        return
+
+    def __enter__(self):
+        return self.map
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            pass
+        return False
+
+def int_generator(start=None):
+    if start is None:
+        start = random.randrange(32767)
     next_i = start
     while True:
         yield next_i
@@ -58,6 +96,14 @@ def roundrobin(*iterables):
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
+
+def divide_N_fairly(N, num_partitions):
+    _n = N / num_partitions
+    ns = [_n] * num_partitions
+    delta = N - sum(ns)
+    for idx in range(delta):
+        ns[idx] += 1
+    return ns
 
 # introspection helpers
 def is_obj_method_name(obj, method_name):
@@ -89,4 +135,14 @@ def print_ts(in_str):
     now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_str = '%s:: %s' % (now_str, in_str)
     print print_str
-    
+
+def ensure_listlike(input):
+    if not isinstance(input, (list, tuple,)):
+        input = [input]
+    return input
+
+def get_dict_as_text(parameters, join_with='\n'):
+    create_line = lambda (key, value): key + ' = ' + str(value)
+    lines = map(create_line, parameters.iteritems())
+    text = join_with.join(lines)
+    return text

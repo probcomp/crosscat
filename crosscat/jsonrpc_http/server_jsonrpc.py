@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -50,7 +50,9 @@ from __future__ import print_function
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-
+import functools
+from multiprocessing import Process, Queue
+#
 from twisted.internet import ssl
 import traceback
 from twisted.internet import reactor
@@ -61,40 +63,60 @@ import crosscat.LocalEngine as LE
 import crosscat.utils.general_utils as gu
 
 
+def putter(f, q, *args, **kwargs):
+    output = f(*args, **kwargs)
+    q.put(output)
+    q.close()
+    return
+
+def run_in_process(method, seed):
+    def wrapped(*args, **kwargs):
+        engine = LE.LocalEngine(seed)
+        _method = getattr(engine, method)
+        #
+        q = Queue()
+        partial = functools.partial(putter, _method, q)
+        p = Process(target=partial, args=args, kwargs=kwargs)
+        p.start()
+        ret_val = q.get()
+        p.join()
+        return ret_val
+    return wrapped
+
 class ExampleServer(ServerEvents):
 
-	get_next_seed = gu.int_generator(start=0)
-	methods = set(gu.get_method_names(LE.LocalEngine))
+    get_next_seed = gu.int_generator(start=0)
+    methods = set(gu.get_method_names(LE.LocalEngine))
 
-	# inherited hooks
-	def log(self, responses, txrequest, error):
-		print(txrequest.code, end=' ')
-		if isinstance(responses, list):
-			for response in responses:
-				msg = self._get_msg(response)
-				print(txrequest, msg)
-		else:
-			msg = self._get_msg(responses)
-			print(txrequest, msg)
+    # inherited hooks
+    def log(self, responses, txrequest, error):
+        print(txrequest.code, end=' ')
+        if isinstance(responses, list):
+            for response in responses:
+                msg = self._get_msg(response)
+                print(txrequest, msg)
+        else:
+            msg = self._get_msg(responses)
+            print(txrequest, msg)
 
-	def findmethod(self, method, args=None, kwargs=None):
-		if method in self.methods:
-			next_seed = self.get_next_seed.next()
-			engine = LE.LocalEngine(next_seed)
-			return getattr(engine, method)
-		else:
-			return None
+    def findmethod(self, method, args=None, kwargs=None):
+        if method in self.methods:
+            next_seed = self.get_next_seed.next()
+            wrapped = run_in_process(method, next_seed)
+            return wrapped
+        else:
+            return None
 
-	# helper methods
-	def _get_msg(self, response):
-		ret_str = str(response)
-		if hasattr(response, 'id'):
-			ret_str = str(response.id)
-			if response.result:
-				ret_str += '; result: %s' % str(response.result)
-			else:
-				ret_str += '; error: %s' % str(response.error)
-		return ret_str
+    # helper methods
+    def _get_msg(self, response):
+        ret_str = str(response)
+        if hasattr(response, 'id'):
+            ret_str = str(response.id)
+            if response.result:
+                ret_str += '; result: %s' % str(response.result)
+            else:
+                ret_str += '; error: %s' % str(response.error)
+        return ret_str
 
 root = JSON_RPC().customize(ExampleServer)
 site = server.Site(root)

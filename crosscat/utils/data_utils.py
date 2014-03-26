@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -23,6 +23,57 @@ import copy
 #
 import numpy
 
+
+def get_generative_clustering(M_c, M_r, T,
+                              data_inverse_permutation_indices,
+                              num_clusters, num_views):
+    from crosscat.LocalEngine import LocalEngine
+    import crosscat.cython_code.State as State
+    # NOTE: this function only works because State.p_State doesn't use
+    #       column_component_suffstats
+    num_rows = len(T)
+    num_cols = len(T[0])
+    X_D_helper = numpy.repeat(range(num_clusters), (num_rows / num_clusters))
+    gen_X_D = [
+        X_D_helper[numpy.argsort(data_inverse_permutation_index)]
+        for data_inverse_permutation_index in data_inverse_permutation_indices
+        ]
+    gen_X_L_assignments = numpy.repeat(range(num_views), (num_cols / num_views))
+    # initialize to generate an X_L to manipulate
+    local_engine = LocalEngine()
+    bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T,
+                                                         initialization='apart')
+    bad_X_L['column_partition']['assignments'] = gen_X_L_assignments
+    # manually constrcut state in in generative configuration
+    state = State.p_State(M_c, T, bad_X_L, gen_X_D)
+    gen_X_L = state.get_X_L()
+    gen_X_D = state.get_X_D()
+    # run inference on hyperparameters to leave them in a reasonable state
+    kernel_list = (
+        'row_partition_hyperparameters',
+        'column_hyperparameters',
+        'column_partition_hyperparameter',
+        )
+    gen_X_L, gen_X_D = local_engine.analyze(M_c, T, gen_X_L, gen_X_D, n_steps=1,
+                                            kernel_list=kernel_list)
+    #
+    return gen_X_L, gen_X_D
+
+def generate_clean_state(gen_seed, num_clusters,
+                         num_cols, num_rows, num_splits,
+                         max_mean=10, max_std=1,
+                         plot=False):
+    # generate the data
+    T, M_r, M_c, data_inverse_permutation_indices = \
+        gen_factorial_data_objects(gen_seed, num_clusters,
+                                      num_cols, num_rows, num_splits,
+                                      max_mean=10, max_std=1,
+                                      send_data_inverse_permutation_indices=True)
+    # recover generative clustering
+    X_L, X_D = get_generative_clustering(M_c, M_r, T,
+                                         data_inverse_permutation_indices,
+                                         num_clusters, num_splits)
+    return T, M_c, M_r, X_L, X_D
 
 def get_ith_ordering(in_list, i):
     temp_list = [in_list[j::(i+1)][:] for j in range(i+1)]
@@ -102,7 +153,7 @@ def gen_continuous_metadata(column_data):
 
 def gen_multinomial_metadata(column_data):
     def get_is_not_nan(el):
-        if type(el) is str:
+        if isinstance(el, str):
             return el.upper() != 'NAN'
         else:
             return True
@@ -275,16 +326,35 @@ def continuous_or_ignore_from_file_with_colnames(filename, cctypes, max_rows=Non
     return T, M_r, M_c, header
 
 def convert_code_to_value(M_c, cidx, code):
+    """
+    For a column with categorical data, this function takes the 'code':
+    the integer used to represent a specific value, and returns the corresponding
+    raw value (e.g. 'Joe' or 234.23409), which is always encoded as a string.
+
+    Note that the underlying store 'value_to_code' is unfortunately named backwards.
+    TODO: fix the backwards naming.
+    """
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
-        return round(code,1)
+        return float(code)
     else:
-        return M_c['column_metadata'][cidx]['value_to_code'][str(int(code))] 
+        try:
+            return M_c['column_metadata'][cidx]['value_to_code'][int(code)]
+        except KeyError:
+            return M_c['column_metadata'][cidx]['value_to_code'][str(int(code))]
 
 def convert_value_to_code(M_c, cidx, value):
+    """
+    For a column with categorical data, this function takes the raw value
+    (e.g. 'Joe' or 234.23409), which is always encoded as a string, and returns the
+    'code': the integer used to represent that value in the underlying representation.
+
+    Note that the underlying store 'code_to_value' is unfortunately named backwards.
+    TODO: fix the backwards naming.
+    """
     if M_c['column_metadata'][cidx]['modeltype'] == 'normal_inverse_gamma':
         return float(value)
     else:
-        return M_c['column_metadata'][cidx]['code_to_value'][str(int(value))] 
+        return M_c['column_metadata'][cidx]['code_to_value'][str(value)] 
 
 def map_from_T_with_M_c(coordinate_value_tuples, M_c):
     coordinate_code_tuples = []
@@ -299,6 +369,7 @@ def map_from_T_with_M_c(coordinate_value_tuples, M_c):
     return coordinate_code_tuples
 
 def map_to_T_with_M_c(T_uncast_array, M_c):
+    T_uncast_array = numpy.array(T_uncast_array)
     # WARNING: array argument is mutated
     for col_idx in range(T_uncast_array.shape[1]):
         modeltype = M_c['column_metadata'][col_idx]['modeltype']
@@ -316,19 +387,49 @@ def map_to_T_with_M_c(T_uncast_array, M_c):
     T = numpy.array(T_uncast_array, dtype=float).tolist()
     return T
 
-def remove_ignore_cols(T, cctypes, header):
-    cctypes_arr = numpy.array(cctypes)
-    header_arr = numpy.array(header)
-    T_arr = numpy.array(T)
-    #
-    keep_cols_bool = cctypes_arr!='ignore'
-    cctypes_arr = cctypes_arr[keep_cols_bool]
-    header_arr = header_arr[keep_cols_bool]
-    T_arr = T_arr[:, keep_cols_bool]
-    #
-    return T_arr, cctypes_arr, header_arr
+def do_pop_list_indices(in_list, pop_indices):
+    pop_indices = sorted(pop_indices, reverse=True)
+    _do_pop = lambda x: in_list.pop(x)
+    map(_do_pop, pop_indices)
+    return in_list
 
-bad_set = set(['null'])
+def get_list_indices(in_list, get_indices_of):
+    lookup = dict(zip(in_list, range(len(in_list))))
+    indices = map(lookup.get, get_indices_of)
+    indices = filter(None, indices)
+    return indices
+
+def transpose_list(in_list):
+    return zip(*in_list)
+
+def get_pop_indices(cctypes, colnames):
+    assert len(colnames) == len(cctypes)
+    pop_columns = [
+            colname
+            for (cctype, colname) in zip(cctypes, colnames)
+            if cctype == 'ignore'
+            ]
+    pop_indices = get_list_indices(colnames, pop_columns)
+    return pop_indices
+
+def do_pop_columns(T, pop_indices):
+    T_by_columns = transpose_list(T)
+    T_by_columns = do_pop_list_indices(T_by_columns, pop_indices)
+    T = transpose_list(T_by_columns)
+    return T
+
+def remove_ignore_cols(T, cctypes, colnames):
+    pop_indices = get_pop_indices(cctypes, colnames)
+    T = do_pop_columns(T, pop_indices)
+    colnames = do_pop_list_indices(colnames[:], pop_indices)
+    cctypes = do_pop_list_indices(cctypes[:], pop_indices)
+    return T, cctypes, colnames
+
+nan_set = set(['', 'null', 'n/a'])
+_convert_nan = lambda el: el if el.strip().lower() not in nan_set else 'NAN'
+_convert_nans = lambda in_list: map(_convert_nan, in_list)
+convert_nans = lambda in_T: map(_convert_nans, in_T)
+
 def read_data_objects(filename, max_rows=None, gen_seed=0,
                       cctypes=None, colnames=None):
     header, raw_T = read_csv(filename, has_header=True)
@@ -336,20 +437,14 @@ def read_data_objects(filename, max_rows=None, gen_seed=0,
     # FIXME: why both accept colnames argument and read header?
     if colnames is None:
         colnames = header
+        pass
     # remove excess rows
     raw_T = at_most_N_rows(raw_T, N=max_rows, gen_seed=gen_seed)
-    # convert empty strings to NAN
-    def filter_empty(el):
-        el_strip = el.strip()
-        if len(el_strip) == 0 or el_strip.lower() in bad_set:
-            return 'NAN'
-        else:
-            return el
-    for i in range(len(raw_T)):
-        raw_T[i] = map(filter_empty, raw_T[i])
+    raw_T = convert_nans(raw_T)
     # remove ignore columns
     if cctypes is None:
         cctypes = ['continuous'] * len(header)
+        pass
     T_uncast_arr, cctypes, header = remove_ignore_cols(raw_T, cctypes, header)
     # determine value mappings and map T to continuous castable values
     M_r = gen_M_r_from_T(T_uncast_arr)
@@ -380,9 +475,9 @@ def guess_column_type(column_data, count_cutoff=20, ratio_cutoff=0.02):
     return column_type
 
 def guess_column_types(T, count_cutoff=20, ratio_cutoff=0.02):
-    T_array_transposed = numpy.array(T).T
+    T_transposed = transpose_list(T)
     column_types = []
-    for column_data in T_array_transposed:
+    for column_data in T_transposed:
         column_type = guess_column_type(column_data, count_cutoff, ratio_cutoff)
         column_types.append(column_type)
     return column_types
@@ -391,6 +486,7 @@ def read_model_data_from_csv(filename, max_rows=None, gen_seed=0,
                              cctypes=None):
     colnames, T = read_csv(filename)
     T = at_most_N_rows(T, max_rows, gen_seed)
+    T = convert_nans(T)
     if cctypes is None:
         cctypes = guess_column_types(T)
     M_c = gen_M_c_from_T(T, cctypes, colnames)

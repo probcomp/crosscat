@@ -1,12 +1,16 @@
-tabular_predDB/jsonrpc_http
+crosscat/jsonrpc_http
 ==============
 
-tabular predictive database stub server
+crosscat JSONRPCEngine stub server
 
 Running tests
 ---------------------------
-    > cd /path/to/tabular_predDB/jsonrpc_http
-    > python server_jsonrpc.py >server_jsonrpc.out 2>server_jsonrpc.err &
-    > python stub_client_jsonrpc.py >stub_client_jsonrpc.out 2>stub_client_jsonrpc.err
-    > # terminate the server
-    > pkill -f server_jsonrpc
+    dirname=/path/to/crosscat
+    # Start the server
+    bash $dirname/scripts/service_scripts/run_server.sh
+    cd $dirname/crosscat/jsonrpc_http
+    # this is currently broken!
+    python stub_client_jsonrpc.py >stub_client_jsonrpc.out 2>stub_client_jsonrpc.err
+    python test_engine.py >test_engine.out 2>test_engine.err
+    # Kill the server
+    pkill -f server_jsonrpc

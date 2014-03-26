@@ -1,5 +1,5 @@
 /*
-*   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+*   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 *
 *   Lead Developers: Dan Lovell and Jay Baxter
 *   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -83,13 +83,17 @@ bool is_almost(double val1, double val2, double precision) {
 vector<double> linspace(double a, double b, int n) {
   vector<double> values;
   if(a > b) {
+	  /*
     cerr << "linspace: passed lower bound greater than upper bound!" << endl;
     cerr << "linspace: using upper bound equal to lower bound" << endl;
+    */
     b = a;
   }
   if(a == b && n != 1) {
+	  /*
     cerr << "linspace: passed lower bound equal upper bound but n != 1!" << endl;
     cerr << "linspace: using n = 1" << endl;
+    */
     n = 1;
   }
   if(n == 1) {
@@ -177,11 +181,6 @@ vector<double> extract_col(const matrix<double> data, int col_idx) {
   }
   return col;
 }
-
-vector<double> append(vector<double> vec1, vector<double> vec2) {
-  vec1.insert(vec1.end(), vec2.begin(), vec2.end());
-  return vec1;
-}  
 
 vector<int> extract_global_ordering(map<int, int> global_to_local) {
   vector<int> global_indices(global_to_local.size(), -1);
@@ -330,6 +329,21 @@ vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
   return cluster_indices_v;
 }
 
+vector<vector<vector<int> > > draw_crp_init(vector<int> global_row_indices,
+				   vector<double> alphas,
+				   RandomNumberGenerator &rng,
+				   string initialization) {
+  vector<vector<vector<int> > > cluster_indicies_v_v;
+  for(vector<double>::iterator it = alphas.begin(); it!=alphas.end(); it++) {
+    double alpha = *it;
+    vector<vector<int> > cluster_indicies_v = draw_crp_init(global_row_indices,
+		    alpha, rng, initialization);
+    cluster_indicies_v_v.push_back(cluster_indicies_v);
+  }
+  return cluster_indicies_v_v;
+}
+
+
 void copy_column(const MatrixD fromM, int from_col, MatrixD &toM, int to_col) {
   assert(fromM.size1()==toM.size1());
   int num_rows = fromM.size1();
@@ -383,14 +397,21 @@ void construct_continuous_specific_hyper_grid(int n_grid,
 				 vector<double> col_data,
 				 vector<double> &s_grid,
 				 vector<double> &mu_grid) {
-  // construct s grid
   // FIXME: should s_grid be a linspace from min el**2 to max el**2
+  double sum_sq_deviation, min, max;
   col_data = filter_nans(col_data);
-  double sum_sq_deviation = calc_sum_sq_deviation(col_data);
+  int num_non_nan = col_data.size();
+  if(num_non_nan != 0) {
+    sum_sq_deviation = calc_sum_sq_deviation(col_data);
+    min = *std::min_element(col_data.begin(), col_data.end());
+    max = *std::max_element(col_data.begin(), col_data.end());
+  } else {
+    // FIXME: What to do here?
+    sum_sq_deviation = 100;
+    min = -100;
+    max = 100;
+  }
   s_grid = log_linspace(sum_sq_deviation / 100., sum_sq_deviation, n_grid);
-  // construct mu grids
-  double min = *std::min_element(col_data.begin(), col_data.end());
-  double max = *std::max_element(col_data.begin(), col_data.end());
   mu_grid = linspace(min, max, n_grid);
 }
 

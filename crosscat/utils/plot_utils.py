@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -25,12 +25,14 @@ pylab.ion()
 import hcluster
 #
 import crosscat.utils.general_utils as gu
+import crosscat.utils.file_utils as fu
 
 
-def my_savefig(filename, dir='', close=True):
+def save_current_figure(filename, dir='./', close=True, format=None):
     if filename is not None:
+        fu.ensure_dir(dir)
         full_filename = os.path.join(dir, filename)
-        pylab.savefig(full_filename)
+        pylab.savefig(full_filename, format=format)
         if close:
             pylab.close()
 
@@ -40,7 +42,7 @@ def get_aspect_ratio(T_array):
     aspect_ratio = float(num_cols)/num_rows
     return aspect_ratio
 
-def plot_T(T_array, M_c, filename=None, dir='', close=True):
+def plot_T(T_array, M_c, filename=None, dir='./', close=True):
     num_cols = len(T_array[0])
     column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_cols)]
     column_names = numpy.array(column_names)
@@ -54,9 +56,9 @@ def plot_T(T_array, M_c, filename=None, dir='', close=True):
 
     pylab.show()
     
-    my_savefig(filename, dir, close)
+    save_current_figure(filename, dir, close)
 
-def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='', close=True):
+def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True, format=None):
 
     num_cols = len(X_L['column_partition']['assignments'])
     column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_cols)]
@@ -111,7 +113,7 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='', close=True):
 
         pylab.show()
         if view_idx!=0: pylab.gca().set_yticklabels([])
-    my_savefig(filename, dir, close)
+    save_current_figure(filename, dir, close, format=format)
 
 def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist.png', plotcolor='red', truth=None, x_axis_lim=None):
 
@@ -154,7 +156,7 @@ def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist
 
     if x_axis_lim != None:
         pylab.xlim(x_axis_lim)
-    my_savefig(filename, '', False)
+    save_current_figure(filename, './', False)
     return pylab.gca().get_xlim()
 
 def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
@@ -261,11 +263,13 @@ def legend_outside_from_dicts(marker_dict, color_dict,
                     bbox_to_anchor=bbox_to_anchor, prop={"size":14})
     return
 
-def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
+def savefig_legend_outside(filename, ax=None, bbox_inches='tight', dir='./'):
     if ax is None:
         ax = pylab.gca()
     lgd = ax.get_legend()
-    pylab.savefig(filename,
+    fu.ensure_dir(dir)
+    full_filename = os.path.join(dir, filename)
+    pylab.savefig(full_filename,
                   bbox_extra_artists=(lgd,),
                   bbox_inches=bbox_inches,
                   )
@@ -293,3 +297,11 @@ def plot_diagnostics(diagnostics_dict, hline_lookup=None, which_diagnostics=None
         pylab.xlabel('iter')
         pylab.ylabel(which_diagnostic)
     return fh
+
+def show_parameters(parameters):
+    if len(parameters) == 0: return
+    ax = pylab.gca()
+    text = gu.get_dict_as_text(parameters)
+    pylab.text(0, 1, text, transform=ax.transAxes,
+            va='top', size='small', linespacing=1.0)
+    return

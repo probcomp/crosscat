@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2010-2013, MIT Probabilistic Computing Project
+#   Copyright (c) 2010-2014, MIT Probabilistic Computing Project
 #
 #   Lead Developers: Dan Lovell and Jay Baxter
 #   Authors: Dan Lovell, Baxter Eaves, Jay Baxter, Vikash Mansinghka
@@ -19,6 +19,7 @@
 #
 import random
 import argparse
+import tempfile
 import sys
 from collections import Counter
 
@@ -37,46 +38,46 @@ def get_next_seed(max_val=32767):
 
 
 def run_test(n=1000, d_type='continuous', observed=False):
-	if d_type == 'continuous':
-		run_test_continuous(n, observed)
-	elif d_type == 'multinomial':
-		run_test_multinomial(n, observed)
+    if d_type == 'continuous':
+        run_test_continuous(n, observed)
+    elif d_type == 'multinomial':
+        run_test_multinomial(n, observed)
 
 def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
-	# generate the partitions
-	random.seed(next_seed)
-	
-	cols_to_views = [0 for _ in range(n_cols)]
-	rows_in_views_to_cols = []
-	for view in range(n_views):
-		partition = eu.CRP(n_rows,2.0)
-		random.shuffle(partition)
-		rows_in_views_to_cols.append(partition)
+    # generate the partitions
+    random.seed(next_seed)
+    
+    cols_to_views = [0 for _ in range(n_cols)]
+    rows_in_views_to_cols = []
+    for view in range(n_views):
+        partition = eu.CRP(n_rows,2.0)
+        random.shuffle(partition)
+        rows_in_views_to_cols.append(partition)
 
-	# generate the data
-	data = numpy.zeros((n_rows,n_cols),dtype=float)
-	for col in range(n_cols):
-		view = cols_to_views[col]
-		for row in range(n_rows):
-			cluster = rows_in_views_to_cols[view][row]
-			data[row,col] = cluster
+    # generate the data
+    data = numpy.zeros((n_rows,n_cols),dtype=float)
+    for col in range(n_cols):
+        view = cols_to_views[col]
+        for row in range(n_rows):
+            cluster = rows_in_views_to_cols[view][row]
+            data[row,col] = cluster
 
-	T = data.tolist()
-	M_r = du.gen_M_r_from_T(T)
-	M_c = du.gen_M_c_from_T(T)
+    T = data.tolist()
+    M_r = du.gen_M_r_from_T(T)
+    M_c = du.gen_M_c_from_T(T)
 
-	T, M_c = du.convert_columns_to_multinomial(T, M_c, range(n_cols))
+    T, M_c = du.convert_columns_to_multinomial(T, M_c, range(n_cols))
 
-	return T, M_r, M_c
+    return T, M_r, M_c
 
 def run_test_continuous(n, observed):
     n_rows = 40
     n_cols = 40
 
     if observed:
-    	query_row = 10
+        query_row = 10
     else:
-    	query_row = n_rows
+        query_row = n_rows
 
     query_column = 1
 
@@ -126,7 +127,7 @@ def run_test_continuous(n, observed):
     # calculated using the trapezoid rule
     area_density = 0;
     for i in range(len(X)-1):
-    	area_density += (X[i+1]-X[i])*(densities[i+1]+densities[i])/2.0
+        area_density += (X[i+1]-X[i])*(densities[i+1]+densities[i])/2.0
 
     print "Area of PDF (should be close to, but not greater than, 1): " + str(area_density)
     print "*Note: The area will be less than one because the range (integral) is truncated."
@@ -144,73 +145,76 @@ def run_test_continuous(n, observed):
     pylab.title('TEST: PDF (not scaled)')
 
     pylab.show()
-
-    raw_input("Press Enter when finished...")
+    fd, fig_filename = tempfile.mkstemp(prefix='run_test_continuous_',
+            suffix='.png', dir='.')
+    pylab.savefig(fig_filename)
 
 
 def run_test_multinomial(n, observed):
-	n_rows = 40
-	n_cols = 40
+    n_rows = 40
+    n_cols = 40
 
-	if observed:
-		query_row = 10
-	else:
-		query_row = n_rows
+    if observed:
+        query_row = 10
+    else:
+        query_row = n_rows
 
-	query_column = 1
+    query_column = 1
 
-	Q = [(query_row, query_column)]
+    Q = [(query_row, query_column)]
 
-	# do the test with multinomial data
-	T, M_r, M_c = generate_multinomial_data(get_next_seed(),2,n_rows,1)
-	
-	state = State.p_State(M_c, T)
+    # do the test with multinomial data
+    T, M_r, M_c = generate_multinomial_data(get_next_seed(),2,n_rows,1)
+    
+    state = State.p_State(M_c, T)
 
-	X_L = state.get_X_L()
-	X_D = state.get_X_D()
+    X_L = state.get_X_L()
+    X_D = state.get_X_D()
 
-	Y = []
+    Y = []
 
-	# pull n samples
-	samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
-	X_array = numpy.sort(numpy.array(samples))
-	X = numpy.unique(X_array)
-	X = X.tolist()
+    # pull n samples
+    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
+    X_array = numpy.sort(numpy.array(samples))
+    X = numpy.unique(X_array)
+    X = X.tolist()
 
-	# build the queries
-	Qs = [];
-	for x in X:
-	    # Qtmp = (query_row, query_column, x[0])
-	    Qtmp = (query_row, query_column, x)
-	    Qs.append(Qtmp)
+    # build the queries
+    Qs = [];
+    for x in X:
+        # Qtmp = (query_row, query_column, x[0])
+        Qtmp = (query_row, query_column, x)
+        Qs.append(Qtmp)
 
-	# get pdf values
-	densities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs))
+    # get pdf values
+    densities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs))
 
-	print "Sum of densities (should be 1): %f" % (numpy.sum(densities))
+    print "Sum of densities (should be 1): %f" % (numpy.sum(densities))
 
-	pylab.clf()
+    pylab.clf()
 
-	# PLOT: probability vs samples distribution
-	# scale all histograms to be valid PDFs (area=1)
-	mbins = numpy.unique(X_array)
+    # PLOT: probability vs samples distribution
+    # scale all histograms to be valid PDFs (area=1)
+    mbins = numpy.unique(X_array)
 
-	mbins = numpy.append(mbins,max(mbins)+1)
+    mbins = numpy.append(mbins,max(mbins)+1)
 
-	pdf, bins = numpy.histogram(X_array,mbins)
+    pdf, bins = numpy.histogram(X_array,mbins)
 
-	pdf = pdf/float(numpy.sum(pdf))
-	pylab.bar(mbins[0:-1],pdf,label="samples",alpha=.5)
-	pylab.scatter(X,densities, c="red", label="pdf", edgecolor='none')
+    pdf = pdf/float(numpy.sum(pdf))
+    pylab.bar(mbins[0:-1],pdf,label="samples",alpha=.5)
+    pylab.scatter(X,densities, c="red", label="pdf", edgecolor='none')
 
-	pylab.legend(loc='upper left',fontsize='x-small')
-	pylab.xlabel('value') 
-	pylab.ylabel('frequency/density')
-	pylab.title('TEST: PDF (not scaled)')
+    pylab.legend(loc='upper left',fontsize='x-small')
+    pylab.xlabel('value') 
+    pylab.ylabel('frequency/density')
+    pylab.title('TEST: PDF (not scaled)')
 
-	pylab.show()
+    pylab.show()
 
-	raw_input("Press Enter when finished...")
+    fd, fig_filename = tempfile.mkstemp(prefix='run_test_multinomial_',
+            suffix='.png', dir='.')
+    pylab.savefig(fig_filename)
 
 random.seed(None) # seed with system time
 inf_seed = random.randrange(32767)
