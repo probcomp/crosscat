@@ -234,6 +234,13 @@ class State {
    */
   double transition_feature_gibbs(int feature_idx, std::vector<double> feature_data);
   /**
+   * Helper for transition_feature_mh
+   * \param feature_idx The column index that the view should associaate with the data
+   * \param feature_data The data that comprises the feature
+   * \param proposed_view The view to propose jumping to
+   */
+  double mh_choose(int feature_idx, std::vector<double> feature_data, View &proposed_view);
+  /**
    * Metropolis birth-death process for assigning columns to view (or creating new views)
    * \param feature_idx The column index that the view should associaate with the data
    * \param feature_data The data that comprises the feature

@@ -190,6 +190,49 @@ double State::transition_feature_gibbs(int feature_idx, vector<double> feature_d
   return score_delta;
 }
 
+double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
+  double score_delta = 0;
+  View *p_original_view = view_lookup[feature_idx];
+  View &original_view = *p_original_view;
+
+  if(&original_view==&proposed_view) {
+      // short circuit: no impact
+      return 0;
+  }
+
+  // remove feature from model
+  View *p_singleton_view;
+  double original_view_score_delta = -remove_feature(feature_idx, feature_data, p_singleton_view);
+  score_delta -= original_view_score_delta;
+  View &singleton_view = *p_singleton_view;
+
+  // score
+  double crp_log_delta_new, data_log_delta_new;
+  string col_datatype = get(global_col_datatypes, feature_idx);
+  CM_Hypers hypers = get(hypers_m, feature_idx);
+  double proposed_view_score_delta = calc_feature_view_predictive_logp(feature_data,
+          col_datatype, proposed_view,
+          crp_log_delta_new,
+          data_log_delta_new,
+          hypers);
+
+  // Metropolis jump
+  double log_r = log(draw_rand_u());
+  View *p_insert_into;
+  if(log_r < proposed_view_score_delta - original_view_score_delta){
+      p_insert_into = &proposed_view;
+  } else {
+      p_insert_into = &original_view;
+  }
+  score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
+
+  // clean up
+  remove_if_empty(original_view);
+  remove_if_empty(singleton_view);
+
+  return score_delta;
+}
+
 // updated kernel with birth-death process
 double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
   double score_delta = 0;
