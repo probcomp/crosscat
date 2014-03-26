@@ -236,77 +236,24 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
 // updated kernel with birth-death process
 double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
   double score_delta = 0;
-  
-  int num_views = views.size();
-  // get current view
-  View *current_view = view_lookup[feature_idx];
-
-  View *p_singleton_view;
-  double original_view_score_delta = -remove_feature(feature_idx, p_singleton_view);
-  score_delta -= original_view_score_delta;
-  View &singleton_view = *p_singleton_view;
-
-  // get logp under current view
-  CM_Hypers hypers = get(hypers_m, feature_idx);
-  string col_datatype = get(global_col_datatypes, feature_idx);
-  double crp_log_delta, data_log_delta;
-  double score_in_current_view = calc_feature_view_predictive_logp(feature_data,
-            col_datatype, *current_view,
-            crp_log_delta,
-            data_log_delta,
-            hypers);
-  // score_in_current_view should be the same as original_view_score_delta
+  View *p_proposed_view;
 
   // do we create a new veiw or move to an existing view?
   bool create_new = (draw_rand_u() < .5);
   if(create_new){
-    // propose a new singleton view
-    View &new_singleton_view = get_new_view();
-    double crp_log_delta_new, data_log_delta_new;
-    // score
-    double score_in_new_view = calc_feature_view_predictive_logp(feature_data,
-            col_datatype, new_singleton_view,
-            crp_log_delta_new,
-            data_log_delta_new,
-            hypers);
-
-    double log_r = log(draw_rand_u());
-
-    // Metropolis jump
-    if(log_r < score_in_new_view-score_in_current_view){
-      score_delta += remove_feature(feature_idx, feature_data, current_view);
-      score_delta += insert_feature(feature_idx, feature_data, new_singleton_view);
-      // printf("Created singleton_view (birth)\n");
-    }
-    // printf("stayed in same view (birth)\n");
-    remove_if_empty(new_singleton_view);
-  }else{
-    // choose a random view
-    int new_view_index = draw_rand_i(num_views-1);
-    if(new_view_index == current_view_index){
-      // if we proposed a jump to the current view, do nothing
-      // printf("stayed in same view (death-prop)\n");
-      return 0;
-    }else{
-      View *new_view = &get_view(new_view_index);  
-      double crp_log_delta_new, data_log_delta_new;
-      double score_in_new_view = calc_feature_view_predictive_logp(feature_data,
-            col_datatype, *new_view,
-            crp_log_delta_new,
-            data_log_delta_new,
-            hypers);
-      double log_r = log(draw_rand_u());
-
-      if(log_r < score_in_new_view-score_in_current_view){
-        score_delta += remove_feature(feature_idx, feature_data, current_view);
-        score_delta += insert_feature(feature_idx, feature_data, *new_view);
-        // printf("moved to new view (death)\n");
-      }
-      // printf("stayed in same view (death)\n");
-    }
+      p_proposed_view = &get_new_view();
+  } else {
+    int num_views = views.size();
+    int proposed_view_index = draw_rand_i(num_views-1);
+    p_proposed_view = &get_view(proposed_view_index);
   }
 
-  remove_if_empty(*p_singleton_view);
+  // Metropolis jump
+  score_delta = mh_choose(feature_idx, feature_data, *p_proposed_view);
+
+  // clean up
+  remove_if_empty(*p_proposed_view);
+
   return score_delta;
 }
 
