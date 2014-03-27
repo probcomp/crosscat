@@ -262,8 +262,11 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
     score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
 
     // clean up
+    bool original_was_not_singleton = &original_view != &singleton_view;
     remove_if_empty(original_view);
-    remove_if_empty(singleton_view);
+    if(original_was_not_singleton) {
+        remove_if_empty(singleton_view);
+    }
 
     return score_delta;
 }
