@@ -77,7 +77,7 @@ def plot_results(results, dirname='./'):
 if __name__ == '__main__':
     import argparse
     import experiment_runner.experiment_utils as eu
-    from experiment_runner.ExperimentRunner import ExperimentRunner
+    from experiment_runner.ExperimentRunner import ExperimentRunner, propagate_to_s3
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
     parser.add_argument('--base_num_rows', default=10, type=int)
@@ -92,16 +92,21 @@ if __name__ == '__main__':
     do_long = args.do_long
 
 
+    # create configs
     arg_list_to_config = partial(eu.arg_list_to_config,
             geweke_utils.generate_parser(),
             arbitrate_args=geweke_utils.arbitrate_args)
     args_list = generate_args_list(base_num_rows, num_iters, do_long)
     config_list = map(arg_list_to_config, args_list)
 
-    # run experiment
-    er = ExperimentRunner(geweke_utils.run_geweke, dirname_prefix=dirname,
+
+    # do experiments
+    er = ExperimentRunner(geweke_utils.run_geweke, storage_type='fs',
+            dirname_prefix=dirname,
             bucket_str='experiment_runner')
     er.do_experiments(config_list)
+    # push to s3
+    propagate_to_s3(er)
 
 
     if do_plots:

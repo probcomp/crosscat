@@ -140,7 +140,7 @@ def summary_plotter(results, dirname='./', save=True):
 
 
 if __name__ == '__main__':
-    from experiment_runner.ExperimentRunner import ExperimentRunner
+    from experiment_runner.ExperimentRunner import ExperimentRunner, propagate_to_s3
 
     # parse args
     parser = _generate_parser()
@@ -148,15 +148,19 @@ if __name__ == '__main__':
     kwargs, do_plots, dirname = _munge_args(args)
 
 
+    # create configs
     config_list = eu.gen_configs(base_config, **kwargs)
 
-    # run experiment
-    er = ExperimentRunner(runner,
+
+    # do experiments
+    er = ExperimentRunner(runner, storage_type='fs',
             result_filename=result_filename,
             dirname_prefix=dirname,
             bucket_str='experiment_runner',
             )
     er.do_experiments(config_list)
+    propagate_to_s3(er)
+
 
     if do_plots:
         results = er.get_results(er.frame).values()
