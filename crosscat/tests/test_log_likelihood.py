@@ -140,32 +140,26 @@ def summary_plotter(results, dirname='./', save=True):
 
 
 if __name__ == '__main__':
-    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    from experiment_runner.ExperimentRunner import ExperimentRunner
 
     # parse args
     parser = _generate_parser()
     args = parser.parse_args()
     kwargs, do_plots, dirname = _munge_args(args)
 
-    # demonstrate use of experiment runner
-    is_result_filepath, generate_dirname, config_to_filepath = \
-            eu.get_fs_helper_funcs(result_filename, directory_prefix)
-    writer = eu.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
+
+    config_list = eu.gen_configs(base_config, **kwargs)
 
     # run experiment
-    config_list = eu.gen_configs(base_config, **kwargs)
-    with Timer('experiments') as timer:
-        with MapperContext(Pool=NoDaemonPool) as mapper:
-            # use non-daemonic mapper since run_geweke spawns daemonic processes
-            eu.do_experiments(config_list, runner, writer, dirname, mapper)
-            pass
-        pass
+    er = ExperimentRunner(runner,
+            result_filename=result_filename,
+            dirname_prefix=dirname,
+            bucket_str='experiment_runner',
+            )
+    er.do_experiments(config_list)
 
     if do_plots:
-        config_list = read_all_configs(dirname)
-        results = read_results(config_list, dirname)
+        results = er.get_results(er.frame).values()
         summary_plotter(results, dirname=dirname)
 #        eu.plot_results(plotter, results, generate_dirname,
 #                saver=pu.save_current_figure, filename='over_iters',

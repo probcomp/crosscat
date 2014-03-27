@@ -1,10 +1,8 @@
-import argparse
 import operator
 import itertools
 from functools import partial
 #
 import crosscat.utils.geweke_utils as geweke_utils
-import experiment_runner.experiment_utils as eu
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
@@ -77,6 +75,9 @@ def plot_results(results, dirname='./'):
     return
 
 if __name__ == '__main__':
+    import argparse
+    import experiment_runner.experiment_utils as eu
+    from experiment_runner.ExperimentRunner import ExperimentRunner
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
     parser.add_argument('--base_num_rows', default=10, type=int)
@@ -91,32 +92,19 @@ if __name__ == '__main__':
     do_long = args.do_long
 
 
-    result_filename = geweke_utils.result_filename
-    directory_prefix = dirname
-    runner = geweke_utils.run_geweke
     arg_list_to_config = partial(eu.arg_list_to_config,
             geweke_utils.generate_parser(),
             arbitrate_args=geweke_utils.arbitrate_args)
-    #
-    is_result_filepath, generate_dirname, config_to_filepath = \
-            eu.get_fs_helper_funcs(result_filename, directory_prefix)
-    writer = eu.get_fs_writer(config_to_filepath)
-    read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
-            is_result_filepath, config_to_filepath)
-
-    # run experiment
     args_list = generate_args_list(base_num_rows, num_iters, do_long)
     config_list = map(arg_list_to_config, args_list)
-    with Timer('experiments') as timer:
-        with MapperContext(Pool=NoDaemonPool) as mapper:
-            # use non-daemonic mapper since run_geweke spawns daemonic processes
-            eu.do_experiments(config_list, runner, writer, dirname, mapper)
-            pass
-        pass
+
+    # run experiment
+    er = ExperimentRunner(geweke_utils.run_geweke, dirname_prefix=dirname,
+            bucket_str='experiment_runner')
+    er.do_experiments(config_list)
 
 
     if do_plots:
-        config_list = read_all_configs(dirname)
-        results = read_results(config_list, dirname)
+        results = er.get_results(er.frame).values()
         plot_results(results, dirname)
         pass

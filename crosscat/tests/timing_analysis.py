@@ -26,11 +26,9 @@ def _munge_args(args):
 
 
 if __name__ == '__main__':
-    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
-    from crosscat.utils.timing_test_utils import reader, read_all_configs, \
-            read_results, writer, runner, gen_configs
+    from crosscat.utils.general_utils import Timer
     import crosscat.utils.timing_test_utils as ttu
-    import experiment_runner.experiment_utils as eu
+    from experiment_runner.ExperimentRunner import ExperimentRunner
 
     # parse args
     parser = _generate_parser()
@@ -43,19 +41,16 @@ if __name__ == '__main__':
             n_steps=[10],
             **kwargs
             )
-    with Timer('experiments') as timer:
-        with MapperContext(Pool=NoDaemonPool) as mapper:
-            # use non-daemonic mapper since run_geweke spawns daemonic processes
-            eu.do_experiments(config_list, runner, writer, dirname, mapper)
-            pass
-        pass
+    er = ExperimentRunner(ttu.runner, dirname_prefix=dirname,
+            bucket_str='experiment_runner')
+    with Timer('er.do_experiments') as timer:
+        er.do_experiments(config_list)
 
 
     if generate_plots:
         # read the data back in
-        all_configs = read_all_configs(dirname)
-        _all_results = read_results(all_configs, dirname)
+        _all_results = er.get_results(er.frame)
         is_same_shape = lambda result: result['start_dims'] == result['end_dims']
-        use_results = filter(is_same_shape, _all_results)
+        use_results = filter(is_same_shape, _all_results.values())
         # add plot_prefix so plots show up at top of list of files/folders
         ttu.plot_results(use_results, plot_prefix=plot_prefix, dirname=dirname)
