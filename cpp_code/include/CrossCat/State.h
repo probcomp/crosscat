@@ -73,6 +73,8 @@ public:
           double COLUMN_CRP_ALPHA,
           std::vector<std::vector<std::vector<int> > > row_partition_v,
           std::vector<double> row_crp_alpha_v,
+          std::vector<double> ROW_CRP_ALPHA_GRID = empty_vector_double,
+          std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
           std::vector<double> S_GRID = empty_vector_double,
           std::vector<double> MU_GRID = empty_vector_double,
           int N_GRID = 31, int SEED = 0);
@@ -102,6 +104,8 @@ public:
           std::vector<int> global_col_indices,
           std::string col_initialization = FROM_THE_PRIOR,
           std::string row_initialization = "",
+          std::vector<double> ROW_CRP_ALPHA_GRID = empty_vector_double,
+          std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
           std::vector<double> S_GRID = empty_vector_double,
           std::vector<double> MU_GRID = empty_vector_double,
           int N_GRID = 31, int SEED = 0);
