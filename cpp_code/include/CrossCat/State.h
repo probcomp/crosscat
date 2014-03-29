@@ -378,7 +378,9 @@ private:
     RandomNumberGenerator rng;
     // resources
     void construct_base_hyper_grids(const boost::numeric::ublas::matrix<double>&
-                                    data, int N_GRID);
+                                    data, int N_GRID,
+                                    std::vector<double> ROW_CRP_ALPHA_GRID,
+                                    std::vector<double> COLUMN_CRP_ALPHA_GRID);
     void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double>&
                                       data,
                                       std::vector<int> global_col_indices,

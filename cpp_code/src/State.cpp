@@ -49,7 +49,8 @@ State::State(const MatrixD& data,
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
             GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
-    construct_base_hyper_grids(data, N_GRID);
+    construct_base_hyper_grids(data, N_GRID, ROW_CRP_ALPHA_GRID,
+            COLUMN_CRP_ALPHA_GRID);
     construct_column_hyper_grids(data, global_col_indices, GLOBAL_COL_DATATYPES,
                                      S_GRID, MU_GRID);
     // actually build the state
@@ -83,7 +84,8 @@ State::State(const MatrixD& data,
     global_col_multinomial_counts = \
                                     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
-    construct_base_hyper_grids(data, N_GRID);
+    construct_base_hyper_grids(data, N_GRID, ROW_CRP_ALPHA_GRID,
+            COLUMN_CRP_ALPHA_GRID);
     construct_column_hyper_grids(data, global_col_indices, GLOBAL_COL_DATATYPES,
                                      S_GRID, MU_GRID);
     //
@@ -677,11 +679,19 @@ double State::transition(const MatrixD& data) {
     return score_delta;
 }
 
-void State::construct_base_hyper_grids(const MatrixD& data, int N_GRID) {
+void State::construct_base_hyper_grids(const MatrixD& data, int N_GRID,
+        vector<double> ROW_CRP_ALPHA_GRID,
+        vector<double> COLUMN_CRP_ALPHA_GRID) {
     int num_rows = data.size1();
     int num_cols = data.size2();
-    row_crp_alpha_grid = create_crp_alpha_grid(num_rows, N_GRID);
-    column_crp_alpha_grid = create_crp_alpha_grid(num_cols, N_GRID);
+    if (ROW_CRP_ALPHA_GRID.size() == 0) {
+        ROW_CRP_ALPHA_GRID = create_crp_alpha_grid(num_rows, N_GRID);
+    }
+    if (COLUMN_CRP_ALPHA_GRID.size() == 0) {
+        COLUMN_CRP_ALPHA_GRID = create_crp_alpha_grid(num_cols, N_GRID);
+    }
+    row_crp_alpha_grid = ROW_CRP_ALPHA_GRID;
+    column_crp_alpha_grid = COLUMN_CRP_ALPHA_GRID;
     construct_continuous_base_hyper_grids(N_GRID, num_rows, r_grid, nu_grid);
     construct_multinomial_base_hyper_grids(N_GRID, num_rows,
                                            multinomial_alpha_grid);
