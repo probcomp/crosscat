@@ -198,14 +198,30 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             ret_tuple = ret_tuple + (timing_list, )
         return ret_tuple
 
-    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
-        random_seed = self.get_next_seed()
+    def _sample_and_insert(self, M_c, T, X_L, X_D, matching_row_indices):
         p_State = State.p_State(M_c, T, X_L, X_D)
-        draw = p_State.get_draw(matching_row_idx, random_seed)
-        p_State.insert_row(draw, matching_row_idx)
-        T.append(draw)
+        draws = []
+        for matching_row_idx in matching_row_indices:
+            random_seed = self.get_next_seed()
+            draw = p_State.get_draw(matching_row_idx, random_seed)
+            p_State.insert_row(draw, matching_row_idx)
+            draws.append(draw)
+            T.append(draw)
         X_L, X_D = p_State.get_X_L(), p_State.get_X_D()
-        return draw, T, X_L, X_D
+        return draws, T, X_L, X_D
+
+    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
+        matching_row_indices = gu.ensure_listlike(matching_row_idx)
+        if len(matching_row_indices) == 0:
+            matching_row_indices = range(len(T))
+            pass
+        was_single_row = len(matching_row_indices) == 1
+        draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D,
+                matching_row_indices)
+        if was_single_row:
+            draws = draws[0]
+            pass
+        return draws, T, X_L, X_D
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
         """Sample values from the predictive distribution of the given latent state
