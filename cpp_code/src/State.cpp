@@ -43,9 +43,9 @@ State::State(const MatrixD& data,
     column_crp_score = 0;
     data_score = 0;
     global_col_datatypes = construct_lookup_map(global_col_indices,
-                           GLOBAL_COL_DATATYPES);
-    global_col_multinomial_counts = \
-                                    construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
+            GLOBAL_COL_DATATYPES);
+    global_col_multinomial_counts = construct_lookup_map(global_col_indices,
+            GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
     if (specified_s_grid.begin() != specified_s_grid.end()) {
