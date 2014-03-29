@@ -48,13 +48,8 @@ State::State(const MatrixD& data,
             GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
-    if (S_GRID.size()!=0) {
-        construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
+    construct_column_hyper_grids(data, global_col_indices, GLOBAL_COL_DATATYPES,
                                      S_GRID, MU_GRID);
-    } else {
-        construct_column_hyper_grids(data, global_col_indices,
-                                     GLOBAL_COL_DATATYPES);
-    }
     // actually build the state
     hypers_m = HYPERS_M;
     column_crp_alpha = COLUMN_CRP_ALPHA;
@@ -85,13 +80,8 @@ State::State(const MatrixD& data,
                                     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
-    if (S_GRID.size() != 0) {
-        construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
+    construct_column_hyper_grids(data, global_col_indices, GLOBAL_COL_DATATYPES,
                                      S_GRID, MU_GRID);
-    } else {
-        construct_column_hyper_grids(data, global_col_indices,
-                                     GLOBAL_COL_DATATYPES);
-    }
     //
     init_column_hypers(global_col_indices);
     column_crp_alpha = sample_column_crp_alpha();
@@ -693,35 +683,27 @@ void State::construct_base_hyper_grids(const MatrixD& data, int N_GRID) {
                                            multinomial_alpha_grid);
 }
 
-void State::construct_column_hyper_grids(vector<int> global_col_indices,
-        vector<string> GLOBAL_COL_DATATYPES,
-        vector<double> S_GRID,
-        vector<double> MU_GRID
-                                        ) {
-    vector<int>::iterator it;
-    for (it = global_col_indices.begin(); it != global_col_indices.end(); it++) {
-        int global_col_idx = *it;
-        string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
-        if (col_datatype == CONTINUOUS_DATATYPE) {
-            s_grids[global_col_idx] = S_GRID;
-            mu_grids[global_col_idx] = MU_GRID;
-        }
-    }
-}
-
 void State::construct_column_hyper_grids(const MatrixD& data,
         vector<int> global_col_indices,
-        vector<string> GLOBAL_COL_DATATYPES) {
+        vector<string> GLOBAL_COL_DATATYPES,
+        vector<double> S_GRID,
+        vector<double> MU_GRID) {
     int N_GRID = r_grid.size();
     vector<int>::iterator it;
     for (it = global_col_indices.begin(); it != global_col_indices.end(); it++) {
         int global_col_idx = *it;
         string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
         if (col_datatype == CONTINUOUS_DATATYPE) {
-            vector<double> col_data = extract_col(data, global_col_idx);
-            construct_continuous_specific_hyper_grid(N_GRID, col_data,
-                    s_grids[global_col_idx],
-                    mu_grids[global_col_idx]);
+            if (S_GRID.size() == 0) {
+                // FIXME: enable separate setting of S_GRID, MU_GRID
+                vector<double> col_data = extract_col(data, global_col_idx);
+                construct_continuous_specific_hyper_grid(N_GRID, col_data,
+                        s_grids[global_col_idx],
+                        mu_grids[global_col_idx]);
+            } else {
+                s_grids[global_col_idx] = S_GRID;
+                mu_grids[global_col_idx] = MU_GRID;
+            }
         }
     }
 }

@@ -375,14 +375,12 @@ private:
     // resources
     void construct_base_hyper_grids(const boost::numeric::ublas::matrix<double>&
                                     data, int N_GRID);
-    void construct_column_hyper_grids(std::vector<int> global_col_indices,
-                                      std::vector<std::string> global_col_datatypes,
-                                      std::vector<double> S_GRID,
-                                      std::vector<double> MU_GRID);
     void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double>&
                                       data,
                                       std::vector<int> global_col_indices,
-                                      std::vector<std::string> global_col_datatypes);
+                                      std::vector<std::string> global_col_datatypes,
+                                      std::vector<double> S_GRID,
+                                      std::vector<double> MU_GRID);
     CM_Hypers get_default_hypers() const;
     double sample_column_crp_alpha();
     double sample_row_crp_alpha();
