@@ -46,11 +46,9 @@ result_filename = 'result.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
-    num_rows = len(X_D[0])
-    generated_T = []
-    for row_i in range(num_rows):
-        sample, T, X_L, X_D = engine.sample_and_insert(M_c, T, X_L, X_D, row_i)
-        generated_T.append(sample)
+    row_indices = range(len(T))
+    generated_T, T, X_L, X_D = engine.sample_and_insert(M_c, T, X_L, X_D,
+            row_indices)
     return generated_T
 
 def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
@@ -132,8 +130,8 @@ def run_posterior_chain(seed, M_c, T, num_iters,
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
             filename = 'T_%s' % idx
-            pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename, dir='',
-                    close=True, format=image_format)
+            pu.plot_views(numpy.array(T), X_D, X_L, M_c, filename=filename,
+                    dir='./', close=True, format=image_format)
             pass
         pass
     return diagnostics_data
