@@ -702,11 +702,10 @@ void State::construct_column_hyper_grids(vector<int> global_col_indices,
     for (it = global_col_indices.begin(); it != global_col_indices.end(); it++) {
         int global_col_idx = *it;
         string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
-        if (col_datatype != CONTINUOUS_DATATYPE) {
-            continue;
+        if (col_datatype == CONTINUOUS_DATATYPE) {
+            s_grids[global_col_idx] = S_GRID;
+            mu_grids[global_col_idx] = MU_GRID;
         }
-        s_grids[global_col_idx] = S_GRID;
-        mu_grids[global_col_idx] = MU_GRID;
     }
 }
 
