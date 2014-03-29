@@ -48,7 +48,7 @@ State::State(const MatrixD& data,
             GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
-    if (specified_s_grid.begin() != specified_s_grid.end()) {
+    if (specified_s_grid.size()!=0) {
         construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
                                      specified_s_grid, specified_mu_grid);
     } else {
