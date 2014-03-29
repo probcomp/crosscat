@@ -37,8 +37,8 @@ State::State(const MatrixD& data,
              double COLUMN_CRP_ALPHA,
              vector<vector<vector<int> > > row_partition_v,
              vector<double> row_crp_alpha_v,
-             vector<double> specified_s_grid,
-             vector<double> specified_mu_grid,
+             vector<double> S_GRID,
+             vector<double> MU_GRID,
              int N_GRID, int SEED) : rng(SEED) {
     column_crp_score = 0;
     data_score = 0;
@@ -48,9 +48,9 @@ State::State(const MatrixD& data,
             GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
-    if (specified_s_grid.size()!=0) {
+    if (S_GRID.size()!=0) {
         construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
-                                     specified_s_grid, specified_mu_grid);
+                                     S_GRID, MU_GRID);
     } else {
         construct_column_hyper_grids(data, global_col_indices,
                                      GLOBAL_COL_DATATYPES);
@@ -71,8 +71,8 @@ State::State(const MatrixD& data,
              vector<int> global_col_indices,
              string col_initialization,
              string row_initialization,
-             vector<double> specified_s_grid,
-             vector<double> specified_mu_grid,
+             vector<double> S_GRID,
+             vector<double> MU_GRID,
              int N_GRID, int SEED) : rng(SEED) {
     column_crp_score = 0;
     data_score = 0;
@@ -85,9 +85,9 @@ State::State(const MatrixD& data,
                                     construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID);
-    if (specified_s_grid.begin() != specified_s_grid.end()) {
+    if (S_GRID.size() != 0) {
         construct_column_hyper_grids(global_col_indices, GLOBAL_COL_DATATYPES,
-                                     specified_s_grid, specified_mu_grid);
+                                     S_GRID, MU_GRID);
     } else {
         construct_column_hyper_grids(data, global_col_indices,
                                      GLOBAL_COL_DATATYPES);
