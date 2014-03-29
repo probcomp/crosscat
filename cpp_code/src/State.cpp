@@ -81,8 +81,8 @@ State::State(const MatrixD& data,
     }
     global_col_datatypes = construct_lookup_map(global_col_indices,
                            GLOBAL_COL_DATATYPES);
-    global_col_multinomial_counts = \
-                                    construct_lookup_map(global_col_indices, GLOBAL_COL_MULTINOMIAL_COUNTS);
+    global_col_multinomial_counts = construct_lookup_map(global_col_indices,
+            GLOBAL_COL_MULTINOMIAL_COUNTS);
     // construct grids
     construct_base_hyper_grids(data, N_GRID, ROW_CRP_ALPHA_GRID,
             COLUMN_CRP_ALPHA_GRID);
