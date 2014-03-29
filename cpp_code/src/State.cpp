@@ -717,13 +717,12 @@ void State::construct_column_hyper_grids(const MatrixD& data,
     for (it = global_col_indices.begin(); it != global_col_indices.end(); it++) {
         int global_col_idx = *it;
         string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
-        if (col_datatype != CONTINUOUS_DATATYPE) {
-            continue;
+        if (col_datatype == CONTINUOUS_DATATYPE) {
+            vector<double> col_data = extract_col(data, global_col_idx);
+            construct_continuous_specific_hyper_grid(N_GRID, col_data,
+                    s_grids[global_col_idx],
+                    mu_grids[global_col_idx]);
         }
-        vector<double> col_data = extract_col(data, global_col_idx);
-        construct_continuous_specific_hyper_grid(N_GRID, col_data,
-                s_grids[global_col_idx],
-                mu_grids[global_col_idx]);
     }
 }
 
