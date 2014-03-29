@@ -68,12 +68,17 @@ def generate_diagnostics_funcs_for_column(X_L, column_idx):
     return diagnostics_funcs
 
 def run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
-        diagnostics_funcs, specified_s_grid, specified_mu_grid,
+        diagnostics_funcs,
+        ROW_CRP_ALPHA_GRID,
+        COLUMN_CRP_ALPHA_GRID,
+        S_GRID, MU_GRID,
         N_GRID,
         ):
     X_L, X_D = engine.analyze(M_c, T, X_L, X_D,
-                specified_s_grid=specified_s_grid,
-                specified_mu_grid=specified_mu_grid,
+                S_GRID=S_GRID,
+                ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+                COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+                MU_GRID=MU_GRID,
                 N_GRID=N_GRID,
                 )
     diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
@@ -108,7 +113,9 @@ def generate_diagnostics_funcs(X_L, probe_columns):
     return diagnostics_funcs
 
 def run_posterior_chain(seed, M_c, T, num_iters,
-        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        probe_columns=(0,),
+        ROW_CRP_ALPHA_GRID=(), COLUMN_CRP_ALPHA_GRID=(),
+        S_GRID=(), MU_GRID=(),
         N_GRID=default_n_grid,
         plot_rand_idx=None,
         ):
@@ -116,15 +123,20 @@ def run_posterior_chain(seed, M_c, T, num_iters,
     engine = LE.LocalEngine(seed)
     M_r = du.gen_M_r_from_T(T)
     X_L, X_D = engine.initialize(M_c, M_r, T, 'from_the_prior',
-            specified_s_grid=specified_s_grid,
-            specified_mu_grid=specified_mu_grid,
+            ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+            COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+            S_GRID=S_GRID,
+            MU_GRID=MU_GRID,
             N_GRID=N_GRID,
             )
     diagnostics_funcs = generate_diagnostics_funcs(X_L, probe_columns)
     diagnostics_data = collections.defaultdict(list)
     for idx in range(num_iters):
         M_c, T, X_L, X_D = run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
-                diagnostics_funcs, specified_s_grid, specified_mu_grid,
+                diagnostics_funcs,
+                ROW_CRP_ALPHA_GRID,
+                COLUMN_CRP_ALPHA_GRID,
+                S_GRID, MU_GRID,
                 N_GRID=N_GRID,
                 )
         if idx == plot_rand_idx:
@@ -137,14 +149,17 @@ def run_posterior_chain(seed, M_c, T, num_iters,
     return diagnostics_data
 
 def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
+        row_crp_alpha_grid, column_crp_alpha_grid,
         s_grid, mu_grid,
         N_GRID=default_n_grid,
         ):
     # run geweke: transition-erase loop
     helper = functools.partial(run_posterior_chain, M_c=M_c, T=T, num_iters=num_iters,
             probe_columns=probe_columns,
-            specified_s_grid=s_grid,
-            specified_mu_grid=mu_grid,
+            ROW_CRP_ALPHA_GRID=row_crp_alpha_grid,
+            COLUMN_CRP_ALPHA_GRID=column_crp_alpha_grid,
+            S_GRID=s_grid,
+            MU_GRID=mu_grid,
             N_GRID=N_GRID,
             # this breaks with multiprocessing
             plot_rand_idx=(num_chains==1),
@@ -157,7 +172,9 @@ def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
     return diagnostics_data_list
 
 def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
-        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        probe_columns=(0,),
+        ROW_CRP_ALPHA_GRID=(), COLUMN_CRP_ALPHA_GRID=(),
+        S_GRID=(), MU_GRID=(),
         N_GRID=default_n_grid,
         ):
     inf_seed, n_samples = inf_seed_and_n_samples
@@ -168,8 +185,10 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
     diagnostics_funcs = None
     for sample_idx in range(n_samples):
         X_L, X_D = engine.initialize(M_c, M_r, T,
-                specified_s_grid=specified_s_grid,
-                specified_mu_grid=specified_mu_grid,
+                ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+                COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+                S_GRID=S_GRID,
+                MU_GRID=MU_GRID,
                 N_GRID=N_GRID,
                 )
         if diagnostics_funcs is None:
@@ -180,14 +199,18 @@ def _forward_sample_from_prior(inf_seed_and_n_samples, M_c, T,
     return diagnostics_data
 
 def forward_sample_from_prior(inf_seed, n_samples, M_c, T,
-        probe_columns=(0,), specified_s_grid=(), specified_mu_grid=(),
+        probe_columns=(0,),
+        ROW_CRP_ALPHA_GRID=(), COLUMN_CRP_ALPHA_GRID=(),
+        S_GRID=(), MU_GRID=(),
         do_multiprocessing=True,
         N_GRID=default_n_grid,
         ):
     helper = functools.partial(_forward_sample_from_prior, M_c=M_c, T=T,
             probe_columns=probe_columns,
-            specified_s_grid=specified_s_grid,
-            specified_mu_grid=specified_mu_grid,
+            ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+            COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+            S_GRID=S_GRID,
+            MU_GRID=MU_GRID,
             N_GRID=N_GRID,
             )
     cpu_count = 1 if not do_multiprocessing else multiprocessing.cpu_count()
@@ -491,7 +514,10 @@ def run_geweke(config):
             )
     # run geweke: transition-erase loop
     print 'generating posterior samples'
+    row_crp_alpha_grid = config.get('row_crp_alpha_grid', ())
+    column_crp_alpha_grid = config.get('column_crp_alpha_grid', ())
     diagnostics_data_list = run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
+            row_crp_alpha_grid, column_crp_alpha_grid,
             s_grid, mu_grid,
             N_GRID=n_grid,
             )

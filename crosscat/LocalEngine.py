@@ -55,7 +55,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
                                   row_initialization, n_chains,
-                                  specified_s_grid, specified_mu_grid,
+                                  ROW_CRP_ALPHA_GRID,
+                                  COLUMN_CRP_ALPHA_GRID,
+                                  S_GRID, MU_GRID,
                                   N_GRID,
                                   ):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
@@ -66,15 +68,19 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([T]),
             itertools.cycle([initialization]),
             itertools.cycle([row_initialization]),
-            itertools.cycle([specified_s_grid]),
-            itertools.cycle([specified_mu_grid]),
+            itertools.cycle([ROW_CRP_ALPHA_GRID]),
+            itertools.cycle([COLUMN_CRP_ALPHA_GRID]),
+            itertools.cycle([S_GRID]),
+            itertools.cycle([MU_GRID]),
             itertools.cycle([N_GRID]),
         )
         return arg_tuples
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
                    row_initialization=-1, n_chains=1,
-                   specified_s_grid=(), specified_mu_grid=(),
+                   ROW_CRP_ALPHA_GRID=(),
+                   COLUMN_CRP_ALPHA_GRID=(),
+                   S_GRID=(), MU_GRID=(),
                    N_GRID=31,
                    ):
         """Sample a latent state from prior
@@ -94,7 +100,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         arg_tuples = self.get_initialize_arg_tuples(
             M_c, M_r, T, initialization,
             row_initialization, n_chains,
-            specified_s_grid, specified_mu_grid,
+            ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+            S_GRID, MU_GRID,
             N_GRID,
         )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
@@ -105,7 +112,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
                                n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
-                               specified_s_grid, specified_mu_grid,
+                               ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+                               S_GRID, MU_GRID,
                                N_GRID,
                                do_timing,
                                ):
@@ -124,8 +132,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([max_time]),
             itertools.cycle([diagnostic_func_dict]),
             itertools.cycle([every_N]),
-            itertools.cycle([specified_s_grid]),
-            itertools.cycle([specified_mu_grid]),
+            itertools.cycle([ROW_CRP_ALPHA_GRID]),
+            itertools.cycle([COLUMN_CRP_ALPHA_GRID]),
+            itertools.cycle([S_GRID]),
+            itertools.cycle([MU_GRID]),
             itertools.cycle([N_GRID]),
             itertools.cycle([do_timing]),
         )
@@ -134,7 +144,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
                 max_iterations=-1, max_time=-1, do_diagnostics=False,
                 diagnostics_every_N=1,
-                specified_s_grid=(), specified_mu_grid=(),
+                ROW_CRP_ALPHA_GRID=(),
+                COLUMN_CRP_ALPHA_GRID=(),
+                S_GRID=(), MU_GRID=(),
                 N_GRID=31,
                 do_timing=False,
                 ):
@@ -177,7 +189,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
                                                  kernel_list, n_steps, c, r, max_iterations, max_time,
                                                  diagnostic_func_dict, diagnostics_every_N,
-                                                 specified_s_grid, specified_mu_grid,
+                                                 ROW_CRP_ALPHA_GRID,
+                                                 COLUMN_CRP_ALPHA_GRID,
+                                                 S_GRID, MU_GRID,
                                                  N_GRID,
                                                  do_timing,
                                                  )
@@ -449,13 +463,16 @@ def munge_diagnostics(diagnostics_dict_list):
 
 
 def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
-                   specified_s_grid, specified_mu_grid,
+                   ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+                   S_GRID, MU_GRID,
                    N_GRID,
                    ):
     p_State = State.p_State(M_c, T, initialization=initialization,
                             row_initialization=row_initialization, SEED=SEED,
-                            specified_s_grid=specified_s_grid,
-                            specified_mu_grid=specified_mu_grid,
+                            ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+                            COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+                            S_GRID=S_GRID,
+                            MU_GRID=MU_GRID,
                             N_GRID=N_GRID,
                             )
     X_L = p_State.get_X_L()
@@ -472,12 +489,15 @@ def _do_initialize_tuple(arg_tuple):
 
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 max_iterations, max_time,
-                specified_s_grid, specified_mu_grid,
+                ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+                S_GRID, MU_GRID,
                 N_GRID,
                 ):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
-                            specified_s_grid=specified_s_grid,
-                            specified_mu_grid=specified_mu_grid,
+                            ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+                            COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+                            S_GRID=S_GRID,
+                            MU_GRID=MU_GRID,
                             N_GRID=N_GRID,
                             )
     p_State.transition(kernel_list, n_steps, c, r,
@@ -508,7 +528,8 @@ none_summary = lambda p_State: None
 
 def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
         max_iterations, max_time, diagnostic_func_dict, every_N,
-        specified_s_grid, specified_mu_grid,
+        ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+        S_GRID, MU_GRID,
         N_GRID,
         do_timing,
         ):
@@ -519,8 +540,10 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
     #
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
-                            specified_s_grid=specified_s_grid,
-                            specified_mu_grid=specified_mu_grid,
+                            ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
+                            COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
+                            S_GRID=S_GRID,
+                            MU_GRID=MU_GRID,
                             N_GRID=N_GRID,
                             )
     with gu.Timer('all transitions', verbose=False) as timer:
