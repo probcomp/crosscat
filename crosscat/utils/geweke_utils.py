@@ -491,6 +491,8 @@ def run_geweke(config):
     gen_seed = config['gen_seed']
     num_chains = config['num_chains']
     num_iters = config['num_iters']
+    row_crp_alpha_grid = config['row_crp_alpha_grid']
+    column_crp_alpha_grid = config['column_crp_alpha_grid']
     max_mu_grid = config['max_mu_grid']
     max_s_grid = config['max_s_grid']
     n_grid = config['n_grid']
@@ -577,6 +579,10 @@ def generate_parser():
     parser.add_argument('--gen_seed', default=0, type=int)
     parser.add_argument('--num_chains', default=None, type=int)
     parser.add_argument('--num_iters', default=1000, type=int)
+    parser.add_argument('--row_crp_alpha_grid', nargs='+', default=None, type=float)
+    parser.add_argument('--column_crp_alpha_grid', nargs='+', default=None, type=float)
+    parser.add_argument('--_divisor', default=1., type=float)
+
     parser.add_argument('--max_mu_grid', default=10, type=int)
     parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
@@ -584,6 +590,9 @@ def generate_parser():
     parser.add_argument('--cctypes', nargs='*', default=None, type=str)
     parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
     return parser
+
+def _gen_grid(N, n_grid, _divisor=1.):
+    return numpy.linspace(1., N / _divisor, n_grid).tolist()
 
 def arbitrate_args(args):
     if args.num_chains is None:
@@ -595,6 +604,12 @@ def arbitrate_args(args):
     assert len(args.cctypes) == args.num_cols
     args.max_mu_grid, args.max_s_grid = arbitrate_mu_s(args.num_rows,
             args.max_mu_grid, args.max_s_grid)
+    if args.row_crp_alpha_grid is None:
+       args.row_crp_alpha_grid = _gen_grid(args.num_rows, args.n_grid,
+               args._divisor)
+    if args.column_crp_alpha_grid is None:
+        args.column_crp_alpha_grid = _gen_grid(args.num_cols, args.n_grid,
+                args._divisor)
     return args
 
 def get_chisquare(not_forward, forward=None):
