@@ -117,8 +117,10 @@ if __name__ == '__main__':
 
 
     if do_plots:
-        results = er.get_results(er.frame).values()
-        plot_results(results, dirname)
+        for id in er.frame.index:
+            result = er._get_result(id)
+            geweke_utils.plot_result(result, dirname)
+            pass
         pass
 
     print er.frame
