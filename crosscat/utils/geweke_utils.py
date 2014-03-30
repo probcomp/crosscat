@@ -316,6 +316,8 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
     map(pylab.plot, kl_series_list)
     pylab.xlabel('iteration')
     pylab.ylabel('KL')
+    # FIXME: remove, or do something "better"
+    pylab.gca().set_ylim((0., 0.1))
     if parameters is not None:
         pu.show_parameters(parameters)
         pass
