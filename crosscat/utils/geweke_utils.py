@@ -509,25 +509,24 @@ def run_geweke(config):
     s_grid = numpy.linspace(1, max_s_grid, n_grid)
 
     # run geweke: forward sample only
-    print 'generating forward samples'
-    forward_diagnostics_data = forward_sample_from_prior(inf_seed,
-            num_iters, M_c, T, probe_columns,
-            s_grid, mu_grid,
-            do_multiprocessing=True,
-            N_GRID=n_grid,
-            )
+    with gu.Timer('generating forward samples') as timer:
+        forward_diagnostics_data = forward_sample_from_prior(inf_seed,
+                num_iters, M_c, T, probe_columns,
+                row_crp_alpha_grid, column_crp_alpha_grid,
+                s_grid, mu_grid,
+                do_multiprocessing=True,
+                N_GRID=n_grid,
+                )
     # run geweke: transition-erase loop
-    print 'generating posterior samples'
-    row_crp_alpha_grid = config.get('row_crp_alpha_grid', ())
-    column_crp_alpha_grid = config.get('column_crp_alpha_grid', ())
-    diagnostics_data_list = run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
-            row_crp_alpha_grid, column_crp_alpha_grid,
-            s_grid, mu_grid,
-            N_GRID=n_grid,
-            )
+    with gu.Timer('generating posterior samples') as timer:
+        diagnostics_data_list = run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
+                row_crp_alpha_grid, column_crp_alpha_grid,
+                s_grid, mu_grid,
+                N_GRID=n_grid,
+                )
     # post process data
-    print 'post prcessing data'
-    processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
+    with gu.Timer('post prcessing data') as timer:
+        processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
     result = dict(
             config=config,
             forward_diagnostics_data=forward_diagnostics_data,
