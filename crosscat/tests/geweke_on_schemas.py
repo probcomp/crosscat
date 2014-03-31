@@ -20,7 +20,7 @@ def _gen_cctypes(*args):
     _cctypes = [[cctype] * N for (cctype, N) in args]
     return reduce(operator.add, _cctypes)
 
-def generate_args_list(base_num_rows, num_iters, do_long=False):
+def generate_args_list(base_num_rows, num_iters, do_long=False, _divisor=1.):
     num_cols_list = [1, 10]
     col_type_list = ['continuous', 'multinomial']
     col_type_pairs = sorted(itertools.combinations(col_type_list, 2))
@@ -31,6 +31,7 @@ def generate_args_list(base_num_rows, num_iters, do_long=False):
     for col_type, num_cols in iter_over:
         cctypes = _gen_cctypes((col_type, num_cols))
         args = _generate_args_list(base_num_rows, num_iters, cctypes)
+        args += ['--_divisor', str(_divisor)]
         args_list.append(args)
         pass
 
@@ -39,6 +40,7 @@ def generate_args_list(base_num_rows, num_iters, do_long=False):
     for (col_type_a, col_type_b), num_cols in iter_over:
         cctypes = _gen_cctypes((col_type_a, num_cols), (col_type_b, num_cols))
         args = _generate_args_list(base_num_rows, num_iters, cctypes)
+        args += ['--_divisor', str(_divisor)]
         args_list.append(args)
         pass
 
@@ -49,10 +51,12 @@ def generate_args_list(base_num_rows, num_iters, do_long=False):
         #
         cctypes = _gen_cctypes(('continuous', num_cols_long))
         args = _generate_args_list(num_rows_long, num_iters, cctypes)
+        args += ['--_divisor', str(_divisor)]
         args_list.append(args)
         #
         cctypes = _gen_cctypes(('multinomial', num_cols_long))
         args = _generate_args_list(num_rows_long, num_iters, cctypes)
+        args += ['--_divisor', str(_divisor)]
         args += ['--num_multinomial_values', '2']
         args_list.append(args)
         #
@@ -84,19 +88,22 @@ if __name__ == '__main__':
     parser.add_argument('--num_iters', default=200, type=int)
     parser.add_argument('--no_plots', action='store_true')
     parser.add_argument('--do_long', action='store_true')
+    parser.add_argument('--_divisor', default=1., type=float)
+
     args = parser.parse_args()
     dirname = args.dirname
     base_num_rows = args.base_num_rows
     num_iters = args.num_iters
     do_plots = not args.no_plots
     do_long = args.do_long
+    _divisor = args._divisor
 
 
     # create configs
     arg_list_to_config = partial(eu.arg_list_to_config,
             geweke_utils.generate_parser(),
             arbitrate_args=geweke_utils.arbitrate_args)
-    args_list = generate_args_list(base_num_rows, num_iters, do_long)
+    args_list = generate_args_list(base_num_rows, num_iters, do_long, _divisor)
     config_list = map(arg_list_to_config, args_list)
 
 
@@ -110,6 +117,10 @@ if __name__ == '__main__':
 
 
     if do_plots:
-        results = er.get_results(er.frame).values()
-        plot_results(results, dirname)
+        for id in er.frame.index:
+            result = er._get_result(id)
+            geweke_utils.plot_result(result, dirname)
+            pass
         pass
+
+    print er.frame
