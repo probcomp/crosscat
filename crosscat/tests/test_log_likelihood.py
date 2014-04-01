@@ -13,7 +13,6 @@ import crosscat.utils.convergence_test_utils as ctu
 import experiment_runner.experiment_utils as eu
 
 
-result_filename = 'result.pkl'
 directory_prefix='test_log_likelihood'
 #
 noneify = set(['n_test'])
@@ -63,21 +62,25 @@ def runner(config):
     # package result
     final_data_ll = diagnostics_dict['data_ll'][-1][-1]
     final_test_set_ll = diagnostics_dict['test_set_ll'][-1][-1]
-    result = dict(
-            config=config,
-            diagnostics_dict=diagnostics_dict,
+    summary = dict(
             gen_data_ll=gen_data_ll,
             gen_test_set_ll=gen_test_set_ll,
             final_data_ll=final_data_ll,
             final_test_set_ll=final_test_set_ll,
+            )
+
+    result = dict(
+            config=config,
+            summary=summary,
+            diagnostics_dict=diagnostics_dict,
             )
     return result
 
 def plotter(result):
     pylab.figure()
     diagnostics_dict = result['diagnostics_dict']
-    gen_data_ll = result['gen_data_ll']
-    gen_test_set_ll = result['gen_test_set_ll']
+    gen_data_ll = result['summary']['gen_data_ll']
+    gen_test_set_ll = result['summary']['gen_test_set_ll']
     #
     pylab.plot(diagnostics_dict['data_ll'], 'g')
     pylab.plot(diagnostics_dict['test_set_ll'], 'r')
@@ -131,7 +134,7 @@ def summary_plotter(results, dirname='./', save=True):
             pu.save_current_figure(filename, dir=dirname, close=True)
             pass
         return
-    frame = eu.results_to_frame(results)
+    frame = eu.summaries_to_frame(results)
     for variable_suffix in ['test_set_ll', 'data_ll']:
         filename = variable_suffix if save else None
         _plot(frame, variable_suffix, filename=filename, dirname=dirname)
@@ -154,7 +157,6 @@ if __name__ == '__main__':
 
     # do experiments
     er = ExperimentRunner(runner, storage_type='fs',
-            result_filename=result_filename,
             dirname_prefix=dirname,
             bucket_str='experiment_runner',
             )

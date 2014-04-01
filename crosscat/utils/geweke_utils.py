@@ -529,17 +529,12 @@ def run_geweke(config):
         processed_data = post_process(forward_diagnostics_data, diagnostics_data_list)
     result = dict(
             config=config,
+            summary=processed_data['summary_kls'],
             forward_diagnostics_data=forward_diagnostics_data,
             diagnostics_data_list=diagnostics_data_list,
             processed_data=processed_data,
             )
     return result
-
-def result_to_series(result):
-    import pandas
-    base = result['config'].copy()
-    base.update(result['processed_data']['summary_kls'])
-    return pandas.Series(base)
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
     'n_grid', 'num_iters', 'num_chains',]
@@ -551,7 +546,7 @@ def plot_result(result, dirname='./'):
     processed_data = result['processed_data']
     kl_series_list_dict = processed_data['kl_series_list_dict']
     #
-    _dirname = generate_dirname(config)
+    _dirname = eu._generate_dirname(dirname_prefix, 10, config)
     save_kwargs = dict(dir=os.path.join(dirname, _dirname))
     get_tuple = lambda parameter: (parameter, config[parameter])
     parameters = dict(map(get_tuple, parameters_to_show))
@@ -566,9 +561,6 @@ def plot_result(result, dirname='./'):
             kl_series_list_dict,
             parameters, save_kwargs)
     return
-
-is_result_filepath, generate_dirname, config_to_filepath = \
-        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
 
 def generate_parser():
     parser = argparse.ArgumentParser()

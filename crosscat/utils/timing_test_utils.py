@@ -57,7 +57,6 @@ def write_hadoop_input(input_filename, X_L, X_D, n_steps, SEED):
     return n_tasks
 
 
-result_filename = 'result.pkl'
 dirname_prefix ='timing_analysis'
 all_kernels = State.transition_name_to_method_name_and_args.keys()
 _kernel_list = [[kernel] for kernel in all_kernels]
@@ -68,12 +67,6 @@ base_config = dict(
         )
 gen_config = functools.partial(eu.gen_config, base_config)
 gen_configs = functools.partial(eu.gen_configs, base_config)
-#
-is_result_filepath, generate_dirname, config_to_filepath = \
-        eu.get_fs_helper_funcs(result_filename, dirname_prefix)
-writer = eu.get_fs_writer(config_to_filepath)
-read_all_configs, reader, read_results = eu.get_fs_reader_funcs(
-        is_result_filepath, config_to_filepath)
 
 
 def _munge_config(config):
@@ -102,12 +95,17 @@ def runner(config):
             )
     #
     end_dims = du.get_state_shape(X_L)
+    same_shape = start_dims == end_dims
+    summary = dict(
+        elapsed_secs=elapsed_secs,
+        same_shape=same_shape,
+        )
     ret_dict = dict(
         config=config,
+        summary=summary,
         table_shape=table_shape,
         start_dims=start_dims,
         end_dims=end_dims,
-        elapsed_secs=elapsed_secs,
         )
     return ret_dict
 
@@ -254,7 +252,7 @@ def series_to_namedtuple(series):
 # end nasty plotting support section
 #############
 
-def _plot_results(results, vary_what='views', plot_filename=None):
+def _plot_results(_results_frame, vary_what='views', plot_filename=None):
     import experiment_runner.experiment_utils as experiment_utils
     # configure parsing/plotting
     plot_parameters = plot_parameter_lookup[vary_what]
@@ -264,12 +262,8 @@ def _plot_results(results, vary_what='views', plot_filename=None):
     get_is_this_kernel = lambda timing_row: \
         timing_row.which_kernel == which_kernel
 
-    # blah
-    is_same_shape = lambda result: result['start_dims'] == result['end_dims']
-    use_results = filter(is_same_shape, results)
-    results_frame = experiment_utils.results_to_frame(use_results)
-
     # munge data for plotting tools
+    results_frame = _results_frame[_results_frame.same_shape]
     results_frame = _munge_frame(results_frame)
     timing_series_list = [el[1] for el in results_frame.iterrows()]
     all_timing_rows = map(series_to_namedtuple, timing_series_list)
@@ -283,12 +277,12 @@ def _plot_results(results, vary_what='views', plot_filename=None):
     plot_grouped_data(dict_of_dicts, plot_parameters)
     return
 
-def plot_results(results, save=True, plot_prefix=None, dirname='./'):
+def plot_results(frame, save=True, plot_prefix=None, dirname='./'):
     # generate each type of plot
     filter_join = lambda join_with, list: join_with.join(filter(None, list))
     for vary_what in ['rows', 'cols', 'clusters', 'views']:
         plot_filename = filter_join('_', [plot_prefix, 'vary', vary_what])
-        _plot_results(results, vary_what, plot_filename)
+        _plot_results(frame, vary_what, plot_filename)
         if save:
             pu.savefig_legend_outside(plot_filename, dir=dirname)
             pass
@@ -296,7 +290,7 @@ def plot_results(results, save=True, plot_prefix=None, dirname='./'):
     return
 
 if __name__ == '__main__':
-    from crosscat.utils.general_utils import Timer, MapperContext, NoDaemonPool
+    from experiment_runner.ExperimentRunner import ExperimentRunner
 
 
     config_list = gen_configs(
@@ -305,15 +299,9 @@ if __name__ == '__main__':
             )
 
 
-    dirname = 'timing_tests'
-    with Timer('experiments') as timer:
-        with MapperContext(Pool=NoDaemonPool) as mapper:
-            # use non-daemonic mapper since run_geweke spawns daemonic processes
-            eu.do_experiments(config_list, runner, writer, dirname, mapper)
-            pass
-        pass
+    dirname = 'timing_analysis'
+    er = ExperimentRunner(runner, dirname_prefix=dirname)
+    er.do_experiments(config_list, dirname)
+    print er.frame
 
-
-    all_configs = read_all_configs(dirname)
-    all_results = read_results(all_configs, dirname)
-    frame = eu.results_to_frame(all_results)
+    results_dict = er.get_results(er.frame[er.frame.same_shape])

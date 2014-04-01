@@ -57,9 +57,4 @@ if __name__ == '__main__':
 
 
     if generate_plots:
-        # read the data back in
-        _all_results = er.get_results(er.frame).values()
-        is_same_shape = lambda result: result['start_dims'] == result['end_dims']
-        use_results = filter(is_same_shape, _all_results)
-        # add plot_prefix so plots show up at top of list of files/folders
-        ttu.plot_results(use_results, plot_prefix=plot_prefix, dirname=dirname)
+        ttu.plot_results(er.frame, plot_prefix=plot_prefix, dirname=dirname)
