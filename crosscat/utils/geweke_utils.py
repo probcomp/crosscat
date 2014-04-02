@@ -41,7 +41,7 @@ import experiment_runner.experiment_utils as eu
 
 image_format = 'png'
 default_n_grid=31
-dirname_prefix='geweke_plots'
+dirname_prefix='geweke_on_schemas'
 result_filename = 'result.pkl'
 
 
