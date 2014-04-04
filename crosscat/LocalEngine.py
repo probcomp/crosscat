@@ -116,6 +116,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                S_GRID, MU_GRID,
                                N_GRID,
                                do_timing,
+                               CT_KERNEL,
                                ):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
@@ -138,6 +139,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([MU_GRID]),
             itertools.cycle([N_GRID]),
             itertools.cycle([do_timing]),
+            itertools.cycle([CT_KERNEL]),
         )
         return arg_tuples
 
@@ -149,6 +151,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 S_GRID=(), MU_GRID=(),
                 N_GRID=31,
                 do_timing=False,
+                CT_KERNEL=0,
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
@@ -179,6 +182,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: X_L, X_D -- the evolved latent state
 
         """
+        if CT_KERNEL not in [0,1]:
+            raise ValueError("CT_KERNEL must be 0 (Gibbs) or 1 (MH)")
 
         if do_timing:
             # diagnostics and timing are exclusive
@@ -194,6 +199,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                                  S_GRID, MU_GRID,
                                                  N_GRID,
                                                  do_timing,
+                                                 CT_KERNEL,
                                                  )
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
@@ -492,6 +498,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
                 S_GRID, MU_GRID,
                 N_GRID,
+                CT_KERNEL,
                 ):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
                             ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
@@ -499,6 +506,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                             S_GRID=S_GRID,
                             MU_GRID=MU_GRID,
                             N_GRID=N_GRID,
+                            CT_KERNEL=CT_KERNEL
                             )
     p_State.transition(kernel_list, n_steps, c, r,
                        max_iterations, max_time)
@@ -532,6 +540,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         S_GRID, MU_GRID,
         N_GRID,
         do_timing,
+        CT_KERNEL,
         ):
     diagnostics_dict = collections.defaultdict(list)
     if diagnostic_func_dict is None:
@@ -545,6 +554,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
                             S_GRID=S_GRID,
                             MU_GRID=MU_GRID,
                             N_GRID=N_GRID,
+                            CT_KERNEL=CT_KERNEL,
                             )
     with gu.Timer('all transitions', verbose=False) as timer:
         for child_n_steps in child_n_steps_list:
@@ -606,6 +616,7 @@ if __name__ == '__main__':
     n_times = 5
     n_chains = 3
     n_test = 100
+    CT_KERNEL = 1
 
     # generate some data
     T, M_r, M_c, data_inverse_permutation_indices = du.gen_factorial_data_objects(
@@ -613,13 +624,15 @@ if __name__ == '__main__':
         max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
         data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
-    X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
-                                                     data_inverse_permutation_indices, num_clusters, num_views)
-    T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
-    #
-    generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(
-        M_c, T,
-        X_L_gen, X_D_gen, T_test)
+
+    # There is currently (4/7/2014) no ttu.get_generative_clustering function which 
+    # X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
+    #                                                  data_inverse_permutation_indices, num_clusters, num_views)
+    # T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
+    # #
+    # generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(
+    #     M_c, T,
+    #     X_L_gen, X_D_gen, T_test)
 
     # run some tests
     engine = LocalEngine(seed=inf_seed)
@@ -628,24 +641,32 @@ if __name__ == '__main__':
     X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
     multi_state_ARIs.append(
         ctu.get_column_ARIs(X_L_list, view_assignment_truth))
-    multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
-                                                                        X_L_list, X_D_list, T_test))
+
+    # multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
+    #                                                                     X_L_list, X_D_list, T_test))
     for time_i in range(n_times):
         X_L_list, X_D_list = engine.analyze(
-            M_c, T, X_L_list, X_D_list, n_steps=n_steps)
+            M_c, T, X_L_list, X_D_list, n_steps=n_steps, CT_KERNEL=CT_KERNEL)
         multi_state_ARIs.append(
             ctu.get_column_ARIs(X_L_list, view_assignment_truth))
-        multi_state_mean_test_lls.append(
-            ctu.calc_mean_test_log_likelihoods(M_c, T,
-                                               X_L_list, X_D_list, T_test))
+        # multi_state_mean_test_lls.append(
+        #     ctu.calc_mean_test_log_likelihoods(M_c, T,
+        #                                        X_L_list, X_D_list, T_test))
 
     X_L_list, X_D_list, diagnostics_dict = engine.analyze(
         M_c, T, X_L_list, X_D_list,
         n_steps=n_steps, do_diagnostics=True)
 
     # print results
+    ct_kernel_name = 'UNKNOWN'
+    if CT_KERNEL==0:
+        ct_kernel_name = 'GIBBS'
+    elif CT_KERNEL==1:
+        ct_kernel_name = 'METROPOLIS'
+    
+    print 'Running with %s CT_KERNEL' % (ct_kernel_name)
     print 'generative_mean_test_log_likelihood'
-    print generative_mean_test_log_likelihood
+    # print generative_mean_test_log_likelihood
     #
     print 'multi_state_mean_test_lls:'
     print multi_state_mean_test_lls
