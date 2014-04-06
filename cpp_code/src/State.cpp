@@ -41,7 +41,9 @@ State::State(const MatrixD& data,
              vector<double> COLUMN_CRP_ALPHA_GRID,
              vector<double> S_GRID,
              vector<double> MU_GRID,
-             int N_GRID, int SEED) : rng(SEED) {
+             int N_GRID, int SEED, int CT_KERNEL) : rng(SEED) {
+    assert( CT_KERNEL==1 || CT_KERNEL==0);
+    ct_kernel = CT_KERNEL;
     column_crp_score = 0;
     data_score = 0;
     global_col_datatypes = construct_lookup_map(global_col_indices,
@@ -73,7 +75,9 @@ State::State(const MatrixD& data,
              vector<double> COLUMN_CRP_ALPHA_GRID,
              vector<double> S_GRID,
              vector<double> MU_GRID,
-             int N_GRID, int SEED) : rng(SEED) {
+             int N_GRID, int SEED, int CT_KERNEL) : rng(SEED) {
+    assert( CT_KERNEL==1 || CT_KERNEL==0);
+    ct_kernel = CT_KERNEL;
     column_crp_score = 0;
     data_score = 0;
     if (row_initialization == "") {
@@ -178,13 +182,14 @@ double State::sample_insert_feature(int feature_idx,
     return score_delta;
 }
 
+
 double State::remove_feature(int feature_idx, vector<double> feature_data,
-                             View*& p_singleton_view) {
+                             View* &p_singleton_view) {
     string col_datatype = global_col_datatypes[feature_idx];
-    CM_Hypers& hypers = hypers_m[feature_idx];
-    map<int, View*>::iterator it = view_lookup.find(feature_idx);
-    assert(it != view_lookup.end());
-    View& which_view = *(it->second);
+    CM_Hypers &hypers = hypers_m[feature_idx];
+    map<int,View*>::iterator it = view_lookup.find(feature_idx);
+    assert(it!=view_lookup.end());
+    View &which_view = *(it->second);
     view_lookup.erase(it);
     int view_num_cols = which_view.get_num_cols();
     double data_logp_delta = which_view.remove_col(feature_idx);
@@ -196,42 +201,117 @@ double State::remove_feature(int feature_idx, vector<double> feature_data,
                          other_data_logp_delta,
                          hypers);
     //
-    if (view_num_cols == 1) {
+    if(view_num_cols==1) {
         p_singleton_view = &which_view;
     } else {
         p_singleton_view = &get_new_view();
     }
     column_crp_score -= crp_logp_delta;
     data_score -= data_logp_delta;
-    assert(abs(other_data_logp_delta - data_logp_delta) < 1E-6);
+    assert(abs(other_data_logp_delta-data_logp_delta)<1E-6);
     return score_delta;
 }
 
-double State::transition_feature(int feature_idx,
-                                 vector<double> feature_data) {
+double State::transition_feature_gibbs(int feature_idx, vector<double> feature_data) {
     double score_delta = 0;
     View *p_singleton_view;
     score_delta += remove_feature(feature_idx, feature_data, p_singleton_view);
-    View& singleton_view = *p_singleton_view;
-    score_delta += sample_insert_feature(feature_idx, feature_data,
-                                         singleton_view);
+    View &singleton_view = *p_singleton_view;
+    score_delta += sample_insert_feature(feature_idx, feature_data, singleton_view);
     return score_delta;
 }
 
-double State::transition_features(const MatrixD& data,
-                                  vector<int> which_features) {
+double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
+    double score_delta = 0;
+    View *p_original_view = view_lookup[feature_idx];
+    View &original_view = *p_original_view;
+
+    if(&original_view==&proposed_view) {
+        // short circuit: no impact
+        return 0;
+    }
+
+    // remove feature from model
+    View *p_singleton_view;
+    double original_view_score_delta = -remove_feature(feature_idx, feature_data, p_singleton_view);
+    score_delta -= original_view_score_delta;
+    View &singleton_view = *p_singleton_view;
+
+    // score
+    double crp_log_delta_new, data_log_delta_new;
+    string col_datatype = get(global_col_datatypes, feature_idx);
+    CM_Hypers hypers = get(hypers_m, feature_idx);
+    double proposed_view_score_delta = calc_feature_view_predictive_logp(feature_data,
+                                       col_datatype, proposed_view,
+                                       crp_log_delta_new,
+                                       data_log_delta_new,
+                                       hypers);
+
+    // Metropolis jump
+    double log_r = log(draw_rand_u());
+    View *p_insert_into;
+    if(log_r < proposed_view_score_delta - original_view_score_delta) {
+        p_insert_into = &proposed_view;
+    } else {
+        p_insert_into = &original_view;
+    }
+    score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
+
+    // clean up
+    bool original_was_not_singleton = &original_view != &singleton_view;
+    remove_if_empty(original_view);
+    if(original_was_not_singleton) {
+        remove_if_empty(singleton_view);
+    }
+
+    return score_delta;
+}
+
+// updated kernel with birth-death process
+double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
+    double score_delta = 0;
+    View *p_proposed_view;
+
+    // do we create a new veiw or move to an existing view?
+    bool create_new = (draw_rand_u() < .5);
+    if(create_new) {
+        p_proposed_view = &get_new_view();
+    } else {
+        int num_views = views.size();
+        int proposed_view_index = draw_rand_i(num_views-1);
+        p_proposed_view = &get_view(proposed_view_index);
+    }
+
+    // Metropolis jump
+    score_delta = mh_choose(feature_idx, feature_data, *p_proposed_view);
+
+    // clean up
+    remove_if_empty(*p_proposed_view);
+
+    return score_delta;
+}
+
+double State::transition_features(const MatrixD &data, vector<int> which_features) {
     double score_delta = 0;
     int num_features = which_features.size();
-    if (num_features == 0) {
+    if(num_features==0) {
         which_features = create_sequence(data.size2());
         // FIXME: use seed to shuffle
         std::random_shuffle(which_features.begin(), which_features.end());
     }
     vector<int>::iterator it;
-    for (it = which_features.begin(); it != which_features.end(); it++) {
+    for(it=which_features.begin(); it!=which_features.end(); it++) {
         int feature_idx = *it;
         vector<double> feature_data = extract_col(data, feature_idx);
-        score_delta += transition_feature(feature_idx, feature_data);
+        // kernel selection
+        if(ct_kernel == 0) {
+            score_delta += transition_feature_gibbs(feature_idx, feature_data);
+        } else if(ct_kernel == 1) {
+            score_delta += transition_feature_mh(feature_idx, feature_data);
+        } else {
+            printf("Invalid CT_KERNEL");
+            assert(0==1);
+        }
     }
     return score_delta;
 }
@@ -776,10 +856,10 @@ vector<double> State::sample_row_crp_alphas(int N_views) {
 }
 
 vector<vector<int> > State::generate_col_partition(vector<int>
-global_col_indices, string col_initialization) {
+        global_col_indices, string col_initialization) {
     vector<vector<int> > column_partition = draw_crp_init(global_col_indices,
-                                           column_crp_alpha, rng,
-                                           col_initialization);
+                                            column_crp_alpha, rng,
+                                            col_initialization);
     return column_partition;
 }
 

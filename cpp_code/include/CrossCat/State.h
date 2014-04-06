@@ -28,6 +28,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+ #include <math.h>   // for log()
 
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
@@ -77,7 +78,7 @@ public:
           std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
           std::vector<double> S_GRID = empty_vector_double,
           std::vector<double> MU_GRID = empty_vector_double,
-          int N_GRID = 31, int SEED = 0);
+          int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
     /** Constructor for drawing a CrossCat state from the prior.
      *  Column and row partitionings are given, as well as all hyper parameters.
@@ -108,7 +109,7 @@ public:
           std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
           std::vector<double> S_GRID = empty_vector_double,
           std::vector<double> MU_GRID = empty_vector_double,
-          int N_GRID = 31, int SEED = 0);
+          int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
     ~State();
 
@@ -242,7 +243,20 @@ public:
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
      */
-    double transition_feature(int feature_idx, std::vector<double> feature_data);
+    double transition_feature_gibbs(int feature_idx, std::vector<double> feature_data);
+    /**
+     * Helper for transition_feature_mh
+     * \param feature_idx The column index that the view should associaate with the data
+     * \param feature_data The data that comprises the feature
+     * \param proposed_view The view to propose jumping to
+     */
+    double mh_choose(int feature_idx, std::vector<double> feature_data, View &proposed_view);
+    /**
+     * Metropolis birth-death process for assigning columns to view (or creating new views)
+     * \param feature_idx The column index that the view should associaate with the data
+     * \param feature_data The data that comprises the feature
+     */
+    double transition_feature_mh(int feature_idx, std::vector<double> feature_data);
     /**
      * Instantiate a new view object with properties matching the state
      * (datatypes, #rows, etc) and track in memeber variable views
@@ -363,6 +377,7 @@ private:
     double column_crp_alpha;
     double column_crp_score;
     double data_score;
+    int ct_kernel;
     // grids
     std::vector<double> column_crp_alpha_grid;
     std::vector<double> row_crp_alpha_grid;
