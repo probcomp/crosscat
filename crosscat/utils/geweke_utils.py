@@ -73,6 +73,7 @@ def run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
         COLUMN_CRP_ALPHA_GRID,
         S_GRID, MU_GRID,
         N_GRID,
+        CT_KERNEL
         ):
     X_L, X_D = engine.analyze(M_c, T, X_L, X_D,
                 S_GRID=S_GRID,
@@ -80,6 +81,7 @@ def run_posterior_chain_iter(engine, M_c, T, X_L, X_D, diagnostics_data,
                 COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
                 MU_GRID=MU_GRID,
                 N_GRID=N_GRID,
+                CT_KERNEL=CT_KERNEL,
                 )
     diagnostics_data = collect_diagnostics(X_L, diagnostics_data,
             diagnostics_funcs)
@@ -117,6 +119,7 @@ def run_posterior_chain(seed, M_c, T, num_iters,
         ROW_CRP_ALPHA_GRID=(), COLUMN_CRP_ALPHA_GRID=(),
         S_GRID=(), MU_GRID=(),
         N_GRID=default_n_grid,
+        CT_KERNEL=0,
         plot_rand_idx=None,
         ):
     plot_rand_idx = arbitrate_plot_rand_idx(plot_rand_idx, num_iters)
@@ -138,6 +141,7 @@ def run_posterior_chain(seed, M_c, T, num_iters,
                 COLUMN_CRP_ALPHA_GRID,
                 S_GRID, MU_GRID,
                 N_GRID=N_GRID,
+                CT_KERNEL=CT_KERNEL,
                 )
         if idx == plot_rand_idx:
             # This DOESN'T work with multithreading
@@ -152,6 +156,7 @@ def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
         row_crp_alpha_grid, column_crp_alpha_grid,
         s_grid, mu_grid,
         N_GRID=default_n_grid,
+        CT_KERNEL=0,
         ):
     # run geweke: transition-erase loop
     helper = functools.partial(run_posterior_chain, M_c=M_c, T=T, num_iters=num_iters,
@@ -161,6 +166,7 @@ def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
             S_GRID=s_grid,
             MU_GRID=mu_grid,
             N_GRID=N_GRID,
+            CT_KERNEL=CT_KERNEL,
             # this breaks with multiprocessing
             plot_rand_idx=(num_chains==1),
             )
@@ -499,6 +505,7 @@ def run_geweke(config):
     cctypes = config['cctypes']
     num_multinomial_values = config['num_multinomial_values']
     probe_columns = config['probe_columns']
+    CT_KERNEL=config['CT_KERNEL']
 
 
     num_values_list = [num_multinomial_values] * num_cols
@@ -523,6 +530,7 @@ def run_geweke(config):
                 row_crp_alpha_grid, column_crp_alpha_grid,
                 s_grid, mu_grid,
                 N_GRID=n_grid,
+                CT_KERNEL=CT_KERNEL,
                 )
     # post process data
     with gu.Timer('post prcessing data') as timer:
@@ -537,7 +545,7 @@ def run_geweke(config):
     return result
 
 parameters_to_show = ['num_rows', 'num_cols', 'max_mu_grid', 'max_s_grid',
-    'n_grid', 'num_iters', 'num_chains',]
+    'n_grid', 'num_iters', 'num_chains', 'CT_KERNEL',]
 def plot_result(result, dirname='./'):
     # extract variables
     config = result['config']
@@ -577,6 +585,7 @@ def generate_parser():
     parser.add_argument('--max_mu_grid', default=10, type=int)
     parser.add_argument('--max_s_grid', default=100, type=int)
     parser.add_argument('--n_grid', default=31, type=int)
+    parser.add_argument('--CT_KERNEL', default=0, type=int)
     parser.add_argument('--num_multinomial_values', default=2, type=int)
     parser.add_argument('--cctypes', nargs='*', default=None, type=str)
     parser.add_argument('--probe_columns', nargs='*', default=None, type=str)
