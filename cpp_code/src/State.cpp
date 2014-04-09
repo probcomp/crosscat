@@ -304,7 +304,7 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
         p_proposed_view = &get_new_view();
     } else {
         int num_views = views.size();
-        int proposed_view_index = draw_rand_i(num_views-1);
+        int proposed_view_index = draw_rand_i(num_views);
         p_proposed_view = &get_view(proposed_view_index);
     }
 
