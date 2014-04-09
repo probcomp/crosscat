@@ -221,24 +221,52 @@ double State::transition_feature_gibbs(int feature_idx, vector<double> feature_d
     return score_delta;
 }
 
-double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view,
-        double proposal_log_ratio) {
+double propose_singleton_p = .5;
+
+double State::get_proposal_log_ratio(View& from_view, View& to_view,
+        double propose_singleton_p) {
+    // presumes you've already popped the freature from its view!!!
+    bool from_singleton = from_view.get_num_cols() == 0;
+    bool to_singleton = to_view.get_num_cols() == 0;
+
+    double proposal_log_numerator = 0;
+    double proposal_log_denominator = 0;
+    if(from_singleton) {
+        // what is proability of choosing the singleton we're leaving?
+        proposal_log_numerator = log(propose_singleton_p) + from_view.calc_crp_marginal();
+    } else {
+        // what is proability of choosing the NON-singleton we're leaving?
+        // WARNING: uniform sampling of existing views is baked in
+        proposal_log_numerator = log(1 - propose_singleton_p) + get_num_views();
+    }
+    if(to_singleton) {
+        // what is proability of choosing the singleton we're proposing?
+        proposal_log_denominator = log(propose_singleton_p) + to_view.calc_crp_marginal();
+    } else {
+        // what is proability of choosing the NON-singleton we're proposing?
+        // WARNING: uniform sampling of existing views is baked in
+        proposal_log_denominator = log(1 - propose_singleton_p) + get_num_views();
+    }
+    double proposal_log_ratio = proposal_log_numerator - proposal_log_denominator;
+    return proposal_log_ratio;
+}
+
+double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
     double score_delta = 0;
-    View *p_original_view = view_lookup[feature_idx];
-    View &original_view = *p_original_view;
+    View &original_view = *view_lookup[feature_idx];
 
     if(&original_view==&proposed_view) {
         // short circuit: no impact
         return 0;
     }
 
-    // remove feature from model
+    // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
     double original_view_score_delta = -remove_feature(feature_idx, feature_data, p_singleton_view);
     score_delta -= original_view_score_delta;
     View &singleton_view = *p_singleton_view;
 
-    // score
+    // get score delta to choose proposed view
     double crp_log_delta_new, data_log_delta_new;
     string col_datatype = get(global_col_datatypes, feature_idx);
     CM_Hypers hypers = get(hypers_m, feature_idx);
@@ -248,10 +276,14 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
                                        data_log_delta_new,
                                        hypers);
 
+    double state_log_ratio = proposed_view_score_delta - original_view_score_delta;
+    double proposal_log_ratio = get_proposal_log_ratio(original_view,
+            proposed_view, propose_singleton_p);
+
     // Metropolis jump
     double log_r = log(draw_rand_u());
     View *p_insert_into;
-    if(log_r < proposed_view_score_delta - original_view_score_delta + proposal_log_ratio) {
+    if(log_r < state_log_ratio + proposal_log_ratio) {
         p_insert_into = &proposed_view;
     } else {
         p_insert_into = &original_view;
@@ -268,28 +300,13 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
     return score_delta;
 }
 
-double State::get_proposal_log_ratio(bool to_singleton, bool from_singleton, double cut) {
-    double proposal_log_ratio = 0;
-    if(to_singleton != from_singleton) {
-        proposal_log_ratio = log(cut) + log(views.size()) - log(1-cut);
-        if(to_singleton) {
-            proposal_log_ratio *= -1;
-        }
-    }
-    return proposal_log_ratio;
-}
-
 // updated kernel with birth-death process
 double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
     double score_delta = 0;
     View *p_proposed_view;
 
-    double propose_singleton_p = .5;
     // do we create a new veiw or move to an existing view?
-    bool from_singleton = (*view_lookup[feature_idx]).get_num_cols() == 1;
     bool propose_singleton = (draw_rand_u() < propose_singleton_p);
-    double proposal_log_ratio = get_proposal_log_ratio(propose_singleton,
-            from_singleton, propose_singleton_p);
     if(propose_singleton) {
         p_proposed_view = &get_new_view();
     } else {
@@ -299,8 +316,7 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
     }
 
     // Metropolis jump
-    score_delta = mh_choose(feature_idx, feature_data, *p_proposed_view,
-            proposal_log_ratio);
+    score_delta = mh_choose(feature_idx, feature_data, *p_proposed_view);
 
     // clean up
     remove_if_empty(*p_proposed_view);

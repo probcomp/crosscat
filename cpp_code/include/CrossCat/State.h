@@ -250,9 +250,8 @@ public:
      * \param feature_data The data that comprises the feature
      * \param proposed_view The view to propose jumping to
      */
-    double mh_choose(int feature_idx, std::vector<double> feature_data, View &proposed_view,
-            double proposal_log_ratio);
-    double get_proposal_log_ratio(bool to_singleton, bool from_singleton, double cut);
+    double mh_choose(int feature_idx, std::vector<double> feature_data, View &proposed_view);
+    double get_proposal_log_ratio(View& from_view, View& to_view, double propose_singleton_p);
     /**
      * Metropolis birth-death process for assigning columns to view (or creating new views)
      * \param feature_idx The column index that the view should associaate with the data
