@@ -223,30 +223,24 @@ double State::transition_feature_gibbs(int feature_idx, vector<double> feature_d
 
 double propose_singleton_p = .5;
 
-double State::get_proposal_log_ratio(View& from_view, View& to_view,
-        double propose_singleton_p) {
-    // presumes you've already popped the freature from its view!!!
-    bool from_singleton = from_view.get_num_cols() == 0;
-    bool to_singleton = to_view.get_num_cols() == 0;
-
-    double proposal_log_numerator = 0;
-    double proposal_log_denominator = 0;
-    if(from_singleton) {
+double State::get_proposal_logp(View& proposed_view) {
+    bool is_singleton = proposed_view.get_num_cols() == 0;
+    double proposal_logp = 0;
+    if(is_singleton) {
         // what is proability of choosing the singleton we're leaving?
-        proposal_log_numerator = log(propose_singleton_p) + from_view.calc_crp_marginal();
+        proposal_logp = log(propose_singleton_p) + proposed_view.calc_crp_marginal();
     } else {
         // what is proability of choosing the NON-singleton we're leaving?
         // WARNING: uniform sampling of existing views is baked in
-        proposal_log_numerator = log(1 - propose_singleton_p) + get_num_views();
+        proposal_logp = log(1 - propose_singleton_p) - log(get_num_views());
     }
-    if(to_singleton) {
-        // what is proability of choosing the singleton we're proposing?
-        proposal_log_denominator = log(propose_singleton_p) + to_view.calc_crp_marginal();
-    } else {
-        // what is proability of choosing the NON-singleton we're proposing?
-        // WARNING: uniform sampling of existing views is baked in
-        proposal_log_denominator = log(1 - propose_singleton_p) + get_num_views();
-    }
+    return proposal_logp;
+}
+
+double State::get_proposal_log_ratio(View& from_view, View& to_view) {
+    // presumes you've already popped the freature from its view!!!
+    double proposal_log_numerator = get_proposal_logp(from_view);
+    double proposal_log_denominator = get_proposal_logp(to_view);
     double proposal_log_ratio = proposal_log_numerator - proposal_log_denominator;
     return proposal_log_ratio;
 }
@@ -277,8 +271,7 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
                                        hypers);
 
     double state_log_ratio = proposed_view_score_delta - original_view_score_delta;
-    double proposal_log_ratio = get_proposal_log_ratio(original_view,
-            proposed_view, propose_singleton_p);
+    double proposal_log_ratio = get_proposal_log_ratio(original_view, proposed_view);
 
     // Metropolis jump
     double log_r = log(draw_rand_u());
