@@ -221,23 +221,46 @@ double State::transition_feature_gibbs(int feature_idx, vector<double> feature_d
     return score_delta;
 }
 
+double propose_singleton_p = .5;
+
+double State::get_proposal_logp(View& proposed_view) {
+    bool is_singleton = proposed_view.get_num_cols() == 0;
+    double proposal_logp = 0;
+    if(is_singleton) {
+        // what is proability of choosing the singleton we're leaving?
+        proposal_logp = log(propose_singleton_p) + proposed_view.calc_crp_marginal();
+    } else {
+        // what is proability of choosing the NON-singleton we're leaving?
+        // WARNING: uniform sampling of existing views is baked in
+        proposal_logp = log(1 - propose_singleton_p) - log(get_num_views());
+    }
+    return proposal_logp;
+}
+
+double State::get_proposal_log_ratio(View& from_view, View& to_view) {
+    // presumes you've already popped the freature from its view!!!
+    double proposal_log_numerator = get_proposal_logp(from_view);
+    double proposal_log_denominator = get_proposal_logp(to_view);
+    double proposal_log_ratio = proposal_log_numerator - proposal_log_denominator;
+    return proposal_log_ratio;
+}
+
 double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
     double score_delta = 0;
-    View *p_original_view = view_lookup[feature_idx];
-    View &original_view = *p_original_view;
+    View &original_view = *view_lookup[feature_idx];
 
     if(&original_view==&proposed_view) {
         // short circuit: no impact
         return 0;
     }
 
-    // remove feature from model
+    // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
-    double original_view_score_delta = -remove_feature(feature_idx, feature_data, p_singleton_view);
-    score_delta -= original_view_score_delta;
+    double original_view_score_delta = remove_feature(feature_idx, feature_data, p_singleton_view);
+    score_delta = original_view_score_delta;
     View &singleton_view = *p_singleton_view;
 
-    // score
+    // get score delta to choose proposed view
     double crp_log_delta_new, data_log_delta_new;
     string col_datatype = get(global_col_datatypes, feature_idx);
     CM_Hypers hypers = get(hypers_m, feature_idx);
@@ -247,10 +270,13 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
                                        data_log_delta_new,
                                        hypers);
 
+    double state_log_ratio = proposed_view_score_delta - original_view_score_delta;
+    double proposal_log_ratio = get_proposal_log_ratio(original_view, proposed_view);
+
     // Metropolis jump
     double log_r = log(draw_rand_u());
     View *p_insert_into;
-    if(log_r < proposed_view_score_delta - original_view_score_delta) {
+    if(log_r < state_log_ratio + proposal_log_ratio) {
         p_insert_into = &proposed_view;
     } else {
         p_insert_into = &original_view;
@@ -273,12 +299,12 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
     View *p_proposed_view;
 
     // do we create a new veiw or move to an existing view?
-    bool create_new = (draw_rand_u() < .5);
-    if(create_new) {
+    bool propose_singleton = (draw_rand_u() < propose_singleton_p);
+    if(propose_singleton) {
         p_proposed_view = &get_new_view();
     } else {
         int num_views = views.size();
-        int proposed_view_index = draw_rand_i(num_views-1);
+        int proposed_view_index = draw_rand_i(num_views);
         p_proposed_view = &get_view(proposed_view_index);
     }
 
