@@ -256,8 +256,8 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
 
     // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
-    double original_view_score_delta = -remove_feature(feature_idx, feature_data, p_singleton_view);
-    score_delta -= original_view_score_delta;
+    double original_view_score_delta = remove_feature(feature_idx, feature_data, p_singleton_view);
+    score_delta = original_view_score_delta;
     View &singleton_view = *p_singleton_view;
 
     // get score delta to choose proposed view
