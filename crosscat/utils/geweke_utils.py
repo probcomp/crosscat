@@ -596,7 +596,7 @@ def _gen_grid(N, n_grid, _divisor=1.):
 
 def arbitrate_args(args):
     if args.num_chains is None:
-        args.num_chains = multiprocessing.cpu_count()
+        args.num_chains = min(4, multiprocessing.cpu_count())
     if args.probe_columns is None:
         args.probe_columns = (0, 1) if args.num_cols > 1 else (0,)
     if args.cctypes is None:
