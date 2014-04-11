@@ -120,6 +120,7 @@ public:
      * \return The number of columns in the state
      */
     int get_num_cols() const;
+    int _careful_get_num_views() const;
     /**
      * \return The number of views (column partitions)
      */

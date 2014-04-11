@@ -117,7 +117,22 @@ int State::get_num_cols() const {
     return view_lookup.size();
 }
 
+int State::_careful_get_num_views() const {
+    int num_views = 0;
+    set<View*>::iterator it;
+    for (it = views.begin(); it != views.end(); it++) {
+        View& v = (**it);
+        int view_num_cols = v.get_num_cols();
+        if(view_num_cols != 0) {
+            num_views++;
+        }
+    }
+    return num_views;
+}
+
 int State::get_num_views() const {
+    // This only works if you can guarantee no empty views (from popped
+    // singletons)
     return views.size();
 }
 
@@ -232,7 +247,7 @@ double State::get_proposal_logp(View& proposed_view) {
     } else {
         // what is proability of choosing the NON-singleton we're leaving?
         // WARNING: uniform sampling of existing views is baked in
-        proposal_logp = log(1 - propose_singleton_p) - log(get_num_views());
+        proposal_logp = log(1 - propose_singleton_p) - log(_careful_get_num_views());
     }
     return proposal_logp;
 }
