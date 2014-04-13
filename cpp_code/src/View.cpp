@@ -444,6 +444,9 @@ double View::calc_column_predictive_logp(vector<double> column_data,
                        data_global_row_indices,
                        hypers);
     }
+    if(get_num_cols()==0) {
+	    score_delta += calc_crp_marginal();
+    }
     return score_delta;
 }
 
