@@ -363,11 +363,9 @@ double calc_multinomial_marginal_logp(int count,
                                       double dirichlet_alpha) {
     double sum_lgammas = 0;
     map<string, double>::const_iterator it;
-    double sum_facts = 0;
     for (it = counts.begin(); it != counts.end(); it++) {
         int label_count = it->second;
         sum_lgammas += lgamma(label_count + dirichlet_alpha);
-	sum_facts += lgamma(label_count + 1.);
     }
     int missing_labels = K - counts.size();
     if (missing_labels != 0) {
@@ -377,7 +375,6 @@ double calc_multinomial_marginal_logp(int count,
                            - K * lgamma(dirichlet_alpha)     \
                            + sum_lgammas             \
                            - lgamma(count + K * dirichlet_alpha);
-    marginal_logp += lgamma(count + 1.) - sum_facts;
     return marginal_logp;
 }
 
