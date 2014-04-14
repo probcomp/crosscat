@@ -383,6 +383,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 		structure['component_params'] = component_params
 		structure['cols_to_views'] = cols_to_views
 		structure['rows_to_clusters'] = rows_to_clusters
+		structure['cluster_weights'] = cluster_weights
 		return T, M_c, structure
 	else:
 		return T, M_c
