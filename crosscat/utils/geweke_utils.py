@@ -357,6 +357,40 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             pass
     return
 
+def _plot_kls(variable_name, result):
+    try:
+        forward_diagnostics_data = result['forward_diagnostics_data']
+        diagnostics_data_list = result['diagnostics_data_list']
+        processed_data = result['processed_data']
+        kl_series_list_dict = processed_data['kl_series_list_dict']
+        kl_series_list = kl_series_list_dict[variable_name]
+        map(pylab.plot, kl_series_list)
+    except Exception, e:
+        pass
+    return
+
+variable_names = [
+    'col_0_mu', 'col_0_nu', 'col_0_s', 'col_0_r',
+    'col_1_mu', 'col_1_nu', 'col_1_s', 'col_1_r',
+    'col_0_dirichlet_alpha', 'col_1_dirichlet_alpha',
+    'column_crp_alpha'
+    ]
+def plot_all_kls(variable_name, results, save_kwargs=None):
+    helper = functools.partial(_plot_kls, variable_name)
+    map(helper, results)
+    #
+    mapped_variable_name = map_variable_name(variable_name)
+    pylab.title('Geweke analysis for %s' % mapped_variable_name)
+    pylab.xlabel('iteration')
+    pylab.ylabel('KL')
+    # FIXME: remove, or do something "better"
+    #pylab.gca().set_ylim((0., 0.1))
+    if save_kwargs is not None:
+        filename = variable_name + '_all_kls.png'
+        pu.save_current_figure(filename, format=image_format, **save_kwargs)
+        pass
+    return
+
 def make_same_length(*args):
     return zip(*zip(*args))
 
