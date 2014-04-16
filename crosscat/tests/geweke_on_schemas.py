@@ -122,9 +122,14 @@ if __name__ == '__main__':
 
     if do_plots:
         geweke_utils.dirname_prefix = dirname
-        for id in er.frame.index:
-            result = er._get_result(id)
-            geweke_utils.plot_result(result, dirname)
+        helper = partial(geweke_utils.plot_result, dirname=dirname)
+        results_iter = er.get_results_iter(er.frame)
+        map(helper, results_iter)
+        #
+        save_kwargs = dict(dir=dirname)
+        for variable_name in geweke_utils.variable_names:
+            results_iter = er.get_results_iter(er.frame)
+            geweke_utils.plot_all_kls(variable_name, results_iter, save_kwargs)
             pass
         pass
 
