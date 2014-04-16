@@ -376,6 +376,8 @@ variable_names = [
     'column_crp_alpha'
     ]
 def plot_all_kls(variable_name, results, save_kwargs=None):
+    pylab.figure()
+    #
     helper = functools.partial(_plot_kls, variable_name)
     map(helper, results)
     #
