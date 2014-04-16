@@ -119,7 +119,6 @@ if __name__ == '__main__':
     # push to s3
     propagate_to_s3(er)
 
-
     if do_plots:
         geweke_utils.dirname_prefix = dirname
         helper = partial(geweke_utils.plot_result, dirname=dirname)
@@ -127,10 +126,13 @@ if __name__ == '__main__':
         map(helper, results_iter)
         #
         save_kwargs = dict(dir=dirname)
+        result_to_plot_kwargs = lambda result: \
+                dict(c='r') if result['config']['CT_KERNEL']==0 else dict(c='k')
         for variable_name in geweke_utils.variable_names:
             results_iter = er.get_results_iter(er.frame)
-            geweke_utils.plot_all_kls(variable_name, results_iter, save_kwargs)
+            geweke_utils.plot_all_kls(variable_name, results_iter,
+                    result_to_plot_kwargs=result_to_plot_kwargs,
+                    save_kwargs=save_kwargs)
             pass
-        pass
 
     print er.frame
