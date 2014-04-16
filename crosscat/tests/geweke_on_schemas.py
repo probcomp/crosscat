@@ -121,6 +121,7 @@ if __name__ == '__main__':
 
 
     if do_plots:
+        geweke_utils.dirname_prefix = dirname
         for id in er.frame.index:
             result = er._get_result(id)
             geweke_utils.plot_result(result, dirname)
