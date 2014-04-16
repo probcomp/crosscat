@@ -328,10 +328,10 @@ def plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         pu.show_parameters(parameters)
         pass
     if save_kwargs is not None:
-        filename = variable_name + '_hist'
+        filename = variable_name + '_hist.png'
         pu.save_current_figure(filename, format=image_format, **save_kwargs)
         #
-        filename = variable_name + '_pp'
+        filename = variable_name + '_pp.png'
         pylab.figure()
         for not_forward in not_forward_list:
             pp_plot(forward, not_forward, 100)
