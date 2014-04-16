@@ -381,6 +381,7 @@ variable_names = [
     'column_crp_alpha'
     ]
 def plot_all_kls(variable_name, results, result_to_plot_kwargs=None,
+        post_action=None,
         save_kwargs=None, new_figure=True):
     if new_figure:
         pylab.figure()
@@ -396,6 +397,9 @@ def plot_all_kls(variable_name, results, result_to_plot_kwargs=None,
     pylab.ylabel('KL')
     # FIXME: remove, or do something "better"
     #pylab.gca().set_ylim((0., 0.1))
+    if post_action is not None:
+        post_action()
+        pass
     if save_kwargs is not None:
         filename = variable_name + '_all_kls.png'
         pu.save_current_figure(filename, format=image_format, **save_kwargs)
