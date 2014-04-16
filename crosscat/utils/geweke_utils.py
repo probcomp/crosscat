@@ -357,14 +357,19 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             pass
     return
 
-def _plot_kls(variable_name, result):
+def _plot_kls(variable_name, result, result_to_plot_kwargs=None):
+    plot_kwargs = dict()
+    if result_to_plot_kwargs:
+        plot_kwargs = result_to_plot_kwargs(result)
+        pass
     try:
         forward_diagnostics_data = result['forward_diagnostics_data']
         diagnostics_data_list = result['diagnostics_data_list']
         processed_data = result['processed_data']
         kl_series_list_dict = processed_data['kl_series_list_dict']
         kl_series_list = kl_series_list_dict[variable_name]
-        map(pylab.plot, kl_series_list)
+        helper = functools.partial(pylab.plot, **plot_kwargs)
+        map(helper, kl_series_list)
     except Exception, e:
         pass
     return
@@ -375,10 +380,14 @@ variable_names = [
     'col_0_dirichlet_alpha', 'col_1_dirichlet_alpha',
     'column_crp_alpha'
     ]
-def plot_all_kls(variable_name, results, save_kwargs=None):
-    pylab.figure()
+def plot_all_kls(variable_name, results, result_to_plot_kwargs=None,
+        save_kwargs=None, new_figure=True):
+    if new_figure:
+        pylab.figure()
+        pass
     #
-    helper = functools.partial(_plot_kls, variable_name)
+    helper = functools.partial(_plot_kls, variable_name,
+            result_to_plot_kwargs=result_to_plot_kwargs)
     map(helper, results)
     #
     mapped_variable_name = map_variable_name(variable_name)
