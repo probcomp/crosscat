@@ -126,12 +126,26 @@ if __name__ == '__main__':
         map(helper, results_iter)
         #
         save_kwargs = dict(dir=dirname)
-        result_to_plot_kwargs = lambda result: \
-                dict(c='r') if result['config']['CT_KERNEL']==0 else dict(c='k')
+        CT_KERNEL_to_plot_kwargs = {
+                0:dict(c='k'),
+                1:dict(c='r'),
+                }
+        def result_to_plot_kwargs(result):
+            which_kernel = result['config']['CT_KERNEL']
+            return CT_KERNEL_to_plot_kwargs[which_kernel]
+        def post_action():
+            import pylab
+            gibbs_line = pylab.Line2D([], [], **CT_KERNEL_to_plot_kwargs[0])
+            gibbs_label = 'CT_KERNEL==Gibbs'
+            mh_line = pylab.Line2D([], [], **CT_KERNEL_to_plot_kwargs[1])
+            mh_label = 'CT_KERNEL==MH'
+            pylab.legend((gibbs_line, mh_line), (gibbs_label, mh_label))
+            pass
         for variable_name in geweke_utils.variable_names:
             results_iter = er.get_results_iter(er.frame)
             geweke_utils.plot_all_kls(variable_name, results_iter,
                     result_to_plot_kwargs=result_to_plot_kwargs,
+                    post_action=post_action,
                     save_kwargs=save_kwargs)
             pass
 
