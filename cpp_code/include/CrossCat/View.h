@@ -118,7 +118,8 @@ public:
     double calc_column_predictive_logp(std::vector<double> column_data,
                                        std::string col_datatype,
                                        std::vector<int> data_global_row_indices,
-                                       CM_Hypers hypers);
+                                       CM_Hypers hypers,
+                                       bool add_singleton_crp_marginal=true);
     //
     // mutators
     void set_row_partitioning(std::vector<std::vector<int> > row_partitioning);

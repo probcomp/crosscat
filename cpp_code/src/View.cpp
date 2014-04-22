@@ -436,7 +436,8 @@ double View::transition(std::map<int, std::vector<double> > row_data_map) {
 double View::calc_column_predictive_logp(vector<double> column_data,
         string col_datatype,
         vector<int> data_global_row_indices,
-        CM_Hypers hypers) {
+        CM_Hypers hypers,
+        bool add_singleton_crp_marginal) {
     double score_delta = 0;
     setCp::iterator it;
     for (it = clusters.begin(); it != clusters.end(); it++) {
@@ -444,7 +445,7 @@ double View::calc_column_predictive_logp(vector<double> column_data,
                        data_global_row_indices,
                        hypers);
     }
-    if(get_num_cols()==0) {
+    if(get_num_cols()==0 && add_singleton_crp_marginal) {
 	    score_delta += calc_crp_marginal();
     }
     return score_delta;
