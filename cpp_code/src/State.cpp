@@ -163,7 +163,7 @@ double State::insert_row(vector<double> row_data, int matching_row_idx, int row_
 }
 
 double State::insert_feature(int feature_idx, vector<double> feature_data,
-                             View& which_view) {
+                             View& which_view, bool add_singleton_crp_marginal) {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers& hypers = hypers_m[feature_idx];
     double crp_logp_delta, data_logp_delta;
@@ -172,7 +172,7 @@ double State::insert_feature(int feature_idx, vector<double> feature_data,
                          which_view,
                          crp_logp_delta,
                          data_logp_delta,
-                         hypers);
+                         hypers, add_singleton_crp_marginal);
     vector<int> data_global_row_indices = create_sequence(feature_data.size());
     which_view.insert_col(feature_data,
                           data_global_row_indices, feature_idx,
@@ -185,21 +185,22 @@ double State::insert_feature(int feature_idx, vector<double> feature_data,
 
 double State::sample_insert_feature(int feature_idx,
                                     vector<double> feature_data,
-                                    View& singleton_view) {
+                                    View& singleton_view, bool add_singleton_crp_marginal) {
     string col_datatype = global_col_datatypes[feature_idx];
     vector<double> unorm_logps = calc_feature_view_predictive_logps(feature_data,
-                                 feature_idx);
+                                 feature_idx, add_singleton_crp_marginal);
     double rand_u = draw_rand_u();
     int draw = numerics::draw_sample_unnormalized(unorm_logps, rand_u);
     View& which_view = get_view(draw);
-    double score_delta = insert_feature(feature_idx, feature_data, which_view);
+    double score_delta = insert_feature(feature_idx, feature_data, which_view,
+            add_singleton_crp_marginal);
     remove_if_empty(singleton_view);
     return score_delta;
 }
 
 
 double State::remove_feature(int feature_idx, vector<double> feature_data,
-                             View* &p_singleton_view) {
+                             View* &p_singleton_view, bool add_singleton_crp_marginal) {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers &hypers = hypers_m[feature_idx];
     map<int,View*>::iterator it = view_lookup.find(feature_idx);
@@ -214,7 +215,8 @@ double State::remove_feature(int feature_idx, vector<double> feature_data,
                          which_view,
                          crp_logp_delta,
                          other_data_logp_delta,
-                         hypers);
+                         hypers,
+                         add_singleton_crp_marginal);
     //
     if(view_num_cols==1) {
         p_singleton_view = &which_view;
@@ -227,12 +229,15 @@ double State::remove_feature(int feature_idx, vector<double> feature_data,
     return score_delta;
 }
 
-double State::transition_feature_gibbs(int feature_idx, vector<double> feature_data) {
+double State::transition_feature_gibbs(int feature_idx, vector<double> feature_data,
+        bool add_singleton_crp_marginal) {
     double score_delta = 0;
     View *p_singleton_view;
-    score_delta += remove_feature(feature_idx, feature_data, p_singleton_view);
+    score_delta += remove_feature(feature_idx, feature_data, p_singleton_view,
+            add_singleton_crp_marginal);
     View &singleton_view = *p_singleton_view;
-    score_delta += sample_insert_feature(feature_idx, feature_data, singleton_view);
+    score_delta += sample_insert_feature(feature_idx, feature_data, singleton_view,
+            add_singleton_crp_marginal);
     return score_delta;
 }
 
@@ -261,6 +266,7 @@ double State::get_proposal_log_ratio(View& from_view, View& to_view) {
 }
 
 double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
+    bool add_singleton_crp_marginal = true;
     double score_delta = 0;
     View &original_view = *view_lookup[feature_idx];
 
@@ -271,7 +277,8 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
 
     // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
-    double original_view_score_delta = remove_feature(feature_idx, feature_data, p_singleton_view);
+    double original_view_score_delta = remove_feature(feature_idx, feature_data, p_singleton_view,
+            add_singleton_crp_marginal);
     score_delta = original_view_score_delta;
     View &singleton_view = *p_singleton_view;
 
@@ -283,7 +290,8 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
                                        col_datatype, proposed_view,
                                        crp_log_delta_new,
                                        data_log_delta_new,
-                                       hypers);
+                                       hypers,
+                                       add_singleton_crp_marginal);
 
     double state_log_ratio = proposed_view_score_delta - original_view_score_delta;
     double proposal_log_ratio = get_proposal_log_ratio(original_view, proposed_view);
@@ -296,7 +304,7 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
     } else {
         p_insert_into = &original_view;
     }
-    score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
+    score_delta += insert_feature(feature_idx, feature_data, *p_insert_into, true);
 
     // clean up
     bool original_was_not_singleton = &original_view != &singleton_view;
@@ -346,9 +354,15 @@ double State::transition_features(const MatrixD &data, vector<int> which_feature
         vector<double> feature_data = extract_col(data, feature_idx);
         // kernel selection
         if(ct_kernel == 0) {
-            score_delta += transition_feature_gibbs(feature_idx, feature_data);
+            bool add_singleton_crp_marginal = false;
+            score_delta += transition_feature_gibbs(feature_idx, feature_data,
+                    add_singleton_crp_marginal);
         } else if(ct_kernel == 1) {
             score_delta += transition_feature_mh(feature_idx, feature_data);
+        } else if(ct_kernel == 2) {
+            bool add_singleton_crp_marginal = true;
+            score_delta += transition_feature_gibbs(feature_idx, feature_data,
+                   add_singleton_crp_marginal);
         } else {
             printf("Invalid CT_KERNEL");
             assert(0==1);
@@ -686,7 +700,8 @@ double State::calc_feature_view_predictive_logp(vector<double> col_data,
         string col_datatype, View v,
         double& crp_log_delta,
         double& data_log_delta,
-        CM_Hypers hypers) const {
+        CM_Hypers hypers,
+        bool add_singleton_crp_marginal) const {
     int view_column_count = v.get_num_cols();
     int num_columns = get_num_cols();
     crp_log_delta = numerics::calc_cluster_crp_logp(view_column_count, num_columns,
@@ -696,7 +711,7 @@ double State::calc_feature_view_predictive_logp(vector<double> col_data,
     // pass singleton_view down to here, or at least hypers
     data_log_delta = v.calc_column_predictive_logp(col_data, col_datatype,
                      data_global_row_indices,
-                     hypers);
+                     hypers, add_singleton_crp_marginal);
     //
     double score_delta = data_log_delta + crp_log_delta;
     return score_delta;
@@ -704,7 +719,8 @@ double State::calc_feature_view_predictive_logp(vector<double> col_data,
 
 vector<double> State::calc_feature_view_predictive_logps(
     vector<double> col_data,
-    int global_col_idx) const {
+    int global_col_idx,
+    bool add_singleton_crp_marginal) const {
     vector<double> logps;
     CM_Hypers hypers = get(hypers_m, global_col_idx);
     set<View*>::iterator it;
@@ -717,7 +733,7 @@ vector<double> State::calc_feature_view_predictive_logps(
                              v,
                              crp_log_delta,
                              data_log_delta,
-                             hypers);
+                             hypers, add_singleton_crp_marginal);
         logps.push_back(score_delta);
     }
     return logps;
