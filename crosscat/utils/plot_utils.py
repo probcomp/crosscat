@@ -79,7 +79,6 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
     for view_idx, X_D_i in enumerate(X_D):
         argsorted = numpy.argsort(X_D_i)
         is_this_view = view_assignments==view_idx
-        xticklabels = numpy.nonzero(is_this_view)[0]
         num_cols_i = sum(is_this_view)
         T_array_sub = T_array[:,is_this_view][argsorted]
         nxtAxWidth = float(num_cols_i) * view_spacing_2
@@ -112,7 +111,6 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
         plot_cluster_lines(X_D_i, num_cols_i)
 
         pylab.gca().set_xticks(range(num_cols_i))
-        #pylab.gca().set_xticklabels(map(str, xticklabels))
         pylab.gca().set_xticklabels(column_names[is_this_view], rotation=90, size='x-small')
         pylab.gca().set_yticklabels([])
         pylab.xlim([-0.5, num_cols_i-0.5])
