@@ -60,24 +60,22 @@ def plot_T(T_array, M_c, filename=None, dir='./', close=True):
 
 def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
         format=None, do_colorbar=False):
-    num_cols = len(X_L['column_partition']['assignments'])
-    column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_cols)]
-    column_names = numpy.array(column_names)
-
-    fig = pylab.figure()
     view_assignments = X_L['column_partition']['assignments']
     view_assignments = numpy.array(view_assignments)
     num_features = len(view_assignments)
+    column_names = [M_c['idx_to_name'][str(idx)] for idx in range(num_features)]
+    column_names = numpy.array(column_names)
     num_views = len(set(view_assignments)) + do_colorbar
     
     disLeft = 0.1
     disRight = 0.1
-    viewSpacing = 0.1 / (max(2,num_views)-1)
+    viewSpacing = 0.1 / (max(2, num_views) - 1)
     nxtAxDisLeft = disLeft
     axpos2 = 0.2
     axpos4 = 0.75
-    view_spacing_2 = 1. / num_features * (1-viewSpacing*(num_views-1.)-disLeft-disRight)
+    view_spacing_2 = (1-viewSpacing*(num_views-1.)-disLeft-disRight) / num_features
     
+    fig = pylab.figure()
     for view_idx in range(num_views - do_colorbar):
         X_D_i = X_D[view_idx]
         argsorted = numpy.argsort(X_D_i)
@@ -91,22 +89,29 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
         nxtAxDisLeft = nxtAxDisLeft+nxtAxWidth+viewSpacing
         
         # Normalize each column to display
-        mincols = T_array_sub.min(axis=0)
-        maxcols = T_array_sub.max(axis=0)
-        T_range = maxcols[numpy.newaxis,:]-mincols[numpy.newaxis,:]
-        T_norm = (T_array_sub-mincols[numpy.newaxis,:]) / T_range
-        pylab.imshow(T_norm, aspect = 'auto',
+        def norm_T(T_array):
+            mincols = T_array_sub.min(axis=0)
+            maxcols = T_array_sub.max(axis=0)
+            T_range = maxcols[numpy.newaxis,:] - mincols[numpy.newaxis,:]
+            return (T_array_sub-mincols[numpy.newaxis,:]) / T_range
+        normed_T = norm_T(T_array_sub)
+        pylab.imshow(normed_T, aspect = 'auto',
                      interpolation='none',cmap=pylab.matplotlib.cm.Greens)
 
-        old_tmp = 0
-        for cluster_i in range(max(X_D_i)):
-            cluster_num_rows = numpy.sum(numpy.array(X_D_i) == cluster_i)
-            if cluster_num_rows > 5:
-                xs = numpy.arange(num_cols_i + 1) - 0.5
-                ys = [old_tmp + cluster_num_rows] * (num_cols_i + 1)
-                pylab.plot(xs, ys, color='red', linewidth=2, hold='true')
-            old_tmp = old_tmp + cluster_num_rows
-               
+        def plot_cluster_lines(X_D_i, num_cols_i):
+            old_tmp = 0
+            for cluster_i in range(max(X_D_i)):
+                cluster_num_rows = numpy.sum(numpy.array(X_D_i) == cluster_i)
+                if cluster_num_rows > 5:
+                    xs = numpy.arange(num_cols_i + 1) - 0.5
+                    ys = [old_tmp + cluster_num_rows] * (num_cols_i + 1)
+                    pylab.plot(xs, ys, color='red', linewidth=2, hold='true')
+                    pass
+                old_tmp = old_tmp + cluster_num_rows
+                pass
+            return
+        plot_cluster_lines(X_D_i, num_cols_i)
+
         pylab.gca().set_xticks(range(num_cols_i))
         #pylab.gca().set_xticklabels(map(str, xticklabels))
         pylab.gca().set_xticklabels(column_names[is_this_view], rotation=90, size='x-small')
