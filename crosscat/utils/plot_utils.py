@@ -76,8 +76,7 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
     view_spacing_2 = (1-viewSpacing*(num_views-1.)-disLeft-disRight) / num_features
     
     fig = pylab.figure()
-    for view_idx in range(num_views - do_colorbar):
-        X_D_i = X_D[view_idx]
+    for view_idx, X_D_i in enumerate(X_D):
         argsorted = numpy.argsort(X_D_i)
         is_this_view = view_assignments==view_idx
         xticklabels = numpy.nonzero(is_this_view)[0]
