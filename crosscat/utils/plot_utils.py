@@ -77,25 +77,18 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
     
     fig = pylab.figure()
     for view_idx, X_D_i in enumerate(X_D):
-        argsorted = numpy.argsort(X_D_i)
+        # figure out some sizing
         is_this_view = view_assignments==view_idx
         num_cols_i = sum(is_this_view)
-        T_array_sub = T_array[:,is_this_view][argsorted]
         nxtAxWidth = float(num_cols_i) * view_spacing_2
         axes_pos = nxtAxDisLeft, axpos2, nxtAxWidth, axpos4
-        currax = fig.add_axes(axes_pos)
         nxtAxDisLeft = nxtAxDisLeft+nxtAxWidth+viewSpacing
-        
-        # Normalize each column to display
+        # define some helpers
         def norm_T(T_array):
             mincols = T_array_sub.min(axis=0)
             maxcols = T_array_sub.max(axis=0)
             T_range = maxcols[numpy.newaxis,:] - mincols[numpy.newaxis,:]
             return (T_array_sub-mincols[numpy.newaxis,:]) / T_range
-        normed_T = norm_T(T_array_sub)
-        pylab.imshow(normed_T, aspect = 'auto',
-                     interpolation='none',cmap=pylab.matplotlib.cm.Greens)
-
         def plot_cluster_lines(X_D_i, num_cols_i):
             old_tmp = 0
             for cluster_i in range(max(X_D_i)):
@@ -108,21 +101,26 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
                 old_tmp = old_tmp + cluster_num_rows
                 pass
             return
+        # plot
+        argsorted = numpy.argsort(X_D_i)
+        T_array_sub = T_array[:,is_this_view][argsorted]
+        normed_T = norm_T(T_array_sub)
+        currax = fig.add_axes(axes_pos)
+        pylab.imshow(normed_T, aspect = 'auto',
+                     interpolation='none', cmap=pylab.matplotlib.cm.Greens)
         plot_cluster_lines(X_D_i, num_cols_i)
-
+        # munge plots
         pylab.gca().set_xticks(range(num_cols_i))
         pylab.gca().set_xticklabels(column_names[is_this_view], rotation=90, size='x-small')
         pylab.gca().set_yticklabels([])
         pylab.xlim([-0.5, num_cols_i-0.5])
         pylab.ylim([0, len(T_array_sub)])
-
-        pylab.show()
         if view_idx!=0: pylab.gca().set_yticklabels([])
     if do_colorbar:
         nxtAxWidth = float(1.) * view_spacing_2
         axes_pos = nxtAxDisLeft, axpos2, nxtAxWidth, axpos4
-        cbaxx = fig.add_axes(axes_pos)
-        cb = pylab.colorbar(cax=cbaxx, ax=currax)
+        cax = fig.add_axes(axes_pos)
+        cb = pylab.colorbar(cax=cax, ax=currax)
     save_current_figure(filename, dir, close, format=format)
 
 def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist.png', plotcolor='red', truth=None, x_axis_lim=None):
