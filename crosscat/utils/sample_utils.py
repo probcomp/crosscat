@@ -28,6 +28,7 @@ import numpy
 #
 import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
+import crosscat.cython_code.CyclicComponentModel as CYCM
 import crosscat.utils.general_utils as gu
 
 class Bunch(dict):
@@ -341,6 +342,8 @@ def get_component_model_constructor(modeltype):
         component_model_constructor = CCM.p_ContinuousComponentModel
     elif modeltype == 'symmetric_dirichlet_discrete':
         component_model_constructor = MCM.p_MultinomialComponentModel
+    elif modeltype == 'vonmises':
+        component_model_constructor = CYCM.p_CyclicComponentModel
     else:
         assert False, \
             "get_model_constructor: unknown modeltype: %s" % modeltype

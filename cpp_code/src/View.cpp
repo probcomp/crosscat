@@ -39,8 +39,11 @@ View::View(const MatrixD data,
            vector<double> MULTINOMIAL_ALPHA_GRID,
            vector<double> R_GRID,
            vector<double> NU_GRID,
+           vector<double> VM_B_GRID,
            map<int, vector<double> > S_GRIDS,
            map<int, vector<double> > MU_GRIDS,
+           map<int, vector<double> > VM_A_GRIDS,
+           map<int, vector<double> > VM_KAPPA_GRIDS,
            double CRP_ALPHA,
            int SEED) : crp_alpha(CRP_ALPHA), rng(SEED) {
     crp_score = 0;
@@ -53,6 +56,9 @@ View::View(const MatrixD data,
     nu_grid = NU_GRID;
     s_grids = S_GRIDS;
     mu_grids = MU_GRIDS;
+    vm_b_grid = VM_B_GRID;
+    vm_a_grids = VM_A_GRIDS;
+    vm_kappa_grids = VM_KAPPA_GRIDS;
     //
     set_row_partitioning(row_partitioning);
     insert_cols(data, global_row_indices, global_col_indices, hypers_m);
@@ -68,8 +74,11 @@ View::View(const MatrixD data,
            vector<double> MULTINOMIAL_ALPHA_GRID,
            vector<double> R_GRID,
            vector<double> NU_GRID,
+           vector<double> VM_B_GRID,
            map<int, vector<double> > S_GRIDS,
            map<int, vector<double> > MU_GRIDS,
+           map<int, vector<double> > VM_A_GRIDS,
+           map<int, vector<double> > VM_KAPPA_GRIDS,
            int SEED) : rng(SEED) {
     crp_score = 0;
     data_score = 0;
@@ -81,6 +90,9 @@ View::View(const MatrixD data,
     nu_grid = NU_GRID;
     s_grids = S_GRIDS;
     mu_grids = MU_GRIDS;
+    vm_b_grid = VM_B_GRID;
+    vm_a_grids = VM_A_GRIDS;
+    vm_kappa_grids = VM_KAPPA_GRIDS;
     //
     // sample alpha
     crp_alpha = crp_alpha_grid[draw_rand_i(crp_alpha_grid.size())];
@@ -97,8 +109,11 @@ View::View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
            std::vector<double> MULTINOMIAL_ALPHA_GRID,
            std::vector<double> R_GRID,
            std::vector<double> NU_GRID,
+           std::vector<double> VM_B_GRID,
            std::map<int, std::vector<double> > S_GRIDS,
            std::map<int, std::vector<double> > MU_GRIDS,
+           map<int, vector<double> > VM_A_GRIDS,
+           map<int, vector<double> > VM_KAPPA_GRIDS,
            int SEED) : rng(SEED) {
     crp_score = 0;
     data_score = 0;
@@ -110,6 +125,9 @@ View::View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
     nu_grid = NU_GRID;
     s_grids = S_GRIDS;
     mu_grids = MU_GRIDS;
+    vm_b_grid = VM_B_GRID;
+    vm_a_grids = VM_A_GRIDS;
+    vm_kappa_grids = VM_KAPPA_GRIDS;
     //
     // sample alpha
     crp_alpha = crp_alpha_grid[draw_rand_i(crp_alpha_grid.size())];
@@ -172,6 +190,10 @@ vector<string> View::get_hyper_strings(int which_col) {
         hyper_strings.push_back("nu");
         hyper_strings.push_back("s");
         hyper_strings.push_back("mu");
+    } else if (global_col_datatype == CYCLIC_DATATYPE) {
+        hyper_strings.push_back("a");
+        hyper_strings.push_back("b");
+        hyper_strings.push_back("kappa");
     } else if (global_col_datatype == MULTINOMIAL_DATATYPE) {
         hyper_strings.push_back("dirichlet_alpha");
     } else {
@@ -195,6 +217,12 @@ vector<double> View::get_hyper_grid(int global_col_idx,
         hyper_grid = mu_grids[global_col_idx];
     } else if (which_hyper == "dirichlet_alpha") {
         hyper_grid = multinomial_alpha_grid;
+    } else if (which_hyper == "a") {
+        hyper_grid = vm_a_grids[global_col_idx];
+    } else if (which_hyper == "b") {
+        hyper_grid = vm_b_grid;
+    } else if (which_hyper == "kappa") {
+        hyper_grid = vm_kappa_grids[global_col_idx];
     } else {
         cout << "View::get_hyper_grid(" << global_col_idx << ", " << which_hyper <<
              "): invalid which_hyper" << endl;

@@ -271,6 +271,14 @@ void construct_continuous_specific_hyper_grid(int n_grid,
         std::vector<double>& s_grid,
         std::vector<double>& mu_grid);
 
+void construct_cyclic_base_hyper_grids(int n_grid,
+        int data_num_vectors,
+        std::vector<double>& vm_b_grid);
+void construct_cyclic_specific_hyper_grid(int n_grid,
+        std::vector<double> col_data,
+        std::vector<double>& vm_a_grid,
+        std::vector<double>& vm_kappa);
+
 void construct_multinomial_base_hyper_grids(int n_grid,
         int data_num_vectors,
         std::vector<double>& multinomial_alpha_grid);

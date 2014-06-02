@@ -151,6 +151,13 @@ def gen_continuous_metadata(column_data):
         code_to_value=dict(),
         )
 
+def gen_cyclic_metadata(column_data):
+    return dict(
+        modeltype="vonmises",
+        value_to_code=dict(),
+        code_to_value=dict(),
+        )
+
 def gen_multinomial_metadata(column_data):
     def get_is_not_nan(el):
         if isinstance(el, str):
@@ -174,6 +181,7 @@ def gen_multinomial_metadata(column_data):
 metadata_generator_lookup = dict(
     continuous=gen_continuous_metadata,
     multinomial=gen_multinomial_metadata,
+    cyclic=gen_cyclic_metadata,
 )
 
 def gen_M_c_from_T(T, cctypes=None, colnames=None):

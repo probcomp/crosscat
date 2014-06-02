@@ -352,8 +352,11 @@ View& State::get_new_view() {
     vector<int> global_row_indices = create_sequence(num_vectors);
     View *p_new_view = new View(global_col_datatypes,
                                 global_row_indices,
-                                row_crp_alpha_grid, multinomial_alpha_grid, r_grid, nu_grid, s_grids,
-                                mu_grids, draw_rand_i());
+                                row_crp_alpha_grid, multinomial_alpha_grid, r_grid, nu_grid,
+                                vm_b_grid,
+                                s_grids, mu_grids, 
+                                vm_a_grids, vm_kappa_grids,
+                                draw_rand_i());
     views.insert(p_new_view);
     return *p_new_view;
 }
@@ -798,6 +801,7 @@ void State::construct_base_hyper_grids(const MatrixD& data, int N_GRID,
     }
     row_crp_alpha_grid = ROW_CRP_ALPHA_GRID;
     column_crp_alpha_grid = COLUMN_CRP_ALPHA_GRID;
+    construct_cyclic_base_hyper_grids(N_GRID, num_rows, vm_b_grid);
     construct_continuous_base_hyper_grids(N_GRID, num_rows, r_grid, nu_grid);
     construct_multinomial_base_hyper_grids(N_GRID, num_rows,
                                            multinomial_alpha_grid);
@@ -824,6 +828,11 @@ void State::construct_column_hyper_grids(const MatrixD& data,
                 s_grids[global_col_idx] = S_GRID;
                 mu_grids[global_col_idx] = MU_GRID;
             }
+        }else if (col_datatype == CYCLIC_DATATYPE){
+            vector<double> col_data = extract_col(data, global_col_idx);
+                construct_cyclic_specific_hyper_grid(N_GRID, col_data,
+                        vm_a_grids[global_col_idx],
+                        vm_kappa_grids[global_col_idx]);
         }
     }
 }
@@ -850,6 +859,13 @@ CM_Hypers State::uniform_sample_hypers(int global_col_idx) {
         hypers["s"] = s_grids[global_col_idx][s_draw];
         int mu_draw = draw_rand_i(N_GRID);
         hypers["mu"] = mu_grids[global_col_idx][mu_draw];
+    } else if (col_datatype == CYCLIC_DATATYPE){
+        int b_draw = draw_rand_i(N_GRID);
+        hypers["b"] = vm_b_grid[b_draw];
+        int a_draw = draw_rand_i(N_GRID);
+        hypers["a"] = vm_a_grids[global_col_idx][b_draw];
+        int kappa_draw = draw_rand_i(N_GRID);
+        hypers["kappa"] = vm_kappa_grids[global_col_idx][kappa_draw];
     } else if (col_datatype == MULTINOMIAL_DATATYPE) {
         int dirichelt_alpha_draw = draw_rand_i(N_GRID);
         hypers["dirichlet_alpha"] = multinomial_alpha_grid[dirichelt_alpha_draw];
@@ -930,7 +946,9 @@ void State::init_views(const MatrixD& data,
                              hypers_m,
                              row_crp_alpha_grid,
                              multinomial_alpha_grid, r_grid, nu_grid,
+                             vm_b_grid,
                              s_grids, mu_grids,
+                             vm_a_grids, vm_kappa_grids,
                              row_crp_alpha,
                              draw_rand_i());
         views.insert(p_v);
