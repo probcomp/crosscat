@@ -26,6 +26,8 @@ namespace numerics {
 
 
 double estimate_vonmises_kappa(std::vector<double> &X){
+    // Newton's method solution for ML estimate of kappa
+
     double N = (double) X.size();
     double sum_sin_x = 0;
     double sum_cos_x = 0;
@@ -39,6 +41,16 @@ double estimate_vonmises_kappa(std::vector<double> &X){
     double R = sqrt(R2) ;
 
     double kappa = R*(2.0-R2)/(1.0-R2);
+
+    double Ap, kappa_1;
+    Ap = boost::math::cyl_bessel_i(1, kappa)/boost::math::cyl_bessel_i(0, kappa);
+    kappa_1 = kappa - (Ap-R)/(1-Ap*Ap-Ap/kappa);
+    Ap = boost::math::cyl_bessel_i(1, kappa_1)/boost::math::cyl_bessel_i(0, kappa_1);
+    kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
+    Ap = boost::math::cyl_bessel_i(1, kappa)/boost::math::cyl_bessel_i(0, kappa);
+    kappa_1 = kappa - (Ap-R)/(1-Ap*Ap-Ap/kappa);
+    Ap = boost::math::cyl_bessel_i(1, kappa_1)/boost::math::cyl_bessel_i(0, kappa_1);
+    kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
 
     return (kappa > 0) ? kappa : 1.0/X.size();
 }
