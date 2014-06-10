@@ -133,16 +133,28 @@ vector<int> State::get_view_counts() const {
 }
 
 double State::insert_row(vector<double> row_data, int matching_row_idx, int row_idx) {
-    if(row_idx==-1) {
+
+    bool append_row = (row_idx == -1);
+
+    if(append_row)
         row_idx = (int) (**views.begin()).cluster_lookup.size();
-    }
+    
     set<View*>::iterator it;
     double score_delta = 0;
     for(it=views.begin(); it!=views.end(); it++) {
         View &v = **it;
         vector<int> global_col_indices = v.get_global_col_indices();
-        vector<double> data_subset = extract_columns(row_data, global_col_indices);
-        score_delta += v.insert_row(data_subset, matching_row_idx, row_idx);
+        // append lookup if needed
+        if( append_row ){
+            Cluster &new_cluster = v.get_new_cluster();
+            vector<double> data_subset = extract_columns(row_data, global_col_indices);
+            score_delta += v.insert_row(data_subset, new_cluster, matching_row_idx);
+            // FIXME: row crp to score_delta?
+        }else{
+            vector<double> data_subset = extract_columns(row_data, global_col_indices);
+            score_delta += v.insert_row(data_subset, matching_row_idx, row_idx);    
+        }
+        
     }
     return score_delta;
 }

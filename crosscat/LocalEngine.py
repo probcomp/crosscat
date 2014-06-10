@@ -31,8 +31,6 @@ import crosscat.utils.inference_utils as iu
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
 
-import pdb
-
 class LocalEngine(EngineTemplate.EngineTemplate):
 
     """A simple interface to the Cython-wrapped C++ engine
@@ -53,6 +51,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         self.mapper = map
         self.do_initialize = _do_initialize_tuple
         self.do_analyze = _do_analyze_tuple
+        self.do_insert = _do_insert_tuple
         return
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
@@ -84,8 +83,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                    COLUMN_CRP_ALPHA_GRID=(),
                    S_GRID=(), MU_GRID=(),
                    N_GRID=31,
-                   subsample=False,
-                   subsample_rows_list=None,
+                   # subsample=False,
+                   # subsample_proportion=None,
+                   # subsample_rows_list=None,
                    ):
         """Sample a latent state from prior
 
@@ -99,25 +99,6 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: X_L, X_D -- the latent state
 
         """
-
-        # here we update the arg_tuples for subsampling
-        if subsample:
-            if not isinstance(subsample_rows_list, list):
-                raise TypeError("subsample_rows_list must be a list or tuple of rows")
-
-            # unique elements only
-            subsample_rows_list = list(set(subsample_rows_list))
-            subsample_rows_list.sort()
-
-            T_sub = []
-            for row in subsample_rows_list:
-                T_sub.append(T[row])
-            
-            T = T_sub
-
-            self.rows_in_use = subsample_rows_list
-        else:
-            self.rows_in_use = 'all'
 
         # FIXME: why is M_r passed?
         arg_tuples = self.get_initialize_arg_tuples(
@@ -135,121 +116,49 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
 
+    def get_insert_arg_tuples(self, M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL):
+        n_chains = len(X_L_list)
+        # seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+            itertools.cycle([M_c]),
+            itertools.cycle([T]),
+            X_L_list, X_D_list,
+            itertools.cycle([new_rows]),
+            itertools.cycle([N_GRID]),
+            itertools.cycle([CT_KERNEL]),
+        )
+        return arg_tuples
 
-    def insert(self, M_c, T, X_L_list, X_D_list, which_rows=None, new_row=None, N_GRID=31, CT_KERNEL=0):
+
+    def insert(self, M_c, T, X_L_list, X_D_list, new_rows=None, N_GRID=31, CT_KERNEL=0):
         """
         Insert mutates the data T. 
         """
 
-        if which_rows is not None and new_row is not None:
-            raise ValueError("You have confused INSERT by specifying both which_rows and new_row.")
+        if new_rows is None:
+            raise ValueError("new_row must exist")
 
-        if which_rows is None and new_row is None:
-            raise ValueError("You have tried to INSERT nothing. Please specify either which_rows or new_row.")
-
-        if new_row is not None and self.rows_in_use != 'all':
-            raise ValueError("INSERT cannot add new rows until subsampling is complete.")
-
-        if isinstance(which_rows, int):
-            which_rows = [which_rows]
-
-        if which_rows is not None:
-            if not isinstance(which_rows, list):
-                raise TypeError("which_rows must be a list or an int")
-            else:
-                # make sure the rows in which_rows are within the bounds of T
-                for row in which_rows:
-                    if row >= len(T):
-                        raise IndexError("entries in which_rows must correspond to rows indices in T")
+        if not isinstance(new_rows, list):
+            raise TypeError('new_rows must be list of lists')
+            if not isinstance(new_rows[0], list):
+                raise TypeError('new_rows must be list of lists')
 
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L_list, X_D_list)
-        kernel_list = ['row_partition_assignments']
-        n_steps = 1
 
-        # BEWARE: There is no checking whether the new row is consitent with M_c. New multinomial
-        # values will cause a segfault
-        if new_row is not None:
-            num_cols = len(T[0])
-            if len(new_row) != num_cols:
-                raise ValueError("New row must have same number of columns (%i) as T." % (num_cols))
-            T2 = copy.deepcopy(T)
-            T2.append(new_row)
-            # treat the new row
-            
-            # Update X_D to sequentially add each new row as a singleton cluster
-            for X_D in X_D_list:
-                for vrc_partition in X_D:
-                    # pdb.set_trace()
-                    V = max(vrc_partition)
-                    vrc_partition.append( V+1)
+        # get insert arg tuples
+        arg_tuples = self.get_insert_arg_tuples(M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL)
 
-            last_row = len(T)-1
+        chain_tuples = self.mapper(self.do_insert, arg_tuples)
+        X_L_list, X_D_list = zip(*chain_tuples)
 
-            # get analyze arg tuples
-            arg_tuples = self.get_analyze_arg_tuples(M_c, T2, X_L_list, X_D_list,
-                                                 kernel_list, n_steps, (), [last_row], n_steps, -1,
-                                                 None, 1,
-                                                 (), (), (), (), N_GRID, False, CT_KERNEL)
+        if not was_multistate:
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
 
-            chain_tuples = self.mapper(self.do_analyze, arg_tuples)
-            X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
+        T.extend(new_rows)
 
-            if not was_multistate:
-                X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+        ret_tuple = X_L_list, X_D_list, T
 
-            ret_tuple = X_L_list, X_D_list, T2
-
-            return ret_tuple
-        else:
-
-            # ignore rows that are already inserted
-            insert_rows = [row for row in which_rows if row not in self.rows_in_use]
-        
-            # get modeltypes 
-            for r in range(len(which_rows)):
-                row = which_rows[r]
-
-                # find where the row should be inserted (preserve original order).
-                try:
-                    insert_index = next(x[0] for x in enumerate(self.rows_in_use) if x[1] > row)
-                except:
-                    insert_index = len(self.rows_in_use)
-
-                self.rows_in_use.insert(insert_index, row)
-                
-                T_sub = []
-                for row in self.rows_in_use:
-                    T_sub.append(T[row])
-
-                # NOTE: At this time CrossCat does not use the sufficient statistics 
-                # in X_L to initialize so I have not updted them here.
-
-                # Update X_D to sequentially add each new row as a singleton cluster
-                for X_D in X_D_list:
-                    for vrc_partition in X_D:
-                        V = max(vrc_partition)
-                        vrc_partition.insert(insert_index, V+1)
-
-                # get analyze arg tuples
-                arg_tuples = self.get_analyze_arg_tuples(M_c, T_sub, X_L_list, X_D_list,
-                                                     kernel_list, n_steps, (), [insert_index], n_steps, -1,
-                                                     None, 1,
-                                                     (), (), (), (), N_GRID, False, CT_KERNEL)
-
-                chain_tuples = self.mapper(self.do_analyze, arg_tuples)
-                X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
-
-                if len(self.rows_in_use) == len(T):
-                    self.rows_in_use = 'all'
-            
-
-            if not was_multistate:
-                X_L_list, X_D_list = X_L_list[0], X_D_list[0]
-
-            ret_tuple = X_L_list, X_D_list
-
-            return ret_tuple
-
+        return ret_tuple
 
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
@@ -324,12 +233,6 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: X_L, X_D -- the evolved latent state
 
         """
-        # account for subsampling
-        if self.rows_in_use is not 'all':
-            T_sub = []
-            for row in self.rows_in_use:
-                T_sub.append(T[row])
-            T = T_sub
 
         if CT_KERNEL not in [0,1]:
             raise ValueError("CT_KERNEL must be 0 (Gibbs) or 1 (MH)")
@@ -638,9 +541,28 @@ def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
 def _do_initialize_tuple(arg_tuple):
     return _do_initialize(*arg_tuple)
 
+
+def _do_insert_tuple(arg_tuple):
+    return _do_insert(*arg_tuple)
+
+def _do_insert( M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
+
+    p_State = State.p_State(M_c, T, X_L=X_L, X_D=X_D,
+                            N_GRID=N_GRID,
+                            CT_KERNEL=CT_KERNEL)
+
+    row_idx = len(T)
+    for row_data in new_rows:
+        p_State.insert_row(row_data, row_idx)
+        p_State.transition(which_transitions=['row_partition_assignments'], r=[row_idx])
+        row_idx += 1
+
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime
+
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
-
 
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 max_iterations, max_time,
