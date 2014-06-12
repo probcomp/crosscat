@@ -24,6 +24,10 @@ using namespace std;
 
 namespace numerics {
 
+// return sign of val (signum function)
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 double estimate_vonmises_kappa(std::vector<double> &X){
     // Newton's method solution for ML estimate of kappa
@@ -53,6 +57,47 @@ double estimate_vonmises_kappa(std::vector<double> &X){
     kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
 
     return (kappa > 0) ? kappa : 1.0/X.size();
+}
+
+// draw random number from Von Mises distribution with mean mu and
+// concentration kappa
+double vonmises_rand(double mu, double kappa, int random_seed){
+    
+    boost::mt19937 gen(random_seed);
+    boost::uniform_01<boost::mt19937> randfloat(gen);
+
+    double a = 1 + sqrt(1 + 4 * (kappa*kappa));
+    double b = (a - sqrt(2 * a))/(2 * kappa);
+    double r = (1 + b*b)/(2 * b);
+    double vmr;
+    int tries = 0;
+    while (true) {
+        double U1 = randfloat();
+        double z = cos(M_PI * U1);
+        double f = (1 + r * z)/(r + z);
+        double c = kappa * (r - f);
+        double U2 = randfloat();
+        if (c * (2 - c) - U2 > 0){
+            double U3 = randfloat();
+            vmr = sgn(U3 - 0.5) * acos(f) + mu;
+            vmr = fmod(vmr, 2.0*M_PI);
+            return vmr;
+        }else if (log(c/U2) + 1 - c >= 0){
+            double U3 = rand();
+            vmr = sgn(U3 - 0.5) * acos(f) + mu;
+            vmr = fmod(vmr, 2.0*M_PI);
+            return vmr;
+        }
+
+        ++tries;
+        if(tries % 100 == 0){
+            printf("vmrand tried: %i.\n", tries);
+        }
+    }
+}
+
+double vonmises_log_pdf(double x, double mu, double kappa){
+    return kappa*cos(x-mu) - log(2*M_PI) - log_bessel_0(kappa);
 }
 
 double log_gamma_pdf(double x, double shape, double scale){

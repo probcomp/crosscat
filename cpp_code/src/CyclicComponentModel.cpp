@@ -215,26 +215,29 @@ double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double
   // Proposal distribution is uniform scaled to the the max value of the 
   // predictive pdf
   // FIXME: This will lead to a lot of rejections especially for high kappa
-  double log_M = calc_element_predictive_logp(b);
+  boost::mt19937 gen(random_seed);
+  boost::uniform_01<boost::mt19937> randfloat(gen);
 
-  boost::mt19937  gen(random_seed);
-  boost::uniform_01<boost::mt19937> uf(gen);
   bool rejected = true;
-  double x; // uniform random number
-  double u_p; // uniform number on [0, maxval]
-  double pdf_t;
+  double x; // von mises random number
+  double k_p = 2*M_PI*kappa/a;  // proposal distribution concentration
+  double u_p;   // uniform number 
+  double l_p;   // log proposal value
+  double pdf_t; // log predictive probability
+  double log_M = calc_element_predictive_logp_constrained(b, constraints)-numerics::vonmises_log_pdf(b,b,k_p);
   unsigned short int itr = 0;
   while(rejected && itr < 1000){
     // generate random number in domain from proposal distribution
-    x = uf()*2.0*M_PI;
-    u_p = log(uf()) + log_M;
+    x = numerics::vonmises_rand(b,k_p, gen());
+    l_p = numerics::vonmises_log_pdf(x,b,k_p) + log_M;
+    u_p = log(randfloat()) + l_p;
 
     // get pdf at target
     pdf_t = calc_element_predictive_logp_constrained(x, constraints);
 
     // if the proposal distribution doesn't entirely encapsulate f, then
     // we've got a bad log_M
-    assert( log_M >= pdf_t );
+    assert( l_p >= pdf_t );
 
     if( u_p < pdf_t){
       rejected = false;
