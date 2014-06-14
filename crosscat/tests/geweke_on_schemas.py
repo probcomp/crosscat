@@ -6,11 +6,12 @@ import crosscat.utils.geweke_utils as geweke_utils
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
-def _generate_args_list(num_rows, num_iters, cctypes):
+def _generate_args_list(num_rows, num_iters, ct_kernel, cctypes):
     num_cols = len(cctypes)
     args_list = [
             '--num_rows', str(num_rows),
             '--num_cols', str(num_cols),
+            '--CT_KERNEL', str(ct_kernel),
             '--num_iters', str(num_iters),
             '--cctypes'
             ] + cctypes
@@ -24,22 +25,23 @@ def generate_args_list(base_num_rows, num_iters, do_long=False, _divisor=1.):
     num_cols_list = [1, 10]
     col_type_list = ['continuous', 'multinomial']
     col_type_pairs = sorted(itertools.combinations(col_type_list, 2))
+    ct_kernel_list = [0, 1]
     args_list = []
 
     # single datatype
-    iter_over = itertools.product(col_type_list, num_cols_list)
-    for col_type, num_cols in iter_over:
+    iter_over = itertools.product(col_type_list, num_cols_list, ct_kernel_list)
+    for col_type, num_cols, ct_kernel in iter_over:
         cctypes = _gen_cctypes((col_type, num_cols))
-        args = _generate_args_list(base_num_rows, num_iters, cctypes)
+        args = _generate_args_list(base_num_rows, num_iters, ct_kernel, cctypes)
         args += ['--_divisor', str(_divisor)]
         args_list.append(args)
         pass
 
     # pairs of datatypes
-    iter_over = itertools.product(col_type_pairs, num_cols_list)
-    for (col_type_a, col_type_b), num_cols in iter_over:
+    iter_over = itertools.product(col_type_pairs, num_cols_list, ct_kernel_list)
+    for (col_type_a, col_type_b), num_cols, ct_kernel in iter_over:
         cctypes = _gen_cctypes((col_type_a, num_cols), (col_type_b, num_cols))
-        args = _generate_args_list(base_num_rows, num_iters, cctypes)
+        args = _generate_args_list(base_num_rows, num_iters, ct_kernel, cctypes)
         args += ['--_divisor', str(_divisor)]
         args_list.append(args)
         pass
@@ -52,13 +54,15 @@ def generate_args_list(base_num_rows, num_iters, do_long=False, _divisor=1.):
         cctypes = _gen_cctypes(('continuous', num_cols_long))
         args = _generate_args_list(num_rows_long, num_iters, cctypes)
         args += ['--_divisor', str(_divisor)]
-        args_list.append(args)
+        args_list.append(args + ['--CT_KERNEL', str(0)])
+        args_list.append(args + ['--CT_KERNEL', str(1)])
         #
         cctypes = _gen_cctypes(('multinomial', num_cols_long))
         args = _generate_args_list(num_rows_long, num_iters, cctypes)
         args += ['--_divisor', str(_divisor)]
         args += ['--num_multinomial_values', '2']
-        args_list.append(args)
+        args_list.append(args + ['--CT_KERNEL', str(0)])
+        args_list.append(args + ['--CT_KERNEL', str(1)])
         #
 #        cctypes = _gen_cctypes(('multinomial', num_cols_long))
 #        args = _generate_args_list(num_rows_long, num_iters, cctypes)
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dirname', default='geweke_on_schemas', type=str)
     parser.add_argument('--base_num_rows', default=10, type=int)
-    parser.add_argument('--num_iters', default=200, type=int)
+    parser.add_argument('--num_iters', default=2000, type=int)
     parser.add_argument('--no_plots', action='store_true')
     parser.add_argument('--do_long', action='store_true')
     parser.add_argument('--_divisor', default=1., type=float)
