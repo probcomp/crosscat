@@ -41,4 +41,3 @@ apt-get install -y doxygen
 
 # 
 pip install $options -r $requirements_filename
-bash $project_location/scripts/install_scripts/install_hcluster.sh

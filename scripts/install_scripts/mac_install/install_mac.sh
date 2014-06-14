@@ -183,18 +183,6 @@ set -e
 pip install numpy==1.7.0
 pip install -r requirements.txt
 
-# download hcluster, the pip installer is broken so we have to do it manually
-pip install -d . --no-install hcluster
-tar xvfz hcluster-0.2.0.tar.gz 
-cd hcluster-0.2.0
-perl -pi.bak -e "s/input('Selection [default=1]:')/2/" setup.py
-sudo python setup.py install
-sudo -k
-
-# get rid of the tar
-cd ../
-rm hcluster-0.2.0.tar.gz 
-
 ################################################################################
 #						       COMPILING CYTHON CODE
 ################################################################################
