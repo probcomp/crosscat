@@ -18,12 +18,48 @@
 #   limitations under the License.
 #
 import numpy
-from sklearn import metrics
 #
 import crosscat.cython_code.State as State
 import crosscat.utils.general_utils as gu
 import crosscat.utils.sample_utils as su
 
+
+def calc_ari(group_idx_list_1, group_idx_list_2):
+    def make_set_dict(list):
+        set_dict = defaultdict(set)
+        add_element = lambda (idx, group): set_dict[group].add(idx)
+        map(add_element, enumerate(list))
+        return set_dict
+    def check_short_circuit(set_dict_1, list_1, set_dict_2, list_2):
+        both_all_apart = len(set_dict_1) == len(list_1) and \
+                len(set_dict_2) == len(list_2)
+        both_all_together = len(set_dict_1) == 1 and len(set_dict_2) == 1
+        return both_all_apart or both_all_together
+    def gen_contingency_data(set_dict_1, set_dict_2):
+        ##https://en.wikipedia.org/wiki/Rand_index#The_contingency_table
+        array_dim = (len(set_dict_1), len(set_dict_2))
+        Ns = numpy.ndarray(array_dim)
+        for idx_1, value1 in enumerate(set_dict_1.values()):
+            for idx_2, value2 in enumerate(set_dict_2.values()):
+                Ns[idx_1, idx_2] = len(value1.intersection(value2))
+        As = Ns.sum(axis=1)
+        Bs = Ns.sum(axis=0)
+        return Ns, As, Bs
+    def choose_2_sum(x):
+        return sum(x * (x - 1) / 2.0)
+    group_idx_dict_1 = make_set_dict(group_idx_list_1)
+    group_idx_dict_2 = make_set_dict(group_idx_list_2)
+    if check_short_circuit(group_idx_dict_1, group_idx_list_1,
+            group_idx_dict_2, group_idx_list_2):
+        return 1.0
+    Ns, As, Bs = gen_contingency_data(group_idx_dict_1, group_idx_dict_2)
+    n_choose_2 = choose_2_sum(numpy.array([len(group_idx_list_1)]))
+    cross_sums = choose_2_sum(Ns[Ns>1])
+    a_sums = choose_2_sum(As)
+    b_sums = choose_2_sum(Bs)
+    numerator = n_choose_2 * cross_sums - a_sums * b_sums
+    denominator = .5 * n_choose_2 * (a_sums + b_sums) - a_sums * b_sums
+    return numerator / denominator
 
 def determine_synthetic_column_ground_truth_assignments(num_cols, num_views):
     num_cols_per_view = num_cols / num_views
@@ -101,14 +137,14 @@ def ARI_CrossCat(Xc, Xrv, XRc, XRrv):
     RefCellClusterAssgn = RefCellClusterAssgn.reshape(RefCellClusterAssgn.size)
         
     # Compare the two partitions using ARI
-    ARI = metrics.adjusted_rand_score(RefCellClusterAssgn, CellClusterAssgn)
-    ARI_viewonly = metrics.adjusted_rand_score(Xc, XRc)
+    ARI = calc_ari(RefCellClusterAssgn, CellClusterAssgn)
+    ARI_viewonly = calc_ari(Xc, XRc)
 
     return ARI, ARI_viewonly
 
 def get_column_ARI(X_L, view_assignment_truth):
     view_assignments = X_L['column_partition']['assignments']
-    ARI = metrics.adjusted_rand_score(view_assignments, view_assignment_truth)
+    ARI = calc_ari(view_assignments, view_assignment_truth)
     return ARI
 
 def get_column_ARIs(X_L_list, view_assignment_truth):
