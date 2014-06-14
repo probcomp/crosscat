@@ -22,7 +22,8 @@ import os
 import numpy
 import pylab
 pylab.ion()
-import hcluster
+from scipy.spatial.distance import pdist
+from scipy.cluster.hierarchy import linkage, dendrogram
 #
 import crosscat.utils.general_utils as gu
 import crosscat.utils.file_utils as fu
@@ -173,11 +174,13 @@ def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
           if assignments[i] == assignments[j]:
             z_matrix[i, j] += 1
     z_matrix /= float(num_latent_states)
+
     # hierachically cluster z_matrix
-    Y = hcluster.pdist(z_matrix)
-    Z = hcluster.linkage(Y)
+    Y = pdist(matrix)
+    Z = linkage(Y)
     pylab.figure()
-    hcluster.dendrogram(Z)
+    dendrogram(Z)
+
     intify = lambda x: int(x.get_text())
     reorder_indices = map(intify, pylab.gca().get_xticklabels())
     pylab.close()
