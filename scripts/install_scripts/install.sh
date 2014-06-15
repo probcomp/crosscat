@@ -40,4 +40,5 @@ apt-get build-dep -y python-sphinx
 apt-get install -y doxygen
 
 # 
+pip install -U distribute
 pip install $options -r $requirements_filename
