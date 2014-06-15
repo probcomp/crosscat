@@ -34,6 +34,7 @@ apt-get update
 # install system dependencies
 # engine dependencies
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
+apt-get remove -y python-numpy python-setuptools python-sphinx ipython
 apt-get install -y libboost1.48-all-dev ccache
 # doc dependencies
 apt-get install -y doxygen
