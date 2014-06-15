@@ -36,7 +36,6 @@ apt-get update
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
 apt-get install -y libboost1.48-all-dev ccache
 # doc dependencies
-apt-get build-dep -y python-sphinx
 apt-get install -y doxygen
 
 # 
