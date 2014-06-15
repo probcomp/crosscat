@@ -34,11 +34,12 @@ apt-get update
 # install system dependencies
 # engine dependencies
 apt-get build-dep -y python-numpy python-matplotlib python-scipy
-apt-get install -y python-pip libboost1.48-all-dev ccache
+apt-get install -y libboost1.48-all-dev ccache
 # doc dependencies
 apt-get build-dep -y python-sphinx
 apt-get install -y doxygen
 
 # 
+wget https://bootstrap.pypa.io/get-pip.py -O- | python
 pip install -U distribute
 pip install $options -r $requirements_filename
