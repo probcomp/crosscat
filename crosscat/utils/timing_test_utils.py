@@ -113,10 +113,10 @@ def runner(config):
 #############
 # begin nasty plotting support section
 get_time_per_step = lambda timing_row: float(timing_row.time_per_step)
-get_num_rows = lambda timing_row: timing_row.num_rows
-get_num_cols = lambda timing_row: timing_row.num_cols
-get_num_views = lambda timing_row: timing_row.num_views
-get_num_clusters = lambda timing_row: timing_row.num_clusters
+get_num_rows = lambda timing_row: str(int(float(timing_row.num_rows)))
+get_num_cols = lambda timing_row: str(int(float(timing_row.num_cols)))
+get_num_views = lambda timing_row: str(int(float(timing_row.num_views)))
+get_num_clusters = lambda timing_row: str(int(float(timing_row.num_clusters)))
 do_strip = lambda string: string.strip()
 
 def group_results(timing_rows, get_fixed_parameters, get_variable_parameter):
