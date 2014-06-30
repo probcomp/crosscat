@@ -83,7 +83,7 @@ double vonmises_rand(double mu, double kappa, int random_seed){
             vmr = fmod(vmr, 2.0*M_PI);
             return vmr;
         }else if (log(c/U2) + 1 - c >= 0){
-            double U3 = rand();
+            double U3 = randfloat();
             vmr = sgn(U3 - 0.5) * acos(f) + mu;
             vmr = fmod(vmr, 2.0*M_PI);
             return vmr;
