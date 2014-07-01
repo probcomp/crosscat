@@ -9,23 +9,8 @@ if [[ "$USER" != "root" ]]; then
 fi
 
 
-CACHED_PACKAGES_DIR=/tmp/CachedPythonPackages
-if [[ ! -z $1 ]]; then
-	CACHED_PACKAGES_DIR=$1
-fi
-options=
-full_path=$(readlink -f "$CACHED_PACKAGES_DIR")
-mkdir -p $full_path
-options=" --download-cache $full_path"
-echo "using options=$options"
-sleep 5
 
 
-# determine some locations
-my_abs_path=$(readlink -f "$0")
-my_dirname=$(dirname $my_abs_path)
-project_location=$(dirname $(cd $my_dirname && git rev-parse --git-dir))
-requirements_filename=$project_location/requirements.txt
 
 
 # update seems necessary, else get
@@ -42,4 +27,3 @@ apt-get install -y doxygen
 # 
 wget https://bootstrap.pypa.io/get-pip.py -O- | python
 pip install -U distribute
-pip install $options -r $requirements_filename
