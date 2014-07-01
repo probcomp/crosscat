@@ -22,6 +22,7 @@ import crosscat.utils.sample_utils as su
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
+import crosscat.tests.component_model_extensions.CyclicComponentModel as cycmext
 
 import random
 import numpy
@@ -30,12 +31,14 @@ import math
 # default parameters for 'seeding' random categories
 default_data_parameters = dict(
     multinomial=dict(weights=[1.0/5.0]*5),
-    continuous=dict(mu=0.0, rho=1.0)
+    continuous=dict(mu=0.0, rho=1.0),
+    cyclic=dict(mu=math.pi, kappa=2.0)
     )
 
 get_data_generator = dict(
 	multinomial=mcmext.p_MultinomialComponentModel.generate_data_from_parameters,
-	continuous=ccmext.p_ContinuousComponentModel.generate_data_from_parameters
+	continuous=ccmext.p_ContinuousComponentModel.generate_data_from_parameters,
+	cyclic=cycmext.p_CyclicComponentModel.generate_data_from_parameters
 	)
 
 NaN = float('nan')
@@ -185,6 +188,19 @@ def generate_separated_model_parameters(cctype, C, num_clusters, get_next_seed, 
 		random.shuffle(model_params)
 		assert len(model_params) == num_clusters
 		return model_params
+	elif cctype == 'cyclic':
+
+		sep = (2.0*math.pi/num_clusters)
+
+		mus = [c*sep for c in range(num_clusters)]
+		std = sep/(5.0*C**.75)
+		k = 1/(std*std)
+
+		model_params = []
+		for c in range(num_clusters):
+			model_params.append(dict(mu=mus[c], kappa=k))
+
+		return model_params
 	else:
 		raise ValueError("Invalid cctype %s." % cctype )
 
@@ -249,7 +265,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 			raise TypeError("cctypes should be a list of strings")
 
 		# NOTE: will have to update when new component models are added
-		if cctype not in ['continuous', 'multinomial']:
+		if cctype not in ['continuous', 'multinomial', 'cyclic']:
 			raise ValueError("invalid cctypein cctypes: %s." % cctype)
 
 	if not isinstance(cols_to_views, list):
@@ -307,7 +323,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 		raise ValueError("distargs should have an entry for each column")
 
 	for i in range(n_cols):
-		if cctypes[i] == 'continuous':
+		if cctypes[i] == 'continuous' or cctypes[i] == 'cyclic':
 			if distargs[i] is not None:
 				raise ValueError("distargs entry for 'continuous' cctype should be None")
 		elif cctypes[i] == 'multinomial':

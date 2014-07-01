@@ -49,8 +49,11 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
+         std::vector<double> VM_B_GRID,
          std::map<int, std::vector<double> > S_GRIDS,
          std::map<int, std::vector<double> > MU_GRIDS,
+         std::map<int, std::vector<double> > VM_A_GRIDS,
+         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
          double CRP_ALPHA,
          int SEED = 0);
     View(const MatrixD data,
@@ -62,8 +65,11 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
+         std::vector<double> VM_B_GRID,
          std::map<int, std::vector<double> > S_GRIDS,
          std::map<int, std::vector<double> > MU_GRIDS,
+         std::map<int, std::vector<double> > VM_A_GRIDS,
+         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
          int SEED = 0);
     View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
          std::vector<int> global_row_indices,
@@ -71,8 +77,11 @@ public:
          std::vector<double> MULTINOMIAL_ALPHA_GRID,
          std::vector<double> R_GRID,
          std::vector<double> NU_GRID,
+         std::vector<double> VM_B_GRID,
          std::map<int, std::vector<double> > S_GRIDS,
          std::map<int, std::vector<double> > MU_GRIDS,
+         std::map<int, std::vector<double> > VM_A_GRIDS,
+         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
          int SEED = 0);
     //
     // getters (external use)
@@ -184,8 +193,11 @@ private:
     std::vector<double> multinomial_alpha_grid;
     std::vector<double> r_grid;
     std::vector<double> nu_grid;
+    std::vector<double> vm_b_grid;
     std::map<int, std::vector<double> > s_grids;
     std::map<int, std::vector<double> > mu_grids;
+    std::map<int, std::vector<double> > vm_a_grids;
+    std::map<int, std::vector<double> > vm_kappa_grids;
     // sub-objects
     RandomNumberGenerator rng;
     // resources

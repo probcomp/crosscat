@@ -95,6 +95,19 @@ MultinomialComponentModel_sources = generate_sources([
     (cpp_src_dir, MultinomialComponentModel_cpp_sources),
     ])
 #
+CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
+CyclicComponentModel_cpp_sources = [
+    'utils.cpp',
+    'numerics.cpp',
+    'RandomNumberGenerator.cpp',
+    'ComponentModel.cpp',
+    'CyclicComponentModel.cpp',
+    ]
+CyclicComponentModel_sources = generate_sources([
+    (pyx_src_dir, CyclicComponentModel_pyx_sources),
+    (cpp_src_dir, CyclicComponentModel_cpp_sources),
+    ])
+#
 State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
     'utils.cpp',
@@ -104,6 +117,7 @@ State_cpp_sources = [
     'View.cpp',
     'Cluster.cpp',
     'ComponentModel.cpp',
+    'CyclicComponentModel.cpp',
     'MultinomialComponentModel.cpp',
     'ContinuousComponentModel.cpp',
     'State.cpp',
@@ -129,6 +143,13 @@ MultinomialComponentModel_ext = Extension(
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
     language="c++")
+CyclicComponentModel_ext = Extension(
+    "crosscat.cython_code.CyclicComponentModel",
+    libraries = ['boost_random'],
+    extra_compile_args = [],
+    sources=CyclicComponentModel_sources,
+    include_dirs=include_dirs,
+    language="c++")
 State_ext = Extension(
     "crosscat.cython_code.State",
     libraries = ['boost_random'],
@@ -138,6 +159,7 @@ State_ext = Extension(
     language="c++")
 #
 ext_modules = [
+        CyclicComponentModel_ext,
         ContinuousComponentModel_ext,
         MultinomialComponentModel_ext,
         State_ext,

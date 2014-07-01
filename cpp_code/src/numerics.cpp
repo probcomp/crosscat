@@ -24,6 +24,98 @@ using namespace std;
 
 namespace numerics {
 
+// return sign of val (signum function)
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+double estimate_vonmises_kappa(std::vector<double> &X){
+    // Newton's method solution for ML estimate of kappa
+
+    double N = (double) X.size();
+    double sum_sin_x = 0;
+    double sum_cos_x = 0;
+    vector<double>::iterator it = X.begin();
+    for (; it != X.end(); it++) {
+        double x = *it;
+        sum_sin_x += sin(x);
+        sum_cos_x += cos(x);
+    }
+    double R2 = (sum_sin_x/N)*(sum_sin_x/N) + (sum_cos_x/N)*(sum_cos_x/N);
+    double R = sqrt(R2) ;
+
+    double kappa = R*(2.0-R2)/(1.0-R2);
+
+    double Ap, kappa_1;
+    Ap = boost::math::cyl_bessel_i(1, kappa)/boost::math::cyl_bessel_i(0, kappa);
+    kappa_1 = kappa - (Ap-R)/(1-Ap*Ap-Ap/kappa);
+    Ap = boost::math::cyl_bessel_i(1, kappa_1)/boost::math::cyl_bessel_i(0, kappa_1);
+    kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
+    Ap = boost::math::cyl_bessel_i(1, kappa)/boost::math::cyl_bessel_i(0, kappa);
+    kappa_1 = kappa - (Ap-R)/(1-Ap*Ap-Ap/kappa);
+    Ap = boost::math::cyl_bessel_i(1, kappa_1)/boost::math::cyl_bessel_i(0, kappa_1);
+    kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
+
+    return (kappa > 0) ? kappa : 1.0/X.size();
+}
+
+// draw random number from Von Mises distribution with mean mu and
+// concentration kappa
+double vonmises_rand(double mu, double kappa, int random_seed){
+    
+    boost::mt19937 gen(random_seed);
+    boost::uniform_01<boost::mt19937> randfloat(gen);
+
+    double a = 1 + sqrt(1 + 4 * (kappa*kappa));
+    double b = (a - sqrt(2 * a))/(2 * kappa);
+    double r = (1 + b*b)/(2 * b);
+    double vmr;
+    int tries = 0;
+    while (true) {
+        double U1 = randfloat();
+        double z = cos(M_PI * U1);
+        double f = (1 + r * z)/(r + z);
+        double c = kappa * (r - f);
+        double U2 = randfloat();
+        if (c * (2 - c) - U2 > 0){
+            double U3 = randfloat();
+            vmr = sgn(U3 - 0.5) * acos(f) + mu;
+            vmr = fmod(vmr, 2.0*M_PI);
+            return vmr;
+        }else if (log(c/U2) + 1 - c >= 0){
+            double U3 = randfloat();
+            vmr = sgn(U3 - 0.5) * acos(f) + mu;
+            vmr = fmod(vmr, 2.0*M_PI);
+            return vmr;
+        }
+
+        ++tries;
+        if(tries % 100 == 0){
+            printf("vmrand tried: %i.\n", tries);
+        }
+    }
+}
+
+double vonmises_log_pdf(double x, double mu, double kappa){
+    return kappa*cos(x-mu) - log(2*M_PI) - log_bessel_0(kappa);
+}
+
+double log_gamma_pdf(double x, double shape, double scale){
+    return -lgamma(shape)-shape*log(scale) + (shape-1)*log(x)-x/scale;
+}
+
+double log_bessel_0(double x){
+    // calclate bessel function. Overflow will be a problem in which case we
+    // use an approximation
+    double i0;
+    try{
+      i0 = log(boost::math::cyl_bessel_i(0, x));  
+    }catch(std::exception const&  ex){
+      return x - .5*log(2*M_PI*x);
+    }
+    return i0;
+  }
+
 double calc_crp_alpha_hyperprior(double alpha) {
     double logp = 0;
     // invert the effect of log gridding
@@ -406,6 +498,133 @@ vector<double> calc_multinomial_dirichlet_alpha_conditional(
         double dirichlet_alpha = *it;
         double logp = calc_multinomial_marginal_logp(count, counts, K,
                       dirichlet_alpha);
+        logps.push_back(logp);
+    }
+    return logps;
+}
+
+
+// Cyclic component model
+void insert_to_cyclic_suffstats(int& count,
+                                    double& sum_sin_x, double& sum_cos_x,
+                                    double el) {
+    if (isnan(el)) {
+        return;
+    }
+    ++count;
+    sum_sin_x += sin(el);
+    sum_cos_x += cos(el);
+}
+
+void remove_from_cyclic_suffstats(int& count,
+                                      double& sum_sin_x, double& sum_cos_x,
+                                      double el) {
+    if (isnan(el)) {
+        return;
+    }
+    --count;
+    sum_sin_x -= sin(el);
+    sum_cos_x -= cos(el);
+}
+
+void update_cyclic_hypers(int count,
+                          double sum_sin_x, double sum_cos_x,
+                          double kappa, double &a, double &b) {
+
+    double p_cos = kappa*sum_cos_x+a*cos(b);
+    double p_sin = kappa*sum_sin_x+a*sin(b);
+
+    double an = sqrt(p_cos*p_cos+p_sin*p_sin);
+    double bn =  -atan2(p_cos,p_sin) + M_PI/2.0;
+
+    //
+    a = an;
+    b = bn;
+}
+
+double calc_cyclic_log_Z(double a)  {
+    return log_bessel_0(a);
+}
+
+double calc_cyclic_logp(int count, double kappa, double a, double log_Z_0) {
+    double logp = -double(count)*(LOG_2PI + log_bessel_0(kappa));
+    logp += calc_cyclic_log_Z(a) - log_Z_0;
+    return logp;
+}
+
+double calc_cyclic_data_logp(int count,
+                                 double sum_sin_x, double sum_cos_x,
+                                 double kappa, double a, double b,
+                                 double el) {
+    if (isnan(el)) {
+        return 0;
+    }
+    double an, bn, am, bm;
+    an = a;
+    am = a;
+    bn = b;
+    bm = b;
+    update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa, an, bn);
+    update_cyclic_hypers(count+1, sum_sin_x+sin(el), sum_cos_x+cos(el), kappa, am, bm);
+
+    double logp = -LOG_2PI - log_bessel_0(kappa);
+    logp += calc_cyclic_log_Z(am) - calc_cyclic_log_Z(an);
+    return logp;
+}
+
+vector<double> calc_cyclic_a_conditionals(std::vector<double> a_grid,
+        int count,
+        double sum_sin_x,
+        double sum_cos_x,
+        double kappa,
+        double b) {
+    std::vector<double> logps;
+    std::vector<double>::iterator it;
+    for (it = a_grid.begin(); it != a_grid.end(); it++) {
+        double kappa_prime = kappa;
+        double a_prime = *it;
+        double b_prime = b;
+        double log_Z_0 = calc_cyclic_log_Z(a_prime);
+        update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa_prime, a_prime, b_prime);
+        double logp = calc_cyclic_logp(count, kappa_prime, a_prime, log_Z_0);
+        logps.push_back(logp);
+    }
+    return logps;
+}
+vector<double> calc_cyclic_b_conditionals(std::vector<double> b_grid,
+        int count,
+        double sum_sin_x,
+        double sum_cos_x,
+        double kappa,
+        double a) {
+    std::vector<double> logps;
+    std::vector<double>::iterator it;
+    for (it = b_grid.begin(); it != b_grid.end(); it++) {
+        double kappa_prime = kappa;
+        double a_prime = a;
+        double b_prime = *it;
+        double log_Z_0 = calc_cyclic_log_Z(a_prime);
+        update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa_prime, a_prime, b_prime);
+        double logp = calc_cyclic_logp(count, kappa_prime, a_prime, log_Z_0);
+        logps.push_back(logp);
+    }
+    return logps;
+}
+vector<double> calc_cyclic_kappa_conditionals(std::vector<double> kappa_grid,
+        int count,
+        double sum_sin_x,
+        double sum_cos_x,
+        double a,
+        double b) {
+    std::vector<double> logps;
+    std::vector<double>::iterator it;
+    for (it = kappa_grid.begin(); it != kappa_grid.end(); it++) {
+        double kappa_prime = *it;
+        double a_prime = a;
+        double b_prime = b;
+        double log_Z_0 = calc_cyclic_log_Z(a_prime);
+        update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa_prime, a_prime, b_prime);
+        double logp = calc_cyclic_logp(count, kappa_prime, a_prime, log_Z_0);
         logps.push_back(logp);
     }
     return logps;

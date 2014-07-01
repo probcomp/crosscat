@@ -4,30 +4,39 @@ import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
+import crosscat.tests.component_model_extensions.CyclicComponentModel as cycmext
 import crosscat.tests.quality_tests.synthetic_data_generator as sdg
 import crosscat.tests.quality_tests.quality_test_utils as qtu
+
+import matplotlib
+matplotlib.use('Agg')
 
 import random
 import pylab
 import numpy
+import math
 
 import unittest
+import pdb
 
 from scipy import stats
 
 distargs = dict(
     multinomial=dict(K=5),
     continuous=None,
+    cyclic=None,
     )
 
 default_data_parameters = dict(
     symmetric_dirichlet_discrete=dict(weights=[1.0/5.0]*5),
-    normal_inverse_gamma=dict(mu=0.0, rho=1.0)
+    normal_inverse_gamma=dict(mu=0.0, rho=1.0),
+    vonmises=dict(mu=math.pi, kappa=2.0)
     )
 
 is_discrete = dict(
     symmetric_dirichlet_discrete=True,
-    normal_inverse_gamma=False
+    normal_inverse_gamma=False,
+    vonmises=False
     )
 
 
@@ -44,6 +53,10 @@ class TestComponentModelQuality(unittest.TestCase):
 
     def test_dirchlet_multinomial_model(self):
         assert(test_one_feature_mixture(mcmext.p_MultinomialComponentModel, 
+                show_plot=self.show_plot) > .1)
+
+    def test_vonmises_vonmises_model(self):
+        assert(test_one_feature_mixture(cycmext.p_CyclicComponentModel, 
                 show_plot=self.show_plot) > .1)
 
 
@@ -73,7 +86,7 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
     """
     random.seed(seed)
 
-    N = 1000
+    N = 300
     separation = .9
     
     get_next_seed = lambda : random.randrange(2147483647)
@@ -86,17 +99,26 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
                         distargs=[distargs[cctype]],
                         return_structure=True)
 
+
+    T_list = list(T)
     T = numpy.array(T)
-    T_list = T
     
+    # pdb.set_trace()    
     # create a crosscat state 
     M_c = du.gen_M_c_from_T(T_list, cctypes=[cctype])
     
     state = State.p_State(M_c, T_list)
+
+    # Get support over all component models
+    discrete_support = qtu.get_mixture_support(cctype, component_model_type,
+                         structure['component_params'][0], nbins=250)
     
+    # calculate simple predictive probability for each point
+    Q = [(N,0,x) for x in discrete_support]
+
     # transitions
     state.transition(n_steps=200)
-    
+
     # get the sample
     X_L = state.get_X_L()
     X_D = state.get_X_D()
@@ -107,17 +129,12 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
     predictive_samples = sdg.predictive_columns(M_c, X_L, X_D, [0],
                             seed=get_next_seed()).flatten(1)
     
-    # Get support over all component models
-    discrete_support = qtu.get_mixture_support(cctype, component_model_type,
-                         structure['component_params'][0], nbins=500)
-
-    # calculate simple predictive probability for each point
-    Q = [(N,0,x) for x in discrete_support]
 
     probabilities = su.simple_predictive_probability(M_c, X_L, X_D, []*len(Q), Q)
     
     # get histogram. Different behavior for discrete and continuous types. For some reason
     # the normed property isn't normalizing the multinomial histogram to 1.
+    # T = T[:,0]
     if is_discrete[component_model_type.model_type]:
         bins = range(len(discrete_support))
         T_hist = numpy.array(qtu.bincount(T, bins=bins))
@@ -126,7 +143,7 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
         S_hist = S_hist/float(numpy.sum(S_hist))
         edges = numpy.array(discrete_support,dtype=float)
     else:
-        T_hist, edges = numpy.histogram(T, bins=min(20,len(discrete_support)), normed=True)
+        T_hist, edges = numpy.histogram(T, bins=min(50,len(discrete_support)), normed=True)
         S_hist, _ =  numpy.histogram(predictive_samples, bins=edges, normed=True)
         edges = edges[0:-1]
 
@@ -146,6 +163,7 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
         test_str = "Chi-square"
     
     if show_plot:
+        pylab.clf()
         lpdf = qtu.get_mixture_pdf(discrete_support, component_model_type, 
                 structure['component_params'][0], [1.0/num_clusters]*num_clusters)
         pylab.axes([0.1, 0.1, .8, .7])
@@ -184,7 +202,9 @@ def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fal
 
         pylab.title(title_string, fontsize=12)
 
-        pylab.show()
+        filename = component_model_type.model_type + "_mixtrue.png"
+        pylab.savefig(filename)
+        pylab.close()
 
     return p
 

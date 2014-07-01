@@ -109,12 +109,14 @@ def bincount(X, bins=None):
 
     return counts
 
-def get_mixture_support(cctype, component_model_class, parameters_list, support=.95, nbins=500):
+def get_mixture_support(cctype, component_model_class, parameters_list, support=.95, nbins=100):
     """
     """
     if cctype == 'multinomial':
         discrete_support = component_model_class.generate_discrete_support(
                             parameters_list[0])
+    elif cctype == 'cyclic':
+        discrete_support = numpy.linspace(0,2*math.pi,nbins)
     else:
         for k in range(len(parameters_list)):
             model_parameters = parameters_list[k]

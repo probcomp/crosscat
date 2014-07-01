@@ -385,9 +385,12 @@ private:
     std::vector<double> row_crp_alpha_grid;
     std::vector<double> r_grid;
     std::vector<double> nu_grid;
+    std::vector<double> vm_b_grid;
     std::vector<double> multinomial_alpha_grid;
     std::map<int, std::vector<double> > s_grids;
     std::map<int, std::vector<double> > mu_grids;
+    std::map<int, std::vector<double> > vm_a_grids;
+    std::map<int, std::vector<double> > vm_kappa_grids;
     // lookups
     std::set<View*> views;
     std::map<int, View*> view_lookup;  // global_column_index to View mapping

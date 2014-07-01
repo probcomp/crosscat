@@ -415,6 +415,25 @@ void construct_continuous_specific_hyper_grid(int n_grid,
   mu_grid = linspace(min, max, n_grid);
 }
 
+void construct_cyclic_base_hyper_grids(int n_grid,
+        int data_num_vectors,
+        std::vector<double>& vm_b_grid){
+  vm_b_grid = linspace(0, 2*M_PI, n_grid);
+
+}
+void construct_cyclic_specific_hyper_grid(int n_grid,
+        std::vector<double> col_data,
+        std::vector<double>& vm_a_grid,
+        std::vector<double>& vm_kappa_grid){
+  double N = (double) col_data.size();
+  double var = calc_sum_sq_deviation(col_data)/N;
+  // vm_a_grid = log_linspace(1/var, N/var, n_grid);
+  // vm_kappa_grid = log_linspace(var, var*N, n_grid);
+  vm_a_grid = log_linspace(1.0/N, N, n_grid);
+  double kappa = numerics::estimate_vonmises_kappa(col_data);
+  vm_kappa_grid = linspace(kappa, N*kappa, n_grid);
+}
+
 void construct_multinomial_base_hyper_grids(int n_grid,
 					    int data_num_vectors,
 					    vector<double> &multinomial_alpha_grid) {

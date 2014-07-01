@@ -58,6 +58,16 @@ include_dirs.extend(valid_dirs)
 setup(
     name = 'Demos',
     ext_modules=[
+        Extension("CyclicComponentModel",
+                  sources=["CyclicComponentModel.pyx",
+                           os.path.join(rel_dir, "src/utils.cpp"),
+                           os.path.join(rel_dir, "src/numerics.cpp"),
+                           os.path.join(rel_dir, "src/RandomNumberGenerator.cpp"),
+                           os.path.join(rel_dir, "src/ComponentModel.cpp"),
+                           os.path.join(rel_dir, "src/CyclicComponentModel.cpp"),
+                           ],
+                  include_dirs=include_dirs,
+                  language="c++"),
         Extension("ContinuousComponentModel",
                   sources=["ContinuousComponentModel.pyx",
                            os.path.join(rel_dir, "src/utils.cpp"),
@@ -88,6 +98,7 @@ setup(
                            os.path.join(rel_dir, "src/View.cpp"),
                            os.path.join(rel_dir, "src/Cluster.cpp"),
                            os.path.join(rel_dir, "src/ComponentModel.cpp"),
+                           os.path.join(rel_dir, "src/CyclicComponentModel.cpp")
                            os.path.join(rel_dir, "src/MultinomialComponentModel.cpp"),
                            os.path.join(rel_dir, "src/ContinuousComponentModel.cpp"),
                            ],

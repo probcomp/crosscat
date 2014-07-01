@@ -4,10 +4,15 @@ import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
+import crosscat.tests.component_model_extensions.CyclicComponentModel as cycmext
+
+import matplotlib
+matplotlib.use('Agg')
 
 import random
 import pylab
 import numpy
+import math
 
 import unittest
 
@@ -15,21 +20,22 @@ from scipy import stats
 
 default_data_parameters = dict(
     symmetric_dirichlet_discrete=dict(weights=[1.0/5.0]*5),
-    normal_inverse_gamma=dict(mu=0.0, rho=1.0)
+    normal_inverse_gamma=dict(mu=0.0, rho=1.0),
+    vonmises=dict(mu=math.pi, kappa=2.0)
     )
 
 is_discrete = dict(
     symmetric_dirichlet_discrete=True,
-    normal_inverse_gamma=False
+    normal_inverse_gamma=False,
+    vonmises=False
     )
-
 
 def main():
     unittest.main()
 
 class TestComponentModelQuality(unittest.TestCase):
     def setUp(self):
-        self.show_plot = False
+        self.show_plot = True
 
     def test_normal_inverse_gamma_model(self):
         assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, 
@@ -37,6 +43,10 @@ class TestComponentModelQuality(unittest.TestCase):
 
     def test_dirchlet_multinomial_model(self):
         assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, 
+            show_plot=self.show_plot) > .1)
+
+    def test_vonmises_vonmises_model(self):
+        assert(test_one_feature_sampler(cycmext.p_CyclicComponentModel, 
             show_plot=self.show_plot) > .1)
 
 
@@ -79,7 +89,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         predictive probabilities 
     11. Calculate goodness of fit stats (returns p value)
     """
-    N = 100
+    N = 250
     
     get_next_seed = lambda : random.randrange(2147483647)
 
@@ -140,7 +150,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
     # Goodness-of-fit-tests
     if not is_discrete[component_model_type.model_type]:
         # do a KS tests if the distribution in continuous
-        cdf = lambda x: component_model_type.cdf(x, model_parameters)
+        # cdf = lambda x: component_model_type.cdf(x, model_parameters)
         # stat, p = stats.kstest(predictive_samples, cdf)   # 1-sample test
         stat, p = stats.ks_2samp(predictive_samples, T[:,0]) # 2-sample test
         test_str = "KS"
@@ -153,6 +163,7 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
         test_str = "Chi-square"
     
     if show_plot:
+        pylab.clf()
         pylab.axes([0.1, 0.1, .8, .7])
         # bin widths
         width = (numpy.max(edges)-numpy.min(edges))/len(edges)
@@ -167,6 +178,8 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
             s=100, 
             label="true pdf", 
             alpha=1)
+
+        # pylab.ylim([0,2])
                 
         # plot predictive probability of support points
         pylab.scatter(discrete_support, 
@@ -186,7 +199,9 @@ def test_one_feature_sampler(component_model_type, show_plot=False):
 
         pylab.title(title_string, fontsize=12)
 
-        pylab.show()
+        filename = component_model_type.model_type + "_single.png"
+        pylab.savefig(filename)
+        pylab.close()
 
     return p
 

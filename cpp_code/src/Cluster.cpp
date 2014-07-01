@@ -126,6 +126,8 @@ double Cluster::calc_column_predictive_logp(vector<double> column_data,
     ComponentModel *p_cm = &prevent_warning;
     if (col_datatype == CONTINUOUS_DATATYPE) {
         p_cm = new ContinuousComponentModel(hypers);
+    } else if (col_datatype == CYCLIC_DATATYPE) {
+        p_cm = new CyclicComponentModel(hypers);
     } else if (col_datatype == MULTINOMIAL_DATATYPE) {
         p_cm = new MultinomialComponentModel(hypers);
     } else {
@@ -207,8 +209,10 @@ double Cluster::insert_col(vector<double> data,
         p_cm = new ContinuousComponentModel(hypers);
     } else if (col_datatype == MULTINOMIAL_DATATYPE) {
         p_cm = new MultinomialComponentModel(hypers);
+    } else if (col_datatype == CYCLIC_DATATYPE) {
+        p_cm = new CyclicComponentModel(hypers);
     } else {
-        cout << "Cluster::insert_col: col_datatype=" << col_datatype << endl;
+        cout << "ERROR: Cluster::insert_col: col_datatype=" << col_datatype << endl;
         assert(1 == 0);
         exit(EXIT_FAILURE);
     }
@@ -265,8 +269,11 @@ void Cluster::init_columns(vector<CM_Hypers*>& hypers_v) {
             //         and instantiate correct type?
             p_cm = new ContinuousComponentModel(hypers);
             p_model_v.push_back(p_cm);
-        } else if (in(hypers, multinomial_key)) {
+        } else if (in(hypers, multinomial_key)){
             p_cm = new MultinomialComponentModel(hypers);
+            p_model_v.push_back(p_cm);
+        } else if (in(hypers, cyclic_key)) {
+            p_cm = new CyclicComponentModel(hypers);
             p_model_v.push_back(p_cm);
         } else {
             cout << "Cluster::init_columns: hypers=" << hypers << endl;

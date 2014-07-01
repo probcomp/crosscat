@@ -33,6 +33,7 @@
 #include "constants.h"
 #include "ComponentModel.h"
 #include "ContinuousComponentModel.h"
+#include "CyclicComponentModel.h"
 #include "MultinomialComponentModel.h"
 
 
