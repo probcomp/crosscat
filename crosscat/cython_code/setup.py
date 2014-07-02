@@ -98,7 +98,7 @@ setup(
                            os.path.join(rel_dir, "src/View.cpp"),
                            os.path.join(rel_dir, "src/Cluster.cpp"),
                            os.path.join(rel_dir, "src/ComponentModel.cpp"),
-                           os.path.join(rel_dir, "src/CyclicComponentModel.cpp")
+                           os.path.join(rel_dir, "src/CyclicComponentModel.cpp"),
                            os.path.join(rel_dir, "src/MultinomialComponentModel.cpp"),
                            os.path.join(rel_dir, "src/ContinuousComponentModel.cpp"),
                            ],
