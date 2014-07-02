@@ -184,7 +184,7 @@ def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
     z_matrix /= float(num_latent_states)
 
     # hierachically cluster z_matrix
-    Y = pdist(matrix)
+    Y = pdist(z_matrix)
     Z = linkage(Y)
     pylab.figure()
     dendrogram(Z)
@@ -214,6 +214,7 @@ def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
                                   rotation=90, size='small')
     pylab.title('column dependencies for: %s' % tablename)
     pylab.savefig(filename)
+    pylab.close()
 
 def legend_outside(ax=None, bbox_to_anchor=(0.5, -.25), loc='upper center',
                    ncol=None, label_cmp=None):
