@@ -5,7 +5,7 @@ body {
 .header-image {
 	/*background-color: rgb(83,119,122);*/
 	background-color: #ccc;
-	background-image: url('../assets/eccls_z.png');
+	/*background-image: url('../assets/eccls_z.png');*/
 	background-size: cover;
 	background-attachment:scroll;
 	background-position:center; 
@@ -15,7 +15,7 @@ body {
 	display: block;
 	width: 100%;
 	text-align: center;
-	box-shadow: 0 0 30px rgba(0,0,0,.7);
+	/*box-shadow: 0 0 30px rgba(0,0,0,.7);*/
 }
 
 .headline {
