@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Baxter Eaves">
+
+    <title>CrossCat</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom CSS for the 'One Page Wonder' Template -->
+    <link href="css/one-page-wonder.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Crosscat</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#overview">Overview</a>
+                    </li>
+                    <li><a href="#download">Download</a>
+                    </li>
+                    <li><a href="#publications">Publications</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <div class="header-image">
+
+        <div class="headline">
+            <div class="container">
+                <h1>CrossCat</h1>
+                <h2>A fully Bayesian nonparametric method for analyzing heterogenous, high dimensional data.</h2>
+            </div>
+        </div>
+
+    </div>
+    <!-- /header-image -->
+
+    <div class="container">
+
+        <!-- START THE FEATURETTES -->
+
+        <hr class="featurette-divider">
+
+        <div class="featurette" id="overview">
+            <!-- <img class="featurette-image img-circle img-responsive pull-right" src="http://placehold.it/500x500"> -->
+            <h2 class="featurette-heading">Overview
+                <span class="text-muted">What does it do and who is it for?</span>
+            </h2>
+            <p class="lead">CrossCat is a domain-general, Bayesian method for analyzing high-dimensional data tables. CrossCat estimates the full joint distribution over the variables in the table from the data, via approximate inference in a hierarchical, nonparametric Bayesian model, and provides efficient samplers for every conditional distribution. CrossCat combines strengths of nonparametric mixture modeling and Bayesian network structure learning: it can model any joint distribution given enough data by positing latent variables, but also discovers independencies between the observable variables.</p>
+
+            <p class="lead"> A range of exploratory analysis and predictive modeling tasks can be addressed via CrossCat, including detecting predictive relationships between variables, finding multiple overlapping clusterings, imputing missing values, and simultaneously selecting features and classifying rows. Research on CrossCat has shown that it is suitable for analysis of real-world tables of up to 10 million cells, including hospital cost and quality measures, voting records, handwritten digits, and state-level unemployment time series.</p>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="featurette" id="download">
+            <!-- <img class="featurette-image img-circle img-responsive pull-left" src="http://placecreature.com/500/500"> -->
+            <h2 class="featurette-heading">Download
+                <span class="text-muted">Get CrossCat.</span>
+            </h2>
+            <p class="lead">Crosscat, along with <a href="http://mit-probabilistic-computing-project.github.io/BayesDB">BayesDB</a> is released via a weekly <a href="http://www.docker.com/">Docker</a> container build. Once you have Docker installed you can download and install the Docker container to your Unix/Linux-based system with the following command</p>
+
+            <pre><code>docker pull avinson/bayesdb</code></pre>
+
+            <p class="lead"><strong>FIXME: Direct user to demo</strong></p>
+
+            <p class="lead">The latest source code can be found on <a href="https://github.com/mit-probabilistic-computing-project/crosscat">our Github repository</a></p>
+
+            <h3>Documentation</h3>
+            <p class="lead">CrossCat is implemented in python-wrapped C++. Integration with the CrossCat client requires knowledge of python. For more information:</p>
+            <ul>
+                <li><a href="https://docs.google.com/file/d/0B_CtKGJ4pH2TdmNRZkhmamg5aVU/edit?usp=drive_web">Python client documentation</a></li>
+                <li><a href="https://docs.google.com/file/d/0B_CtKGJ4pH2TeVo0Zk5IT3V6S0E/edit?usp=drive_web">C++ backend documentation</a></li>
+            </ul>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="featurette" id="publications">
+            <!-- <img class="featurette-image img-circle img-responsive pull-right" src="http://placecreature.com/500/500"> -->
+            <h2 class="featurette-heading">Publications
+                <span class="text-muted">How does it do what it does?</span>
+            </h2>
+            <p class="lead publication">Shafto, P., Kemp, C., Mansinghka, V.K., & Tenenbaum, J.B. (2011). A probabilistic model of cross-categorization. Cognition, 120, 1-25. <a href="http://shaftolab.com/lab_papers/repository/crosscat.pdf">pdf</a></p>
+
+            <p class="lead publication">Mansinghka, V., Shafto, P., Jonas, E., Petschulat, C., Gasner, M., & Tenenbaum, J.B. (accepted pending revision). CrossCat: A fully Bayesian nonparametric method for analyzing heterogenous, high dimensional data. Journal of Machine Learning Research.</p>
+
+            <p class="lead publication">Li, D. & Shafto, P. (2011). Bayesian hierarchical cross-clustering. Proceedings of the Fourteenth International Conference on Artificial Intelligence and Statistics. JMLR W&CP, 15, 443-451.</p>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <!-- /END THE FEATURETTES -->
+
+        <hr>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>CrossCat and its sister project, BayesDB, are being developed by Jay Baxter, Dan Lovell, and Vikash Mansinghka at Massuchusetts Institute of Technology and by Pat Shafto and Baxter Eaves at University of Louisville.</p>
+
+            <p>If you have any comments or questions, please feel free to email us at crosscat [AT] mit.edu.</p>
+
+            <p>This research and development is supported in part by the DARPA XDATA program.</p>
+
+            <p>Copyright &copy; CrossCat 2014</p>
+        </footer>
+        <!-- /END OF FOOTER -->
+
+    </div>
+    <!-- /container -->
+
+    <!-- JavaScript -->
+    <script src="js/jquery-1.10.2.js"></script>
+    <script src="js/bootstrap.js"></script>
+
+</body>
+
+</html>
