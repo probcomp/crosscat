@@ -19,6 +19,7 @@
 #
 import itertools
 import collections
+import copy
 #
 import numpy
 #
@@ -29,7 +30,6 @@ import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
-
 
 class LocalEngine(EngineTemplate.EngineTemplate):
 
@@ -51,6 +51,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         self.mapper = map
         self.do_initialize = _do_initialize_tuple
         self.do_analyze = _do_analyze_tuple
+        self.do_insert = _do_insert_tuple
         return
 
     def get_initialize_arg_tuples(self, M_c, M_r, T, initialization,
@@ -82,6 +83,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                    COLUMN_CRP_ALPHA_GRID=(),
                    S_GRID=(), MU_GRID=(),
                    N_GRID=31,
+                   # subsample=False,
+                   # subsample_proportion=None,
+                   # subsample_rows_list=None,
                    ):
         """Sample a latent state from prior
 
@@ -105,10 +109,57 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             N_GRID,
         )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
+
         X_L_list, X_D_list = zip(*chain_tuples)
         if n_chains == 1:
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         return X_L_list, X_D_list
+
+
+    def get_insert_arg_tuples(self, M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL):
+        n_chains = len(X_L_list)
+        # seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        arg_tuples = itertools.izip(
+            itertools.cycle([M_c]),
+            itertools.cycle([T]),
+            X_L_list, X_D_list,
+            itertools.cycle([new_rows]),
+            itertools.cycle([N_GRID]),
+            itertools.cycle([CT_KERNEL]),
+        )
+        return arg_tuples
+
+
+    def insert(self, M_c, T, X_L_list, X_D_list, new_rows=None, N_GRID=31, CT_KERNEL=0):
+        """
+        Insert mutates the data T. 
+        """
+
+        if new_rows is None:
+            raise ValueError("new_row must exist")
+
+        if not isinstance(new_rows, list):
+            raise TypeError('new_rows must be list of lists')
+            if not isinstance(new_rows[0], list):
+                raise TypeError('new_rows must be list of lists')
+
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L_list, X_D_list)
+
+        # get insert arg tuples
+        arg_tuples = self.get_insert_arg_tuples(M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL)
+
+        chain_tuples = self.mapper(self.do_insert, arg_tuples)
+        X_L_list, X_D_list = zip(*chain_tuples)
+
+        if not was_multistate:
+            X_L_list, X_D_list = X_L_list[0], X_D_list[0]
+
+        T.extend(new_rows)
+
+        ret_tuple = X_L_list, X_D_list, T
+
+        return ret_tuple
+
 
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
                                n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
@@ -182,6 +233,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: X_L, X_D -- the evolved latent state
 
         """
+
         if CT_KERNEL not in [0,1]:
             raise ValueError("CT_KERNEL must be 0 (Gibbs) or 1 (MH)")
 
@@ -489,9 +541,28 @@ def _do_initialize(SEED, M_c, M_r, T, initialization, row_initialization,
 def _do_initialize_tuple(arg_tuple):
     return _do_initialize(*arg_tuple)
 
+
+def _do_insert_tuple(arg_tuple):
+    return _do_insert(*arg_tuple)
+
+def _do_insert( M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
+
+    p_State = State.p_State(M_c, T, X_L=X_L, X_D=X_D,
+                            N_GRID=N_GRID,
+                            CT_KERNEL=CT_KERNEL)
+
+    row_idx = len(T)
+    for row_data in new_rows:
+        p_State.insert_row(row_data, row_idx)
+        p_State.transition(which_transitions=['row_partition_assignments'], r=[row_idx])
+        row_idx += 1
+
+    X_L_prime = p_State.get_X_L()
+    X_D_prime = p_State.get_X_D()
+    return X_L_prime, X_D_prime
+
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
-
 
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 max_iterations, max_time,
@@ -517,7 +588,6 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
 
 def _do_analyze_tuple(arg_tuple):
     return _do_analyze_with_diagnostic(*arg_tuple)
-
 
 def get_child_n_steps_list(n_steps, every_N):
     if every_N is None:
