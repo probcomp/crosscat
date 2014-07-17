@@ -5,7 +5,7 @@ TEST=$(CPP_DIR)/tests
 XNET=crosscat/binary_creation
 
 
-all: cython doc
+all: cython docs
 
 clean:
 	cd $(CPP_DIR) && make clean

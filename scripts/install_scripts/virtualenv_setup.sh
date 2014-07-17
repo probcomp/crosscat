@@ -43,7 +43,7 @@ bashrc_has_virtualenvwrapper=$(grep WORKON_HOME "${HOME}/.bashrc")
 if [[ -z "$bashrc_has_virtualenvwrapper" ]]; then
     echo "Setting up virtualenv via ~/.bashrc"  
     WORKON_HOME="${HOME}/.virtualenvs"
-    wrapper_script=/usr/local/bin/virtualenvwrapper.sh
+    wrapper_script=$(which virtualenvwrapper.sh)
     cat -- >> "${HOME}/.bashrc" <<EOF
 export WORKON_HOME="$WORKON_HOME"
 source "$wrapper_script"
