@@ -24,6 +24,7 @@ import datetime
 import random
 import multiprocessing
 import multiprocessing.pool
+import threading
 
 #http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 class NoDaemonProcess(multiprocessing.Process):
@@ -76,13 +77,22 @@ class MapperContext(object):
             pass
         return False
 
-def int_generator(start=None):
-    if start is None:
-        start = random.randrange(32767)
-    next_i = start
-    while True:
-        yield next_i
-        next_i += 1
+class int_generator(object):
+    """Int generator with mutex."""
+    def __init__(self, start=None):
+        self.start = start
+        if start is None:
+            self.start = random.randrange(32767)
+        self.next_i = self.start
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        with self.lock:
+            self.next_i += 1
+            return self.next_i
 
 def roundrobin(*iterables):
     "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
