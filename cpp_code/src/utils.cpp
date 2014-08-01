@@ -30,7 +30,6 @@ using namespace std;
 using namespace boost;
 
 using boost::numeric::ublas::project;
-using boost::numeric::ublas::range;
 using boost::numeric::ublas::matrix;
 
 // FROM runModel_v2.cpp
@@ -347,8 +346,8 @@ vector<vector<vector<int> > > draw_crp_init(vector<int> global_row_indices,
 void copy_column(const MatrixD fromM, int from_col, MatrixD &toM, int to_col) {
   assert(fromM.size1()==toM.size1());
   int num_rows = fromM.size1();
-  project(toM, range(0, num_rows), range(to_col, to_col+1)) = \
-    project(fromM, range(0, num_rows), range(from_col, from_col+1));
+  project(toM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(to_col, to_col+1)) = \
+    project(fromM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(from_col, from_col+1));
 }
 
 MatrixD extract_columns(const MatrixD fromM, vector<int> from_cols) {
