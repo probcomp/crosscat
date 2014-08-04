@@ -75,8 +75,8 @@ def gen_correlated_data_discrete( n, r, SEED=0):
     if r < .05:
         r = .05
 
-    # define joint distribution
-    std = K/(6.0*r)
+    # define joint distribution    
+    std = -K*(r**.5) + K + 1.0/K
     fxy = numpy.zeros((K,K))
     for row in range(K):
         mu = float(row)
@@ -96,7 +96,7 @@ def gen_correlated_data_discrete( n, r, SEED=0):
         for y in Y:
             true_MI += fxy[x,y]*numpy.log(fxy[x,y]/(fx[x]*fy[y]))
 
-    external_mi = mutual_info_score(None,None,contengency=fxy)
+    external_mi = mutual_info_score(None,None,contingency=fxy)
 
     # sample data from joint distribution
     T = numpy.zeros((n,2))
@@ -124,7 +124,7 @@ def run_test(args):
 
     variances = []
 
-    burn_in = 200
+    burn_in = 500
 
     MIs = numpy.zeros( (num_times, len(num_samples)) )
 
@@ -206,12 +206,12 @@ def run_test(args):
     stderr = numpy.std(MIs,axis=0)#/(float(num_times)**.5)
     mean = numpy.mean(MIs,axis=0)
     pl.errorbar(num_samples,mean,yerr=stderr,c='blue')
-    pl.plot(num_samples, mean, c="blue", alpha=.8, label='mean MI')
-    pl.plot(num_samples, [true_mi]*len(num_samples), color='red', alpha=.8, label='true MI');
-    pl.plot(num_samples, [external_mi]*len(num_samples), color=(0,.5,.5), alpha=.8, label='external MI');
+    pl.plot(num_samples, mean, c="blue", alpha=.8, label='CC')
+    pl.plot(num_samples, [true_mi]*len(num_samples), color='red', alpha=.8, label='true');
+    pl.plot(num_samples, [external_mi]*len(num_samples), color=(0,.5,.5), alpha=.8, label='external');
     pl.title('convergence')
     pl.xlabel('#rows in X (log)')
-    pl.ylabel('CrossCat MI - true MI')
+    pl.ylabel('MI')
 
     pl.legend(loc=0,prop={'size':8})
     pl.gca().set_xscale('log')
