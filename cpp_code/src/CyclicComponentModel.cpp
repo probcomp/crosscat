@@ -196,10 +196,11 @@ double CyclicComponentModel::get_draw(int random_seed) const {
 
 double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double> constraints) const {
   // get modified suffstats
-  double kappa, a, b;
+  double kappa, a, b, b_a;
   int count;
   double sum_sin_x, sum_cos_x;
   get_hyper_doubles(kappa, a, b);
+  b_a = b;
   get_suffstats(count, sum_sin_x, sum_cos_x);
   int num_constraints = (int) constraints.size();
   for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
@@ -219,27 +220,20 @@ double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double
   boost::uniform_01<boost::mt19937> randfloat(gen);
 
   bool rejected = true;
-  double x; // von mises random number
-  double k_p = 2*M_PI*kappa/a;  // proposal distribution concentration
-  double u_p;   // uniform number 
+  double x; // random number
   double l_p;   // log proposal value
   double pdf_t; // log predictive probability
-  double log_M = calc_element_predictive_logp_constrained(b, constraints)-numerics::vonmises_log_pdf(b,b,k_p);
+  double log_M = calc_element_predictive_logp_constrained(b, constraints);
   unsigned short int itr = 0;
   while(rejected && itr < 1000){
     // generate random number in domain from proposal distribution
-    x = numerics::vonmises_rand(b,k_p, gen());
-    l_p = numerics::vonmises_log_pdf(x,b,k_p) + log_M;
-    u_p = log(randfloat()) + l_p;
+    x = randfloat()*2*M_PI;
+    l_p = log(randfloat()) + log_M;
 
     // get pdf at target
     pdf_t = calc_element_predictive_logp_constrained(x, constraints);
 
-    // if the proposal distribution doesn't entirely encapsulate f, then
-    // we've got a bad log_M
-    assert( l_p >= pdf_t );
-
-    if( u_p < pdf_t){
+    if( l_p < pdf_t){
       rejected = false;
       return x;
     }
