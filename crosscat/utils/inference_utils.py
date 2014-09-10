@@ -112,9 +112,9 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
     n_clusters = len(cluster_crps)
 
     # get X values
-    x_values = M_c['column_metadata'][X]['code_to_value'].keys()
+    x_values = M_c['column_metadata'][X]['code_to_value'].values()
     # get Y values
-    y_values = M_c['column_metadata'][Y]['code_to_value'].keys()
+    y_values = M_c['column_metadata'][Y]['code_to_value'].values()
 
     # get components models for each cluster for columns X and Y
     component_models_X = [0]*n_clusters
