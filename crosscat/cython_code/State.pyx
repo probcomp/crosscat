@@ -32,7 +32,7 @@ import crosscat.utils.general_utils as gu
 
 
 cdef double set_double(double& to_set, double value):
-     to_set = value
+     (&to_set)[0] = value	# (&...)[0] works around Cython >=0.18 bug.
      return to_set
 
 cdef vector[int] convert_int_vector_to_cpp(python_vector):
