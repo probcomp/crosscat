@@ -186,11 +186,7 @@ setup(
     url='TBA',
     long_description='TBA.',
     packages=packages,
-    dependency_links=[
-        'https://github.com/mit-probabilistic-computing-project/experiment_runner/tarball/master#egg=experiment_runner-0.1.4',
-    ],
     install_requires=[
-        'experiment_runner==0.1.4',
     ],
     package_dir={'crosscat':'crosscat/'},
     ext_modules=ext_modules,
