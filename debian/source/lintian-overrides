@@ -1,0 +1,3 @@
+# Too much trouble to change this, harmless since it doesn't figure
+# into the resulting build product.
+crosscat source: source-is-missing website/source/javascripts/jquery.js
