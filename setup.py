@@ -71,16 +71,16 @@ include_dirs = ['cpp_code/include/CrossCat', numpy.get_include()]
 # specify sources
 ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
 ContinuousComponentModel_cpp_sources = [
-        'utils.cpp',
-        'numerics.cpp',
-        'RandomNumberGenerator.cpp',
-        'ComponentModel.cpp',
-        'ContinuousComponentModel.cpp',
-        ]
+    'utils.cpp',
+    'numerics.cpp',
+    'RandomNumberGenerator.cpp',
+    'ComponentModel.cpp',
+    'ContinuousComponentModel.cpp',
+]
 ContinuousComponentModel_sources = generate_sources([
     (pyx_src_dir, ContinuousComponentModel_pyx_sources),
     (cpp_src_dir, ContinuousComponentModel_cpp_sources),
-    ])
+])
 #
 MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
@@ -89,11 +89,11 @@ MultinomialComponentModel_cpp_sources = [
     'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'MultinomialComponentModel.cpp',
-    ]
+]
 MultinomialComponentModel_sources = generate_sources([
     (pyx_src_dir, MultinomialComponentModel_pyx_sources),
     (cpp_src_dir, MultinomialComponentModel_cpp_sources),
-    ])
+])
 #
 CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
 CyclicComponentModel_cpp_sources = [
@@ -102,11 +102,11 @@ CyclicComponentModel_cpp_sources = [
     'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'CyclicComponentModel.cpp',
-    ]
+]
 CyclicComponentModel_sources = generate_sources([
     (pyx_src_dir, CyclicComponentModel_pyx_sources),
     (cpp_src_dir, CyclicComponentModel_cpp_sources),
-    ])
+])
 #
 State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
@@ -121,11 +121,11 @@ State_cpp_sources = [
     'MultinomialComponentModel.cpp',
     'ContinuousComponentModel.cpp',
     'State.cpp',
-    ]
+]
 State_sources = generate_sources([
     (pyx_src_dir, State_pyx_sources),
     (cpp_src_dir, State_cpp_sources),
-    ])
+])
 
 
 # create exts
@@ -135,49 +135,62 @@ ContinuousComponentModel_ext = Extension(
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++")
+    language="c++",
+)
 MultinomialComponentModel_ext = Extension(
     "crosscat.cython_code.MultinomialComponentModel",
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++")
+    language="c++",
+)
 CyclicComponentModel_ext = Extension(
     "crosscat.cython_code.CyclicComponentModel",
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=CyclicComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++")
+    language="c++",
+)
 State_ext = Extension(
     "crosscat.cython_code.State",
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
-    language="c++")
+    language="c++",
+)
 #
 ext_modules = [
-        CyclicComponentModel_ext,
-        ContinuousComponentModel_ext,
-        MultinomialComponentModel_ext,
-        State_ext,
-        ]
+    CyclicComponentModel_ext,
+    ContinuousComponentModel_ext,
+    MultinomialComponentModel_ext,
+    State_ext,
+]
 
-packages = ['crosscat', 'crosscat.utils', 'crosscat.convergence_analysis',
-    'crosscat.jsonrpc_http', 'crosscat.cython_code', 'crosscat.tests',
-    'crosscat.tests.quality_tests', 'crosscat.tests.component_model_extensions']
+packages = [
+    'crosscat',
+    'crosscat.utils',
+    'crosscat.convergence_analysis',
+    'crosscat.jsonrpc_http',
+    'crosscat.cython_code',
+    'crosscat.tests',
+    'crosscat.tests.quality_tests',
+    'crosscat.tests.component_model_extensions',
+]
 setup(
-        name='CrossCat',
-        version='0.1',
-        author='MIT.PCP',
-        url='TBA',
-        long_description='TBA.',
-        packages=packages,
-        dependency_links=['https://github.com/mit-probabilistic-computing-project/experiment_runner/tarball/master#egg=experiment_runner-0.1.4'],
-        install_requires=['experiment_runner==0.1.4'],
-        package_dir={'crosscat':'crosscat/'},
-        ext_modules=ext_modules,
-        cmdclass = {'build_ext': build_ext}
-        )
+    name='CrossCat',
+    version='0.1',
+    author='MIT.PCP',
+    url='TBA',
+    long_description='TBA.',
+    packages=packages,
+    install_requires=[
+        'scipy>=0.11.0',
+        'numpy>=1.7.0',
+    ],
+    package_dir={'crosscat':'crosscat/'},
+    ext_modules=ext_modules,
+    cmdclass={'build_ext': build_ext},
+)

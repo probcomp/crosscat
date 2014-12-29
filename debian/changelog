@@ -1,0 +1,5 @@
+crosscat (20141229-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Taylor R Campbell <riastradh+probcomp@csail.mit.edu>  Mon, 29 Dec 2014 20:48:37 +0000
