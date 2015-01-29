@@ -19,11 +19,23 @@ We provide a [VirtualBox VM](https://docs.google.com/file/d/0B_x0H2s37jOVanBmYVJ
 
 **Please read the install scripts and consider their implications before using**
 
-CrossCat can be successfully installed locally on bare Ubuntu server 12.04 systems with
+CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with
+
+    sudo apt-get install cython libboost-all-dev python python-setuptools
+    sudo apt-get install python-numpy python-scipy
 
     git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
-    sudo bash crosscat/scripts/install_scripts/install.sh
-    sudo python crosscat/setup.py install
+    cd crosscat
+    python setup.py build
+    sudo python setup.py install
+
+CrossCat can also be installed in a local Python virtual environment:
+
+    cd crosscat
+    virtualenv --site-system-packages /path/to/venv
+    . /path/to/venv/bin/activate
+    python setup.py build
+    python setup.py install
 
 # Documentation
 
