@@ -8,9 +8,22 @@ except ImportError:
     print 'TRYING: from distutils.core import setup'
     from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Distutils import build_ext
 #
 import numpy
+
+
+# If the user wants to build, the user is going to need cython
+USE_CYTHON = (sys.argv[1] in ['build', 'sdist'])
+
+cmdclass = dict()
+if USE_CYTHON:
+    print("Building cython files.")
+    from Cython.Distutils import build_ext
+    cmdclass = {'build_ext': build_ext}
+    source_ext = '.pyx'
+else:
+    print("Building from existing cython files.")
+    source_ext = '.cpp'
 
 
 # http://stackoverflow.com/a/18992595
@@ -69,7 +82,7 @@ include_dirs = ['cpp_code/include/CrossCat', numpy.get_include()]
 
 
 # specify sources
-ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
+ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel'+source_ext]
 ContinuousComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -82,7 +95,7 @@ ContinuousComponentModel_sources = generate_sources([
     (cpp_src_dir, ContinuousComponentModel_cpp_sources),
 ])
 #
-MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
+MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel'+source_ext]
 MultinomialComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -95,7 +108,7 @@ MultinomialComponentModel_sources = generate_sources([
     (cpp_src_dir, MultinomialComponentModel_cpp_sources),
 ])
 #
-CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
+CyclicComponentModel_pyx_sources = ['CyclicComponentModel'+source_ext]
 CyclicComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -108,7 +121,7 @@ CyclicComponentModel_sources = generate_sources([
     (cpp_src_dir, CyclicComponentModel_cpp_sources),
 ])
 #
-State_pyx_sources = ['State.pyx']
+State_pyx_sources = ['State'+source_ext]
 State_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -169,6 +182,10 @@ ext_modules = [
     State_ext,
 ]
 
+if USE_CYTHON:
+    from Cython.Build import cythonize
+    ext_modules = cythonize(ext_modules)
+
 packages = [
     'crosscat',
     'crosscat.utils',
@@ -179,6 +196,7 @@ packages = [
     'crosscat.tests.quality_tests',
     'crosscat.tests.component_model_extensions',
 ]
+
 setup(
     name='CrossCat',
     version='0.1',
@@ -192,5 +210,5 @@ setup(
     ],
     package_dir={'crosscat':'crosscat/'},
     ext_modules=ext_modules,
-    cmdclass={'build_ext': build_ext},
+    cmdclass=cmdclass,
 )
