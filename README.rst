@@ -12,7 +12,7 @@ Local (Ubuntu)
 
 You can install CrossCat using pip (no need to clone from git)::
 
-$ pip install crosscat
+$ pip install --pre crosscat
 
 If you'd like to install from source, CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with::
 
