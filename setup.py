@@ -12,17 +12,18 @@ from distutils.extension import Extension
 import numpy
 
 
-# If the user wants to build, the user is going to need cython
-USE_CYTHON = (sys.argv[1] in ['build', 'sdist'])
+# If we're building from Git (no PKG-INFO), we use Cython.  If we're
+# building from an sdist (PKG-INFO exists), we will already have run
+# Cython to compile the .pyx files into .cpp files, and we can treat
+# them as normal C++ extensions.
+USE_CYTHON = not os.path.exists("PKG-INFO")
 
 cmdclass = dict()
 if USE_CYTHON:
-    print("Building cython files.")
     from Cython.Distutils import build_ext
     cmdclass = {'build_ext': build_ext}
     source_ext = '.pyx'
 else:
-    print("Building from existing cython files.")
     source_ext = '.cpp'
 
 
