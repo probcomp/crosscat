@@ -197,12 +197,28 @@ packages = [
     'crosscat.tests.component_model_extensions',
 ]
 
+
+# fall back long description if the README is missing
+long_description = 'CrossCat is a domain-general, Bayesian method for analyzing ' +\
+    'high-dimensional data tables. CrossCat estimates the full joint distribution ' +\
+    'over the variables in the table from the data, via approximate inference in ' +\
+    'a hierarchical, nonparametric Bayesian model, and provides efficient samplers ' +\
+    'for every conditional distribution. CrossCat combines strengths of ' +\
+    'nonparametric mixture modeling and Bayesian network structure learning: it ' +\
+    'can model any joint distribution given enough data by positing latent ' +\
+    'variables, but also discovers independencies between the observable variables.'
+
+if os.path.exists('README.rst'):
+    long_description = open('README.rst').read()
+
 setup(
     name='CrossCat',
-    version='0.1',
+    version='0.1.0',
     author='MIT.PCP',
-    url='TBA',
-    long_description='TBA.',
+    license='Apache License, Version 2.0',
+    description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
+    url='https://github.com/mit-probabilistic-computing-project/crosscat',
+    long_description=long_description,
     packages=packages,
     install_requires=[
         'scipy>=0.11.0',

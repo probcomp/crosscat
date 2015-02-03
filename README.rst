@@ -16,21 +16,21 @@ $ pip install crosscat
 
 If you'd like to install from source, CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with::
 
-    $ sudo apt-get install cython libboost-all-dev python python-setuptools
-    $ sudo apt-get install python-numpy python-scipy
+$ sudo apt-get install cython libboost-all-dev python python-setuptools
+$ sudo apt-get install python-numpy python-scipy
 
-    $ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
-    $ cd crosscat
-    $ python setup.py build
-    $ python setup.py install  # or python setup.py develop
+$ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
+$ cd crosscat
+$ python setup.py build
+$ python setup.py install  # or python setup.py develop
 
 CrossCat can also be installed in a local Python virtual environment: ::
 
-    $ cd crosscat
-    $ virtualenv --site-system-packages /path/to/venv
-    $ . /path/to/venv/bin/activate
-    $ python setup.py build
-    $ python setup.py install  # or python setup.py develop
+$ cd crosscat
+$ virtualenv --site-system-packages /path/to/venv
+$ . /path/to/venv/bin/activate
+$ python setup.py build
+$ python setup.py install  # or python setup.py develop
 
 A similar process has been found to work on OSX.
 
@@ -64,7 +64,7 @@ dha\_example.py (github_) is a basic example of analysis using CrossCat.  For a 
 
 ::
 
-    python crosscat/examples/dha_example.py crosscat/www/data/dha.csv --num_chains 2 --num_transitions 2
+python crosscat/examples/dha_example.py crosscat/www/data/dha.csv --num_chains 2 --num_transitions 2
 
 
 **Note**: the default argument values take a considerable amount of time to run and are best suited to a cluster.
