@@ -156,3 +156,8 @@ def get_dict_as_text(parameters, join_with='\n'):
     lines = map(create_line, parameters.iteritems())
     text = join_with.join(lines)
     return text
+
+def casefold(s):
+    # XXX Not real Unicode case folding, but will do for now.  Change
+    # me when bayeslite is modified to do real Unicode case folding.
+    return s.upper().lower()

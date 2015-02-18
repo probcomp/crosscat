@@ -190,7 +190,7 @@ def similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_colu
     ## Set col_idxs: defaults to all columns.
     if target_column:
         if type(target_column) == str:
-            col_idxs = [M_c['name_to_idx'][target_column]]
+            col_idxs = [M_c['name_to_idx'][gu.casefold(target_column)]]
         elif type(target_column) == list:
             col_idxs = target_column
         else:
@@ -307,6 +307,7 @@ def names_to_global_indices(column_names, M_c):
     # FIXME: str(column_name) is hack
     if isinstance(first_key, (unicode, str)):
         column_names = map(str, column_names)
+    column_names = map(gu.casefold, column_names)
     return [name_to_idx[column_name] for column_name in column_names]
 
 def extract_view_column_info(M_c, X_L, view_idx):
