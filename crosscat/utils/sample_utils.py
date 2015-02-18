@@ -24,6 +24,8 @@ import math
 from collections import Counter
 #
 from scipy.misc import logsumexp
+
+import copy
 import numpy
 #
 import crosscat.cython_code.ContinuousComponentModel as CCM
@@ -722,7 +724,12 @@ def ensure_multistate(X_L_list, X_D_list):
     was_multistate = get_is_multistate(X_L_list, X_D_list)
     if not was_multistate:
         X_L_list, X_D_list = [X_L_list], [X_D_list]
-    return X_L_list, X_D_list, was_multistate
+    # NOTE: We must do deepcopy or changes made to X_L (but, curiously, 
+    # not X_D)  hereafter shall be present in the original variables in 
+    # the original scope. 
+    # FIXME: The culprits are likely sparsify_X_L and desparsify_X_L in
+    # State.pyx
+    return copy.deepcopy(X_L_list), copy.deepcopy(X_D_list), was_multistate
 
 # def determine_cluster_view_logps(M_c, X_L, X_D, Y):
 #     get_which_view = lambda which_column: \
