@@ -119,7 +119,7 @@ def gen_factorial_data(gen_seed, num_clusters,
     inverse_permutation_indices_list = []
     for data_idx in xrange(num_splits):
         data_i, zs_i = gen_data(
-            gen_seed=random_state.randint(sys.maxint),
+            gen_seed=gen_seed,
             num_clusters=num_clusters,
             num_cols=num_cols/num_splits,
             num_rows=num_rows,
