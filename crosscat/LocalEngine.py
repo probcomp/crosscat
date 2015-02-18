@@ -233,6 +233,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: X_L, X_D -- the evolved latent state
 
         """
+        if n_steps <= 0:
+            raise ValueError("You must do at least one analyze step.")
 
         if CT_KERNEL not in [0,1]:
             raise ValueError("CT_KERNEL must be 0 (Gibbs) or 1 (MH)")
