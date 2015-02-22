@@ -214,7 +214,7 @@ if os.path.exists('README.rst'):
 
 setup(
     name='CrossCat',
-    version='0.1.1.dev',
+    version='0.1.2',
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
