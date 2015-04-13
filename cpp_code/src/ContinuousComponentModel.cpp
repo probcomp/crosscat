@@ -18,6 +18,8 @@
 *   limitations under the License.
 */
 #include "ContinuousComponentModel.h"
+#include <boost/math/distributions/students_t.hpp>
+#include <boost/random/student_t_distribution.hpp>
 using namespace std;
 
 ContinuousComponentModel::ContinuousComponentModel(CM_Hypers& in_hypers) {

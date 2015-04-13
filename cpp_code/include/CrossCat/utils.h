@@ -22,7 +22,7 @@
 
 #include "numerics.h"
 #include "constants.h"
-#include "RandomNumberGenerator.h"
+class RandomNumberGenerator;
 //
 #include <iostream>
 #include <string>
