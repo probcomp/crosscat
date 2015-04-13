@@ -196,11 +196,10 @@ double CyclicComponentModel::get_draw(int random_seed) const {
 
 double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double> constraints) const {
   // get modified suffstats
-  double kappa, a, b, b_a;
+  double kappa, a, b;
   int count;
   double sum_sin_x, sum_cos_x;
   get_hyper_doubles(kappa, a, b);
-  b_a = b;
   get_suffstats(count, sum_sin_x, sum_cos_x);
   int num_constraints = (int) constraints.size();
   for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {

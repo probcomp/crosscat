@@ -426,7 +426,7 @@ void construct_cyclic_specific_hyper_grid(int n_grid,
         std::vector<double>& vm_a_grid,
         std::vector<double>& vm_kappa_grid){
   double N = (double) col_data.size();
-  double var = calc_sum_sq_deviation(col_data)/N;
+  // double var = calc_sum_sq_deviation(col_data)/N;
   // vm_a_grid = log_linspace(1/var, N/var, n_grid);
   // vm_kappa_grid = log_linspace(var, var*N, n_grid);
   vm_a_grid = log_linspace(1.0/N, N, n_grid);

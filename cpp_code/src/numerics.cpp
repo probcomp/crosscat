@@ -83,14 +83,12 @@ double vonmises_rand(double mu, double kappa, int random_seed){
         if (c * (2 - c) - U2 > 0){
             double U3 = randfloat();
             vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            double vmr_a = vmr;
             vmr = fmod(vmr, 2.0*M_PI);
             if(vmr < 0) vmr = 2*M_PI+vmr;
             return vmr;
         }else if (log(c/U2) + 1 - c >= 0){
             double U3 = randfloat();
             vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            double vmr_a = vmr;
             vmr = fmod(vmr, 2.0*M_PI);
             if(vmr < 0) vmr = 2*M_PI+vmr;
             return vmr;
