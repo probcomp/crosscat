@@ -31,9 +31,9 @@
 #include <boost/math/special_functions/bessel.hpp> 
 #include <boost/random/mersenne_twister.hpp>
 
-const static double LOG_2PI = log(2.0 * M_PI);
-const static double HALF_LOG_2PI = .5 * LOG_2PI;
-const static double LOG_2 = log(2.0);
+static const double LOG_2PI = log(2.0 * M_PI);
+static const double HALF_LOG_2PI = .5 * LOG_2PI;
+static const double LOG_2 = log(2.0);
 
 // use a namespce to hold all the functions?
 // http://stackoverflow.com/questions/6108704/renaming-namespaces
