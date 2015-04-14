@@ -27,8 +27,8 @@
 
 class ContinuousComponentModel : public ComponentModel {
 public:
-    ContinuousComponentModel(std::map<std::string, double>& in_hyper_hash);
-    ContinuousComponentModel(std::map<std::string, double>& in_hyper_hash,
+    ContinuousComponentModel(CM_Hypers& in_hyper_hash);
+    ContinuousComponentModel(CM_Hypers& in_hyper_hash,
                              int COUNT, double SUM_X, double SUM_X_SQ);
     virtual ~ContinuousComponentModel() {};
     //

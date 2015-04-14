@@ -28,15 +28,15 @@
 
 class CyclicComponentModel : public ComponentModel {
 public:
-    CyclicComponentModel(std::map<std::string, double>& in_hyper_hash);
-    CyclicComponentModel(std::map<std::string, double>& in_hyper_hash,
+    CyclicComponentModel(CM_Hypers& in_hyper_hash);
+    CyclicComponentModel(CM_Hypers& in_hyper_hash,
                              int COUNT, double SUM_SIN_X, double SUM_COS_X);
     virtual ~CyclicComponentModel() {};
     //
     // getters
     void get_suffstats(int& count_out, double& sum_sin_x, double& sum_cos_x_) const;
     void get_hyper_doubles(double& kappa, double& a, double& b) const;
-    std::map<std::string, double> get_hypers() const;
+    CM_Hypers get_hypers() const;
     std::map<std::string, double> get_suffstats() const;
     std::map<std::string, double> _get_suffstats() const;
     double get_draw(int random_seed) const;
