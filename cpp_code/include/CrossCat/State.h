@@ -65,19 +65,19 @@ public:
      *  \param SEED The seed for the state's RNG
      */
     State(const MatrixD& data,
-          std::vector<std::string> GLOBAL_COL_DATATYPES,
-          std::vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS,
-          std::vector<int> global_row_indices,
-          std::vector<int> global_col_indices,
-          std::map<int, CM_Hypers> HYPERS_M,
-          std::vector<std::vector<int> > column_partition,
+          const std::vector<std::string>& GLOBAL_COL_DATATYPES,
+          const std::vector<int>& GLOBAL_COL_MULTINOMIAL_COUNTS,
+          const std::vector<int>& global_row_indices,
+          const std::vector<int>& global_col_indices,
+          const std::map<int, CM_Hypers>& HYPERS_M,
+          const std::vector<std::vector<int> >& column_partition,
           double COLUMN_CRP_ALPHA,
-          std::vector<std::vector<std::vector<int> > > row_partition_v,
-          std::vector<double> row_crp_alpha_v,
-          std::vector<double> ROW_CRP_ALPHA_GRID = empty_vector_double,
-          std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
-          std::vector<double> S_GRID = empty_vector_double,
-          std::vector<double> MU_GRID = empty_vector_double,
+          const std::vector<std::vector<std::vector<int> > >& row_partition_v,
+          const std::vector<double>& row_crp_alpha_v,
+          const std::vector<double>& ROW_CRP_ALPHA_GRID = empty_vector_double,
+          const std::vector<double>& COLUMN_CRP_ALPHA_GRID = empty_vector_double,
+          const std::vector<double>& S_GRID = empty_vector_double,
+          const std::vector<double>& MU_GRID = empty_vector_double,
           int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
     /** Constructor for drawing a CrossCat state from the prior.
@@ -99,16 +99,16 @@ public:
      *  \param SEED The seed for the state's RNG
      */
     State(const MatrixD& data,
-          std::vector<std::string> GLOBAL_COL_DATATYPES,
-          std::vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS,
-          std::vector<int> global_row_indices,
-          std::vector<int> global_col_indices,
-          std::string col_initialization = FROM_THE_PRIOR,
+          const std::vector<std::string>& GLOBAL_COL_DATATYPES,
+          const std::vector<int>& GLOBAL_COL_MULTINOMIAL_COUNTS,
+          const std::vector<int>& global_row_indices,
+          const std::vector<int>& global_col_indices,
+          const std::string& col_initialization = FROM_THE_PRIOR,
           std::string row_initialization = "",
-          std::vector<double> ROW_CRP_ALPHA_GRID = empty_vector_double,
-          std::vector<double> COLUMN_CRP_ALPHA_GRID = empty_vector_double,
-          std::vector<double> S_GRID = empty_vector_double,
-          std::vector<double> MU_GRID = empty_vector_double,
+          const std::vector<double>& ROW_CRP_ALPHA_GRID = empty_vector_double,
+          const std::vector<double>& COLUMN_CRP_ALPHA_GRID = empty_vector_double,
+          const std::vector<double>& S_GRID = empty_vector_double,
+          const std::vector<double>& MU_GRID = empty_vector_double,
           int N_GRID=31, int SEED=0, int CT_KERNEL=0);
 
     ~State();
@@ -205,7 +205,7 @@ public:
      */
     std::vector<double> get_draw(int row_idx, int random_seed) const;
 
-    double insert_row(std::vector<double> row_data, int matching_row_idx, int row_idx=-1);
+    double insert_row(const std::vector<double>& row_data, int matching_row_idx, int row_idx=-1);
     //
     // mutators
     //
@@ -217,7 +217,8 @@ public:
      * \param which_view A reference to the view in which the feature should be added
      * \return The delta in the state's marginal log probability
      */
-    double insert_feature(int feature_idx, std::vector<double> feature_data,
+    double insert_feature(int feature_idx,
+                          const std::vector<double>& feature_data,
                           View& which_view);
     /**
      * Gibbs sample which view to insert the feature into.
@@ -226,7 +227,8 @@ public:
      * \param singleton_view A reference to an empty view to allow for creation of new views.
      *        Deleted internally if not used.
      */
-    double sample_insert_feature(int feature_idx, std::vector<double> feature_data,
+    double sample_insert_feature(int feature_idx,
+                                 const std::vector<double>& feature_data,
                                  View& singleton_view);
     /**
      * Remove a feature from the state.
@@ -236,21 +238,25 @@ public:
      *        This variables name is a bit of a misnomer: its not necessarily a singleton.
      *        Necesary to pass out for determining the marginal log probability delta
      */
-    double remove_feature(int feature_idx, std::vector<double> feature_data,
+    double remove_feature(int feature_idx,
+                          const std::vector<double>& feature_data,
                           View*& p_singleton_view);
     /**
      * Gibbs sample a feature among the views, possibly creating a new view
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
      */
-    double transition_feature_gibbs(int feature_idx, std::vector<double> feature_data);
+    double transition_feature_gibbs(int feature_idx,
+                                    const std::vector<double>& feature_data);
     /**
      * Helper for transition_feature_mh
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
      * \param proposed_view The view to propose jumping to
      */
-    double mh_choose(int feature_idx, std::vector<double> feature_data, View &proposed_view);
+    double mh_choose(int feature_idx,
+                     const std::vector<double>& feature_data,
+                     View &proposed_view);
     double get_proposal_logp(View& proposed_view);
     double get_proposal_log_ratio(View& from_view, View& to_view);
     /**
@@ -258,7 +264,8 @@ public:
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
      */
-    double transition_feature_mh(int feature_idx, std::vector<double> feature_data);
+    double transition_feature_mh(int feature_idx,
+                                 const std::vector<double>& feature_data);
     /**
      * Instantiate a new view object with properties matching the state
      * (datatypes, #rows, etc) and track in memeber variable views
@@ -280,7 +287,7 @@ public:
      * Stale function: don't use
      */
     double transition_view_i(int which_view,
-                             std::map<int, std::vector<double> > row_data_map);
+                             const std::map<int, std::vector<double> >& row_data_map);
     /**
      * Stale function: don't use
      */
@@ -326,7 +333,7 @@ public:
      * Gibbs sample row partition CRP hyperparameter on views denoted by specified column indices
      * \return The delta in the state's marginal log probability
      */
-    double transition_row_partition_hyperparameters(std::vector<int> which_cols);
+    double transition_row_partition_hyperparameters(const std::vector<int>& which_cols);
     /**
      * Gibbs sample cluster membership of specified rows
      * \return The delta in the state's marginal log probability
@@ -338,16 +345,16 @@ public:
     /**
      * \return The predictive log likelihood of a feature belonging to a particular view
      */
-    double calc_feature_view_predictive_logp(std::vector<double> col_data,
-            std::string col_datatype,
-            View v,
+    double calc_feature_view_predictive_logp(const std::vector<double>& col_data,
+            const std::string& col_datatype,
+            const View& v,
             double& crp_log_delta,
             double& data_log_delta,
-            CM_Hypers hypers) const;
+            const CM_Hypers& hypers) const;
     /**
      * \return The predictive log likelihoods of a feature belonging to each view
      */
-    std::vector<double> calc_feature_view_predictive_logps(std::vector<double>
+    std::vector<double> calc_feature_view_predictive_logps(const std::vector<double>&
             col_data, int global_col_idx) const;
     /**
      * \return The predictive log likelihood of a row having been generated by this state
@@ -366,10 +373,10 @@ public:
      * given the state's column partitioning and the hyperprior on alpha
      * defined in numerics::calc_crp_alpha_hyperprior
      */
-    std::vector<double> calc_column_crp_marginals(std::vector<double>
+    std::vector<double> calc_column_crp_marginals(const std::vector<double>&
             alphas_to_score) const;
     friend std::ostream& operator<<(std::ostream& os, const State& s);
-    std::string to_string(std::string join_str = "\n",
+    std::string to_string(const std::string& join_str = "\n",
                           bool top_level = false) const;
 private:
     DISALLOW_COPY_AND_ASSIGN(State);
@@ -404,29 +411,30 @@ private:
                                     std::vector<double> COLUMN_CRP_ALPHA_GRID);
     void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double>&
                                       data,
-                                      std::vector<int> global_col_indices,
-                                      std::vector<std::string> global_col_datatypes,
-                                      std::vector<double> S_GRID,
-                                      std::vector<double> MU_GRID);
+                                      const std::vector<int>& global_col_indices,
+                                      const std::vector<std::string>& global_col_datatypes,
+                                      const std::vector<double>& S_GRID,
+                                      const std::vector<double>& MU_GRID);
     CM_Hypers get_default_hypers() const;
     double sample_column_crp_alpha();
     double sample_row_crp_alpha();
     std::vector<double> sample_row_crp_alphas(int N_views);
-    std::vector<std::vector<int> > generate_col_partition(std::vector<int>
+    std::vector<std::vector<int> > generate_col_partition(const std::vector<int>&
                                global_col_indices,
-                               std::string col_initialization);
+                               const std::string& col_initialization);
     std::vector<std::vector<std::vector<int> > > generate_row_partitions(
-        std::vector<int> global_row_indices,
-        std::vector<double> row_crp_alpha_v, std::string row_initialization);
+        const std::vector<int>& global_row_indices,
+        const std::vector<double>& row_crp_alpha_v,
+        const std::string& row_initialization);
     void init_base_hypers();
     CM_Hypers uniform_sample_hypers(int global_col_idx);
-    void init_column_hypers(std::vector<int> global_col_indices);
+    void init_column_hypers(const std::vector<int>& global_col_indices);
     void init_views(const MatrixD& data,
-                    std::vector<int> global_row_indices,
-                    std::vector<int> global_col_indices,
-                    std::vector<std::vector<int> > column_partition,
-                    std::vector<std::vector<std::vector<int> > > row_partition_v,
-                    std::vector<double> row_crp_alpha_v);
+                    const std::vector<int>& global_row_indices,
+                    const std::vector<int>& global_col_indices,
+                    const std::vector<std::vector<int> >& column_partition,
+                    const std::vector<std::vector<std::vector<int> > >& row_partition_v,
+                    const std::vector<double>& row_crp_alpha_v);
 };
 
 #endif // GUARD_state_h

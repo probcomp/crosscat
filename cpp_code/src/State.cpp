@@ -28,19 +28,19 @@ using boost::numeric::ublas::range;
 
 // FIXME: shouldn't need T, not really using suffstats here
 State::State(const MatrixD& data,
-             vector<string> GLOBAL_COL_DATATYPES,
-             vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS,
-             vector<int> global_row_indices,
-             vector<int> global_col_indices,
-             map<int, CM_Hypers> HYPERS_M,
-             vector<vector<int> > column_partition,
+             const vector<string>& GLOBAL_COL_DATATYPES,
+             const vector<int>& GLOBAL_COL_MULTINOMIAL_COUNTS,
+             const vector<int>& global_row_indices,
+             const vector<int>& global_col_indices,
+             const map<int, CM_Hypers>& HYPERS_M,
+             const vector<vector<int> >& column_partition,
              double COLUMN_CRP_ALPHA,
-             vector<vector<vector<int> > > row_partition_v,
-             vector<double> row_crp_alpha_v,
-             vector<double> ROW_CRP_ALPHA_GRID,
-             vector<double> COLUMN_CRP_ALPHA_GRID,
-             vector<double> S_GRID,
-             vector<double> MU_GRID,
+             const vector<vector<vector<int> > >& row_partition_v,
+             const vector<double>& row_crp_alpha_v,
+             const vector<double>& ROW_CRP_ALPHA_GRID,
+             const vector<double>& COLUMN_CRP_ALPHA_GRID,
+             const vector<double>& S_GRID,
+             const vector<double>& MU_GRID,
              int N_GRID, int SEED, int CT_KERNEL) : rng(SEED) {
     assert( CT_KERNEL==1 || CT_KERNEL==0);
     ct_kernel = CT_KERNEL;
@@ -65,16 +65,16 @@ State::State(const MatrixD& data,
 }
 
 State::State(const MatrixD& data,
-             vector<string> GLOBAL_COL_DATATYPES,
-             vector<int> GLOBAL_COL_MULTINOMIAL_COUNTS,
-             vector<int> global_row_indices,
-             vector<int> global_col_indices,
-             string col_initialization,
+             const vector<string>& GLOBAL_COL_DATATYPES,
+             const vector<int>& GLOBAL_COL_MULTINOMIAL_COUNTS,
+             const vector<int>& global_row_indices,
+             const vector<int>& global_col_indices,
+             const string& col_initialization,
              string row_initialization,
-             vector<double> ROW_CRP_ALPHA_GRID,
-             vector<double> COLUMN_CRP_ALPHA_GRID,
-             vector<double> S_GRID,
-             vector<double> MU_GRID,
+             const vector<double>& ROW_CRP_ALPHA_GRID,
+             const vector<double>& COLUMN_CRP_ALPHA_GRID,
+             const vector<double>& S_GRID,
+             const vector<double>& MU_GRID,
              int N_GRID, int SEED, int CT_KERNEL) : rng(SEED) {
     assert( CT_KERNEL==1 || CT_KERNEL==0);
     ct_kernel = CT_KERNEL;
@@ -132,7 +132,9 @@ vector<int> State::get_view_counts() const {
     return view_counts;
 }
 
-double State::insert_row(vector<double> row_data, int matching_row_idx, int row_idx) {
+double State::insert_row(const vector<double>& row_data,
+			 int matching_row_idx,
+			 int row_idx) {
 
     bool append_row = (row_idx == -1);
 
@@ -159,7 +161,8 @@ double State::insert_row(vector<double> row_data, int matching_row_idx, int row_
     return score_delta;
 }
 
-double State::insert_feature(int feature_idx, vector<double> feature_data,
+double State::insert_feature(int feature_idx,
+			     const vector<double>& feature_data,
                              View& which_view) {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers& hypers = hypers_m[feature_idx];
@@ -181,7 +184,7 @@ double State::insert_feature(int feature_idx, vector<double> feature_data,
 }
 
 double State::sample_insert_feature(int feature_idx,
-                                    vector<double> feature_data,
+                                    const vector<double>& feature_data,
                                     View& singleton_view) {
     string col_datatype = global_col_datatypes[feature_idx];
     vector<double> unorm_logps = calc_feature_view_predictive_logps(feature_data,
@@ -195,7 +198,8 @@ double State::sample_insert_feature(int feature_idx,
 }
 
 
-double State::remove_feature(int feature_idx, vector<double> feature_data,
+double State::remove_feature(int feature_idx,
+			     const vector<double>& feature_data,
                              View* &p_singleton_view) {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers &hypers = hypers_m[feature_idx];
@@ -224,7 +228,8 @@ double State::remove_feature(int feature_idx, vector<double> feature_data,
     return score_delta;
 }
 
-double State::transition_feature_gibbs(int feature_idx, vector<double> feature_data) {
+double State::transition_feature_gibbs(int feature_idx,
+				       const vector<double>& feature_data) {
     double score_delta = 0;
     View *p_singleton_view;
     score_delta += remove_feature(feature_idx, feature_data, p_singleton_view);
@@ -257,7 +262,9 @@ double State::get_proposal_log_ratio(View& from_view, View& to_view) {
     return proposal_log_ratio;
 }
 
-double State::mh_choose(int feature_idx, vector<double> feature_data, View &proposed_view) {
+double State::mh_choose(int feature_idx,
+			const vector<double>& feature_data,
+			View &proposed_view) {
     double score_delta = 0;
     View &original_view = *view_lookup[feature_idx];
 
@@ -306,7 +313,8 @@ double State::mh_choose(int feature_idx, vector<double> feature_data, View &prop
 }
 
 // updated kernel with birth-death process
-double State::transition_feature_mh(int feature_idx, vector<double> feature_data) {
+double State::transition_feature_mh(int feature_idx,
+				    const vector<double>& feature_data) {
     double score_delta = 0;
     View *p_proposed_view;
 
@@ -329,7 +337,8 @@ double State::transition_feature_mh(int feature_idx, vector<double> feature_data
     return score_delta;
 }
 
-double State::transition_features(const MatrixD &data, vector<int> which_features) {
+double State::transition_features(const MatrixD &data,
+				  vector<int> which_features) {
     double score_delta = 0;
     int num_features = which_features.size();
     if(num_features==0) {
@@ -337,7 +346,7 @@ double State::transition_features(const MatrixD &data, vector<int> which_feature
         // FIXME: use seed to shuffle
         std::random_shuffle(which_features.begin(), which_features.end());
     }
-    vector<int>::iterator it;
+    vector<int>::const_iterator it;
     for(it=which_features.begin(); it!=which_features.end(); ++it) {
         int feature_idx = *it;
         vector<double> feature_data = extract_col(data, feature_idx);
@@ -533,7 +542,7 @@ map<int, vector<int> > State::get_column_groups() const {
 }
 
 double State::transition_view_i(int which_view,
-                                map<int, vector<double> > row_data_map) {
+                                const map<int, vector<double> >& row_data_map) {
     // assumes views set ordering stays constant between calls
     set<View*>::iterator it = views.begin();
     std::advance(it, which_view);
@@ -590,7 +599,7 @@ double State::transition_row_partition_assignments(const MatrixD& data,
                                 v.global_to_local);
         const MatrixD data_subset = extract_columns(data, view_cols);
         map<int, vector<double> > row_data_map = construct_data_map(data_subset);
-        vector<int>::iterator vi_it;
+        vector<int>::const_iterator vi_it;
         for (vi_it = which_rows.begin(); vi_it != which_rows.end(); ++vi_it) {
             // for each SPECIFIED row
             int row_idx = *vi_it;
@@ -629,13 +638,13 @@ double State::transition_views_row_partition_hyper() {
     return score_delta;
 }
 
-double State::transition_row_partition_hyperparameters(vector<int>
+double State::transition_row_partition_hyperparameters(const vector<int>&
         which_cols) {
     double score_delta = 0;
     set<View*> which_views;
     int num_cols = which_cols.size();
     if (num_cols != 0) {
-        vector<int>::iterator it;
+        vector<int>::const_iterator it;
         for (it = which_cols.begin(); it != which_cols.end(); ++it) {
             View *v_p = view_lookup[*it];
             which_views.insert(v_p);
@@ -661,7 +670,7 @@ double State::transition_column_hyperparameters(vector<int> which_cols) {
         //FIXME: use own shuffle so seed control is in effect
         std::random_shuffle(which_cols.begin(), which_cols.end());
     }
-    vector<int>::iterator it;
+    vector<int>::const_iterator it;
     for (it = which_cols.begin(); it != which_cols.end(); ++it) {
         View& which_view = *view_lookup[*it];
         // FIXME: this is a hack, global_to_local should be private and a getter should be used instead
@@ -682,11 +691,11 @@ double State::transition_views_col_hypers() {
     return score_delta;
 }
 
-double State::calc_feature_view_predictive_logp(vector<double> col_data,
-        string col_datatype, View v,
+double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
+        const string& col_datatype, const View& v,
         double& crp_log_delta,
         double& data_log_delta,
-        CM_Hypers hypers) const {
+        const CM_Hypers& hypers) const {
     int view_column_count = v.get_num_cols();
     int num_columns = get_num_cols();
     crp_log_delta = numerics::calc_cluster_crp_logp(view_column_count, num_columns,
@@ -703,7 +712,7 @@ double State::calc_feature_view_predictive_logp(vector<double> col_data,
 }
 
 vector<double> State::calc_feature_view_predictive_logps(
-    vector<double> col_data,
+    const vector<double>& col_data,
     int global_col_idx) const {
     vector<double> logps;
     CM_Hypers hypers = get(hypers_m, global_col_idx);
@@ -730,11 +739,11 @@ double State::calc_column_crp_marginal() const {
             num_cols, true);
 }
 
-vector<double> State::calc_column_crp_marginals(vector<double> alphas_to_score)
+vector<double> State::calc_column_crp_marginals(const vector<double>& alphas_to_score)
 const {
     vector<int> view_counts = get_view_counts();
     vector<double> crp_scores;
-    vector<double>::iterator it = alphas_to_score.begin();
+    vector<double>::const_iterator it = alphas_to_score.begin();
     int num_cols = get_num_cols();
     for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
@@ -820,12 +829,12 @@ void State::construct_base_hyper_grids(const MatrixD& data, int N_GRID,
 }
 
 void State::construct_column_hyper_grids(const MatrixD& data,
-        vector<int> global_col_indices,
-        vector<string> GLOBAL_COL_DATATYPES,
-        vector<double> S_GRID,
-        vector<double> MU_GRID) {
+        const vector<int>& global_col_indices,
+        const vector<string>& GLOBAL_COL_DATATYPES,
+        const vector<double>& S_GRID,
+        const vector<double>& MU_GRID) {
     int N_GRID = r_grid.size();
-    vector<int>::iterator it;
+    vector<int>::const_iterator it;
     for (it = global_col_indices.begin(); it != global_col_indices.end(); ++it) {
         int global_col_idx = *it;
         string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
@@ -909,8 +918,8 @@ vector<double> State::sample_row_crp_alphas(int N_views) {
     return row_crp_alpha_v;
 }
 
-vector<vector<int> > State::generate_col_partition(vector<int>
-        global_col_indices, string col_initialization) {
+vector<vector<int> > State::generate_col_partition(const vector<int>&
+        global_col_indices, const string& col_initialization) {
     vector<vector<int> > column_partition = draw_crp_init(global_col_indices,
                                             column_crp_alpha, rng,
                                             col_initialization);
@@ -918,15 +927,16 @@ vector<vector<int> > State::generate_col_partition(vector<int>
 }
 
 vector<vector<vector<int> > > State::generate_row_partitions(
-    vector<int> global_row_indices,
-    vector<double> row_crp_alpha_v, string row_initialization) {
+    const vector<int>& global_row_indices,
+    const vector<double>& row_crp_alpha_v,
+    const string& row_initialization) {
     vector<vector<vector<int> > > row_partition_v = draw_crp_init(global_row_indices,
             row_crp_alpha_v, rng, row_initialization);
     return row_partition_v;
 }
 
-void State::init_column_hypers(vector<int> global_col_indices) {
-    vector<int>::iterator gci_it;
+void State::init_column_hypers(const vector<int>& global_col_indices) {
+    vector<int>::const_iterator gci_it;
     for (gci_it = global_col_indices.begin(); gci_it != global_col_indices.end();
             ++gci_it) {
         int global_col_idx = *gci_it;
@@ -938,11 +948,11 @@ void State::init_column_hypers(vector<int> global_col_indices) {
 }
 
 void State::init_views(const MatrixD& data,
-                       vector<int> global_row_indices,
-                       vector<int> global_col_indices,
-                       vector<vector<int> > column_partition,
-                       vector<vector<vector<int> > > row_partition_v,
-                       vector<double> row_crp_alpha_v) {
+                       const vector<int>& global_row_indices,
+                       const vector<int>& global_col_indices,
+                       const vector<vector<int> >& column_partition,
+                       const vector<vector<vector<int> > >& row_partition_v,
+                       const vector<double>& row_crp_alpha_v) {
     assert(column_partition.size() == row_partition_v.size());
     assert(column_partition.size() == row_crp_alpha_v.size());
     int num_views = column_partition.size();
@@ -964,7 +974,7 @@ void State::init_views(const MatrixD& data,
                              row_crp_alpha,
                              draw_rand_i());
         views.insert(p_v);
-        vector<int>::iterator ci_it;
+        vector<int>::const_iterator ci_it;
         for (ci_it = column_indices.begin(); ci_it != column_indices.end(); ++ci_it) {
             int column_index = *ci_it;
             view_lookup[column_index] = p_v;
@@ -977,7 +987,7 @@ std::ostream& operator<<(std::ostream& os, const State& s) {
     return os;
 }
 
-string State::to_string(string join_str, bool top_level) const {
+string State::to_string(const string& join_str, bool top_level) const {
     stringstream ss;
     if (!top_level) {
         int view_idx = 0;
