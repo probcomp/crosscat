@@ -372,6 +372,7 @@ public:
     std::string to_string(std::string join_str = "\n",
                           bool top_level = false) const;
 private:
+    DISALLOW_COPY_AND_ASSIGN(State);
     // parameters
     std::map<int, std::string> global_col_datatypes;
     std::map<int, int> global_col_multinomial_counts;
