@@ -17,12 +17,27 @@ TEST=tests
 # /usr/local/boost
 BIN = main
 MAIN = main.cpp
-NAMES = ContinuousComponentModel MultinomialComponentModel ComponentModel \
-	Cluster View State \
-	utils numerics RandomNumberGenerator DateTime
-TEST_NAMES = test_component_model \
-	test_continuous_component_model test_multinomial_component_model \
-	test_cluster test_view test_view_speed test_state
+NAMES = \
+	ContinuousComponentModel \
+	MultinomialComponentModel \
+	ComponentModel \
+	Cluster \
+	View \
+	State \
+	utils \
+	numerics \
+	RandomNumberGenerator \
+	DateTime \
+	# end of NAMES
+TEST_NAMES = \
+	test_component_model \
+	test_continuous_component_model \
+	test_multinomial_component_model \
+	test_cluster \
+	test_view \
+	test_view_speed \
+	test_state \
+	# end of TEST_NAMES
 HEADERS = $(foreach name, $(NAMES), $(INC)/$(name).h)
 SOURCES = $(foreach name, $(NAMES), $(SRC)/$(name).cpp)
 OBJECTS = $(foreach name, $(NAMES), $(OBJ)/$(name).o)
