@@ -129,17 +129,17 @@ std::vector<double> calc_continuous_mu_conditionals(std::vector<double>
 //
 // calculators
 double calc_multinomial_marginal_logp(int count,
-                                      std::map<std::string, double> counts,
+                                      const std::map<std::string, double>& counts,
                                       int K,
                                       double dirichlet_alpha);
-double calc_multinomial_predictive_logp(std::string element,
-                                        std::map<std::string, double> counts,
+double calc_multinomial_predictive_logp(const std::string& element,
+                                        const std::map<std::string, double>& counts,
                                         int sum_counts,
                                         int K, double dirichlet_alpha);
 std::vector<double> calc_multinomial_dirichlet_alpha_conditional(
-    std::vector<double> dirichlet_alpha_grid,
+    const std::vector<double>& dirichlet_alpha_grid,
     int count,
-    std::map<std::string, double> counts,
+    const std::map<std::string, double>& counts,
     int K);
 
 // cyclic component model functions

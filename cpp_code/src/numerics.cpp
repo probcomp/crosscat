@@ -457,7 +457,7 @@ vector<double> calc_continuous_mu_conditionals(std::vector<double> mu_grid,
 }
 
 double calc_multinomial_marginal_logp(int count,
-                                      const map<string, double> counts,
+                                      const map<string, double>& counts,
                                       int K,
                                       double dirichlet_alpha) {
     double sum_lgammas = 0;
@@ -477,29 +477,29 @@ double calc_multinomial_marginal_logp(int count,
     return marginal_logp;
 }
 
-double calc_multinomial_predictive_logp(string element,
-                                        map<string, double> counts,
+double calc_multinomial_predictive_logp(const string& element,
+                                        const map<string, double>& counts,
                                         int sum_counts,
                                         int K, double dirichlet_alpha) {
     if (isnan(element)) {
         return 0;
     }
-    map<string, double>::iterator it = counts.find(element);
+    map<string, double>::const_iterator it = counts.find(stringify(element));
     double numerator = dirichlet_alpha;
     if (it != counts.end()) {
-        numerator += counts[element];
+        numerator += it->second;
     }
     double denominator = sum_counts + K * dirichlet_alpha;
     return log(numerator) - log(denominator);
 }
 
 vector<double> calc_multinomial_dirichlet_alpha_conditional(
-    vector<double> dirichlet_alpha_grid,
+    const vector<double>& dirichlet_alpha_grid,
     int count,
-    map<string, double> counts,
+    const map<string, double>& counts,
     int K) {
     vector<double> logps;
-    vector<double>::iterator it;
+    vector<double>::const_iterator it;
     for (it = dirichlet_alpha_grid.begin(); it != dirichlet_alpha_grid.end();
             it++) {
         double dirichlet_alpha = *it;
