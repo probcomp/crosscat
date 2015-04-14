@@ -127,7 +127,7 @@ public:
     double calc_column_predictive_logp(const std::vector<double>& column_data,
                                        const std::string& col_datatype,
                                        const std::vector<int>& data_global_row_indices,
-                                       const CM_Hypers& hypers);
+                                       const CM_Hypers& hypers) const;
     //
     // mutators
     void set_row_partitioning(const std::vector<std::vector<int> >& row_partitioning);

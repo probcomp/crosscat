@@ -464,9 +464,9 @@ double View::transition(const map<int, vector<double> >& row_data_map) {
 double View::calc_column_predictive_logp(const vector<double>& column_data,
         const string& col_datatype,
         const vector<int>& data_global_row_indices,
-        const CM_Hypers& hypers) {
+        const CM_Hypers& hypers) const {
     double score_delta = 0;
-    setCp::iterator it;
+    setCp::const_iterator it;
     for (it = clusters.begin(); it != clusters.end(); ++it) {
         score_delta += (**it).calc_column_predictive_logp(column_data, col_datatype,
                        data_global_row_indices,
