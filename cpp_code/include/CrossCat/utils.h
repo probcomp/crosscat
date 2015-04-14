@@ -46,9 +46,9 @@ std::ostream& operator<<(std::ostream& os, const std::map<K, V>& in_map) {
     typename std::map<K, V>::const_iterator it = in_map.begin();
     if (it != in_map.end()) {
         os << it->first << ":" << it->second;
-        it++;
+        ++it;
     }
-    for (; it != in_map.end(); it++) {
+    for (; it != in_map.end(); ++it) {
         os << ", " << it->first << " : " << it->second;
     }
     os << "}";
@@ -61,9 +61,9 @@ std::ostream& operator<<(std::ostream& os, const std::set<T>& sT) {
     typename std::set<T>::const_iterator it = sT.begin();
     if (it != sT.end()) {
         os << *it;
-        it++;
+        ++it;
     }
-    for (; it != sT.end(); it++) {
+    for (; it != sT.end(); ++it) {
         os << ", " << *it;
     }
     os << "}";
@@ -76,9 +76,9 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vT) {
     typename std::vector<T>::const_iterator it = vT.begin();
     if (it != vT.end()) {
         os << *it;
-        it++;
+        ++it;
     }
-    for (; it != vT.end(); it++) {
+    for (; it != vT.end(); ++it) {
         os << ", " << *it;
     }
     os << "]";
@@ -127,7 +127,7 @@ V setdefault(std::map<K, V>& m, const K& key, const V& value) {
 template <class K, class V>
 K get_key_of_value(const std::map<K, V>& m, const V& value) {
     typename std::map<K, V>::const_iterator it;
-    for (it = m.begin(); it != m.end(); it++) {
+    for (it = m.begin(); it != m.end(); ++it) {
         if (it->second == value) {
             return it->first;
         }
@@ -207,7 +207,7 @@ template <class T>
 std::vector<T> set_to_vector(const std::set<T>& in_set) {
     std::vector<T> out_vector;
     typename std::set<T>::const_iterator it;
-    for (it = in_set.begin(); it != in_set.end(); it++) {
+    for (it = in_set.begin(); it != in_set.end(); ++it) {
         T element = *it;
         out_vector.push_back(element);
     }
@@ -219,7 +219,7 @@ template <class T>
 std::map<T, int> set_to_map(const std::set<T>& in_set) {
     std::map<T, int> out_map;
     typename std::set<T>::const_iterator it;
-    for (it = in_set.begin(); it != in_set.end(); it++) {
+    for (it = in_set.begin(); it != in_set.end(); ++it) {
         T element = *it;
         int out_map_size = out_map.size();
         out_map[element] = out_map_size;
@@ -240,7 +240,7 @@ template <class K, class V>
 std::map<V, std::set<K> > group_by_value(const std::map<K, V>& in_map) {
     std::map<V, std::set<K> > out_map;
     typename std::map<K, V>::const_iterator it;
-    for (it = in_map.begin(); it != in_map.end(); it++) {
+    for (it = in_map.begin(); it != in_map.end(); ++it) {
         K k = it->first;
         V v = it->second;
         out_map[v].insert(k);
@@ -298,7 +298,7 @@ template <class T>
 int count_elements(const std::vector<std::vector<T> >& v_v_T) {
     int num_elements = 0;
     typename std::vector<std::vector<T> >::const_iterator it;
-    for (it = v_v_T.begin(); it != v_v_T.end(); it++) {
+    for (it = v_v_T.begin(); it != v_v_T.end(); ++it) {
         num_elements += (*it).size();
     }
     return num_elements;

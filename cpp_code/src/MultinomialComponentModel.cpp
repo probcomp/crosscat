@@ -175,7 +175,7 @@ void MultinomialComponentModel::get_keys_counts_for_draw(vector<string>& keys,
         const map<string, double>& counts) const {
     double dirichlet_alpha = hyper_dirichlet_alpha;
     map<string, double>::const_iterator it;
-    for (it = counts.begin(); it != counts.end(); it++) {
+    for (it = counts.begin(); it != counts.end(); ++it) {
         string key = it->first;
         int count_for_draw = it->second;
         // "update" counts by adding dirichlet alpha to each value

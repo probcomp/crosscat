@@ -74,7 +74,7 @@ vector<double> Cluster::get_draw(int random_seed) const {
     RandomNumberGenerator rng(random_seed);
     std::vector<double> draws;
     std::vector<ComponentModel*>::const_iterator it;
-    for(it=p_model_v.begin(); it!=p_model_v.end(); it++) {
+    for(it=p_model_v.begin(); it!=p_model_v.end(); ++it) {
         int randi = rng.nexti(MAX_INT);
         double draw = (**it).get_draw(randi);
         draws.push_back(draw);
@@ -85,7 +85,7 @@ vector<double> Cluster::get_draw(int random_seed) const {
 std::vector<double> Cluster::calc_marginal_logps() const {
     std::vector<double> logps;
     std::vector<ComponentModel*>::const_iterator it;
-    for (it = p_model_v.begin(); it != p_model_v.end(); it++) {
+    for (it = p_model_v.begin(); it != p_model_v.end(); ++it) {
         double logp = (**it).calc_marginal_logp();
         logps.push_back(logp);
     }
@@ -137,7 +137,7 @@ double Cluster::calc_column_predictive_logp(const vector<double>& column_data,
         exit(EXIT_FAILURE);
     }
     set<int>::const_iterator it;
-    for (it = row_indices.begin(); it != row_indices.end(); it++) {
+    for (it = row_indices.begin(); it != row_indices.end(); ++it) {
         int global_row_idx = *it;
         // FIXME: global_to_data must be used if not all rows are present
         // int data_idx = global_to_data[global_row_idx];
@@ -217,7 +217,7 @@ double Cluster::insert_col(const vector<double>& data,
         exit(EXIT_FAILURE);
     }
     set<int>::const_iterator it;
-    for (it = row_indices.begin(); it != row_indices.end(); it++) {
+    for (it = row_indices.begin(); it != row_indices.end(); ++it) {
         int global_row_idx = *it;
         // FIXME: global_to_data must be used if not all rows are present
         // int data_idx = global_to_data[global_row_idx]    int data_idx = global_to_data[global_row_idx];
@@ -261,7 +261,7 @@ string Cluster::to_string(const string& join_str, bool top_level) const {
 void Cluster::init_columns(const vector<CM_Hypers*>& hypers_v) {
     score = 0;
     vector<CM_Hypers*>::const_iterator it;
-    for (it = hypers_v.begin(); it != hypers_v.end(); it++) {
+    for (it = hypers_v.begin(); it != hypers_v.end(); ++it) {
         CM_Hypers& hypers = **it;
         ComponentModel *p_cm;
         if (in(hypers, continuous_key)) {

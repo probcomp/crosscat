@@ -124,7 +124,7 @@ int State::get_num_views() const {
 vector<int> State::get_view_counts() const {
     vector<int> view_counts;
     set<View*>::iterator it;
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         View& v = (**it);
         int view_num_cols = v.get_num_cols();
         view_counts.push_back(view_num_cols);
@@ -141,7 +141,7 @@ double State::insert_row(vector<double> row_data, int matching_row_idx, int row_
     
     set<View*>::iterator it;
     double score_delta = 0;
-    for(it=views.begin(); it!=views.end(); it++) {
+    for(it=views.begin(); it!=views.end(); ++it) {
         View &v = **it;
         vector<int> global_col_indices = v.get_global_col_indices();
         // append lookup if needed
@@ -338,7 +338,7 @@ double State::transition_features(const MatrixD &data, vector<int> which_feature
         std::random_shuffle(which_features.begin(), which_features.end());
     }
     vector<int>::iterator it;
-    for(it=which_features.begin(); it!=which_features.end(); it++) {
+    for(it=which_features.begin(); it!=which_features.end(); ++it) {
         int feature_idx = *it;
         vector<double> feature_data = extract_col(data, feature_idx);
         // kernel selection
@@ -418,7 +418,7 @@ double State::get_column_crp_score() const {
 double State::get_data_score() const {
     set<View*>::const_iterator it;
     double data_score = 0;
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         double data_score_i = (**it).get_score();
         data_score += data_score_i;
     }
@@ -485,7 +485,7 @@ vector<int> State::get_column_partition_counts() const {
 vector<vector<int> > State::get_X_D() const {
     vector<vector<int> > X_D;
     set<View*>::iterator it;
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         View& v = **it;
         vector<int> canonical_clustering = v.get_canonical_clustering();
         X_D.push_back(canonical_clustering);
@@ -498,7 +498,7 @@ vector<double> State::get_draw(int row_idx, int random_seed) const {
     set<View*>::iterator it;
     vector<double> _draw;
     vector<int> global_col_indices;
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         View& v = **it;
         int randi = rng.nexti(MAX_INT);
         vector<double> draw_i = v.get_draw(row_idx, randi);
@@ -521,7 +521,7 @@ map<int, vector<int> > State::get_column_groups() const {
     map<View*, set<int> > view_to_set = group_by_value(view_lookup);
     map<int, vector<int> > view_idx_to_vec;
     set<View*>::iterator it;
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         View* p_v = *it;
         int view_idx = view_to_int[p_v];
         set<int> int_set = view_to_set[p_v];
@@ -583,7 +583,7 @@ double State::transition_row_partition_assignments(const MatrixD& data,
         std::random_shuffle(which_rows.begin(), which_rows.end());
     }
     set<View*>::iterator svp_it;
-    for (svp_it = views.begin(); svp_it != views.end(); svp_it++) {
+    for (svp_it = views.begin(); svp_it != views.end(); ++svp_it) {
         // for each view
         View& v = **svp_it;
         vector<int> view_cols = get_indices_to_reorder(global_column_indices,
@@ -591,7 +591,7 @@ double State::transition_row_partition_assignments(const MatrixD& data,
         const MatrixD data_subset = extract_columns(data, view_cols);
         map<int, vector<double> > row_data_map = construct_data_map(data_subset);
         vector<int>::iterator vi_it;
-        for (vi_it = which_rows.begin(); vi_it != which_rows.end(); vi_it++) {
+        for (vi_it = which_rows.begin(); vi_it != which_rows.end(); ++vi_it) {
             // for each SPECIFIED row
             int row_idx = *vi_it;
             vector<double> vd = row_data_map[row_idx];
@@ -636,7 +636,7 @@ double State::transition_row_partition_hyperparameters(vector<int>
     int num_cols = which_cols.size();
     if (num_cols != 0) {
         vector<int>::iterator it;
-        for (it = which_cols.begin(); it != which_cols.end(); it++) {
+        for (it = which_cols.begin(); it != which_cols.end(); ++it) {
             View *v_p = view_lookup[*it];
             which_views.insert(v_p);
         }
@@ -644,7 +644,7 @@ double State::transition_row_partition_hyperparameters(vector<int>
         which_views = views;
     }
     set<View*>::iterator it;
-    for (it = which_views.begin(); it != which_views.end(); it++) {
+    for (it = which_views.begin(); it != which_views.end(); ++it) {
         score_delta += (*it)->transition_crp_alpha();
     }
     data_score += score_delta;
@@ -662,7 +662,7 @@ double State::transition_column_hyperparameters(vector<int> which_cols) {
         std::random_shuffle(which_cols.begin(), which_cols.end());
     }
     vector<int>::iterator it;
-    for (it = which_cols.begin(); it != which_cols.end(); it++) {
+    for (it = which_cols.begin(); it != which_cols.end(); ++it) {
         View& which_view = *view_lookup[*it];
         // FIXME: this is a hack, global_to_local should be private and a getter should be used instead
         int local_col_idx = which_view.global_to_local[*it];
@@ -710,7 +710,7 @@ vector<double> State::calc_feature_view_predictive_logps(
     set<View*>::iterator it;
     double crp_log_delta, data_log_delta;
     string col_datatype = get(global_col_datatypes, global_col_idx);
-    for (it = views.begin(); it != views.end(); it++) {
+    for (it = views.begin(); it != views.end(); ++it) {
         View& v = **it;
         double score_delta = calc_feature_view_predictive_logp(col_data,
                              col_datatype,
@@ -736,7 +736,7 @@ const {
     vector<double> crp_scores;
     vector<double>::iterator it = alphas_to_score.begin();
     int num_cols = get_num_cols();
-    for (; it != alphas_to_score.end(); it++) {
+    for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
         double this_crp_score = numerics::calc_crp_alpha_conditional(view_counts,
                                 alpha_to_score,
@@ -751,7 +751,7 @@ double State::calc_row_predictive_logp(const vector<double>& in_vd) {
     vector<double> view_sum_predictive_logps;
     vector<int> global_column_indices = create_sequence(in_vd.size());
     set<View*>::iterator svp_it;
-    for (svp_it = views.begin(); svp_it != views.end(); svp_it++) {
+    for (svp_it = views.begin(); svp_it != views.end(); ++svp_it) {
         // for each view
         View& v = **svp_it;
         vector<int> view_cols = get_indices_to_reorder(global_column_indices,
@@ -786,7 +786,7 @@ double State::transition(const MatrixD& data) {
     std::random_shuffle(which_transitions.begin(), which_transitions.end());
     double score_delta = 0;
     vector<int>::iterator it;
-    for (it = which_transitions.begin(); it != which_transitions.end(); it++) {
+    for (it = which_transitions.begin(); it != which_transitions.end(); ++it) {
         int which_transition = *it;
         if (which_transition == 0) {
             score_delta += transition_views(data);
@@ -826,7 +826,7 @@ void State::construct_column_hyper_grids(const MatrixD& data,
         vector<double> MU_GRID) {
     int N_GRID = r_grid.size();
     vector<int>::iterator it;
-    for (it = global_col_indices.begin(); it != global_col_indices.end(); it++) {
+    for (it = global_col_indices.begin(); it != global_col_indices.end(); ++it) {
         int global_col_idx = *it;
         string col_datatype = GLOBAL_COL_DATATYPES[global_col_idx];
         if (col_datatype == CONTINUOUS_DATATYPE) {
@@ -928,7 +928,7 @@ vector<vector<vector<int> > > State::generate_row_partitions(
 void State::init_column_hypers(vector<int> global_col_indices) {
     vector<int>::iterator gci_it;
     for (gci_it = global_col_indices.begin(); gci_it != global_col_indices.end();
-            gci_it++) {
+            ++gci_it) {
         int global_col_idx = *gci_it;
         hypers_m[global_col_idx] = uniform_sample_hypers(global_col_idx);
         if (!in(hypers_m[global_col_idx], (string) "fixed")) {
@@ -965,7 +965,7 @@ void State::init_views(const MatrixD& data,
                              draw_rand_i());
         views.insert(p_v);
         vector<int>::iterator ci_it;
-        for (ci_it = column_indices.begin(); ci_it != column_indices.end(); ci_it++) {
+        for (ci_it = column_indices.begin(); ci_it != column_indices.end(); ++ci_it) {
             int column_index = *ci_it;
             view_lookup[column_index] = p_v;
         }
@@ -983,7 +983,7 @@ string State::to_string(string join_str, bool top_level) const {
         int view_idx = 0;
         set<View*>::const_iterator it;
         ss << "========" << std::endl;
-        for (it = views.begin(); it != views.end(); it++) {
+        for (it = views.begin(); it != views.end(); ++it) {
             View v = **it;
             ss << "view idx: " << view_idx++ << endl;
             ss << v << endl;
