@@ -242,6 +242,7 @@ double CyclicComponentModel::get_draw_constrained(int random_seed,
   printf("CyclicComponentModel::get_draw_constrained failed to accept a sample after 1000 proposals.\n");
   printf("a: %f, b: %f, kappa: %f\n", a, b, kappa);
   assert(false);
+  return 0;			// XXXGCC
 }
 
 map<string, double> CyclicComponentModel::_get_suffstats() const {
