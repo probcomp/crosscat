@@ -34,7 +34,7 @@ MultinomialComponentModel::MultinomialComponentModel(CM_Hypers& in_hypers) {
 
 MultinomialComponentModel::MultinomialComponentModel(CM_Hypers& in_hypers,
         int count_in,
-        std::map<std::string, double> counts) {
+        const map<string, double>& counts) {
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
@@ -73,7 +73,7 @@ double MultinomialComponentModel::calc_element_predictive_logp(
 }
 
 double MultinomialComponentModel::calc_element_predictive_logp_constrained(
-    double element, vector<double> constraints) const {
+    double element, const vector<double>& constraints) const {
     if (isnan(element)) {
         return 0;
     }
@@ -101,7 +101,7 @@ double MultinomialComponentModel::calc_element_predictive_logp_constrained(
 }
 
 vector<double> MultinomialComponentModel::calc_hyper_conditionals(
-    string which_hyper, vector<double> hyper_grid) const {
+    const string& which_hyper, const vector<double>& hyper_grid) const {
     int count;
     map<string, double> counts;
     int K = hyper_K;
@@ -171,7 +171,8 @@ void MultinomialComponentModel::init_suffstats() {
 }
 
 void MultinomialComponentModel::get_keys_counts_for_draw(vector<string>& keys,
-        vector<double>& log_counts_for_draw, map<string, double> counts) const {
+        vector<double>& log_counts_for_draw,
+        const map<string, double>& counts) const {
     double dirichlet_alpha = hyper_dirichlet_alpha;
     map<string, double>::const_iterator it;
     for (it = counts.begin(); it != counts.end(); it++) {
@@ -206,7 +207,7 @@ double MultinomialComponentModel::get_draw(int random_seed) const {
 }
 
 double MultinomialComponentModel::get_draw_constrained(int random_seed,
-        vector<double> constraints) const {
+        const vector<double>& constraints) const {
     // get modified suffstats
     int count;
     map<string, double> counts;
