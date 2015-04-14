@@ -39,49 +39,49 @@ class Cluster;
 class View {
 public:
     //FIXME: add constructor with ranges as arguments, rather than recalculate
-    View(const MatrixD data,
-         std::map<int, std::string> GLOBAL_COL_DATATYPES,
-         std::vector<std::vector<int> > row_partitioning,
-         std::vector<int> global_row_indices,
-         std::vector<int> global_col_indices,
+    View(const MatrixD& data,
+         const std::map<int, std::string>& GLOBAL_COL_DATATYPES,
+         const std::vector<std::vector<int> >& row_partitioning,
+         const std::vector<int>& global_row_indices,
+         const std::vector<int>& global_col_indices,
          std::map<int, CM_Hypers>& hypers_m,
-         std::vector<double> ROW_CRP_ALPHA_GRID,
-         std::vector<double> MULTINOMIAL_ALPHA_GRID,
-         std::vector<double> R_GRID,
-         std::vector<double> NU_GRID,
-         std::vector<double> VM_B_GRID,
-         std::map<int, std::vector<double> > S_GRIDS,
-         std::map<int, std::vector<double> > MU_GRIDS,
-         std::map<int, std::vector<double> > VM_A_GRIDS,
-         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
+         const std::vector<double>& ROW_CRP_ALPHA_GRID,
+         const std::vector<double>& MULTINOMIAL_ALPHA_GRID,
+         const std::vector<double>& R_GRID,
+         const std::vector<double>& NU_GRID,
+         const std::vector<double>& VM_B_GRID,
+         const std::map<int, std::vector<double> >& S_GRIDS,
+         const std::map<int, std::vector<double> >& MU_GRIDS,
+         const std::map<int, std::vector<double> >& VM_A_GRIDS,
+         const std::map<int, std::vector<double> >& VM_KAPPA_GRIDS,
          double CRP_ALPHA,
          int SEED = 0);
-    View(const MatrixD data,
-         std::map<int, std::string> GLOBAL_COL_DATATYPES,
-         std::vector<int> global_row_indices,
-         std::vector<int> global_col_indices,
+    View(const MatrixD& data,
+         const std::map<int, std::string>& GLOBAL_COL_DATATYPES,
+         const std::vector<int>& global_row_indices,
+         const std::vector<int>& global_col_indices,
          std::map<int, CM_Hypers>& hypers_m,
-         std::vector<double> ROW_CRP_ALPHA_GRID,
-         std::vector<double> MULTINOMIAL_ALPHA_GRID,
-         std::vector<double> R_GRID,
-         std::vector<double> NU_GRID,
-         std::vector<double> VM_B_GRID,
-         std::map<int, std::vector<double> > S_GRIDS,
-         std::map<int, std::vector<double> > MU_GRIDS,
-         std::map<int, std::vector<double> > VM_A_GRIDS,
-         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
+         const std::vector<double>& ROW_CRP_ALPHA_GRID,
+         const std::vector<double>& MULTINOMIAL_ALPHA_GRID,
+         const std::vector<double>& R_GRID,
+         const std::vector<double>& NU_GRID,
+         const std::vector<double>& VM_B_GRID,
+         const std::map<int, std::vector<double> >& S_GRIDS,
+         const std::map<int, std::vector<double> >& MU_GRIDS,
+         const std::map<int, std::vector<double> >& VM_A_GRIDS,
+         const std::map<int, std::vector<double> >& VM_KAPPA_GRIDS,
          int SEED = 0);
-    View(std::map<int, std::string> GLOBAL_COL_DATATYPES,
-         std::vector<int> global_row_indices,
-         std::vector<double> ROW_CRP_ALPHA_GRID,
-         std::vector<double> MULTINOMIAL_ALPHA_GRID,
-         std::vector<double> R_GRID,
-         std::vector<double> NU_GRID,
-         std::vector<double> VM_B_GRID,
-         std::map<int, std::vector<double> > S_GRIDS,
-         std::map<int, std::vector<double> > MU_GRIDS,
-         std::map<int, std::vector<double> > VM_A_GRIDS,
-         std::map<int, std::vector<double> > VM_KAPPA_GRIDS,
+    View(const std::map<int, std::string>& GLOBAL_COL_DATATYPES,
+         const std::vector<int>& global_row_indices,
+         const std::vector<double>& ROW_CRP_ALPHA_GRID,
+         const std::vector<double>& MULTINOMIAL_ALPHA_GRID,
+         const std::vector<double>& R_GRID,
+         const std::vector<double>& NU_GRID,
+         const std::vector<double>& VM_B_GRID,
+         const std::map<int, std::vector<double> >& S_GRIDS,
+         const std::map<int, std::vector<double> >& MU_GRIDS,
+         const std::map<int, std::vector<double> >& VM_A_GRIDS,
+         const std::map<int, std::vector<double> >& VM_KAPPA_GRIDS,
          int SEED = 0);
     //
     // getters (external use)
@@ -95,7 +95,7 @@ public:
     std::vector<double> get_crp_alpha_grid() const;
     std::vector<std::string> get_hyper_strings(int which_col);
     std::vector<double> get_hyper_grid(int global_col_idx,
-                                       std::string which_hyper);
+                                       const std::string& which_hyper);
     CM_Hypers get_hypers(int local_col_idx) const;
     //
     // API helpers
@@ -113,52 +113,52 @@ public:
     std::vector<int> get_cluster_counts() const;
     //
     // calculators
-    double calc_cluster_vector_predictive_logp(std::vector<double> vd,
+    double calc_cluster_vector_predictive_logp(const std::vector<double>& vd,
             const Cluster& cd,
             double& crp_logp_delta,
             double& data_logp_delta) const;
     std::vector<double> calc_cluster_vector_predictive_logps(
-        std::vector<double> vd);
+        const std::vector<double>& vd);
     double calc_crp_marginal() const;
-    std::vector<double> calc_crp_marginals(std::vector<double> alphas) const;
+    std::vector<double> calc_crp_marginals(const std::vector<double>& alphas) const;
     std::vector<double> calc_hyper_conditionals(int which_col,
-            std::string which_hyper,
-            std::vector<double> hyper_grid) const;
-    double calc_column_predictive_logp(std::vector<double> column_data,
-                                       std::string col_datatype,
-                                       std::vector<int> data_global_row_indices,
-                                       CM_Hypers hypers);
+            const std::string& which_hyper,
+            const std::vector<double>& hyper_grid) const;
+    double calc_column_predictive_logp(const std::vector<double>& column_data,
+                                       const std::string& col_datatype,
+                                       const std::vector<int>& data_global_row_indices,
+                                       const CM_Hypers& hypers);
     //
     // mutators
-    void set_row_partitioning(std::vector<std::vector<int> > row_partitioning);
-    void set_row_partitioning(std::vector<int> global_row_indices);
+    void set_row_partitioning(const std::vector<std::vector<int> >& row_partitioning);
+    void set_row_partitioning(const std::vector<int>& global_row_indices);
     double set_crp_alpha(double new_crp_alpha);
     Cluster& get_new_cluster();
-    double insert_row(std::vector<double> vd, Cluster& cd, int row_idx);
-    double insert_row(std::vector<double> vd, int matching_row_idx, int row_idx);
-    double insert_row(std::vector<double> vd, int row_idx);
-    double remove_row(std::vector<double> vd, int row_idx);
+    double insert_row(const std::vector<double>& vd, Cluster& cd, int row_idx);
+    double insert_row(const std::vector<double>& vd, int matching_row_idx, int row_idx);
+    double insert_row(const std::vector<double>& vd, int row_idx);
+    double remove_row(const std::vector<double>& vd, int row_idx);
     double remove_col(int global_col_idx);
-    double insert_col(std::vector<double> col_data,
-                      std::vector<int> data_global_row_indices,
+    double insert_col(const std::vector<double>& col_data,
+                      const std::vector<int>& data_global_row_indices,
                       int global_col_idx,
-                      CM_Hypers& hypers);
-    double insert_cols(const MatrixD data,
-                       std::vector<int> global_row_indices,
-                       std::vector<int> global_col_indices,
+		      CM_Hypers& hypers);
+    double insert_cols(const MatrixD& data,
+                       const std::vector<int>& global_row_indices,
+                       const std::vector<int>& global_col_indices,
                        std::map<int, CM_Hypers>& hypers_m);
     void remove_if_empty(Cluster& which_cluster);
     void remove_all();
-    double transition_z(std::vector<double> vd, int row_idx);
-    double transition_zs(std::map<int, std::vector<double> > row_data_map);
+    double transition_z(const std::vector<double>& vd, int row_idx);
+    double transition_zs(const std::map<int, std::vector<double> >& row_data_map);
     double transition_crp_alpha();
-    double set_hyper(int which_col, std::string which_hyper, double new_value);
-    double transition_hyper_i(int which_col, std::string which_hyper,
-                              std::vector<double> hyper_grid);
-    double transition_hyper_i(int which_col, std::string which_hyper);
+    double set_hyper(int which_col, const std::string& which_hyper, double new_value);
+    double transition_hyper_i(int which_col, const std::string& which_hyper,
+                              const std::vector<double>& hyper_grid);
+    double transition_hyper_i(int which_col, const std::string& which_hyper);
     double transition_hypers_i(int which_col);
     double transition_hypers();
-    double transition(std::map<int, std::vector<double> > row_data_map);
+    double transition(const std::map<int, std::vector<double> >& row_data_map);
     //
     // data structures
     std::set<Cluster*> clusters;
@@ -166,19 +166,19 @@ public:
     std::vector<CM_Hypers*> hypers_v;
     //
     // helper functions
-    std::vector<double> align_data(std::vector<double> values,
-                                   std::vector<int> global_column_indices) const;
+    std::vector<double> align_data(const std::vector<double>& values,
+                                   const std::vector<int>& global_column_indices) const;
     std::vector<int> shuffle_row_indices();
     std::vector<std::vector<int> > get_cluster_groupings() const;
     std::vector<int> get_canonical_clustering() const;
     //
     friend std::ostream& operator<<(std::ostream& os, const View& v);
-    std::string to_string(std::string join_str = "\n",
+    std::string to_string(const std::string& join_str = "\n",
                           bool top_level = false) const;
     void print();
     void print_score_matrix();
     // void assert_state_consistency();
-    // double score_test_set(std::vector<std::vector<double> > test_set) const;
+    // double score_test_set(const std::vector<std::vector<double> >& test_set) const;
     //
     // hyper inference grids FIXME: MOVE TO PRIVATE WHEN DONE TESTING
     std::map<int, int> global_to_local; // FIXME: specify appicability to columns
@@ -205,7 +205,7 @@ private:
     int draw_rand_i(int max);
     // helpers
     void construct_base_hyper_grids(int num_rows);
-    void construct_column_hyper_grid(std::vector<double> col_data,
+    void construct_column_hyper_grid(const std::vector<double>& col_data,
                                      int gobal_col_idx);
     /* CM_Hypers data_hypers; */
 };
