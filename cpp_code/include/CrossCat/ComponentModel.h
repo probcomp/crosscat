@@ -60,7 +60,7 @@ public:
     // helpers
     friend std::ostream& operator<<(std::ostream& os, const ComponentModel& cm);
     // make protected later
-    CM_Hypers *p_hypers;
+    const CM_Hypers *p_hypers;
     std::string to_string(std::string join_str = "\n") const;
 protected:
     int count;

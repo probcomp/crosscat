@@ -27,8 +27,8 @@
 
 class ContinuousComponentModel : public ComponentModel {
 public:
-    ContinuousComponentModel(CM_Hypers& in_hyper_hash);
-    ContinuousComponentModel(CM_Hypers& in_hyper_hash,
+    ContinuousComponentModel(const CM_Hypers& in_hyper_hash);
+    ContinuousComponentModel(const CM_Hypers& in_hyper_hash,
                              int COUNT, double SUM_X, double SUM_X_SQ);
     virtual ~ContinuousComponentModel() {};
     //
@@ -40,17 +40,17 @@ public:
     std::map<std::string, double> _get_suffstats() const;
     double get_draw(int random_seed) const;
     double get_draw_constrained(int random_seed,
-                                std::vector<double> constraints) const;
+                                const std::vector<double>& constraints) const;
     double get_predictive_cdf(double element,
-                              std::vector<double> constraints) const;
+                              const std::vector<double>& constraints) const;
     //
     // calculators
     double calc_marginal_logp() const;
     double calc_element_predictive_logp(double element) const;
     double calc_element_predictive_logp_constrained(double element,
-            std::vector<double> constraints) const;
-    std::vector<double> calc_hyper_conditionals(std::string which_hyper,
-            std::vector<double> hyper_grid) const;
+            const std::vector<double>& constraints) const;
+    std::vector<double> calc_hyper_conditionals(const std::string& which_hyper,
+            const std::vector<double>& hyper_grid) const;
     //
     // mutators
     double insert_element(double element);
