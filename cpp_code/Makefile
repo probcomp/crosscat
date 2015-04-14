@@ -18,16 +18,16 @@ TEST=tests
 BIN = main
 MAIN = main.cpp
 NAMES = \
-	ContinuousComponentModel \
-	MultinomialComponentModel \
-	ComponentModel \
 	Cluster \
-	View \
-	State \
-	utils \
-	numerics \
-	RandomNumberGenerator \
+	ComponentModel \
+	ContinuousComponentModel \
 	DateTime \
+	MultinomialComponentModel \
+	RandomNumberGenerator \
+	State \
+	View \
+	numerics \
+	utils \
 	# end of NAMES
 TEST_NAMES = \
 	test_cluster \
