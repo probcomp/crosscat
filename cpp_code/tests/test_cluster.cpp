@@ -146,7 +146,9 @@ int main(int argc, char** argv) {
         assert(is_almost(score_0, curr_hyper_conditional_in_grid, precision));
 
         // map<string, double> &hypers = cd.get_hypers_i(which_col);
-        map<string, double>& hypers = *(*cd.p_model_v[which_col]).p_hypers;
+        map<string, double>& hypers =
+	  // XXX const_cast hack
+	  *const_cast<map<string, double> *>((*cd.p_model_v[which_col]).p_hypers);
         double prior_r = hypers["r"];
         double new_r = hyper_grid[0];
         //
