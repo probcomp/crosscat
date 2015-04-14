@@ -31,12 +31,12 @@ double ComponentModel::calc_element_predictive_logp(double element) const {
     return NaN;
 }
 double ComponentModel::calc_element_predictive_logp_constrained(double element,
-        vector<double> constraints) const {
+        const vector<double>& constraints) const {
     assert(0);
     return NaN;
 }
-vector<double> ComponentModel::calc_hyper_conditionals(string which_hyper,
-        vector<double> hyper_grid) const {
+vector<double> ComponentModel::calc_hyper_conditionals(const string& which_hyper,
+        const vector<double>& hyper_grid) const {
     assert(0);
     vector<double> vd;
     return vd;
@@ -51,7 +51,7 @@ double ComponentModel::get_draw(int random_seed) const {
     return NaN;
 }
 double ComponentModel::get_draw_constrained(int random_seed,
-        std::vector<double> constraints) const {
+        const vector<double>& constraints) const {
     assert(0);
     return NaN;
 }
@@ -94,7 +94,7 @@ std::ostream& operator<<(std::ostream& os, const ComponentModel& cm) {
     return os;
 }
 
-string ComponentModel::to_string(string join_str) const {
+string ComponentModel::to_string(const string& join_str) const {
     stringstream ss;
     ss << "count: " << count << join_str;
     ss << "suffstats: " << get_suffstats() << join_str;
