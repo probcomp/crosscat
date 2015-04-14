@@ -21,6 +21,7 @@ NAMES = \
 	Cluster \
 	ComponentModel \
 	ContinuousComponentModel \
+	CyclicComponentModel \
 	DateTime \
 	MultinomialComponentModel \
 	RandomNumberGenerator \
