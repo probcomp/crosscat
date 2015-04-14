@@ -128,25 +128,17 @@ template <class K, class V>
 K get_key_of_value(const std::map<K, V>& m, const V& value) {
     typename std::map<K, V>::const_iterator it;
     for (it = m.begin(); it != m.end(); ++it) {
-        if (it->second == value) {
-            return it->first;
-        }
+        if (it->second == value)
+	  break;
     }
-    assert(0);
-    std::cout <<
-              "utils.h::get_key_of_value(): got value for which there is no key!!!" <<
-              std::endl;
-    return m.end()->first;
+    assert(it != m.end());
+    return it->first;
 }
 
 template <class K, class V>
 V get(const std::map<K, V>& m, const K& key) {
     typename std::map<K, V>::const_iterator it = m.find(key);
-    if (it == m.end()) {
-        std::cout << "utils.h::get() lookup failure: map: " << m;
-        std::cout << "; key: " << key << std::endl;
-        assert(1 == 0);
-    }
+    assert(it != m.end());
     return it->second;
 }
 
