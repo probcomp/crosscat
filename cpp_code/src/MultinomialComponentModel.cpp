@@ -22,7 +22,7 @@
 
 using namespace std;
 
-MultinomialComponentModel::MultinomialComponentModel(CM_Hypers& in_hypers) {
+MultinomialComponentModel::MultinomialComponentModel(const CM_Hypers& in_hypers) {
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
@@ -32,7 +32,7 @@ MultinomialComponentModel::MultinomialComponentModel(CM_Hypers& in_hypers) {
     set_log_Z_0();
 }
 
-MultinomialComponentModel::MultinomialComponentModel(CM_Hypers& in_hypers,
+MultinomialComponentModel::MultinomialComponentModel(const CM_Hypers& in_hypers,
         int count_in,
         const map<string, double>& counts) {
     count = 0;

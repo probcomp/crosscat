@@ -26,8 +26,8 @@
 
 class MultinomialComponentModel : public ComponentModel {
 public:
-    MultinomialComponentModel(CM_Hypers& in_hypers);
-    MultinomialComponentModel(CM_Hypers& in_hypers,
+    MultinomialComponentModel(const CM_Hypers& in_hypers);
+    MultinomialComponentModel(const CM_Hypers& in_hypers,
                               int count,
                               const std::map<std::string, double>& counts);
     virtual ~MultinomialComponentModel() {};
