@@ -29,10 +29,6 @@
 #include <vector>
 #include "utils.h"
 #include "constants.h"
-#include <boost/random/student_t_distribution.hpp>
-#include <boost/math/distributions/students_t.hpp>
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/random/mersenne_twister.hpp>
 
 class ComponentModel {
 public:
@@ -45,16 +41,17 @@ public:
     virtual std::map<std::string, double> _get_suffstats() const;
     virtual double get_draw(int random_seed) const;
     virtual double get_draw_constrained(int random_seed,
-                                std::vector<double> constraints) const;
+                                const std::vector<double>& constraints) const;
     //
     //
     // calculators
     virtual double calc_marginal_logp() const;
     virtual double calc_element_predictive_logp(double element) const;
     virtual double calc_element_predictive_logp_constrained(double element,
-            std::vector<double> constraints) const;
-    virtual std::vector<double> calc_hyper_conditionals(std::string which_hyper,
-            std::vector<double> hyper_grid) const;
+            const std::vector<double>& constraints) const;
+    virtual std::vector<double> calc_hyper_conditionals(
+            const std::string& which_hyper,
+            const std::vector<double>& hyper_grid) const;
     //
     // mutators
     virtual double insert_element(double element);
@@ -64,8 +61,8 @@ public:
     // helpers
     friend std::ostream& operator<<(std::ostream& os, const ComponentModel& cm);
     // make protected later
-    CM_Hypers *p_hypers;
-    std::string to_string(std::string join_str = "\n") const;
+    const CM_Hypers *p_hypers;
+    std::string to_string(const std::string& join_str = "\n") const;
 protected:
     int count;
     double log_Z_0;

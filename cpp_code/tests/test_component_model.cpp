@@ -54,8 +54,8 @@ int main() {
     vector<ComponentModel*> p_cm_v;
     p_cm_v.push_back(p_ccm);
     p_cm_v.push_back(p_mcm);
-    p_cm_v[0]->insert_element(10);
-    p_cm_v[1]->insert_element(10);
+    p_cm_v[0]->insert_element(9);
+    p_cm_v[1]->insert_element(9);
     cout << "p_cm_v[0]->calc_marginal_logp(): " << p_cm_v[0]->calc_marginal_logp()
          << endl;
     cout << "p_cm_v[1]->calc_marginal_logp(): " << p_cm_v[1]->calc_marginal_logp()

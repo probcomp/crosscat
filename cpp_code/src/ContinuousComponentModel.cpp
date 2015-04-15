@@ -18,30 +18,32 @@
 *   limitations under the License.
 */
 #include "ContinuousComponentModel.h"
+#include <boost/math/distributions/students_t.hpp>
+#include <boost/random/student_t_distribution.hpp>
 using namespace std;
 
-ContinuousComponentModel::ContinuousComponentModel(CM_Hypers& in_hypers) {
+ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
-    hyper_r = (*p_hypers)["r"];
-    hyper_nu = (*p_hypers)["nu"];
-    hyper_s = (*p_hypers)["s"];
-    hyper_mu = (*p_hypers)["mu"];
+    hyper_r = get(*p_hypers, string("r"));
+    hyper_nu = get(*p_hypers, string("nu"));
+    hyper_s = get(*p_hypers, string("s"));
+    hyper_mu = get(*p_hypers, string("mu"));
     init_suffstats();
     set_log_Z_0();
 }
 
-ContinuousComponentModel::ContinuousComponentModel(CM_Hypers& in_hypers,
+ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers,
         int COUNT, double SUM_X, double SUM_X_SQ) {
     count = COUNT;
     sum_x = SUM_X;
     sum_x_squared = SUM_X_SQ;
     p_hypers = &in_hypers;
-    hyper_r = (*p_hypers)["r"];
-    hyper_nu = (*p_hypers)["nu"];
-    hyper_s = (*p_hypers)["s"];
-    hyper_mu = (*p_hypers)["mu"];
+    hyper_r = get(*p_hypers, string("r"));
+    hyper_nu = get(*p_hypers, string("nu"));
+    hyper_s = get(*p_hypers, string("s"));
+    hyper_mu = get(*p_hypers, string("mu"));
     set_log_Z_0();
     score = calc_marginal_logp();
 }
@@ -84,7 +86,7 @@ double ContinuousComponentModel::calc_element_predictive_logp(
 }
 
 double ContinuousComponentModel::calc_element_predictive_logp_constrained(
-    double element, vector<double> constraints) const {
+    double element, const vector<double>& constraints) const {
     if (isnan(element)) {
         return 0;
     }
@@ -113,7 +115,7 @@ double ContinuousComponentModel::calc_element_predictive_logp_constrained(
 }
 
 vector<double> ContinuousComponentModel::calc_hyper_conditionals(
-    string which_hyper, vector<double> hyper_grid) const {
+    const string& which_hyper, const vector<double>& hyper_grid) const {
     double r, nu, s, mu;
     int count;
     double sum_x, sum_x_squared;
@@ -199,7 +201,7 @@ double ContinuousComponentModel::get_draw(int random_seed) const {
 }
 
 double ContinuousComponentModel::get_draw_constrained(int random_seed,
-        vector<double> constraints) const {
+        const vector<double>& constraints) const {
     // get modified suffstats
     double r, nu, s, mu;
     int count;
@@ -231,7 +233,7 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
 
 // For simple predictive probability
 double ContinuousComponentModel::get_predictive_cdf(double element,
-        vector<double> constraints) const {
+        const vector<double>& constraints) const {
     // get modified suffstats
     double r, nu, s, mu;
     int count;

@@ -20,26 +20,26 @@
 #include "CyclicComponentModel.h"
 using namespace std;
 
-CyclicComponentModel::CyclicComponentModel(CM_Hypers& in_hypers) {
+CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers) {
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
-    hyper_kappa = (*p_hypers)["kappa"];
-    hyper_a = (*p_hypers)["a"];
-    hyper_b = (*p_hypers)["b"];
+    hyper_kappa = get(*p_hypers, string("kappa"));
+    hyper_a = get(*p_hypers, string("a"));
+    hyper_b = get(*p_hypers, string("b"));
     init_suffstats();
     set_log_Z_0();
 }
 
-CyclicComponentModel::CyclicComponentModel(CM_Hypers& in_hypers,
+CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers,
         int COUNT, double SUM_SIN_X, double SUM_COS_X) {
     count = COUNT;
     sum_sin_x = SUM_SIN_X;
     sum_cos_x = SUM_COS_X;
     p_hypers = &in_hypers;
-    hyper_kappa = (*p_hypers)["kappa"];
-    hyper_a = (*p_hypers)["a"];
-    hyper_b = (*p_hypers)["b"];
+    hyper_kappa = get(*p_hypers, string("kappa"));
+    hyper_a = get(*p_hypers, string("a"));
+    hyper_b = get(*p_hypers, string("b"));
     set_log_Z_0();
     score = calc_marginal_logp();
 }
@@ -84,7 +84,7 @@ double CyclicComponentModel::calc_element_predictive_logp(
 }
 
 double CyclicComponentModel::calc_element_predictive_logp_constrained(
-    double element, vector<double> constraints) const {
+    double element, const vector<double>& constraints) const {
     if (isnan(element)) {
         return 0;
     }
@@ -113,7 +113,7 @@ double CyclicComponentModel::calc_element_predictive_logp_constrained(
 }
 
 vector<double> CyclicComponentModel::calc_hyper_conditionals(
-    string which_hyper, vector<double> hyper_grid) const {
+    const string& which_hyper, const vector<double>& hyper_grid) const {
     double kappa, a, b;
     int count;
     double sum_sin_x, sum_cos_x;
@@ -194,13 +194,13 @@ double CyclicComponentModel::get_draw(int random_seed) const {
     return get_draw_constrained(random_seed, constraints);
 }
 
-double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double> constraints) const {
+double CyclicComponentModel::get_draw_constrained(int random_seed,
+        const vector<double>& constraints) const {
   // get modified suffstats
-  double kappa, a, b, b_a;
+  double kappa, a, b;
   int count;
   double sum_sin_x, sum_cos_x;
   get_hyper_doubles(kappa, a, b);
-  b_a = b;
   get_suffstats(count, sum_sin_x, sum_cos_x);
   int num_constraints = (int) constraints.size();
   for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
@@ -242,6 +242,7 @@ double CyclicComponentModel::get_draw_constrained(int random_seed, vector<double
   printf("CyclicComponentModel::get_draw_constrained failed to accept a sample after 1000 proposals.\n");
   printf("a: %f, b: %f, kappa: %f\n", a, b, kappa);
   assert(false);
+  return 0;			// XXXGCC
 }
 
 map<string, double> CyclicComponentModel::_get_suffstats() const {

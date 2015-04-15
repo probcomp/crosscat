@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
         global_col_types.push_back(CONTINUOUS_DATATYPE);
         global_col_multinomial_counts.push_back(0);
     }
-    State s = State(data, global_col_types,
+    State s(data, global_col_types,
                     global_col_multinomial_counts,
                     global_row_indices,
                     global_column_indices);

@@ -29,7 +29,6 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-typedef boost::numeric::ublas::matrix<double> matrixD;
 using namespace std;
 typedef vector<Cluster*> vectorCp;
 typedef set<Cluster*> setCp;
@@ -101,7 +100,7 @@ int main(int argc, char** argv) {
     cout << endl << "test_view_speed: Hello World!" << endl;
 
     // load some data
-    matrixD data;
+    MatrixD data;
     LoadData("T.csv", data);
     int num_cols = data.size2();
     int num_rows = data.size1();

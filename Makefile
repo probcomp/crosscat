@@ -8,30 +8,30 @@ XNET=crosscat/binary_creation
 all: cython docs
 
 clean:
-	cd $(CPP_DIR) && make clean
-	cd $(CYT) && make clean
-	cd $(XNET) && make clean
+	cd $(CPP_DIR) && $(MAKE) clean
+	cd $(CYT) && $(MAKE) clean
+	cd $(XNET) && $(MAKE) clean
 	#
 	cd $(DOCS)/sphinx && rm -rf _build
-	cd $(DOCS)/latex && make clean
+	cd $(DOCS)/latex && $(MAKE) clean
 	cd $(DOCS)/doxygen && rm -rf html latex
 
 cpp:
-	cd $(CPP_DIR) && make
+	cd $(CPP_DIR) && $(MAKE)
 
 cython:
-	cd $(CYT) && make
+	cd $(CYT) && $(MAKE)
 
 docs:	cython
-	cd $(DOCS)/sphinx && make -f Makefile.sphinx html latexpdf
-	cd $(DOCS)/latex && make
-	cd $(DOCS)/doxygen && doxygen Doxyfile && cd latex && make
+	cd $(DOCS)/sphinx && $(MAKE) -f Makefile.sphinx html latexpdf
+	cd $(DOCS)/latex && $(MAKE)
+	cd $(DOCS)/doxygen && doxygen Doxyfile && cd latex && $(MAKE)
 
 runtests:
-	cd $(CPP_DIR) && make runtests
+	cd $(CPP_DIR) && $(MAKE) runtests
 
 tests:
-	cd $(CPP_DIR) && make tests
+	cd $(CPP_DIR) && $(MAKE) tests
 
 xnet:
-	cd $(XNET) && make
+	cd $(XNET) && $(MAKE)

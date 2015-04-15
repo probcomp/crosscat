@@ -19,6 +19,8 @@
 */
 #include "numerics.h"
 #include <boost/math/distributions.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
 
 using namespace std;
 
@@ -30,13 +32,13 @@ template <typename T> int sgn(T val) {
 }
 
 
-double estimate_vonmises_kappa(std::vector<double> &X){
+double estimate_vonmises_kappa(const vector<double>& X) {
     // Newton's method solution for ML estimate of kappa
 
     double N = (double) X.size();
     double sum_sin_x = 0;
     double sum_cos_x = 0;
-    vector<double>::iterator it = X.begin();
+    vector<double>::const_iterator it = X.begin();
     for (; it != X.end(); it++) {
         double x = *it;
         sum_sin_x += sin(x);
@@ -81,14 +83,12 @@ double vonmises_rand(double mu, double kappa, int random_seed){
         if (c * (2 - c) - U2 > 0){
             double U3 = randfloat();
             vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            double vmr_a = vmr;
             vmr = fmod(vmr, 2.0*M_PI);
             if(vmr < 0) vmr = 2*M_PI+vmr;
             return vmr;
         }else if (log(c/U2) + 1 - c >= 0){
             double U3 = randfloat();
             vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            double vmr_a = vmr;
             vmr = fmod(vmr, 2.0*M_PI);
             if(vmr < 0) vmr = 2*M_PI+vmr;
             return vmr;
@@ -136,9 +136,9 @@ double calc_continuous_hyperprior(double r, double nu, double s) {
     return logp;
 }
 
-double logaddexp(vector<double> logs) {
+double logaddexp(const vector<double>& logs) {
     double result = 0;
-    vector<double>::iterator it;
+    vector<double>::const_iterator it;
     for (it = logs.begin(); it != logs.end(); it++) {
         result += exp(*it);
     }
@@ -147,7 +147,9 @@ double logaddexp(vector<double> logs) {
 
 // subtract minimum value, logaddexp residuals, pass residuals and partition to
 // draw_sample_with_partition
-int draw_sample_unnormalized(vector<double> unorm_logps, double rand_u) {
+int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
+                             double rand_u) {
+    vector<double> unorm_logps = unorm_logps_given;
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
     vector<double>::iterator it = unorm_logps.begin();
@@ -161,10 +163,10 @@ int draw_sample_unnormalized(vector<double> unorm_logps, double rand_u) {
     return draw;
 }
 
-int draw_sample_with_partition(vector<double> unorm_logps,
+int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
     int draw = 0;
-    vector<double>::iterator it = unorm_logps.begin();
+    vector<double>::const_iterator it = unorm_logps.begin();
     for (; it != unorm_logps.end(); it++) {
         rand_u -= exp(*it - log_partition);
         if (rand_u < 0) {
@@ -179,12 +181,12 @@ int draw_sample_with_partition(vector<double> unorm_logps,
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)
 // only useful for crp_init or supercluster swapping since no data component
-int crp_draw_sample(vector<int> counts, int sum_counts, double alpha,
+int crp_draw_sample(const vector<int>& counts, int sum_counts, double alpha,
                     double rand_u) {
     int draw = 0;
     double partition = sum_counts + alpha;
 
-    vector<int>::iterator it = counts.begin();
+    vector<int>::const_iterator it = counts.begin();
     for (; it != counts.end(); it++) {
         rand_u -= (*it / partition);
         if (rand_u < 0) {
@@ -197,7 +199,7 @@ int crp_draw_sample(vector<int> counts, int sum_counts, double alpha,
 }
 
 // p(alpha | clusters)
-double calc_crp_alpha_conditional(std::vector<int> counts,
+double calc_crp_alpha_conditional(const vector<int>& counts,
                                   double alpha, int sum_counts,
                                   bool absolute) {
     int num_clusters = counts.size();
@@ -210,7 +212,7 @@ double calc_crp_alpha_conditional(std::vector<int> counts,
     // absolute necessary for determining true distribution rather than relative
     if (absolute) {
         double sum_log_gammas = 0;
-        std::vector<int>::iterator it = counts.begin();
+        vector<int>::const_iterator it = counts.begin();
         for (; it != counts.end(); it++) {
             sum_log_gammas += lgamma(*it);
         }
@@ -221,12 +223,12 @@ double calc_crp_alpha_conditional(std::vector<int> counts,
 }
 
 // helper for may calls to calc_crp_alpha_conditional
-std::vector<double> calc_crp_alpha_conditionals(std::vector<double> grid,
-        std::vector<int> counts,
+vector<double> calc_crp_alpha_conditionals(const vector<double>& grid,
+        const vector<int>& counts,
         bool absolute) {
     int sum_counts = std::accumulate(counts.begin(), counts.end(), 0);
-    std::vector<double> logps;
-    std::vector<double>::iterator it = grid.begin();
+    vector<double> logps;
+    vector<double>::const_iterator it = grid.begin();
     for (; it != grid.end(); it++) {
         double alpha = *it;
         double logp = calc_crp_alpha_conditional(counts, alpha,
@@ -327,15 +329,15 @@ double calc_continuous_data_logp(int count,
     return logp;
 }
 
-vector<double> calc_continuous_r_conditionals(std::vector<double> r_grid,
+vector<double> calc_continuous_r_conditionals(const vector<double>& r_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double nu,
         double s,
         double mu) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = r_grid.begin(); it != r_grid.end(); it++) {
         double r_prime = *it;
         double nu_prime = nu;
@@ -356,15 +358,15 @@ vector<double> calc_continuous_r_conditionals(std::vector<double> r_grid,
     return logps;
 }
 
-vector<double> calc_continuous_nu_conditionals(std::vector<double> nu_grid,
+vector<double> calc_continuous_nu_conditionals(const vector<double>& nu_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double r,
         double s,
         double mu) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = nu_grid.begin(); it != nu_grid.end(); it++) {
         double r_prime = r;
         double nu_prime = *it;
@@ -385,15 +387,15 @@ vector<double> calc_continuous_nu_conditionals(std::vector<double> nu_grid,
     return logps;
 }
 
-vector<double> calc_continuous_s_conditionals(std::vector<double> s_grid,
+vector<double> calc_continuous_s_conditionals(const vector<double>& s_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double r,
         double nu,
         double mu) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = s_grid.begin(); it != s_grid.end(); it++) {
         double r_prime = r;
         double nu_prime = nu;
@@ -419,15 +421,15 @@ vector<double> calc_continuous_s_conditionals(std::vector<double> s_grid,
     return logps;
 }
 
-vector<double> calc_continuous_mu_conditionals(std::vector<double> mu_grid,
+vector<double> calc_continuous_mu_conditionals(const vector<double>& mu_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double r,
         double nu,
         double s) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = mu_grid.begin(); it != mu_grid.end(); it++) {
         double r_prime = r;
         double nu_prime = nu;
@@ -455,13 +457,12 @@ vector<double> calc_continuous_mu_conditionals(std::vector<double> mu_grid,
 }
 
 double calc_multinomial_marginal_logp(int count,
-                                      const map<string, double> counts,
+                                      const vector<int>& counts,
                                       int K,
                                       double dirichlet_alpha) {
     double sum_lgammas = 0;
-    map<string, double>::const_iterator it;
-    for (it = counts.begin(); it != counts.end(); it++) {
-        int label_count = it->second;
+    for (size_t key = 0; key < counts.size(); key++) {
+        int label_count = counts[key];
         sum_lgammas += lgamma(label_count + dirichlet_alpha);
     }
     int missing_labels = K - counts.size();
@@ -475,29 +476,29 @@ double calc_multinomial_marginal_logp(int count,
     return marginal_logp;
 }
 
-double calc_multinomial_predictive_logp(string element,
-                                        map<string, double> counts,
+double calc_multinomial_predictive_logp(double element,
+                                        const vector<int>& counts,
                                         int sum_counts,
                                         int K, double dirichlet_alpha) {
     if (isnan(element)) {
         return 0;
     }
-    map<string, double>::iterator it = counts.find(element);
-    double numerator = dirichlet_alpha;
-    if (it != counts.end()) {
-        numerator += counts[element];
-    }
+    assert(0 <= element);
+    assert(element < K);
+    assert(element == trunc(element));
+    int i = static_cast<int>(element);
+    double numerator = dirichlet_alpha + counts[i];
     double denominator = sum_counts + K * dirichlet_alpha;
     return log(numerator) - log(denominator);
 }
 
 vector<double> calc_multinomial_dirichlet_alpha_conditional(
-    vector<double> dirichlet_alpha_grid,
+    const vector<double>& dirichlet_alpha_grid,
     int count,
-    map<string, double> counts,
+    const vector<int>& counts,
     int K) {
     vector<double> logps;
-    vector<double>::iterator it;
+    vector<double>::const_iterator it;
     for (it = dirichlet_alpha_grid.begin(); it != dirichlet_alpha_grid.end();
             it++) {
         double dirichlet_alpha = *it;
@@ -577,14 +578,14 @@ double calc_cyclic_data_logp(int count,
     return logp;
 }
 
-vector<double> calc_cyclic_a_conditionals(std::vector<double> a_grid,
+vector<double> calc_cyclic_a_conditionals(const vector<double>& a_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,
         double kappa,
         double b) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = a_grid.begin(); it != a_grid.end(); it++) {
         double kappa_prime = kappa;
         double a_prime = *it;
@@ -596,14 +597,14 @@ vector<double> calc_cyclic_a_conditionals(std::vector<double> a_grid,
     }
     return logps;
 }
-vector<double> calc_cyclic_b_conditionals(std::vector<double> b_grid,
+vector<double> calc_cyclic_b_conditionals(const vector<double>& b_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,
         double kappa,
         double a) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = b_grid.begin(); it != b_grid.end(); it++) {
         double kappa_prime = kappa;
         double a_prime = a;
@@ -615,14 +616,14 @@ vector<double> calc_cyclic_b_conditionals(std::vector<double> b_grid,
     }
     return logps;
 }
-vector<double> calc_cyclic_kappa_conditionals(std::vector<double> kappa_grid,
+vector<double> calc_cyclic_kappa_conditionals(const vector<double>& kappa_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,
         double a,
         double b) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = kappa_grid.begin(); it != kappa_grid.end(); it++) {
         double kappa_prime = *it;
         double a_prime = a;
