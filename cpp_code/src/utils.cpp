@@ -353,7 +353,7 @@ void copy_column(const MatrixD& fromM, int from_col, MatrixD &toM, int to_col) {
     project(fromM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(from_col, from_col+1));
 }
 
-MatrixD extract_columns(const MatrixD fromM, vector<int> from_cols) {
+MatrixD extract_columns(const MatrixD& fromM, const vector<int>& from_cols) {
   int num_rows = fromM.size1();
   int num_cols = from_cols.size();
   MatrixD toM(num_rows, num_cols);
