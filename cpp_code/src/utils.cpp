@@ -183,9 +183,9 @@ vector<double> extract_col(const matrix<double>& data, int col_idx) {
   return col;
 }
 
-vector<int> extract_global_ordering(map<int, int> global_to_local) {
+vector<int> extract_global_ordering(const map<int, int>& global_to_local) {
   vector<int> global_indices(global_to_local.size(), -1);
-  map<int,int>::iterator it;
+  map<int,int>::const_iterator it;
   for(it=global_to_local.begin(); it!=global_to_local.end(); it++) {
     int global_idx = it->first;
     int local_idx = it->second;

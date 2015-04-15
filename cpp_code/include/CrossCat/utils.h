@@ -150,7 +150,7 @@ V get(const std::map<K, V>& m, const K& key) {
     return it->second;
 }
 
-std::vector<int> extract_global_ordering(std::map<int, int> global_to_local);
+std::vector<int> extract_global_ordering(const std::map<int, int>& global_to_local);
 
 template <class K, class V>
 std::map<K, V> construct_lookup_map(const std::vector<K>& keys,
