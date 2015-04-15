@@ -43,7 +43,7 @@ namespace numerics {
 // signum
 template <typename T> int sgn(T val);
 
-double estimate_vonmises_kappa(std::vector<double> &X);
+double estimate_vonmises_kappa(const std::vector<double>& X);
 double vonmises_rand(double mu, double kappa, int random_seed);
 double vonmises_log_pdf(double x, double mu, double kappa);
 

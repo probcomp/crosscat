@@ -32,13 +32,13 @@ template <typename T> int sgn(T val) {
 }
 
 
-double estimate_vonmises_kappa(std::vector<double> &X){
+double estimate_vonmises_kappa(const vector<double>& X) {
     // Newton's method solution for ML estimate of kappa
 
     double N = (double) X.size();
     double sum_sin_x = 0;
     double sum_cos_x = 0;
-    vector<double>::iterator it = X.begin();
+    vector<double>::const_iterator it = X.begin();
     for (; it != X.end(); it++) {
         double x = *it;
         sum_sin_x += sin(x);
