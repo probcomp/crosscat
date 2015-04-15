@@ -419,14 +419,14 @@ void construct_continuous_specific_hyper_grid(int n_grid,
 
 void construct_cyclic_base_hyper_grids(int n_grid,
         int data_num_vectors,
-        std::vector<double>& vm_b_grid){
+        vector<double>& vm_b_grid){
   vm_b_grid = linspace(0, 2*M_PI, n_grid);
 
 }
 void construct_cyclic_specific_hyper_grid(int n_grid,
-        std::vector<double> col_data,
-        std::vector<double>& vm_a_grid,
-        std::vector<double>& vm_kappa_grid){
+        const vector<double>& col_data,
+        vector<double>& vm_a_grid,
+        vector<double>& vm_kappa_grid){
   double N = (double) col_data.size();
   // double var = calc_sum_sq_deviation(col_data)/N;
   // vm_a_grid = log_linspace(1/var, N/var, n_grid);
