@@ -157,10 +157,10 @@ double std_vector_mean(const vector<double>& values) {
   return mean;
 }
 
-double calc_sum_sq_deviation(vector<double> values) {
+double calc_sum_sq_deviation(const vector<double>& values) {
   double mean = std_vector_mean(values);
   double sum_sq_deviation = 0;
-  vector<double>::iterator it;
+  vector<double>::const_iterator it;
   for(it=values.begin(); it!=values.end(); it++) {
     sum_sq_deviation += pow((*it) - mean, 2) ;
   }
