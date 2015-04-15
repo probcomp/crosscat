@@ -221,12 +221,12 @@ double calc_crp_alpha_conditional(const vector<int>& counts,
 }
 
 // helper for may calls to calc_crp_alpha_conditional
-std::vector<double> calc_crp_alpha_conditionals(std::vector<double> grid,
-        std::vector<int> counts,
+vector<double> calc_crp_alpha_conditionals(const vector<double>& grid,
+        const vector<int>& counts,
         bool absolute) {
     int sum_counts = std::accumulate(counts.begin(), counts.end(), 0);
-    std::vector<double> logps;
-    std::vector<double>::iterator it = grid.begin();
+    vector<double> logps;
+    vector<double>::const_iterator it = grid.begin();
     for (; it != grid.end(); it++) {
         double alpha = *it;
         double logp = calc_crp_alpha_conditional(counts, alpha,
