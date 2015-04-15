@@ -164,7 +164,7 @@ std::map<K, V> construct_lookup_map(const std::vector<K>& keys,
 }
 
 template <class K>
-std::map<K, int> construct_lookup_map(std::vector<K> keys) {
+std::map<K, int> construct_lookup_map(const std::vector<K>& keys) {
     return construct_lookup_map(keys, create_sequence(keys.size()));
 }
 
