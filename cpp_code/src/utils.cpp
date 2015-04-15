@@ -194,7 +194,7 @@ vector<int> extract_global_ordering(const map<int, int>& global_to_local) {
   return global_indices;
 }
 
-map<int, vector<double> > construct_data_map(const MatrixD data) {
+map<int, vector<double> > construct_data_map(const MatrixD& data) {
   unsigned int num_rows = data.size1();
   map<int, vector<double> > data_map;
   for(unsigned int row_idx=0; row_idx<num_rows; row_idx++) {

@@ -168,7 +168,7 @@ std::map<K, int> construct_lookup_map(const std::vector<K>& keys) {
     return construct_lookup_map(keys, create_sequence(keys.size()));
 }
 
-std::map<int, std::vector<double> > construct_data_map(const MatrixD data);
+std::map<int, std::vector<double> > construct_data_map(const MatrixD& data);
 std::map<int, int> remove_and_reorder(std::map<int, int> global_to_local,
                                       int global_to_remove);
 
