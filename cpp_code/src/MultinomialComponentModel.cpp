@@ -49,11 +49,9 @@ MultinomialComponentModel::MultinomialComponentModel(const CM_Hypers& in_hypers,
 }
 
 double MultinomialComponentModel::calc_marginal_logp() const {
-    int count;
-    map<string, double> counts;
+    const map<string, double>& counts = suffstats;
     int K = hyper_K;
     double dirichlet_alpha = hyper_dirichlet_alpha;
-    get_suffstats(count, counts);
     return numerics::calc_multinomial_marginal_logp(count, counts, K,
             dirichlet_alpha);
 }
@@ -102,10 +100,8 @@ double MultinomialComponentModel::calc_element_predictive_logp_constrained(
 
 vector<double> MultinomialComponentModel::calc_hyper_conditionals(
     const string& which_hyper, const vector<double>& hyper_grid) const {
-    int count;
-    map<string, double> counts;
+    const map<string, double>& counts = suffstats;
     int K = hyper_K;
-    get_suffstats(count, counts);
     if (which_hyper == "dirichlet_alpha") {
         return numerics::calc_multinomial_dirichlet_alpha_conditional(hyper_grid,
                 count,
@@ -188,9 +184,7 @@ void MultinomialComponentModel::get_keys_counts_for_draw(vector<string>& keys,
 
 double MultinomialComponentModel::get_draw(int random_seed) const {
     // get modified suffstats
-    int count;
-    map<string, double> counts;
-    get_suffstats(count, counts);
+    const map<string, double>& counts = suffstats;
     // get a random draw
     boost::mt19937  _engine(random_seed);
     boost::uniform_01<boost::mt19937> _dist(_engine);
@@ -209,9 +203,7 @@ double MultinomialComponentModel::get_draw(int random_seed) const {
 double MultinomialComponentModel::get_draw_constrained(int random_seed,
         const vector<double>& constraints) const {
     // get modified suffstats
-    int count;
-    map<string, double> counts;
-    get_suffstats(count, counts);
+    const map<string, double>& counts = suffstats;
     // get a random draw
     boost::mt19937  _engine(random_seed);
     boost::uniform_01<boost::mt19937> _dist(_engine);
