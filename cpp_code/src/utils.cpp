@@ -167,7 +167,7 @@ double calc_sum_sq_deviation(const vector<double>& values) {
   return sum_sq_deviation;
 }
 
-vector<double> extract_row(const matrix<double> data, int row_idx) {
+vector<double> extract_row(const matrix<double>& data, int row_idx) {
   vector<double> row;
   for(unsigned int j=0;j < data.size2(); j++) {
     row.push_back(data(row_idx, j));
