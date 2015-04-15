@@ -125,7 +125,7 @@ V setdefault(std::map<K, V>& m, const K& key, const V& value) {
 }
 
 template <class K, class V>
-K get_key_of_value(const std::map<K, V> m, V value) {
+K get_key_of_value(const std::map<K, V>& m, const V& value) {
     typename std::map<K, V>::const_iterator it;
     for (it = m.begin(); it != m.end(); it++) {
         if (it->second == value) {
