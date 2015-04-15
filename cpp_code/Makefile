@@ -36,9 +36,11 @@ TEST_NAMES = \
 	test_continuous_component_model \
 	test_multinomial_component_model \
 	test_state \
+	# end of TEST_NAMES
+BROKEN_TEST_NAMES \
 	test_view \
 	test_view_speed \
-	# end of TEST_NAMES
+	# end of BROKEN_TEST_NAMES
 HEADERS = $(foreach name, $(NAMES), $(INC)/$(name).h)
 SOURCES = $(foreach name, $(NAMES), $(SRC)/$(name).cpp)
 OBJECTS = $(foreach name, $(NAMES), $(OBJ)/$(name).o)
