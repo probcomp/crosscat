@@ -179,12 +179,12 @@ int draw_sample_with_partition(const vector<double>& unorm_logps,
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)
 // only useful for crp_init or supercluster swapping since no data component
-int crp_draw_sample(vector<int> counts, int sum_counts, double alpha,
+int crp_draw_sample(const vector<int>& counts, int sum_counts, double alpha,
                     double rand_u) {
     int draw = 0;
     double partition = sum_counts + alpha;
 
-    vector<int>::iterator it = counts.begin();
+    vector<int>::const_iterator it = counts.begin();
     for (; it != counts.end(); it++) {
         rand_u -= (*it / partition);
         if (rand_u < 0) {

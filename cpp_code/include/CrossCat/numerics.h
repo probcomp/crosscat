@@ -57,8 +57,8 @@ double logaddexp(const std::vector<double>& logs);
 int draw_sample_unnormalized(std::vector<double> unorm_logps, double rand_u);
 int draw_sample_with_partition(const std::vector<double>& unorm_logps,
                                double log_partition, double rand_u);
-int crp_draw_sample(std::vector<int> counts, int sum_counts, double alpha,
-                    double rand_u);
+int crp_draw_sample(const std::vector<int>& counts, int sum_counts,
+                    double alpha, double rand_u);
 
 // crp probability functions
 double calc_cluster_crp_logp(double cluster_weight, double sum_weights,
