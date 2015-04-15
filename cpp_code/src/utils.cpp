@@ -151,7 +151,7 @@ double std_vector_sum(const vector<double>& values) {
   return sum;
 }
 
-double std_vector_mean(vector<double> values) {
+double std_vector_mean(const vector<double>& values) {
   double sum = std_vector_sum(values);
   double mean = sum / values.size();
   return mean;
