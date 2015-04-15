@@ -99,7 +99,7 @@ double std_vector_sum(const std::vector<double>& vec);
 double std_vector_mean(const std::vector<double>& vec);
 double calc_sum_sq_deviation(const std::vector<double>& values);
 std::vector<double> extract_row(const MatrixD& data, int row_idx);
-std::vector<double> extract_col(const MatrixD data, int col_idx);
+std::vector<double> extract_col(const MatrixD& data, int col_idx);
 
 template <class T>
 std::vector<T> append(const std::vector<T>& vec1, const std::vector<T>& vec2) {

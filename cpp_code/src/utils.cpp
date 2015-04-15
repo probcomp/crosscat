@@ -175,7 +175,7 @@ vector<double> extract_row(const matrix<double>& data, int row_idx) {
   return row;
 }
 
-vector<double> extract_col(const matrix<double> data, int col_idx) {
+vector<double> extract_col(const matrix<double>& data, int col_idx) {
   vector<double> col;
   for(unsigned int j=0;j < data.size1(); j++) {
     col.push_back(data(j, col_idx));
