@@ -116,14 +116,12 @@ bool in(const std::map<K, V>& m, const K& key) {
 }
 
 template <class K, class V>
-V setdefault(std::map<K, V> m, K key, V value) {
-    bool is_in = in(m, key);
-    if (!is_in) {
-        m[key] = value;
-    } else {
-        value = m[key];
-    }
-    return value;
+V setdefault(std::map<K, V>& m, const K& key, const V& value) {
+    typename std::map<K, V>::const_iterator it = m.find(key);
+    if (it == m.end())
+        return value;
+    else
+        return it->second;
 }
 
 template <class K, class V>
