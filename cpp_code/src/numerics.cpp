@@ -327,15 +327,15 @@ double calc_continuous_data_logp(int count,
     return logp;
 }
 
-vector<double> calc_continuous_r_conditionals(std::vector<double> r_grid,
+vector<double> calc_continuous_r_conditionals(const vector<double>& r_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double nu,
         double s,
         double mu) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = r_grid.begin(); it != r_grid.end(); it++) {
         double r_prime = *it;
         double nu_prime = nu;

@@ -92,7 +92,8 @@ double calc_continuous_data_logp(int count,
                                  double s, double mu,
                                  double el,
                                  double score_0);
-std::vector<double> calc_continuous_r_conditionals(std::vector<double> r_grid,
+std::vector<double> calc_continuous_r_conditionals(
+        const std::vector<double>& r_grid,
         int count,
         double sum_x,
         double sum_x_sq,
