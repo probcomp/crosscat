@@ -126,9 +126,9 @@ vector<double> std_vector_add(const vector<double>& vec1,
   return sum_vec;
 }
 
-vector<double> std_vector_add(vector<vector<double> > vec_vec) {
+vector<double> std_vector_add(const vector<vector<double> >& vec_vec) {
   vector<double> sum_vec = vec_vec[0];
-  vector<vector<double> >::iterator it = vec_vec.begin();
+  vector<vector<double> >::const_iterator it = vec_vec.begin();
   it++;
   for(; it!=vec_vec.end(); it++) {
     sum_vec = std_vector_add(sum_vec, *it);

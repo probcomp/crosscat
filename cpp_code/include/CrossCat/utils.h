@@ -93,7 +93,7 @@ std::vector<int> create_sequence(int len, int start = 0);
 
 std::vector<double> std_vector_add(const std::vector<double>& vec1,
                                    const std::vector<double>& vec2);
-std::vector<double> std_vector_add(std::vector<std::vector<double> > vec_vec);
+std::vector<double> std_vector_add(const std::vector<std::vector<double> >& vec_vec);
 
 double std_vector_sum(std::vector<double> vec);
 double std_vector_mean(std::vector<double> vec);
