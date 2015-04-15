@@ -396,17 +396,17 @@ void construct_continuous_base_hyper_grids(int n_grid,
 }
 
 void construct_continuous_specific_hyper_grid(int n_grid,
-				 vector<double> col_data,
+				 const vector<double>& col_data,
 				 vector<double> &s_grid,
 				 vector<double> &mu_grid) {
   // FIXME: should s_grid be a linspace from min el**2 to max el**2
   double sum_sq_deviation, min, max;
-  col_data = filter_nans(col_data);
-  int num_non_nan = col_data.size();
+  vector<double> filtered_col_data = filter_nans(col_data);
+  int num_non_nan = filtered_col_data.size();
   if(num_non_nan != 0) {
-    sum_sq_deviation = calc_sum_sq_deviation(col_data);
-    min = *std::min_element(col_data.begin(), col_data.end());
-    max = *std::max_element(col_data.begin(), col_data.end());
+    sum_sq_deviation = calc_sum_sq_deviation(filtered_col_data);
+    min = *std::min_element(filtered_col_data.begin(), filtered_col_data.end());
+    max = *std::max_element(filtered_col_data.begin(), filtered_col_data.end());
   } else {
     // FIXME: What to do here?
     sum_sq_deviation = 100;

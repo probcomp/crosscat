@@ -269,7 +269,7 @@ void construct_continuous_base_hyper_grids(int n_grid,
         std::vector<double>& r_grid,
         std::vector<double>& nu_grid);
 void construct_continuous_specific_hyper_grid(int n_grid,
-        std::vector<double> col_data,
+        const std::vector<double>& col_data,
         std::vector<double>& s_grid,
         std::vector<double>& mu_grid);
 
