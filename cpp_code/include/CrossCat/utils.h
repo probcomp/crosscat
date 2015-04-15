@@ -201,7 +201,7 @@ std::vector<double> extract_columns(const std::vector<double> in_vd,
                                     const std::vector<int> from_cols);
 
 template <class T>
-std::vector<T> set_to_vector(const std::set<T> in_set) {
+std::vector<T> set_to_vector(const std::set<T>& in_set) {
     std::vector<T> out_vector;
     typename std::set<T>::const_iterator it;
     for (it = in_set.begin(); it != in_set.end(); it++) {
