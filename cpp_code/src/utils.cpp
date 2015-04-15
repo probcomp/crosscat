@@ -375,7 +375,7 @@ vector<double> extract_columns(const vector<double>& in_vd,
   return out_vd;
 }
 
-int intify(std::string str) {
+int intify(const string& str) {
   std::istringstream strin(str);
   int str_int;
   strin >> str_int;

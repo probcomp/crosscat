@@ -234,7 +234,7 @@ std::string stringify(const T& element) {
     return ss.str();
 }
 
-int intify(std::string str);
+int intify(const std::string& str);
 
 template <class K, class V>
 std::map<V, std::set<K> > group_by_value(const std::map<K, V>& in_map) {
