@@ -161,10 +161,10 @@ int draw_sample_unnormalized(vector<double> unorm_logps, double rand_u) {
     return draw;
 }
 
-int draw_sample_with_partition(vector<double> unorm_logps,
+int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
     int draw = 0;
-    vector<double>::iterator it = unorm_logps.begin();
+    vector<double>::const_iterator it = unorm_logps.begin();
     for (; it != unorm_logps.end(); it++) {
         rand_u -= exp(*it - log_partition);
         if (rand_u < 0) {
