@@ -225,7 +225,7 @@ std::map<T, int> set_to_map(const std::set<T>& in_set) {
 }
 
 template <class T>
-std::string stringify(T element) {
+std::string stringify(const T& element) {
     std::stringstream ss;
     ss << element;
     return ss.str();
