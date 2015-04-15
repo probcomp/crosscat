@@ -292,9 +292,9 @@ boost::numeric::ublas::matrix<T> vector_to_matrix(const std::vector<T>& vT) {
 }
 
 template <class T>
-int count_elements(std::vector<std::vector<T> > v_v_T) {
+int count_elements(const std::vector<std::vector<T> >& v_v_T) {
     int num_elements = 0;
-    typename std::vector<std::vector<T> >::iterator it;
+    typename std::vector<std::vector<T> >::const_iterator it;
     for (it = v_v_T.begin(); it != v_v_T.end(); it++) {
         num_elements += (*it).size();
     }
