@@ -294,10 +294,10 @@ vector<int> draw_crp_init_counts(int num_datum, double alpha,
   return counts;
 }
 
-vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
+vector<vector<int> > draw_crp_init(const vector<int>& global_row_indices,
 				   double alpha,
 				   RandomNumberGenerator &rng,
-				   string initialization) {
+				   const string& initialization) {
   vector<vector<int> > cluster_indices_v;
   if(initialization==TOGETHER) {
     cluster_indices_v.push_back(global_row_indices);
@@ -311,9 +311,10 @@ vector<vector<int> > draw_crp_init(vector<int> global_row_indices,
   } else if(initialization==FROM_THE_PRIOR) {
     int num_datum = global_row_indices.size();
     vector<int> counts = draw_crp_init_counts(num_datum, alpha, rng);
-    std::random_shuffle(global_row_indices.begin(),
-			global_row_indices.end());
-    vector<int>::iterator it = global_row_indices.begin();
+    vector<int> shuffled_row_indices = global_row_indices;
+    std::random_shuffle(shuffled_row_indices.begin(),
+			shuffled_row_indices.end());
+    vector<int>::const_iterator it = shuffled_row_indices.begin();
     for(unsigned int cluster_idx=0; cluster_idx<counts.size();
 	cluster_idx++) {
       int count = counts[cluster_idx];

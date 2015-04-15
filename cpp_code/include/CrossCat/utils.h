@@ -185,11 +185,11 @@ std::vector<std::vector<double> > reorder_per_map(
                                   const std::vector<int>& global_column_indices,
                                   const std::map<int, int>& global_to_local);
 
-std::vector<std::vector<int> > draw_crp_init(std::vector<int>
-                           global_row_indices,
+std::vector<std::vector<int> > draw_crp_init(
+                           const std::vector<int>& global_row_indices,
                            double alpha,
                            RandomNumberGenerator& rng,
-                           std::string initialization = FROM_THE_PRIOR);
+                           const std::string& initialization = FROM_THE_PRIOR);
 
 std::vector<std::vector<std::vector<int> > > draw_crp_init(
     std::vector<int> global_row_indices,
