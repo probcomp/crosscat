@@ -457,14 +457,12 @@ vector<double> calc_continuous_mu_conditionals(const vector<double>& mu_grid,
 }
 
 double calc_multinomial_marginal_logp(int count,
-                                      const map<int, int>& counts,
+                                      const vector<int>& counts,
                                       int K,
                                       double dirichlet_alpha) {
     double sum_lgammas = 0;
-    for (map<int, int>::const_iterator it = counts.begin();
-         it != counts.end();
-         ++it) {
-        int label_count = it->second;
+    for (size_t key = 0; key < counts.size(); key++) {
+        int label_count = counts[key];
         sum_lgammas += lgamma(label_count + dirichlet_alpha);
     }
     int missing_labels = K - counts.size();
@@ -479,7 +477,7 @@ double calc_multinomial_marginal_logp(int count,
 }
 
 double calc_multinomial_predictive_logp(double element,
-                                        const map<int, int>& counts,
+                                        const vector<int>& counts,
                                         int sum_counts,
                                         int K, double dirichlet_alpha) {
     if (isnan(element)) {
@@ -489,10 +487,7 @@ double calc_multinomial_predictive_logp(double element,
     assert(element < K);
     assert(element == trunc(element));
     int i = static_cast<int>(element);
-    double numerator = dirichlet_alpha;
-    map<int, int>::const_iterator it = counts.find(i);
-    if (it != counts.end())
-        numerator += it->second;
+    double numerator = dirichlet_alpha + counts[i];
     double denominator = sum_counts + K * dirichlet_alpha;
     return log(numerator) - log(denominator);
 }
@@ -500,7 +495,7 @@ double calc_multinomial_predictive_logp(double element,
 vector<double> calc_multinomial_dirichlet_alpha_conditional(
     const vector<double>& dirichlet_alpha_grid,
     int count,
-    const map<int, int>& counts,
+    const vector<int>& counts,
     int K) {
     vector<double> logps;
     vector<double>::const_iterator it;

@@ -58,13 +58,11 @@ MultinomialComponentModel::MultinomialComponentModel(const CM_Hypers& in_hypers,
 }
 
 void MultinomialComponentModel::init_suffstats() {
-    for (int key = 0; key < hyper_K; key++)
-        suffstats[key] += 0;
-    assert(suffstats.size() == hyper_K);
+    suffstats.resize(hyper_K);
 }
 
 double MultinomialComponentModel::calc_marginal_logp() const {
-    const map<int, int>& counts = suffstats;
+    const vector<int>& counts = suffstats;
     int K = hyper_K;
     double dirichlet_alpha = hyper_dirichlet_alpha;
     return numerics::calc_multinomial_marginal_logp(count, counts, K,
@@ -92,7 +90,7 @@ double MultinomialComponentModel::calc_element_predictive_logp_constrained(
     int K = hyper_K;
     double dirichlet_alpha = hyper_dirichlet_alpha;
     //
-    map<int, int> suffstats_copy = suffstats;
+    vector<int> suffstats_copy = suffstats;
     int count_copy = count;
     int num_constraints = (int) constraints.size();
     for (int constraint_idx = 0; constraint_idx < num_constraints;
@@ -115,7 +113,7 @@ double MultinomialComponentModel::calc_element_predictive_logp_constrained(
 
 vector<double> MultinomialComponentModel::calc_hyper_conditionals(
     const string& which_hyper, const vector<double>& hyper_grid) const {
-    const map<int, int>& counts = suffstats;
+    const vector<int>& counts = suffstats;
     int K = hyper_K;
     if (which_hyper == "dirichlet_alpha") {
         return numerics::calc_multinomial_dirichlet_alpha_conditional(hyper_grid,
@@ -175,11 +173,10 @@ void MultinomialComponentModel::set_log_Z_0() {
 
 void MultinomialComponentModel::get_keys_counts_for_draw(vector<int>& keys,
         vector<double>& log_counts_for_draw,
-        const map<int, int>& counts) const {
+        const vector<int>& counts) const {
     double dirichlet_alpha = hyper_dirichlet_alpha;
     for (int key = 0; key < hyper_K; key++) {
-        map<int, int>::const_iterator it = counts.find(key);
-        int count_for_draw = (it == counts.end() ? 0 : it->second);
+        int count_for_draw = counts[key];
         // "update" counts by adding dirichlet alpha to each value
         count_for_draw += dirichlet_alpha;
         keys.push_back(key);
@@ -190,7 +187,7 @@ void MultinomialComponentModel::get_keys_counts_for_draw(vector<int>& keys,
 
 double MultinomialComponentModel::get_draw(int random_seed) const {
     // get modified suffstats
-    const map<int, int>& counts = suffstats;
+    const vector<int>& counts = suffstats;
     // get a random draw
     boost::mt19937  _engine(random_seed);
     boost::uniform_01<boost::mt19937> _dist(_engine);
@@ -209,7 +206,7 @@ double MultinomialComponentModel::get_draw(int random_seed) const {
 double MultinomialComponentModel::get_draw_constrained(int random_seed,
         const vector<double>& constraints) const {
     // get modified suffstats
-    const map<int, int>& counts = suffstats;
+    const vector<int>& counts = suffstats;
     // get a random draw
     boost::mt19937  _engine(random_seed);
     boost::uniform_01<boost::mt19937> _dist(_engine);
@@ -239,8 +236,7 @@ double MultinomialComponentModel::get_draw_constrained(int random_seed,
 map<string, double> MultinomialComponentModel::_get_suffstats() const {
     map<string, double> counts;
     for (int key = 0; key < hyper_K; key++) {
-        map<int, int>::const_iterator it = suffstats.find(key);
-        counts[stringify(key)] = (it == suffstats.end() ? 0 : it->second);
+        counts[stringify(key)] = suffstats[key];
     }
     return counts;
 }
