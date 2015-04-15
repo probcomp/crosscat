@@ -63,7 +63,7 @@ int crp_draw_sample(const std::vector<int>& counts, int sum_counts,
 // crp probability functions
 double calc_cluster_crp_logp(double cluster_weight, double sum_weights,
                              double alpha);
-double calc_crp_alpha_conditional(std::vector<int> counts, double alpha,
+double calc_crp_alpha_conditional(const std::vector<int>& counts, double alpha,
                                   int sum_counts = -1, bool absolute = false);
 std::vector<double> calc_crp_alpha_conditionals(std::vector<double> grid,
         std::vector<int> counts,

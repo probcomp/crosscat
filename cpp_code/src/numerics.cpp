@@ -197,7 +197,7 @@ int crp_draw_sample(const vector<int>& counts, int sum_counts, double alpha,
 }
 
 // p(alpha | clusters)
-double calc_crp_alpha_conditional(std::vector<int> counts,
+double calc_crp_alpha_conditional(const vector<int>& counts,
                                   double alpha, int sum_counts,
                                   bool absolute) {
     int num_clusters = counts.size();
@@ -210,7 +210,7 @@ double calc_crp_alpha_conditional(std::vector<int> counts,
     // absolute necessary for determining true distribution rather than relative
     if (absolute) {
         double sum_log_gammas = 0;
-        std::vector<int>::iterator it = counts.begin();
+        vector<int>::const_iterator it = counts.begin();
         for (; it != counts.end(); it++) {
             sum_log_gammas += lgamma(*it);
         }
