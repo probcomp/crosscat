@@ -54,7 +54,7 @@ double log_gamma_pdf(double x, double shape, double scale);
 double logaddexp(const std::vector<double>& logs);
 
 // sampling given vector of logps or related
-int draw_sample_unnormalized(std::vector<double> unorm_logps, double rand_u);
+int draw_sample_unnormalized(const std::vector<double>& unorm_logps, double rand_u);
 int draw_sample_with_partition(const std::vector<double>& unorm_logps,
                                double log_partition, double rand_u);
 int crp_draw_sample(const std::vector<int>& counts, int sum_counts,

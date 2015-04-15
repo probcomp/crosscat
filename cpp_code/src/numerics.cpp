@@ -147,7 +147,9 @@ double logaddexp(const vector<double>& logs) {
 
 // subtract minimum value, logaddexp residuals, pass residuals and partition to
 // draw_sample_with_partition
-int draw_sample_unnormalized(vector<double> unorm_logps, double rand_u) {
+int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
+                             double rand_u) {
+    vector<double> unorm_logps = unorm_logps_given;
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
     vector<double>::iterator it = unorm_logps.begin();
