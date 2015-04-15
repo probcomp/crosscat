@@ -109,7 +109,7 @@ std::vector<T> append(const std::vector<T>& vec1, const std::vector<T>& vec2) {
 }
 
 template <class K, class V>
-bool in(const std::map<K, V> m, K key) {
+bool in(const std::map<K, V>& m, const K& key) {
     typename std::map<K, V>::const_iterator it = m.find(key);
     bool is_in = it != m.end();
     return is_in;
