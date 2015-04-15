@@ -146,7 +146,7 @@ vector<double> filter_nans(vector<double> values) {
   return non_nan_values;
 }
 
-double std_vector_sum(vector<double> values) {
+double std_vector_sum(const vector<double>& values) {
   double sum = std::accumulate(values.begin(), values.end(), 0.0);
   return sum;
 }
