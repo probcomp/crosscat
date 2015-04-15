@@ -102,9 +102,10 @@ std::vector<double> extract_row(const MatrixD data, int row_idx);
 std::vector<double> extract_col(const MatrixD data, int col_idx);
 
 template <class T>
-std::vector<T> append(std::vector<T> vec1, std::vector<T> vec2) {
-  vec1.insert(vec1.end(), vec2.begin(), vec2.end());
-  return vec1;
+std::vector<T> append(const std::vector<T>& vec1, const std::vector<T>& vec2) {
+  std::vector<T> vec = vec1;
+  vec.insert(vec.end(), vec2.begin(), vec2.end());
+  return vec;
 }
 
 template <class K, class V>
