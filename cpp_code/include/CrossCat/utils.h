@@ -41,7 +41,7 @@ typedef boost::numeric::ublas::matrix<double> MatrixD;
 void LoadData(const std::string& file, MatrixD& M);
 
 template <class K, class V>
-std::ostream& operator<<(std::ostream& os, const std::map<K, V> in_map) {
+std::ostream& operator<<(std::ostream& os, const std::map<K, V>& in_map) {
     os << "{";
     typename std::map<K, V>::const_iterator it = in_map.begin();
     if (it != in_map.end()) {
