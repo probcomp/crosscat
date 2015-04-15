@@ -153,8 +153,8 @@ V get(const std::map<K, V>& m, const K& key) {
 std::vector<int> extract_global_ordering(std::map<int, int> global_to_local);
 
 template <class K, class V>
-std::map<K, V> construct_lookup_map(std::vector<K> keys,
-                                    std::vector<V> values) {
+std::map<K, V> construct_lookup_map(const std::vector<K>& keys,
+                                    const std::vector<V>& values) {
     assert(keys.size() == values.size());
     std::map<K, V> lookup;
     for (unsigned int idx = 0; idx < keys.size(); idx++) {
