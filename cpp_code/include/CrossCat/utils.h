@@ -71,7 +71,7 @@ std::ostream& operator<<(std::ostream& os, const std::set<T>& sT) {
 }
 
 template <class T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T> vT) {
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vT) {
     os << "[";
     typename std::vector<T>::const_iterator it = vT.begin();
     if (it != vT.end()) {
