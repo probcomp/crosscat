@@ -203,12 +203,12 @@ map<int, vector<double> > construct_data_map(const MatrixD& data) {
   return data_map;
 }
 
-map<int, int> remove_and_reorder(map<int, int> old_global_to_local,
+map<int, int> remove_and_reorder(const map<int, int>& old_global_to_local,
 				 int global_to_remove) {
   // extract current ordering
   vector<int> global_indices = extract_global_ordering(old_global_to_local);
   // remove
-  int local_to_remove = old_global_to_local[global_to_remove];
+  int local_to_remove = old_global_to_local.find(global_to_remove)->first;
   global_indices.erase(global_indices.begin() + local_to_remove);
   // constrcut and return
   return construct_lookup_map(global_indices);

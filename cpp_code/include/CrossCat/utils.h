@@ -169,7 +169,7 @@ std::map<K, int> construct_lookup_map(const std::vector<K>& keys) {
 }
 
 std::map<int, std::vector<double> > construct_data_map(const MatrixD& data);
-std::map<int, int> remove_and_reorder(std::map<int, int> global_to_local,
+std::map<int, int> remove_and_reorder(const std::map<int, int>& global_to_local,
                                       int global_to_remove);
 
 std::vector<int> get_indices_to_reorder(std::vector<int>
