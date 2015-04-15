@@ -385,15 +385,15 @@ vector<double> calc_continuous_nu_conditionals(const vector<double>& nu_grid,
     return logps;
 }
 
-vector<double> calc_continuous_s_conditionals(std::vector<double> s_grid,
+vector<double> calc_continuous_s_conditionals(const vector<double>& s_grid,
         int count,
         double sum_x,
         double sum_x_sq,
         double r,
         double nu,
         double mu) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = s_grid.begin(); it != s_grid.end(); it++) {
         double r_prime = r;
         double nu_prime = nu;

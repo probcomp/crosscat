@@ -108,7 +108,8 @@ std::vector<double> calc_continuous_nu_conditionals(
         double r,
         double s,
         double mu);
-std::vector<double> calc_continuous_s_conditionals(std::vector<double> s_grid,
+std::vector<double> calc_continuous_s_conditionals(
+        const std::vector<double>& s_grid,
         int count,
         double sum_x,
         double sum_x_sq,
