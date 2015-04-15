@@ -229,10 +229,10 @@ vector<int> get_indices_to_reorder(const vector<int>& data_global_column_indices
   return reorder_indices;  
 }		   
 
-vector<double> reorder_per_indices(vector<double> raw_values,
-				   vector<int> reorder_indices) {
+vector<double> reorder_per_indices(const vector<double>& raw_values,
+				   const vector<int>& reorder_indices) {
   vector<double> arranged_values;
-  vector<int>::iterator it;
+  vector<int>::const_iterator it;
   for(it=reorder_indices.begin(); it!=reorder_indices.end(); it++) {
     int raw_value_idx = *it;
     double raw_value = raw_values[raw_value_idx];
