@@ -27,7 +27,7 @@ If you'd like to install from source, CrossCat can be successfully installed loc
 CrossCat can also be installed in a local Python virtual environment: ::
 
     $ cd crosscat
-    $ virtualenv --site-system-packages /path/to/venv
+    $ virtualenv --system-site-packages /path/to/venv
     $ . /path/to/venv/bin/activate
     $ python setup.py build
     $ python setup.py install  # or python setup.py develop
