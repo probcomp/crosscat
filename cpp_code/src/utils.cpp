@@ -331,12 +331,12 @@ vector<vector<int> > draw_crp_init(const vector<int>& global_row_indices,
   return cluster_indices_v;
 }
 
-vector<vector<vector<int> > > draw_crp_init(vector<int> global_row_indices,
-				   vector<double> alphas,
+vector<vector<vector<int> > > draw_crp_init(const vector<int>& global_row_indices,
+				   const vector<double>& alphas,
 				   RandomNumberGenerator &rng,
-				   string initialization) {
+				   const string& initialization) {
   vector<vector<vector<int> > > cluster_indicies_v_v;
-  for(vector<double>::iterator it = alphas.begin(); it!=alphas.end(); it++) {
+  for(vector<double>::const_iterator it = alphas.begin(); it != alphas.end(); it++) {
     double alpha = *it;
     vector<vector<int> > cluster_indicies_v = draw_crp_init(global_row_indices,
 		    alpha, rng, initialization);

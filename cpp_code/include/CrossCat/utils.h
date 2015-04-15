@@ -192,10 +192,10 @@ std::vector<std::vector<int> > draw_crp_init(
                            const std::string& initialization = FROM_THE_PRIOR);
 
 std::vector<std::vector<std::vector<int> > > draw_crp_init(
-    std::vector<int> global_row_indices,
-    std::vector<double> alphas,
+    const std::vector<int>& global_row_indices,
+    const std::vector<double>& alphas,
     RandomNumberGenerator& rng,
-    std::string initialization);
+    const std::string& initialization);
 
 void copy_column(const MatrixD fromM, int from_col, MatrixD& toM, int to_col);
 MatrixD extract_columns(const MatrixD fromM, std::vector<int> from_cols);
