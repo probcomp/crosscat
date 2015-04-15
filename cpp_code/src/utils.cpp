@@ -116,7 +116,8 @@ vector<double> log_linspace(double a, double b, int n) {
   return values;
 }
 
-vector<double> std_vector_add(vector<double> vec1, vector<double> vec2) {
+vector<double> std_vector_add(const vector<double>& vec1,
+                              const vector<double>& vec2) {
   assert(vec1.size()==vec2.size());
   vector<double> sum_vec;
   for(unsigned int i=0; i<vec1.size(); i++) {
