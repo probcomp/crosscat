@@ -140,7 +140,7 @@ K get_key_of_value(const std::map<K, V>& m, const V& value) {
 }
 
 template <class K, class V>
-V get(const std::map<K, V> m, K key) {
+V get(const std::map<K, V>& m, const K& key) {
     typename std::map<K, V>::const_iterator it = m.find(key);
     if (it == m.end()) {
         std::cout << "utils.h::get() lookup failure: map: " << m;
