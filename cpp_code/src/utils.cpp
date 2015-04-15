@@ -36,7 +36,7 @@ using boost::numeric::ublas::matrix;
 // FROM runModel_v2.cpp
 /////////////////////////////////////////////////////////////////////
 // expect a csv file of data
-void LoadData(string file, matrix<double>& M) {
+void LoadData(const string& file, matrix<double>& M) {
   ifstream in(file.c_str());
   if (!in.is_open()) return;
   typedef tokenizer< char_separator<char> > Tokenizer;

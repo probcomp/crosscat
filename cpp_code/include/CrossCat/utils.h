@@ -38,7 +38,7 @@ typedef ComponentModelHypers CM_Hypers;
 
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
-void LoadData(std::string file, MatrixD& M);
+void LoadData(const std::string& file, MatrixD& M);
 
 template <class K, class V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V> in_map) {
