@@ -346,7 +346,7 @@ vector<vector<vector<int> > > draw_crp_init(const vector<int>& global_row_indice
 }
 
 
-void copy_column(const MatrixD fromM, int from_col, MatrixD &toM, int to_col) {
+void copy_column(const MatrixD& fromM, int from_col, MatrixD &toM, int to_col) {
   assert(fromM.size1()==toM.size1());
   int num_rows = fromM.size1();
   project(toM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(to_col, to_col+1)) = \
