@@ -165,7 +165,8 @@ double calc_cyclic_data_logp(int count,
                              double kappa, double a, double b,
                              double el);
 
-std::vector<double> calc_cyclic_a_conditionals(std::vector<double> a_grid,
+std::vector<double> calc_cyclic_a_conditionals(
+        const std::vector<double>& a_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,
