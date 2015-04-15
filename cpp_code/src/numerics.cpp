@@ -136,9 +136,9 @@ double calc_continuous_hyperprior(double r, double nu, double s) {
     return logp;
 }
 
-double logaddexp(vector<double> logs) {
+double logaddexp(const vector<double>& logs) {
     double result = 0;
-    vector<double>::iterator it;
+    vector<double>::const_iterator it;
     for (it = logs.begin(); it != logs.end(); it++) {
         result += exp(*it);
     }

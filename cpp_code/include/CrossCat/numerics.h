@@ -51,7 +51,7 @@ double log_bessel_0(double x); // log I_0(x)
 
 double log_gamma_pdf(double x, double shape, double scale);
 
-double logaddexp(std::vector<double> logs);
+double logaddexp(const std::vector<double>& logs);
 
 // sampling given vector of logps or related
 int draw_sample_unnormalized(std::vector<double> unorm_logps, double rand_u);
