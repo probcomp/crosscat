@@ -200,8 +200,8 @@ std::vector<std::vector<std::vector<int> > > draw_crp_init(
 void copy_column(const MatrixD& fromM, int from_col, MatrixD& toM, int to_col);
 MatrixD extract_columns(const MatrixD& fromM,
 			const std::vector<int>& from_cols);
-std::vector<double> extract_columns(const std::vector<double> in_vd,
-                                    const std::vector<int> from_cols);
+std::vector<double> extract_columns(const std::vector<double>& in_vd,
+                                    const std::vector<int>& from_cols);
 
 template <class T>
 std::vector<T> set_to_vector(const std::set<T>& in_set) {

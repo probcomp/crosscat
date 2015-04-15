@@ -364,8 +364,8 @@ MatrixD extract_columns(const MatrixD& fromM, const vector<int>& from_cols) {
   return toM;
 }
 
-vector<double> extract_columns(const vector<double> in_vd,
-			       const vector<int> from_cols) {
+vector<double> extract_columns(const vector<double>& in_vd,
+			       const vector<int>& from_cols) {
   vector<double> out_vd;
   vector<int>::const_iterator it;
   for(it=from_cols.begin(); it!=from_cols.end(); it++) {
