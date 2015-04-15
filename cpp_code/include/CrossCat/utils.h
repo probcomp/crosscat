@@ -246,8 +246,8 @@ std::map<V, std::set<K> > group_by_value(const std::map<K, V>& in_map) {
 }
 
 template <class V>
-std::vector<int> define_group_ordering(const std::map<int, V> local_lookup,
-                                       const std::set<V> in_set) {
+std::vector<int> define_group_ordering(const std::map<int, V>& local_lookup,
+                                       const std::set<V>& in_set) {
     std::vector<int> group_ordering;
     std::map<V, int> V_to_int = set_to_map(in_set);
     int num_elements = local_lookup.size();
