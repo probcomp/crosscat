@@ -179,7 +179,7 @@ std::vector<double> calc_cyclic_b_conditionals(
         double sum_cos_x,
         double kappa,
         double a);
-std::vector<double> calc_cyclic_kappa_conditionals(std::vector<double> kappa_grid,
+std::vector<double> calc_cyclic_kappa_conditionals(const std::vector<double>& kappa_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,

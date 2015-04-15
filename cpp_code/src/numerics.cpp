@@ -615,14 +615,14 @@ vector<double> calc_cyclic_b_conditionals(const vector<double>& b_grid,
     }
     return logps;
 }
-vector<double> calc_cyclic_kappa_conditionals(std::vector<double> kappa_grid,
+vector<double> calc_cyclic_kappa_conditionals(const vector<double>& kappa_grid,
         int count,
         double sum_sin_x,
         double sum_cos_x,
         double a,
         double b) {
-    std::vector<double> logps;
-    std::vector<double>::iterator it;
+    vector<double> logps;
+    vector<double>::const_iterator it;
     for (it = kappa_grid.begin(); it != kappa_grid.end(); it++) {
         double kappa_prime = *it;
         double a_prime = a;
