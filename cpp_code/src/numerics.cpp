@@ -457,13 +457,12 @@ vector<double> calc_continuous_mu_conditionals(const vector<double>& mu_grid,
 }
 
 double calc_multinomial_marginal_logp(int count,
-                                      const map<string, double>& counts,
+                                      const vector<int>& counts,
                                       int K,
                                       double dirichlet_alpha) {
     double sum_lgammas = 0;
-    map<string, double>::const_iterator it;
-    for (it = counts.begin(); it != counts.end(); it++) {
-        int label_count = it->second;
+    for (size_t key = 0; key < counts.size(); key++) {
+        int label_count = counts[key];
         sum_lgammas += lgamma(label_count + dirichlet_alpha);
     }
     int missing_labels = K - counts.size();
@@ -477,18 +476,18 @@ double calc_multinomial_marginal_logp(int count,
     return marginal_logp;
 }
 
-double calc_multinomial_predictive_logp(const string& element,
-                                        const map<string, double>& counts,
+double calc_multinomial_predictive_logp(double element,
+                                        const vector<int>& counts,
                                         int sum_counts,
                                         int K, double dirichlet_alpha) {
     if (isnan(element)) {
         return 0;
     }
-    map<string, double>::const_iterator it = counts.find(stringify(element));
-    double numerator = dirichlet_alpha;
-    if (it != counts.end()) {
-        numerator += it->second;
-    }
+    assert(0 <= element);
+    assert(element < K);
+    assert(element == trunc(element));
+    int i = static_cast<int>(element);
+    double numerator = dirichlet_alpha + counts[i];
     double denominator = sum_counts + K * dirichlet_alpha;
     return log(numerator) - log(denominator);
 }
@@ -496,7 +495,7 @@ double calc_multinomial_predictive_logp(const string& element,
 vector<double> calc_multinomial_dirichlet_alpha_conditional(
     const vector<double>& dirichlet_alpha_grid,
     int count,
-    const map<string, double>& counts,
+    const vector<int>& counts,
     int K) {
     vector<double> logps;
     vector<double>::const_iterator it;

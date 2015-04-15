@@ -37,9 +37,9 @@ public:
                        std::map<std::string, double>& counts) const;
     std::map<std::string, double> _get_suffstats() const;
     std::map<std::string, double> get_hypers() const;
-    void get_keys_counts_for_draw(std::vector<std::string>& keys,
+    void get_keys_counts_for_draw(std::vector<int>& keys,
                                   std::vector<double>& log_counts_for_draw,
-                                  const std::map<std::string, double>& counts) const;
+                                  const std::vector<int>& counts) const;
     double get_draw(int random_seed) const;
     double get_draw_constrained(int random_seed,
                                 const std::vector<double>& constraints) const;
@@ -60,7 +60,7 @@ protected:
     void set_log_Z_0();
     void init_suffstats();
 private:
-    std::map<std::string, double> suffstats;
+    std::vector<int> suffstats;
     int hyper_K;
     double hyper_dirichlet_alpha;
 };
