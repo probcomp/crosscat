@@ -136,9 +136,9 @@ vector<double> std_vector_add(const vector<vector<double> >& vec_vec) {
   return sum_vec;
 }
 
-vector<double> filter_nans(vector<double> values) {
+static vector<double> filter_nans(const vector<double>& values) {
   vector<double> non_nan_values;
-  vector<double>::iterator it;
+  vector<double>::const_iterator it;
   for(it=values.begin(); it!=values.end(); it++) {
     if(isnan(*it)) continue;
     non_nan_values.push_back(*it);
