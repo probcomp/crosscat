@@ -214,15 +214,15 @@ map<int, int> remove_and_reorder(const map<int, int>& old_global_to_local,
   return construct_lookup_map(global_indices);
 }
 
-vector<int> get_indices_to_reorder(vector<int> data_global_column_indices,
-				   map<int, int> global_to_local) {
+vector<int> get_indices_to_reorder(const vector<int>& data_global_column_indices,
+				   const map<int, int>& global_to_local) {
   int num_local_cols = global_to_local.size();
   int num_data_cols = data_global_column_indices.size();
   vector<int> reorder_indices(num_local_cols, -1);
   for(int data_column_idx=0; data_column_idx<num_data_cols; data_column_idx++) {
     int global_column_idx = data_global_column_indices[data_column_idx];
     if(global_to_local.find(global_column_idx) != global_to_local.end()) {
-      int local_idx = global_to_local[data_column_idx];
+      int local_idx = global_to_local.find(data_column_idx)->second;
       reorder_indices[local_idx] = data_column_idx;
     }
   }

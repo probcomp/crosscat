@@ -172,8 +172,9 @@ std::map<int, std::vector<double> > construct_data_map(const MatrixD& data);
 std::map<int, int> remove_and_reorder(const std::map<int, int>& global_to_local,
                                       int global_to_remove);
 
-std::vector<int> get_indices_to_reorder(std::vector<int>
-                                        data_global_column_indices, std::map<int, int> global_to_local);
+std::vector<int> get_indices_to_reorder(const std::vector<int>&
+                                            data_global_column_indices,
+                                        const std::map<int, int>& global_to_local);
 std::vector<double> reorder_per_indices(std::vector<double> raw_values,
                                         std::vector<int> reorder_indices);
 std::vector<double> reorder_per_map(std::vector<double> raw_values,
