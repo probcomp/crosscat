@@ -56,7 +56,7 @@ std::ostream& operator<<(std::ostream& os, const std::map<K, V>& in_map) {
 }
 
 template <class T>
-std::ostream& operator<<(std::ostream& os, const std::set<T> sT) {
+std::ostream& operator<<(std::ostream& os, const std::set<T>& sT) {
     os << "{";
     typename std::set<T>::const_iterator it = sT.begin();
     if (it != sT.end()) {
