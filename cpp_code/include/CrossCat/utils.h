@@ -181,8 +181,9 @@ std::vector<double> reorder_per_map(const std::vector<double>& raw_values,
                                     const std::vector<int>& global_column_indices,
                                     const std::map<int, int>& global_to_local);
 std::vector<std::vector<double> > reorder_per_map(
-                                  std::vector<std::vector<double> > raw_values,
-                                  std::vector<int> global_column_indices, std::map<int, int> global_to_local);
+                                  const std::vector<std::vector<double> >& raw_values,
+                                  const std::vector<int>& global_column_indices,
+                                  const std::map<int, int>& global_to_local);
 
 std::vector<std::vector<int> > draw_crp_init(std::vector<int>
                            global_row_indices,

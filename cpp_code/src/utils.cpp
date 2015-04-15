@@ -249,12 +249,12 @@ vector<double> reorder_per_map(const vector<double>& raw_values,
   return reorder_per_indices(raw_values, reorder_indices);
 }
 
-vector<vector<double> > reorder_per_map(vector<vector<double> > raw_values,
-					vector<int> global_column_indices,
-					map<int, int> global_to_local) {
+vector<vector<double> > reorder_per_map(const vector<vector<double> >& raw_values,
+					const vector<int>& global_column_indices,
+					const map<int, int>& global_to_local) {
   vector<int> reorder_indices = get_indices_to_reorder(global_column_indices, global_to_local);
   vector<vector<double> > arranged_values_v;
-  vector<vector<double> >::iterator it;
+  vector<vector<double> >::const_iterator it;
   for(it=raw_values.begin(); it!=raw_values.end(); it++) {
     vector<double> arranged_values = reorder_per_indices(*it, reorder_indices);
     arranged_values_v.push_back(arranged_values);
