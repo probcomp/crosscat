@@ -161,7 +161,7 @@ void MultinomialComponentModel::init_suffstats() {
     for (int key = 0; key < K; key++) {
         string key_str = stringify(key);
         if (suffstats.find(key_str) == suffstats.end()) {
-            suffstats[stringify(key)] = 0;
+            suffstats[key_str] = 0;
         }
     }
 }
