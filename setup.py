@@ -225,7 +225,7 @@ setup(
         'scipy>=0.11.0',
         'numpy>=1.7.0',
     ],
-    package_dir={'crosscat':'crosscat/'},
+    package_dir={'crosscat':'crosscat'},
     ext_modules=ext_modules,
     cmdclass=cmdclass,
 )
