@@ -214,7 +214,7 @@ if os.path.exists('README.rst'):
 
 setup(
     name='CrossCat',
-    version='0.1.4',
+    version='0.1.5',
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
@@ -225,7 +225,7 @@ setup(
         'scipy>=0.11.0',
         'numpy>=1.7.0',
     ],
-    package_dir={'crosscat':'crosscat/'},
+    package_dir={'crosscat':'crosscat'},
     ext_modules=ext_modules,
     cmdclass=cmdclass,
 )
