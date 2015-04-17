@@ -1,5 +1,0 @@
-crosscat (0.1.4-1) trusty; urgency=medium
-
-  * Initial release. (Closes: #XXXXXX)
-
- -- Taylor R Campbell <riastradh+probcomp@csail.mit.edu>  Wed, 15 Apr 2015 21:40:01 +0000
