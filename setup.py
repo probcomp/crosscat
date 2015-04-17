@@ -30,7 +30,7 @@ else:
 # http://stackoverflow.com/a/18992595
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
-    has_ccache = os.system('which ccache') == 0
+    has_ccache = os.system('which ccache >/dev/null 2>/dev/null') == 0
     if has_ccache:
         os.environ['CC'] = 'ccache gcc'
 
@@ -183,7 +183,8 @@ ext_modules = [
     State_ext,
 ]
 
-if USE_CYTHON:
+# XXX Mega-kludge!
+if USE_CYTHON and sys.argv[1] == 'sdist':
     from Cython.Build import cythonize
     ext_modules = cythonize(ext_modules)
 
