@@ -30,7 +30,7 @@ else:
 # http://stackoverflow.com/a/18992595
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
-    has_ccache = os.system('which ccache') == 0
+    has_ccache = os.system('which ccache >/dev/null 2>/dev/null') == 0
     if has_ccache:
         os.environ['CC'] = 'ccache gcc'
 
