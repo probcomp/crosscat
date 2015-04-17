@@ -183,7 +183,8 @@ ext_modules = [
     State_ext,
 ]
 
-if USE_CYTHON:
+# XXX Mega-kludge!
+if USE_CYTHON and sys.argv[1] == 'sdist':
     from Cython.Build import cythonize
     ext_modules = cythonize(ext_modules)
 
