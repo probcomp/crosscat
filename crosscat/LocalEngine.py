@@ -21,7 +21,7 @@ import copy
 import itertools
 import collections
 import random
-
+import itertools as it
 import numpy
 
 import crosscat.cython_code.State as State
@@ -29,6 +29,8 @@ import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
+
+from scipy.sparse.csgraph import connected_components
 
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
@@ -487,56 +489,80 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e, confidence)
 
-    def ensure_col(self, M_c, T, X_L, X_D, col1, col2, dependent=True, max_iter=100, force=False):
+    def ensure_col(self, M_c, T, X_L, X_D, relinfo):
         ''' Ensures dependencey or indepdendency between columns
+
+        relinfo is a list of where each entry is an (int, int, bool) tuple where the
+        first two entries are column indices and the third entry describes whether the
+        columns are to be dependent (True) or independent (False).
         '''
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
-        if force:
-            for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
-                if not self.assert_col(X_L_i, X_D_i, col1, col2, dependent=dependent):
-                    assg = X_L_i['column_partition']['assignments']
-                    counts = X_L_i['column_partition']['counts']
-                    z_col1 = int(assg[col1])
-                    if dependent:
-                        is_singleton = counts[assg[col1]] == 1
-                        assg[col1] = assg[col2]
-                        counts[assg[col1]] -= 1
-                        counts[assg[col2]] += 1
-                        if is_singleton:
-                            del counts[assg[col2]]
-                            assg = [z if z < z_col1 else z-1 for z in assg]
-                    else:
-                        one_view = len(counts) == 1
-                        if one_view:
-                            counts[0] -= 1
-                            counts.append(1)
-                            assg[col1] = 1
-                        else:
-                            other_views = [v for v in range(len(counts)) if v != z_col1]
-                            new_view = random.choice(other_views)
-                            counts[z_col1] -= 1
-                            counts[new_view] += 1
-                            assg[col1] = new_view
-                    res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=(), n_steps=1)
-                assert self.assert_col(X_L_i, X_D_i, col1, col2, dependent=dependent)
-                X_L_list[i] = X_L_i
-                X_D_list[i] = X_D_i
-        else:
-            kernel_list = ('column_partition_assignments',)
-            for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
-                iters = 0
-                X_L_tmp = copy.deepcopy(X_L_i)
-                X_D_tmp = copy.deepcopy(X_D_i)
-                while not self.assert_col(X_L_tmp, X_D_tmp, col1, col2, dependent=dependent):
-                    if iters >= max_iter:
-                        raise RuntimeError('Maximum ensure iterations reached.')
-                    res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=kernel_list,
-                                       n_steps=1, c=(col1,))
-                    X_L_tmp = res[0]
-                    X_D_tmp = res[1]
-                    iters += 1
-                X_L_list[i] = X_L_tmp
-                X_D_list[i] = X_D_tmp
+
+        def assignment_to_adjacency(assg):
+            n = len(assg)
+            adjmat = numpy.eye(n, dtype=numpy.dtype(int))
+            setlinks = numpy.zeros((n, n), dtype=numpy.dtype(bool))
+            for i, j in it.combinations(range(n), 2):
+                if assg[i] == assg[j]:
+                    adjmat[i, j] = 1
+                    adjmat[j, i] = 1
+            return adjmat, setlinks
+
+        def impose_dependence(adjmat, setlinks, col1, col2):
+            adjmat[col1, col2] = 1
+            adjmat[col2, col1] = 1
+            setlinks[col1, col2] = True
+            setlinks[col2, col1] = True
+            return adjmat, setlinks
+
+        def impose_independence(adjmat, setlinks, col1, col2):
+            if setlinks[col1, col2] and adjmat[col1, col2] != 0:
+                raise RuntimeError("Conflicting information in relinfo")
+            dependent_with_col2 = numpy.nonzero(adjmat[col2, :])[0]
+            for col in dependent_with_col2:
+                adjmat[col1, col] = 0
+                adjmat[col, col1] = 0
+            setlinks[col1, col2] = True
+            setlinks[col2, col1] = True
+            return adjmat, setlinks
+
+        def labels_and_counts_from_adjmat(adjmat):
+            num_components, labels_array = connected_components(adjmat, False)
+            labels = labels_array.tolist()
+            counts = [0]*num_components
+            for z in labels:
+                counts[z] += 1
+            return labels, counts
+
+        for X_L_i in X_L_list:
+            assg = X_L_i['column_partition']['assignments']
+            adjmat, setlinks = assignment_to_adjacency(assg)
+            for col1, col2, dependent in relinfo:
+                if not dependent:
+                    continue
+                adjmat, setlinks = impose_dependence(adjmat, setlinks, col1, col2)
+            for col1, col2, dependent in relinfo:
+                if dependent:
+                    continue
+                adjmat, setlinks = impose_independence(adjmat, setlinks, col1, col2)
+            labels, counts = labels_and_counts_from_adjmat(adjmat)
+            # FIXME: Make sure to update X_D so that the views match!
+            X_L_i['column_partition']['assignments'] = labels
+            X_L_i['column_partition']['counts'] = counts
+
+        # XXX: This is hack so that I don't have to worry about fooling with
+        # the view_state in the metadata (moving around columns and filling
+        # in sufficient statistics). Crosscat doesn't give a hill og beans
+        # about the view_state and will recreate it from the partition info
+        # and T. So I run a no-transition to get crosscta to generate the
+        # metadata.
+        #   When I clean things up, I'll do the more proper things and init
+        # a state w/o the empty transition. This is temporary.
+        # for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
+        #     res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=(), n_steps=1)
+        #     X_L_list[i] = res[0]
+        #     X_D_list[i] = res[1]
+        #     assert self.assert_col(res[0], res[0], col1, col2, dependent=dependent)
 
         if was_multistate:
             return X_L_list, X_D_list
@@ -573,15 +599,22 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             return X_L_list[0], X_D_list[0]
 
-    def assert_col(self, X_L, X_D, col1, col2, dependent=True):
+    def assert_col(self, X_L, X_D, col1, col2, dependent=True, single_bool=False):
         # TODO: X_D is not used for anything other than ensure_multistate.
         # I should probably edit ensure_multistate to take X_L or X_D using
         # keyword arguments.
         X_L_list, _, was_multistate = su.ensure_multistate(X_L, X_D)
         model_assertions = []
+        assertion = True
         for X_L_i in X_L_list:
             assg = X_L_i['column_partition']['assignments']
-            model_assertions.append((assg[col1] == assg[col2]) == dependent)
+            assertion = (assg[col1] == assg[col2]) == dependent
+            if single_bool and not assertion:
+                return False
+            model_assertions.append(assertion)
+
+        if single_bool:
+            return True
 
         if was_multistate:
             return model_assertions
