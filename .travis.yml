@@ -5,5 +5,7 @@ before_install:
     - sudo apt-get update -qq
     - sudo apt-get install -y libboost-all-dev python python-setuptools
     - sudo apt-get install -y python-numpy python-scipy
+    - sudo easy_install cython
 
-install: sudo python setup.py install
+install:
+    - sudo python setup.py install
