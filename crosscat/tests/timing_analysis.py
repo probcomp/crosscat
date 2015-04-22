@@ -26,8 +26,8 @@ def _munge_args(args):
 
 
 if __name__ == '__main__':
+    import crosscat.tests.timing_test_utils as ttu
     from crosscat.utils.general_utils import Timer
-    import crosscat.utils.timing_test_utils as ttu
     from experiment_runner.ExperimentRunner import ExperimentRunner, propagate_to_s3
 
 

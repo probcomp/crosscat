@@ -40,10 +40,10 @@ excludes = [
     ]
 includes = [
     'crosscat.tests.mutual_information_test_utils',
+    'crosscat.tests.timing_test_utils',
     'crosscat.utils.data_utils',
     'crosscat.utils.file_utils',
     'crosscat.utils.inference_utils',
-    'crosscat.utils.timing_test_utils',
     'crosscat.utils.convergence_test_utils',
     'crosscat.LocalEngine',
     'crosscat.HadoopEngine',

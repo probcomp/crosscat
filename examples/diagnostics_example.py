@@ -14,9 +14,9 @@ import crosscat.LocalEngine as LE
 import crosscat.MultiprocessingEngine as ME
 import crosscat.IPClusterEngine as IPE
 import crosscat.tests.plot_utils as pu
+import crosscat.tests.timing_test_utils as ttu
 import crosscat.utils.data_utils as du
 import crosscat.utils.convergence_test_utils as ctu
-import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.diagnostic_utils as su
 
 # <codecell>

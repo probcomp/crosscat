@@ -26,13 +26,13 @@ import itertools
 import random
 #
 import crosscat.tests.mutual_information_test_utils as mitu
+import crosscat.tests.timing_test_utils as ttu
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
 import crosscat.utils.hadoop_utils as hu
 import crosscat.utils.xnet_utils as xu
 import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
-import crosscat.utils.timing_test_utils as ttu
 import crosscat.utils.convergence_test_utils as ctu
 import crosscat.utils.LocalEngine as LE
 import crosscat.utils.HadoopEngine as HE
