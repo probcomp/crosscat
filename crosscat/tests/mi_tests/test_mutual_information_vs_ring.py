@@ -23,8 +23,8 @@ import matplotlib
 matplotlib.use('Agg')
 import numpy
 import pylab as pl
+import crosscat.tests.mutual_information_test_utils as mitu
 import crosscat.utils.inference_utils as iu
-import crosscat.utils.mutual_information_test_utils as mitu
 import crosscat.utils.data_utils as du
 import crosscat.cython_code.State as State
 
