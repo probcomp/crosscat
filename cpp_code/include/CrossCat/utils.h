@@ -22,7 +22,7 @@
 
 #include "numerics.h"
 #include "constants.h"
-class RandomNumberGenerator;
+#include "RandomNumberGenerator.h"
 //
 #include <iostream>
 #include <string>
@@ -302,5 +302,13 @@ bool isnan(const std::string& value);
 #define DISALLOW_COPY_AND_ASSIGN(CLASS)         \
   CLASS(const CLASS&);                          \
   void operator=(const CLASS&)
+
+template <class T>
+void
+random_shuffle(T begin, T end, RandomNumberGenerator& rng) {
+  typename std::iterator_traits<T>::difference_type n = end - begin;
+  for (int i = 0; i < n; i++)
+    std::swap(begin[i], begin[rng.nexti(i)]);
+}
 
 #endif // GUARD_utils_H
