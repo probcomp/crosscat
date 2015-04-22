@@ -4,8 +4,6 @@ import sys
 try:
     from setuptools import setup
 except ImportError:
-    print 'FAILED: from setuptools import setup'
-    print 'TRYING: from distutils.core import setup'
     from distutils.core import setup
 from distutils.extension import Extension
 
