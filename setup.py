@@ -234,8 +234,8 @@ setup(
         'cython>=0.20.1',
     ],
     install_requires=[
-        'scipy>=0.11.0',
         'numpy>=1.7.0',
+        'scipy>=0.11.0',
     ],
     package_dir={'crosscat':'crosscat'},
     ext_modules=ext_modules,
