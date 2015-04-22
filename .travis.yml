@@ -4,6 +4,6 @@ compiler:
 before_install:
     - sudo apt-get update -qq
     - sudo apt-get install -y libboost-all-dev python python-setuptools
-    - sudo apt-get install -y python-nump python-scipy
+    - sudo apt-get install -y python-numpy python-scipy
 
 install: sudo python setup.py install
