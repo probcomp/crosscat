@@ -420,8 +420,7 @@ double View::transition_hyper_i(int which_col, const string& which_hyper) {
 
 double View::transition_hypers_i(int which_col) {
     vector<string> hyper_strings = get_hyper_strings(which_col);
-    // FIXME: use own shuffle so its seed controlled
-    std::random_shuffle(hyper_strings.begin(), hyper_strings.end());
+    random_shuffle(hyper_strings.begin(), hyper_strings.end(), rng);
     double score_delta = 0;
     vector<string>::iterator it;
     for (it = hyper_strings.begin(); it != hyper_strings.end(); ++it) {
@@ -442,8 +441,7 @@ double View::transition_hypers() {
 
 double View::transition(const map<int, vector<double> >& row_data_map) {
     vector<int> which_transitions = create_sequence(3);
-    //FIXME: use own shuffle so seed control is in effect
-    std::random_shuffle(which_transitions.begin(), which_transitions.end());
+    random_shuffle(which_transitions.begin(), which_transitions.end(), rng);
     double score_delta = 0;
     vector<int>::iterator it;
     for (it = which_transitions.begin(); it != which_transitions.end(); ++it) {
