@@ -8,8 +8,6 @@ except ImportError:
     print 'TRYING: from distutils.core import setup'
     from distutils.core import setup
 from distutils.extension import Extension
-#
-import numpy
 
 
 # If we're building from Git (no PKG-INFO), we use Cython.  If we're
@@ -29,6 +27,14 @@ if USE_CYTHON:
         source_ext = '.pyx'
 else:
     source_ext = '.cpp'
+
+
+try:
+    import numpy
+except ImportError:
+    numpy_includes = []
+else:
+    numpy_includes = [numpy.get_include()]
 
 
 # http://stackoverflow.com/a/18992595
@@ -83,7 +89,7 @@ os.chdir(this_dir)
 # locations
 pyx_src_dir = 'crosscat/cython_code'
 cpp_src_dir = 'cpp_code/src'
-include_dirs = ['cpp_code/include/CrossCat', numpy.get_include()]
+include_dirs = ['cpp_code/include/CrossCat'] + numpy_includes
 
 
 # specify sources
