@@ -12,7 +12,7 @@ from distutils.extension import Extension
 # building from an sdist (PKG-INFO exists), we will already have run
 # Cython to compile the .pyx files into .cpp files, and we can treat
 # them as normal C++ extensions.
-USE_CYTHON = not os.path.exists("PKG-INFO")
+USE_CYTHON = not os.path.exists('PKG-INFO')
 
 cmdclass = dict()
 if USE_CYTHON:
@@ -152,36 +152,36 @@ State_sources = generate_sources([
 
 # create exts
 ContinuousComponentModel_ext = Extension(
-    "crosscat.cython_code.ContinuousComponentModel",
+    'crosscat.cython_code.ContinuousComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 MultinomialComponentModel_ext = Extension(
-    "crosscat.cython_code.MultinomialComponentModel",
+    'crosscat.cython_code.MultinomialComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 CyclicComponentModel_ext = Extension(
-    "crosscat.cython_code.CyclicComponentModel",
+    'crosscat.cython_code.CyclicComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=CyclicComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 State_ext = Extension(
-    "crosscat.cython_code.State",
+    'crosscat.cython_code.State',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 #
 ext_modules = [
