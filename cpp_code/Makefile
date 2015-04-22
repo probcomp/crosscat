@@ -37,7 +37,7 @@ TEST_NAMES = \
 	test_multinomial_component_model \
 	test_state \
 	# end of TEST_NAMES
-BROKEN_TEST_NAMES \
+BROKEN_TEST_NAMES = \
 	test_view \
 	test_view_speed \
 	# end of BROKEN_TEST_NAMES

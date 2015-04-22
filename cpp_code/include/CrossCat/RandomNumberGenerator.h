@@ -21,7 +21,7 @@
 #define GUARD_randomnumbergenerator_h
 
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
 #include <ctime>
 //
 #include "constants.h"
