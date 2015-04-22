@@ -25,8 +25,8 @@ from collections import Counter
 import numpy
 import pylab
 
+import crosscat.tests.enumerate_utils as eu
 # import crosscat.utils.file_utils as fu
-import crosscat.utils.enumerate_utils as eu
 import crosscat.utils.sample_utils as su
 import crosscat.utils.plot_utils as pu
 import crosscat.utils.data_utils as du

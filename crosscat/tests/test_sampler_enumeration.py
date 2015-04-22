@@ -21,7 +21,7 @@ import numpy as np
 import random
 import sys
 
-import crosscat.utils.enumerate_utils as eu
+import crosscat.tests.enumerate_utils as eu
 import crosscat.cython_code.State as State
 import pylab
 from scipy.stats import pearsonr as pearsonr
