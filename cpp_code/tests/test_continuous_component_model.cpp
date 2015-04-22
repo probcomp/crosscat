@@ -67,8 +67,9 @@ int main(int argc, char** argv) {
     vector<double> values_to_test_reversed = values_to_test;
     std::reverse(values_to_test_reversed.begin(), values_to_test_reversed.end());
     vector<double> values_to_test_shuffled = values_to_test;
-    std::random_shuffle(values_to_test_shuffled.begin(),
-                        values_to_test_shuffled.end());
+    random_shuffle(values_to_test_shuffled.begin(),
+                   values_to_test_shuffled.end(),
+                   rng);
 
     // print generated values
     //
