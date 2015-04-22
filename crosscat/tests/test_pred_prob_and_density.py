@@ -27,8 +27,8 @@ import numpy
 import pylab
 
 import crosscat.tests.enumerate_utils as eu
+import crosscat.tests.plot_utils as pu
 import crosscat.utils.sample_utils as su
-import crosscat.utils.plot_utils as pu
 import crosscat.utils.data_utils as du
 
 import crosscat.cython_code.State as State

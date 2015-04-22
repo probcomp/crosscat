@@ -7,8 +7,8 @@ import pylab
 #
 from crosscat.LocalEngine import LocalEngine
 import crosscat.tests.geweke_utils as gu
+import crosscat.tests.plot_utils as pu
 import crosscat.utils.data_utils as du
-import crosscat.utils.plot_utils as pu
 import crosscat.utils.convergence_test_utils as ctu
 import experiment_runner.experiment_utils as eu
 
