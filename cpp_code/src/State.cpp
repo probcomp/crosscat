@@ -343,8 +343,7 @@ double State::transition_features(const MatrixD &data,
     int num_features = which_features.size();
     if(num_features==0) {
         which_features = create_sequence(data.size2());
-        // FIXME: use seed to shuffle
-        std::random_shuffle(which_features.begin(), which_features.end());
+        random_shuffle(which_features.begin(), which_features.end(), rng);
     }
     vector<int>::const_iterator it;
     for(it=which_features.begin(); it!=which_features.end(); ++it) {
@@ -588,8 +587,7 @@ double State::transition_row_partition_assignments(const MatrixD& data,
     if (num_rows == 0) {
         num_rows = data.size1();
         which_rows = create_sequence(num_rows);
-        //FIXME: use own shuffle so seed control is in effect
-        std::random_shuffle(which_rows.begin(), which_rows.end());
+        random_shuffle(which_rows.begin(), which_rows.end(), rng);
     }
     set<View*>::iterator svp_it;
     for (svp_it = views.begin(); svp_it != views.end(); ++svp_it) {
@@ -667,8 +665,7 @@ double State::transition_column_hyperparameters(vector<int> which_cols) {
     if (num_cols == 0) {
         num_cols = view_lookup.size();
         which_cols = create_sequence(num_cols);
-        //FIXME: use own shuffle so seed control is in effect
-        std::random_shuffle(which_cols.begin(), which_cols.end());
+        random_shuffle(which_cols.begin(), which_cols.end(), rng);
     }
     vector<int>::const_iterator it;
     for (it = which_cols.begin(); it != which_cols.end(); ++it) {
@@ -791,8 +788,7 @@ double State::transition_column_crp_alpha() {
 
 double State::transition(const MatrixD& data) {
     vector<int> which_transitions = create_sequence(3);
-    //FIXME: use own shuffle so seed control is in effect
-    std::random_shuffle(which_transitions.begin(), which_transitions.end());
+    random_shuffle(which_transitions.begin(), which_transitions.end(), rng);
     double score_delta = 0;
     vector<int>::iterator it;
     for (it = which_transitions.begin(); it != which_transitions.end(); ++it) {
