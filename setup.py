@@ -20,9 +20,13 @@ USE_CYTHON = not os.path.exists("PKG-INFO")
 
 cmdclass = dict()
 if USE_CYTHON:
-    from Cython.Distutils import build_ext
-    cmdclass = {'build_ext': build_ext}
-    source_ext = '.pyx'
+    try:
+        from Cython.Distutils import build_ext
+    except ImportError:
+        source_ext = '.cpp'
+    else:
+        cmdclass = {'build_ext': build_ext}
+        source_ext = '.pyx'
 else:
     source_ext = '.cpp'
 
@@ -222,6 +226,9 @@ setup(
     url='https://github.com/mit-probabilistic-computing-project/crosscat',
     long_description=long_description,
     packages=packages,
+    setup_requires=[
+        'cython>=0.20.1',
+    ],
     install_requires=[
         'scipy>=0.11.0',
         'numpy>=1.7.0',
