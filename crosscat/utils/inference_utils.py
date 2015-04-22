@@ -17,13 +17,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from scipy.misc import logsumexp
 import numpy
 import random
 import math
 
 import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
+from crosscat.utils.general_utils import logsumexp
 import crosscat.utils.sample_utils as su
 import pdb # fixme: remove
 

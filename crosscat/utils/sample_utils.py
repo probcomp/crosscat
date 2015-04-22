@@ -22,8 +22,6 @@ import copy
 import math
 
 from collections import Counter
-#
-from scipy.misc import logsumexp
 
 import copy
 import numpy
@@ -32,6 +30,7 @@ import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
 import crosscat.cython_code.CyclicComponentModel as CYCM
 import crosscat.utils.general_utils as gu
+from crosscat.utils.general_utils import logsumexp
 
 class Bunch(dict):
     def __getattr__(self, key):

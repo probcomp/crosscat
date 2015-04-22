@@ -54,9 +54,9 @@ class MultiprocessingEngine(LE.LocalEngine):
 
 
 if __name__ == '__main__':
+    import crosscat.tests.timing_test_utils as ttu
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
-    import crosscat.utils.timing_test_utils as ttu
 
 
     # settings

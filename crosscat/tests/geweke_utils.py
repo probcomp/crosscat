@@ -32,9 +32,9 @@ import numpy
 import pylab
 #
 import crosscat.LocalEngine as LE
+import crosscat.tests.plot_utils as pu
 import crosscat.utils.general_utils as gu
 import crosscat.utils.data_utils as du
-import crosscat.utils.plot_utils as pu
 import crosscat.tests.quality_tests.quality_test_utils as qtu
 import experiment_runner.experiment_utils as eu
 

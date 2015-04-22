@@ -27,7 +27,7 @@ import crosscat.utils.data_utils as du
 import crosscat.utils.xnet_utils as xu
 from crosscat.LocalEngine import LocalEngine
 import crosscat.cython_code.State as State
-import crosscat.utils.plot_utils as pu
+import crosscat.tests.plot_utils as pu
 import experiment_runner.experiment_utils as eu
 
 

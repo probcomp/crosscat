@@ -25,6 +25,7 @@ import random
 import multiprocessing
 import multiprocessing.pool
 import threading
+import math
 
 #http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 class NoDaemonProcess(multiprocessing.Process):
@@ -156,3 +157,9 @@ def get_dict_as_text(parameters, join_with='\n'):
     lines = map(create_line, parameters.iteritems())
     text = join_with.join(lines)
     return text
+
+def logsumexp(array):
+    m = max(array)
+    return m + math.log(sum(math.exp(a - m) for a in array))
+
+assert logsumexp(range(10)) == 9.4586297444267107

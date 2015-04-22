@@ -2,7 +2,7 @@ import operator
 import itertools
 from functools import partial
 #
-import crosscat.utils.geweke_utils as geweke_utils
+import crosscat.tests.geweke_utils as geweke_utils
 from crosscat.utils.general_utils import MapperContext, NoDaemonPool, Timer
 
 
