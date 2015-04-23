@@ -12,12 +12,12 @@ Local (Ubuntu)
 
 You can install CrossCat using pip (no need to clone from git)::
 
-$ pip install --pre crosscat
+$ pip install crosscat
 
 If you'd like to install from source, CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with::
 
     $ sudo apt-get install cython libboost-all-dev python python-setuptools
-    $ sudo apt-get install python-numpy python-scipy
+    $ sudo apt-get install python-numpy
     $ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
 
     $ cd crosscat
@@ -33,13 +33,6 @@ CrossCat can also be installed in a local Python virtual environment: ::
     $ python setup.py install  # or python setup.py develop
 
 A similar process has been found to work on OSX.
-
-
-VM
----
-We provide a `VirtualBox VM`_ for small scale testing of CrossCat.
-
-.. _`VirtualBox VM`: https://docs.google.com/file/d/0B_x0H2s37jOVanBmYVJMWElPQWM/edit?usp=drive_web
 
 Documentation
 =============
