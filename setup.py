@@ -4,27 +4,35 @@ import sys
 try:
     from setuptools import setup
 except ImportError:
-    print 'FAILED: from setuptools import setup'
-    print 'TRYING: from distutils.core import setup'
     from distutils.core import setup
 from distutils.extension import Extension
-#
-import numpy
 
 
 # If we're building from Git (no PKG-INFO), we use Cython.  If we're
 # building from an sdist (PKG-INFO exists), we will already have run
 # Cython to compile the .pyx files into .cpp files, and we can treat
 # them as normal C++ extensions.
-USE_CYTHON = not os.path.exists("PKG-INFO")
+USE_CYTHON = not os.path.exists('PKG-INFO')
 
 cmdclass = dict()
 if USE_CYTHON:
-    from Cython.Distutils import build_ext
-    cmdclass = {'build_ext': build_ext}
-    source_ext = '.pyx'
+    try:
+        from Cython.Distutils import build_ext
+    except ImportError:
+        source_ext = '.cpp'
+    else:
+        cmdclass = {'build_ext': build_ext}
+        source_ext = '.pyx'
 else:
     source_ext = '.cpp'
+
+
+try:
+    import numpy
+except ImportError:
+    numpy_includes = []
+else:
+    numpy_includes = [numpy.get_include()]
 
 
 # http://stackoverflow.com/a/18992595
@@ -79,7 +87,7 @@ os.chdir(this_dir)
 # locations
 pyx_src_dir = 'crosscat/cython_code'
 cpp_src_dir = 'cpp_code/src'
-include_dirs = ['cpp_code/include/CrossCat', numpy.get_include()]
+include_dirs = ['cpp_code/include/CrossCat'] + numpy_includes
 
 
 # specify sources
@@ -144,36 +152,36 @@ State_sources = generate_sources([
 
 # create exts
 ContinuousComponentModel_ext = Extension(
-    "crosscat.cython_code.ContinuousComponentModel",
+    'crosscat.cython_code.ContinuousComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 MultinomialComponentModel_ext = Extension(
-    "crosscat.cython_code.MultinomialComponentModel",
+    'crosscat.cython_code.MultinomialComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 CyclicComponentModel_ext = Extension(
-    "crosscat.cython_code.CyclicComponentModel",
+    'crosscat.cython_code.CyclicComponentModel',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=CyclicComponentModel_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 State_ext = Extension(
-    "crosscat.cython_code.State",
+    'crosscat.cython_code.State',
     libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
-    language="c++",
+    language='c++',
 )
 #
 ext_modules = [
@@ -215,18 +223,20 @@ if os.path.exists('README.rst'):
 
 setup(
     name='CrossCat',
-    version='0.1.6',
+    version='0.1.8',
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
     url='https://github.com/mit-probabilistic-computing-project/crosscat',
     long_description=long_description,
     packages=packages,
+    setup_requires=[
+        'cython>=0.20.1',
+    ],
     install_requires=[
-        'scipy>=0.11.0',
         'numpy>=1.7.0',
     ],
-    package_dir={'crosscat':'crosscat'},
+    package_dir={'crosscat': 'crosscat'},
     ext_modules=ext_modules,
     cmdclass=cmdclass,
 )

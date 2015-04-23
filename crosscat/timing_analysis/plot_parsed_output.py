@@ -24,8 +24,8 @@ from collections import Counter
 #
 import pylab
 #
+import crosscat.tests.plot_utils as pu
 import crosscat.utils.data_utils as du
-import crosscat.utils.plot_utils as pu
 
 
 get_time_per_step = lambda timing_row: float(timing_row.time_per_step)
