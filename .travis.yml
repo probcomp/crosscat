@@ -2,9 +2,9 @@ language: cpp
 compiler:
     - gcc
 before_install:
-    - sudo apt-get update
-    - sudo apt-get install -y libboost-all-dev python python-setuptools
-    - sudo apt-get install -y cython python-numpy python-scipy
+    - sudo apt-get -y update
+    - sudo apt-get install -y cython libboost-all-dev libboost-random-dev python python-setuptools
+    - sudo apt-get install -y python-numpy python-scipy
 
 install:
     - sudo python setup.py install
