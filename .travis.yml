@@ -3,8 +3,9 @@ compiler:
     - gcc
 before_install:
     - sudo apt-get -y update
-    - sudo apt-get install -y cython libboost-all-dev libboost-random-dev python python-setuptools
+    - sudo apt-get install -y libboost-all-dev libboost-random-dev python python-setuptools python-pip
     - sudo apt-get install -y python-numpy python-scipy
+    - sudo pip install cython
 
 install:
     - sudo python setup.py install
