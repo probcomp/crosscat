@@ -12,16 +12,6 @@
 #include <time.h>
 #include <string>
 
-
-
-class DateTime {
-public:
-    static std::string GetDateTimeStr();
-
-
-};
-
-
 //  need to move Timer to its own
 //   files
 class Timer {
