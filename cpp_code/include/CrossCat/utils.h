@@ -220,6 +220,18 @@ std::map<T, int> set_to_map(const std::set<T>& in_set) {
 }
 
 template <class T>
+std::map<T, int> vector_to_map(const std::vector<T>& in_vector) {
+    std::map<T, int> out_map;
+    typename std::vector<T>::const_iterator it;
+    for (it = in_vector.begin(); it != in_vector.end(); ++it) {
+        T element = *it;
+        int out_map_size = out_map.size();
+        out_map[element] = out_map_size;
+    }
+    return out_map;
+}
+
+template <class T>
 std::string stringify(const T& element) {
     std::stringstream ss;
     ss << element;
