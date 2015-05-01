@@ -400,7 +400,7 @@ private:
     std::map<int, std::vector<double> > vm_a_grids;
     std::map<int, std::vector<double> > vm_kappa_grids;
     // lookups
-    std::set<View*> views;
+    std::vector<View*> views;
     std::map<int, View*> view_lookup;  // global_column_index to View mapping
     // sub-objects
     RandomNumberGenerator rng;
