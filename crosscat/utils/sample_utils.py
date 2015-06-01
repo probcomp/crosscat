@@ -30,6 +30,7 @@ import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
 import crosscat.cython_code.CyclicComponentModel as CYCM
 import crosscat.utils.general_utils as gu
+import crosscat.utils.data_utils as du
 from crosscat.utils.general_utils import logsumexp
 
 class Bunch(dict):
@@ -575,12 +576,45 @@ def get_continuous_mass_within_delta(samples, center, delta):
     mass_fraction = float(num_within_delta) / num_samples
     return mass_fraction
 
+
 def continuous_imputation_confidence(samples, imputed,
-                                     column_component_suffstats_i):
-    col_std = get_column_std(column_component_suffstats_i)
-    delta = .1 * col_std
-    confidence = get_continuous_mass_within_delta(samples, imputed, delta)
-    return confidence
+                                     column_component_suffstats_i,
+                                     n_steps=100, n_chains=1):
+    # XXX: the confidence in continuous imputation is "the probability that
+    # there exists a unimodal summary" which is deifined as the proportion of
+    # probability mass in the largest mode of a DPMM inferred from the simulate
+    # samples. We use crosscat on the samples.
+
+    from crosscat.cython_code import State
+
+    # XXX: assumes samples somes in as a 1-D numpy.array or 1-D list
+    samples = numpy.array([samples])
+
+    num_samples = float(len(samples))
+
+    # XXX: This is a higly problematic consequence of the current definition of
+    # confidence. If the number of samples is 1, then the confidence is always
+    # 1 because there will be exactly 1 mode in the DPMM (recall the DPMM can
+    # have, at maximum, as many modes at data points). I figure if we're going
+    # to give a bad answer, we shoud give it quickly.
+    if num_samples == 1:
+        return 1.0
+
+    confs = []
+    tlist = ['column_hyperparameters',
+             'row_partition_hyperparameters',
+             'row_partition_assignments']
+    M_c = du.gen_M_c_from_T(samples, cctypes=['continuous'])
+    for chain in range(n_chains):
+        ccstate = State.p_State(M_c, samples)
+        ccstate.transition(which_transitions=tlist, n_steps=n_steps)
+        assignment = ccstate.get_X_D()[0]
+        num_cats = max(assignment)+1
+        props = numpy.histogram(assignment, num_cats)[0]/num_samples
+        confs.append(max(props))
+
+    return numpy.mean(confs)
+
 
 def continuous_imputation(samples, get_next_seed):
     imputed = numpy.median(samples)
