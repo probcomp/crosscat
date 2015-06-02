@@ -579,7 +579,8 @@ def get_continuous_mass_within_delta(samples, center, delta):
 
 def continuous_imputation_confidence(samples, imputed,
                                      column_component_suffstats_i,
-                                     n_steps=100, n_chains=1):
+                                     n_steps=100, n_chains=1,
+                                     return_metadata=False):
     # XXX: the confidence in continuous imputation is "the probability that
     # there exists a unimodal summary" which is deifined as the proportion of
     # probability mass in the largest mode of a DPMM inferred from the simulate
@@ -588,9 +589,8 @@ def continuous_imputation_confidence(samples, imputed,
     from crosscat.cython_code import State
 
     # XXX: assumes samples somes in as a 1-D numpy.array or 1-D list
-    samples = numpy.array([samples])
-
     num_samples = float(len(samples))
+    T = [[x] for x in samples]
 
     # XXX: This is a higly problematic consequence of the current definition of
     # confidence. If the number of samples is 1, then the confidence is always
@@ -604,16 +604,32 @@ def continuous_imputation_confidence(samples, imputed,
     tlist = ['column_hyperparameters',
              'row_partition_hyperparameters',
              'row_partition_assignments']
-    M_c = du.gen_M_c_from_T(samples, cctypes=['continuous'])
+    M_c = du.gen_M_c_from_T(T, cctypes=['continuous'])
+
+    if return_metadata:
+        X_L_list = []
+        X_D_list = []
+
     for chain in range(n_chains):
-        ccstate = State.p_State(M_c, samples)
+        ccstate = State.p_State(M_c, T)
         ccstate.transition(which_transitions=tlist, n_steps=n_steps)
-        assignment = ccstate.get_X_D()[0]
+
+        X_D = ccstate.get_X_D()
+
+        assignment = X_D[0]
         num_cats = max(assignment)+1
         props = numpy.histogram(assignment, num_cats)[0]/num_samples
         confs.append(max(props))
 
-    return numpy.mean(confs)
+        if return_metadata:
+            X_L_list.append(ccstate.get_X_L())
+            X_D_list.append(X_D)
+
+    conf = numpy.mean(confs)
+    if return_metadata:
+        return conf, X_L_list, X_D_list
+    else:
+        return conf
 
 
 def continuous_imputation(samples, get_next_seed):
