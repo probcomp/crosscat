@@ -21,8 +21,8 @@ import itertools
 import random
 import numpy
 import crosscat.LocalEngine as LE
+import crosscat.tests.mutual_information_test_utils as mitu
 import crosscat.utils.inference_utils as iu
-import crosscat.utils.mutual_information_test_utils as mitu
 
 def run_mi_test_local(data_dict):
 

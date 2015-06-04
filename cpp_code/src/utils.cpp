@@ -383,7 +383,7 @@ int intify(const string& str) {
 }
 
 vector<double> create_crp_alpha_grid(int n_values, int N_GRID) {
-  vector<double> crp_alpha_grid = log_linspace(1., n_values, N_GRID);
+  vector<double> crp_alpha_grid = log_linspace(1./n_values, n_values, N_GRID);
   return crp_alpha_grid;
 }
 

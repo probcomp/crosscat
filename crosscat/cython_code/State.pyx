@@ -26,9 +26,9 @@ cimport numpy as np
 #
 import numpy
 #
+# import crosscat.tests.plot_utils as pu
 import crosscat.utils.file_utils as fu
 import crosscat.utils.general_utils as gu
-# import crosscat.utils.plot_utils as pu
 
 
 cdef double set_double(double& to_set, double value):
