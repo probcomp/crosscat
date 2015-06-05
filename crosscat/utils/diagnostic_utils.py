@@ -46,12 +46,5 @@ def column_partition_assignments_to_f_z_statistic(column_partition_assignments,
     return numpy.array(as_list)[:, numpy.newaxis]
 
 def default_reprocess_diagnostics_func(diagnostics_arr_dict):
-    column_partition_assignments = diagnostics_arr_dict.pop('column_partition_assignments')
-    # column_paritition_assignments are column, iter, chain
-    D = column_partition_assignments.shape[0] - 1
-    f_z_statistic_0_1 = column_partition_assignments_to_f_z_statistic(column_partition_assignments, 1, 0)
-    f_z_statistic_0_D = column_partition_assignments_to_f_z_statistic(column_partition_assignments, D, 0)
-    diagnostics_arr_dict['f_z[0, 1]'] = f_z_statistic_0_1
-    diagnostics_arr_dict['f_z[0, D]'] = f_z_statistic_0_D
-    #
+    del diagnostics_arr_dict['column_partition_assignments']
     return diagnostics_arr_dict
