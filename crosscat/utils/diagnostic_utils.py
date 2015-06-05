@@ -46,5 +46,11 @@ def column_partition_assignments_to_f_z_statistic(column_partition_assignments,
     return numpy.array(as_list)[:, numpy.newaxis]
 
 def default_reprocess_diagnostics_func(diagnostics_arr_dict):
+    # This code formerly did stuff with the column partition
+    # assignments after deleting it.  The stuff it did was apparently
+    # unused, and caused trouble with one-column tables, so we have
+    # removed it.  But until someone ascertains that it is safe to
+    # leave the column partition assignments in, we'll continue
+    # deleting it for now.
     del diagnostics_arr_dict['column_partition_assignments']
     return diagnostics_arr_dict
