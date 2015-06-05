@@ -114,7 +114,7 @@ X_L_list, X_D_list, diagnostics_dict = engine.analyze(M_c, T, X_L_list, X_D_list
 # <codecell>
 
 # plot results
-which_diagnostics = ['num_views', 'column_crp_alpha', 'ARI', 'f_z[0, 1]', 'f_z[0, D]']
+which_diagnostics = ['num_views', 'column_crp_alpha', 'ARI']
 pu.plot_diagnostics(diagnostics_dict, hline_lookup=ground_truth_lookup,
         which_diagnostics=which_diagnostics)
 # pu.plot_views(numpy.array(T), X_D_gen, X_L_gen, M_c)
