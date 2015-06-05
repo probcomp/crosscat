@@ -21,6 +21,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.map cimport map as c_map
+from libcpp.set cimport set as c_set
 from cython.operator import dereference
 cimport numpy as np
 #
@@ -30,6 +31,10 @@ import numpy
 import crosscat.utils.file_utils as fu
 import crosscat.utils.general_utils as gu
 
+
+cdef c_map[int, c_set[int]] empty_map_of_int_set():
+    cdef c_map[int, c_set[int]] retval
+    return retval
 
 cdef double set_double(double& to_set, double value):
      (&to_set)[0] = value	# (&...)[0] works around Cython >=0.18 bug.
@@ -127,6 +132,8 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    c_map[int, c_map[string, double]] hypers_m,
                                    vector[vector[int]] column_partition,
+                                   c_map[int, c_set[int]] col_ensure_dep,
+                                   c_map[int, c_set[int]] col_ensure_ind,
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
@@ -223,12 +230,20 @@ cdef class p_State:
               column_crp_alpha = constructor_args['column_crp_alpha']
               row_partition_v = constructor_args['row_partition_v']
               row_crp_alpha_v = constructor_args['row_crp_alpha_v']
+              col_ensure_dep = constructor_args['col_ensure_dep']
+              col_ensure_ind = constructor_args['col_ensure_ind']
+              if col_ensure_dep is None:
+                  col_ensure_dep = empty_map_of_int_set()
+                  col_ensure_ind = empty_map_of_int_set()
               self.thisptr = new_State(dereference(self.dataptr),
                                        self.column_types,
                                        self.event_counts,
                                        self.gri, self.gci,
                                        hypers_m,
-                                       column_partition, column_crp_alpha,
+                                       column_partition,
+                                       col_ensure_dep,
+                                       col_ensure_ind,
+                                       column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
                                        ROW_CRP_ALPHA_GRID,
                                        COLUMN_CRP_ALPHA_GRID,
@@ -443,6 +458,13 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      column_crp_alpha = X_L['column_partition']['hypers']['alpha']
      row_partition_v = map(indicator_list_to_list_of_list, X_D)
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
+     col_ensure = X_L.get('col_ensure', None)
+     if col_ensure is None:
+         col_ensure_dep = None
+         col_ensure_ind = None
+     else:
+         col_ensure_dep = X_L['col_ensure']['dependent']
+         col_ensure_ind = X_L['col_ensure']['inddependent']
      n_grid = 31
      seed = 0
      ct_kernel=0
@@ -458,6 +480,8 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      constructor_args['N_GRID'] = n_grid
      constructor_args['SEED'] = seed
      constructor_args['CT_KERNEL'] = ct_kernel
+     constructor_args['col_ensure_dep'] = col_ensure_dep
+     constructor_args['col_ensure_ind'] = col_ensure_ind
      #
      return constructor_args
 

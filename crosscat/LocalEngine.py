@@ -492,9 +492,41 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def ensure_col(self, M_c, T, X_L, X_D, relinfo):
         ''' Ensures dependencey or indepdendency between columns
 
-        relinfo is a list of where each entry is an (int, int, bool) tuple where the
-        first two entries are column indices and the third entry describes whether the
-        columns are to be dependent (True) or independent (False).
+        relinfo is a list of where each entry is an (int, int, bool) tuple
+        where the first two entries are column indices and the third entry
+        describes whether the columns are to be dependent (True) or independent
+        (False).
+
+        Behavior Notes:
+        ensure_col will add col_esnure enforcement to the meta data (top level
+        of X_L); unensure_col will remove it. Calling ensure_col twice will
+        replace the first ensure.
+
+        Because this opertaion chnages the metadata, the user should be aware
+        that it will clobber any existing analyses.
+
+        Implementation Notes:
+        This function relies on the fact that the crosscat State intializer
+        does not use the sufficient statistics in X_L. The only things that we
+        update are the column partition assignments in X_L and the row
+        partition assignments in X_D.
+
+        The meta data looks like this:
+        >>> relinfo
+        [(1, 2, True), (2, 5, True), (1, 5, True), (1, 3, False)]
+        >>> X_L['col_ensure']
+        {
+        "dependent" :
+        {
+            1 : [2, 5],
+            2 : [1, 5],
+            5 : [1, 2]
+        },
+        "independent" :
+        {
+            1 : [3],
+            3 : [1]
+        }
         '''
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
 
@@ -534,7 +566,25 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 counts[z] += 1
             return labels, counts
 
-        for X_L_i in X_L_list:
+        col_ensure_md = dict()
+        col_ensure_md[True] = []
+        col_ensure_md[False] = []
+
+        for col1, col2, dependent in relinfo:
+            if col1 == col2:
+                raise ValueError("col1 cannot be the same as col2 in relinfo")
+
+            if col_ensure_md[dependent].get(col1, None) is None:
+                col_ensure_md[dependent][col1] = [col2]
+            elif col2 not in col_ensure_md[dependent][col1]:
+                col_ensure_md[dependent][col1].append(col2)
+
+            if col_ensure_md[dependent].get(col2, None) is None:
+                col_ensure_md[dependent][col2] = [col1]
+            elif col1 not in col_ensure_md[dependent][col2]:
+                col_ensure_md[dependent][col2].append(col1)
+
+        for X_L_i, X_D_i in zip(X_L_list, X_D_list):
             assg = X_L_i['column_partition']['assignments']
             adjmat, setlinks = assignment_to_adjacency(assg)
             for col1, col2, dependent in relinfo:
@@ -545,10 +595,31 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 if dependent:
                     continue
                 adjmat, setlinks = impose_independence(adjmat, setlinks, col1, col2)
+
+            # Assert that the ensures still hold
+            for col1, col2, dependent in relinfo:
+                assert adjmat[col1, col2] == dependent
+                assert adjmat[col2, col1] == dependent
+
             labels, counts = labels_and_counts_from_adjmat(adjmat)
-            # FIXME: Make sure to update X_D so that the views match!
+            # FIXME: Fill in view alphas
             X_L_i['column_partition']['assignments'] = labels
             X_L_i['column_partition']['counts'] = counts
+
+            X_L_i['col_ensure'] = dict()
+            X_L_i['col_ensure']['dependent'] = col_ensure_md[True]
+            X_L_i['col_ensure']['independent'] = col_ensure_md[False]
+
+            # Because this should be thought of as an initalization, we are
+            # going to randomly re-intialize X_D based on the new
+            # column partition.
+            num_views = len(X_L_i['column_partition']['counts'])
+            if len(X_D_i) > num_views:
+                X_D_i = X_D_i[:num_views]
+            else:
+                # TODO: Generate new row partitions using CRP
+                while len(X_D_i) < num_views:
+                    X_D_i.append(random.choice(X_D_i))
 
         # XXX: This is hack so that I don't have to worry about fooling with
         # the view_state in the metadata (moving around columns and filling
@@ -558,11 +629,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         # metadata.
         #   When I clean things up, I'll do the more proper things and init
         # a state w/o the empty transition. This is temporary.
-        # for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
-        #     res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=(), n_steps=1)
-        #     X_L_list[i] = res[0]
-        #     X_D_list[i] = res[1]
-        #     assert self.assert_col(res[0], res[0], col1, col2, dependent=dependent)
+        for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
+            res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=(), n_steps=1)
+            X_L_list[i] = res[0]
+            X_D_list[i] = res[1]
+            assert self.assert_col(res[0], res[0], col1, col2, dependent=dependent)
 
         if was_multistate:
             return X_L_list, X_D_list

@@ -56,6 +56,8 @@ public:
      *  \param HYPERS_M A map of column index to column hypers
      *  \param column_partition The partitioning of column indices.  Each partition
      *         denoting a view
+     *  \param col_ensure_dep
+     *  \param col_ensure_ind
      *  \param COLUMN_CRP_ALPHA The column CRP hyperparameter
      *  \param row_partition_v A vector of row partitionings.  One row partitioning
      *         for each element of column_partition
@@ -71,6 +73,8 @@ public:
           const std::vector<int>& global_col_indices,
           const std::map<int, CM_Hypers>& HYPERS_M,
           const std::vector<std::vector<int> >& column_partition,
+          const std::map<int, std::set<int> >& col_ensure_dep,
+          const std::map<int, std::set<int> >& col_ensure_ind,
           double COLUMN_CRP_ALPHA,
           const std::vector<std::vector<std::vector<int> > >& row_partition_v,
           const std::vector<double>& row_crp_alpha_v,
@@ -87,6 +91,8 @@ public:
      *         Valid values are defined in constants.h
      *  \param GLOBAL_COL_MULTINOMIAL_COUNTS A vector of counts, denoting the number
      *         of possible values.
+     *  \param col_ensure_dep
+     *  \param col_ensure_ind
      *  \param global_row_indices A vector of ints, denoting the row indices
      *         of the data matrix passed in
      *  \param global_col_indices A vector of ints, denoting the column indices
@@ -350,7 +356,8 @@ public:
             const View& v,
             double& crp_log_delta,
             double& data_log_delta,
-            const CM_Hypers& hypers) const;
+            const CM_Hypers& hypers,
+            const int& global_col_idx) const;
     /**
      * \return The predictive log likelihoods of a feature belonging to each view
      */
@@ -388,6 +395,9 @@ private:
     double column_crp_score;
     double data_score;
     int ct_kernel;
+    // column structure ensure
+    std::map<int, std::set<int> > column_dependencies;
+    std::map<int, std::set<int> > column_independencies;
     // grids
     std::vector<double> column_crp_alpha_grid;
     std::vector<double> row_crp_alpha_grid;
