@@ -498,6 +498,14 @@ vector<int> State::get_column_partition_counts() const {
     return get_view_counts();
 }
 
+std::map<int, std::set<int> > State::get_column_dependencies() const {
+    return column_dependencies;
+}
+
+std::map<int, std::set<int> > State::get_column_independencies() const {
+    return column_independencies;
+}
+
 vector<vector<int> > State::get_X_D() const {
     vector<vector<int> > X_D;
     set<View*>::iterator it;

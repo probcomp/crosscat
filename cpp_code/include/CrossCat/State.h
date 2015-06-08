@@ -122,6 +122,8 @@ public:
     //
     // getters
     //
+    std::map<int, std::set<int> > get_column_dependencies() const;
+    std::map<int, std::set<int> > get_column_independencies() const;
     /**
      * \return The number of columns in the state
      */

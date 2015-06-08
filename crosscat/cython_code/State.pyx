@@ -108,6 +108,8 @@ cdef extern from "State.h":
           vector[int] get_column_partition_counts()
           #
           c_map[string, double] get_row_partition_model_hypers_i(int view_idx)
+          c_map[int, c_set[int]] get_column_dependencies();
+          c_map[int, c_set[int]] get_column_independencies();
           vector[int] get_row_partition_model_counts_i(int view_idx)
           vector[vector[c_map[string, double]]] get_column_component_suffstats_i(int view_idx)
           #
@@ -350,6 +352,18 @@ cdef class p_State:
             view_state_i = self.get_view_state_i(view_idx)
             view_state.append(view_state_i)
         return view_state
+    def get_col_ensure_dep(self):
+        retval = self.thisptr.get_column_dependencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
+    def get_col_ensure_ind(self):
+        retval = self.thisptr.get_column_independencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
     # mutators
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
@@ -404,10 +418,21 @@ cdef class p_State:
           column_partition = self.get_column_partition()
           column_hypers = self.get_column_hypers()
           view_state = self.get_view_state()
+          
+          col_ensure_dep = self.get_col_ensure('dependent')
+          col_ensure_ind = self.get_col_ensure('independent')
+
           X_L = dict()
           X_L['column_partition'] = column_partition
           X_L['column_hypers'] = column_hypers
           X_L['view_state'] = view_state
+          if col_ensure_dep is not None or col_ensure_ind is not None:
+              X_L['col_ensure'] = dict()
+          if col_ensure_dep is not None:
+              X_L['col_ensure']['dependent'] = col_ensure_dep 
+          if col_ensure_ind is not None:
+              X_L['col_ensure']['independent'] = col_ensure_ind
+
           sparsify_X_L(self.M_c, X_L)
           return X_L
     def save(self, filename, dir='', **kwargs):
