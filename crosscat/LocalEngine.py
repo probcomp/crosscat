@@ -567,22 +567,24 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             return labels, counts
 
         col_ensure_md = dict()
-        col_ensure_md[True] = []
-        col_ensure_md[False] = []
+        col_ensure_md[True] = dict()
+        col_ensure_md[False] = dict()
 
         for col1, col2, dependent in relinfo:
             if col1 == col2:
                 raise ValueError("col1 cannot be the same as col2 in relinfo")
 
+            col_ensure_md[dependent][col1] = set([col2])
+
             if col_ensure_md[dependent].get(col1, None) is None:
-                col_ensure_md[dependent][col1] = [col2]
-            elif col2 not in col_ensure_md[dependent][col1]:
-                col_ensure_md[dependent][col1].append(col2)
+                col_ensure_md[dependent][col1] = set([col2])
+            else:
+                col_ensure_md[dependent][col1].add(col2)
 
             if col_ensure_md[dependent].get(col2, None) is None:
-                col_ensure_md[dependent][col2] = [col1]
-            elif col1 not in col_ensure_md[dependent][col2]:
-                col_ensure_md[dependent][col2].append(col1)
+                col_ensure_md[dependent][col2] = set([col1])
+            else:
+                col_ensure_md[dependent][col2].add(col1)
 
         for X_L_i, X_D_i in zip(X_L_list, X_D_list):
             assg = X_L_i['column_partition']['assignments']
@@ -613,8 +615,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 X_D_i = X_D_i[:num_views]
             else:
                 # TODO: Generate new row partitions using CRP
+                # TODO: Generate CRP alpha from the proper grid
                 while len(X_D_i) < num_views:
                     X_D_i.append(random.choice(X_D_i))
+                    # XXX: this metadata is NOT complete; it is just enough to
+                    # re-init a state without complaints.
+                    X_L_i['view_state'].append(dict(X_L_i['view_state'][-1]))
 
             # Assert that the ensures still hold in adjmat
             for col1, col2, dependent in relinfo:
