@@ -596,11 +596,6 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                     continue
                 adjmat, setlinks = impose_independence(adjmat, setlinks, col1, col2)
 
-            # Assert that the ensures still hold
-            for col1, col2, dependent in relinfo:
-                assert adjmat[col1, col2] == dependent
-                assert adjmat[col2, col1] == dependent
-
             labels, counts = labels_and_counts_from_adjmat(adjmat)
             # FIXME: Fill in view alphas
             X_L_i['column_partition']['assignments'] = labels
@@ -620,6 +615,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 # TODO: Generate new row partitions using CRP
                 while len(X_D_i) < num_views:
                     X_D_i.append(random.choice(X_D_i))
+
+            # Assert that the ensures still hold in adjmat
+            for col1, col2, dependent in relinfo:
+                assert self.assert_col(X_L_i, X_D_i, col1, col2, dependent,
+                                       True)
 
         # XXX: This is hack so that I don't have to worry about fooling with
         # the view_state in the metadata (moving around columns and filling
