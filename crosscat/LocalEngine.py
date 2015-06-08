@@ -636,10 +636,13 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         #   When I clean things up, I'll do the more proper things and init
         # a state w/o the empty transition. This is temporary.
         for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
-            res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=(), n_steps=1)
+            res = self.analyze(M_c, T, X_L_i, X_D_i,
+                               kernel_list=('column_partition_hyperparameter',),
+                               n_steps=1)
             X_L_list[i] = res[0]
             X_D_list[i] = res[1]
-            assert self.assert_col(res[0], res[0], col1, col2, dependent=dependent)
+            assert self.assert_col(res[0], res[1], col1, col2,
+                                   dependent=dependent)
 
         if was_multistate:
             return X_L_list, X_D_list

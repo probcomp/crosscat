@@ -428,9 +428,7 @@ cdef class p_State:
           X_L['view_state'] = view_state
           if col_ensure_dep is not None or col_ensure_ind is not None:
               X_L['col_ensure'] = dict()
-          if col_ensure_dep is not None:
               X_L['col_ensure']['dependent'] = col_ensure_dep 
-          if col_ensure_ind is not None:
               X_L['col_ensure']['independent'] = col_ensure_ind
 
           sparsify_X_L(self.M_c, X_L)
@@ -485,11 +483,18 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
      col_ensure = X_L.get('col_ensure', None)
      if col_ensure is None:
-         col_ensure_dep = None
-         col_ensure_ind = None
+         col_ensure_dep = empty_map_of_int_set()
+         col_ensure_ind = empty_map_of_int_set()
      else:
-         col_ensure_dep = X_L['col_ensure']['dependent']
-         col_ensure_ind = X_L['col_ensure']['independent']
+         if X_L['col_ensure'].get('dependent', None) is None:
+             col_ensure_dep = empty_map_of_int_set()
+         else:
+             col_ensure_dep = X_L['col_ensure']['dependent']
+
+         if X_L['col_ensure'].get('independent', None) is None:
+             col_ensure_ind = empty_map_of_int_set()
+         else:
+             col_ensure_ind = X_L['col_ensure']['independent']
      n_grid = 31
      seed = 0
      ct_kernel=0
