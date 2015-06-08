@@ -419,8 +419,8 @@ cdef class p_State:
           column_hypers = self.get_column_hypers()
           view_state = self.get_view_state()
           
-          col_ensure_dep = self.get_col_ensure('dependent')
-          col_ensure_ind = self.get_col_ensure('independent')
+          col_ensure_dep = self.get_col_ensure_dep()
+          col_ensure_ind = self.get_col_ensure_ind()
 
           X_L = dict()
           X_L['column_partition'] = column_partition
@@ -489,7 +489,7 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
          col_ensure_ind = None
      else:
          col_ensure_dep = X_L['col_ensure']['dependent']
-         col_ensure_ind = X_L['col_ensure']['inddependent']
+         col_ensure_ind = X_L['col_ensure']['independent']
      n_grid = 31
      seed = 0
      ct_kernel=0
