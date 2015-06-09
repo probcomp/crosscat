@@ -729,9 +729,9 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             column_independencies.find(global_col_idx) != column_independencies.end()){
         // Check whether the feature can or cannot belong to this view. If it
         // violates either column_dependencies or column_independencies, then
-        // delta is log(0). Awesome. Now we have Inf infecting everything.
-        // Get the columns in this view
+        // delta is log(0). 
 
+        // Get the columns in this view
         std::vector<int> cols_in_view;
         for(std::map<int,int>::const_iterator it = v.global_to_local.begin();
                 it != v.global_to_local.end(); it++) {
@@ -755,8 +755,8 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             // be dependent of the column at global_col_idx
             for (int i = 0; i < cols_in_view.size(); ++i){
                 int col = cols_in_view[i];
-                if(column_independencies.find(global_col_idx)->second.find(col) !=
-                        column_independencies.find(global_col_idx)->second.end()){
+                map<int, set<int> >::const_iterator inds = column_independencies.find(global_col_idx); 
+                if(inds->second.find(col) != inds->second.end()){
                     view_violates_ind = true;
                 }
             }
@@ -764,7 +764,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
 
         // Either dependence or independence can be violated but not both, if
         // the state was initalized properly.
-        assert( !(view_violates_dep and  view_violates_ind) );
+        assert( !(view_violates_dep and view_violates_ind) );
 
     }
 
