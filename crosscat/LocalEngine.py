@@ -489,7 +489,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e, confidence)
 
-    def ensure_col(self, M_c, T, X_L, X_D, relinfo):
+    def ensure_col(self, M_c, M_r, T, X_L, X_D, relinfo, max_rejections=100):
         ''' Ensures dependencey or indepdendency between columns
 
         relinfo is a list of where each entry is an (int, int, bool) tuple
@@ -498,18 +498,18 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         (False).
 
         Behavior Notes:
-        ensure_col will add col_esnure enforcement to the meta data (top level
+        ensure_col will add col_esnure enforcement to the metadata (top level
         of X_L); unensure_col will remove it. Calling ensure_col twice will
         replace the first ensure.
 
-        Because this opertaion chnages the metadata, the user should be aware
-        that it will clobber any existing analyses.
+        This operation destroys the existing X_L and X_D metadata; the user
+        should be aware that it will clobber any existing analyses.
 
         Implementation Notes:
-        This function relies on the fact that the crosscat State intializer
-        does not use the sufficient statistics in X_L. The only things that we
-        update are the column partition assignments in X_L and the row
-        partition assignments in X_D.
+        Initialization is implemented via rejection (by repeatedyl initalizing
+        states and throwing ones out that do not adhear to relinfo). This means
+        that in the event the contraints in relinfo are complex, or impossible,
+        that the rejection alogrithm may fail.
 
         The meta data looks like this:
         >>> relinfo
@@ -529,42 +529,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         }
         '''
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
-
-        def assignment_to_adjacency(assg):
-            n = len(assg)
-            adjmat = numpy.eye(n, dtype=numpy.dtype(int))
-            setlinks = numpy.zeros((n, n), dtype=numpy.dtype(bool))
-            for i, j in it.combinations(range(n), 2):
-                if assg[i] == assg[j]:
-                    adjmat[i, j] = 1
-                    adjmat[j, i] = 1
-            return adjmat, setlinks
-
-        def impose_dependence(adjmat, setlinks, col1, col2):
-            adjmat[col1, col2] = 1
-            adjmat[col2, col1] = 1
-            setlinks[col1, col2] = True
-            setlinks[col2, col1] = True
-            return adjmat, setlinks
-
-        def impose_independence(adjmat, setlinks, col1, col2):
-            if setlinks[col1, col2] and adjmat[col1, col2] != 0:
-                raise RuntimeError("Conflicting information in relinfo")
-            dependent_with_col2 = numpy.nonzero(adjmat[col2, :])[0]
-            for col in dependent_with_col2:
-                adjmat[col1, col] = 0
-                adjmat[col, col1] = 0
-            setlinks[col1, col2] = True
-            setlinks[col2, col1] = True
-            return adjmat, setlinks
-
-        def labels_and_counts_from_adjmat(adjmat):
-            num_components, labels_array = connected_components(adjmat, False)
-            labels = labels_array.tolist()
-            counts = [0]*num_components
-            for z in labels:
-                counts[z] += 1
-            return labels, counts
+        if was_multistate:
+            num_states = len(X_L_list)
+        else:
+            num_states = 1
 
         col_ensure_md = dict()
         col_ensure_md[True] = dict()
@@ -586,68 +554,36 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             else:
                 col_ensure_md[dependent][col2].add(col1)
 
-        for X_L_i, X_D_i in zip(X_L_list, X_D_list):
-            assg = X_L_i['column_partition']['assignments']
-            adjmat, setlinks = assignment_to_adjacency(assg)
-            for col1, col2, dependent in relinfo:
-                if not dependent:
-                    continue
-                adjmat, setlinks = impose_dependence(adjmat, setlinks, col1, col2)
-            for col1, col2, dependent in relinfo:
-                if dependent:
-                    continue
-                adjmat, setlinks = impose_independence(adjmat, setlinks, col1, col2)
+        def assert_relinfo(X_L, X_D, relinfo):
+            for col1, col2, dep in relinfo:
+                if not self.assert_col(X_L, X_D, col1, col2, dep, True):
+                    return False
+            return True
 
-            labels, counts = labels_and_counts_from_adjmat(adjmat)
-            # FIXME: Fill in view alphas
-            X_L_i['column_partition']['assignments'] = labels
-            X_L_i['column_partition']['counts'] = counts
+        X_L_out = []
+        X_D_out = []
+        for _ in range(num_states):
+            counter = 0
+            X_L_i, X_D_i = self.initialize(M_c, M_r, T)
+            while not assert_relinfo(X_L_i, X_D_i, relinfo):
+                if counter > max_rejections:
+                    raise RuntimeError("Could not ranomly generate a partition \
+                                       that satisfies the constraints in \
+                                       relinfo")
+                counter += 1
+                X_L_i, X_D_i = self.initialize(M_c, M_r, T)
 
             X_L_i['col_ensure'] = dict()
             X_L_i['col_ensure']['dependent'] = col_ensure_md[True]
             X_L_i['col_ensure']['independent'] = col_ensure_md[False]
 
-            # Because this should be thought of as an initalization, we are
-            # going to randomly re-intialize X_D based on the new
-            # column partition.
-            num_views = len(X_L_i['column_partition']['counts'])
-            if len(X_D_i) > num_views:
-                X_D_i = X_D_i[:num_views]
-            else:
-                # TODO: Generate new row partitions using CRP
-                # TODO: Generate CRP alpha from the proper grid
-                while len(X_D_i) < num_views:
-                    X_D_i.append(random.choice(X_D_i))
-                    # XXX: this metadata is NOT complete; it is just enough to
-                    # re-init a state without complaints.
-                    X_L_i['view_state'].append(dict(X_L_i['view_state'][-1]))
-
-            # Assert that the ensures still hold in adjmat
-            for col1, col2, dependent in relinfo:
-                assert self.assert_col(X_L_i, X_D_i, col1, col2, dependent,
-                                       True)
-
-        # XXX: This is hack so that I don't have to worry about fooling with
-        # the view_state in the metadata (moving around columns and filling
-        # in sufficient statistics). Crosscat doesn't give a hill og beans
-        # about the view_state and will recreate it from the partition info
-        # and T. So I run a no-transition to get crosscta to generate the
-        # metadata.
-        #   When I clean things up, I'll do the more proper things and init
-        # a state w/o the empty transition. This is temporary.
-        for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
-            res = self.analyze(M_c, T, X_L_i, X_D_i,
-                               kernel_list=('column_partition_hyperparameter',),
-                               n_steps=1)
-            X_L_list[i] = res[0]
-            X_D_list[i] = res[1]
-            assert self.assert_col(res[0], res[1], col1, col2,
-                                   dependent=dependent)
+            X_D_out.append(X_D_i)
+            X_L_out.append(X_L_i)
 
         if was_multistate:
-            return X_L_list, X_D_list
+            return X_L_out, X_D_out
         else:
-            return X_L_list[0], X_D_list[0]
+            return X_L_out[0], X_D_out[0]
 
     def ensure_row(self, M_c, T, X_L, X_D, row1, row2, dependent=True, wrt=None, max_iter=100,
                    force=False):

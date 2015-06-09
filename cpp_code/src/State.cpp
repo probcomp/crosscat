@@ -738,19 +738,27 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             cols_in_view.push_back(it->first);
         }
 
-        std::set<int>::const_iterator its;
-        for (its = column_dependencies.find(global_col_idx)->second.begin(); its !=
-                column_dependencies.find(global_col_idx)->second.end(); its++){
-            if(std::find(cols_in_view.begin(), cols_in_view.end(), *its) ==
-                    cols_in_view.end()){
-                view_violates_dep = true;
+        if (!column_dependencies.empty()){
+            std::set<int>::const_iterator its;
+            // make sure that all the dependencies are satisfied
+            map<int, set<int> >::const_iterator deps = column_dependencies.find(global_col_idx); 
+            for (its = deps->second.begin(); its != deps->second.end(); its++){
+                if(std::find(cols_in_view.begin(), cols_in_view.end(), *its) ==
+                        cols_in_view.end()){
+                    view_violates_dep = true;
+                }
             }
         }
 
-        for (int i = 0; i < cols_in_view.size(); ++i){
-            if(column_independencies.find(global_col_idx)->second.find(i) !=
-                    column_independencies.find(global_col_idx)->second.end()){
-                view_violates_ind = true;
+        if (!column_independencies.empty()){
+            // Make sure that none of the columns in this view are supposed to
+            // be dependent of the column at global_col_idx
+            for (int i = 0; i < cols_in_view.size(); ++i){
+                int col = cols_in_view[i];
+                if(column_independencies.find(global_col_idx)->second.find(col) !=
+                        column_independencies.find(global_col_idx)->second.end()){
+                    view_violates_ind = true;
+                }
             }
         }
 
@@ -764,7 +772,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
     if(view_violates_ind or view_violates_dep){
         // XXX: I have a feeling that this is going to wreck multinomial draws
         // due to terrible floating point error.
-        score_delta = DBL_MIN;
+        score_delta = -INFINITY;
     }
 
     return score_delta;
