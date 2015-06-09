@@ -108,8 +108,8 @@ cdef extern from "State.h":
           vector[int] get_column_partition_counts()
           #
           c_map[string, double] get_row_partition_model_hypers_i(int view_idx)
-          c_map[int, c_set[int]] get_column_dependencies();
-          c_map[int, c_set[int]] get_column_independencies();
+          c_map[int, c_set[int]] get_column_dependencies()
+          c_map[int, c_set[int]] get_column_independencies()
           vector[int] get_row_partition_model_counts_i(int view_idx)
           vector[vector[c_map[string, double]]] get_column_component_suffstats_i(int view_idx)
           #
