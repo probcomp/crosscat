@@ -725,8 +725,12 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
    
     bool view_violates_dep = false;
     bool view_violates_ind = false;
-    if (column_dependencies.find(global_col_idx) != column_dependencies.end()  or
-            column_independencies.find(global_col_idx) != column_independencies.end()){
+    bool dependencies_for_col = (column_dependencies.find(global_col_idx)
+            != column_dependencies.end());
+
+    bool independencies_for_col = (column_independencies.find(global_col_idx)
+            != column_independencies.end());
+    if (dependencies_for_col or independencies_for_col){
         // Check whether the feature can or cannot belong to this view. If it
         // violates either column_dependencies or column_independencies, then
         // delta is log(0). 
@@ -738,7 +742,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             cols_in_view.push_back(it->first);
         }
 
-        if (!column_dependencies.empty()){
+        if (dependencies_for_col){
             std::set<int>::const_iterator its;
             // make sure that all the dependencies are satisfied
             map<int, set<int> >::const_iterator deps = column_dependencies.find(global_col_idx); 
@@ -750,7 +754,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             }
         }
 
-        if (!column_independencies.empty()){
+        if (independencies_for_col){
             // Make sure that none of the columns in this view are supposed to
             // be dependent of the column at global_col_idx
             for (int i = 0; i < cols_in_view.size(); ++i){
