@@ -28,7 +28,8 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
- #include <math.h>   // for log()
+#include <math.h>   // for log()
+#include <limits>
 
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
