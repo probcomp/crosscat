@@ -352,18 +352,21 @@ cdef class p_State:
             view_state_i = self.get_view_state_i(view_idx)
             view_state.append(view_state_i)
         return view_state
+
     def get_col_ensure_dep(self):
         retval = self.thisptr.get_column_dependencies()
         if len(retval) == 0:
             return None
         else:
             return retval
+
     def get_col_ensure_ind(self):
         retval = self.thisptr.get_column_independencies()
         if len(retval) == 0:
             return None
         else:
             return retval
+
     # mutators
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
@@ -481,20 +484,16 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      column_crp_alpha = X_L['column_partition']['hypers']['alpha']
      row_partition_v = map(indicator_list_to_list_of_list, X_D)
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
-     col_ensure = X_L.get('col_ensure', None)
-     if col_ensure is None:
+
+     if X_L.get('col_ensure', None) is None:
          col_ensure_dep = empty_map_of_int_set()
          col_ensure_ind = empty_map_of_int_set()
      else:
-         if X_L['col_ensure'].get('dependent', None) is None:
-             col_ensure_dep = empty_map_of_int_set()
-         else:
-             col_ensure_dep = X_L['col_ensure']['dependent']
+         col_ensure_dep = X_L['col_ensure'].get('dependent',
+                                                empty_map_of_int_set())
+         col_ensure_ind = X_L['col_ensure'].get('independent',
+                                                empty_map_of_int_set())
 
-         if X_L['col_ensure'].get('independent', None) is None:
-             col_ensure_ind = empty_map_of_int_set()
-         else:
-             col_ensure_ind = X_L['col_ensure']['independent']
      n_grid = 31
      seed = 0
      ct_kernel=0
