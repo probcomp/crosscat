@@ -123,7 +123,7 @@ int State::get_num_views() const {
 
 vector<int> State::get_view_counts() const {
     vector<int> view_counts;
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     for (it = views.begin(); it != views.end(); ++it) {
         View& v = (**it);
         int view_num_cols = v.get_num_cols();
@@ -141,7 +141,7 @@ double State::insert_row(const vector<double>& row_data,
     if(append_row)
         row_idx = (int) (**views.begin()).cluster_lookup.size();
     
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     double score_delta = 0;
     for(it=views.begin(); it!=views.end(); ++it) {
         View &v = **it;
@@ -343,8 +343,7 @@ double State::transition_features(const MatrixD &data,
     int num_features = which_features.size();
     if(num_features==0) {
         which_features = create_sequence(data.size2());
-        // FIXME: use seed to shuffle
-        std::random_shuffle(which_features.begin(), which_features.end());
+        random_shuffle(which_features.begin(), which_features.end(), rng);
     }
     vector<int>::const_iterator it;
     for(it=which_features.begin(); it!=which_features.end(); ++it) {
@@ -378,42 +377,38 @@ View& State::get_new_view() {
                                 s_grids, mu_grids, 
                                 vm_a_grids, vm_kappa_grids,
                                 draw_rand_i());
-    views.insert(p_new_view);
+    views.push_back(p_new_view);
     return *p_new_view;
 }
 
 View& State::get_view(int view_idx) {
-    assert(view_idx <= views.size());
-    bool not_new = ((unsigned int) view_idx) < views.size();
-    if (not_new) {
-        set<View*>::iterator it = views.begin();
-        std::advance(it, view_idx);
-        return **it;
-    } else {
-        // This shouldn't happen anymore
-        assert(1 == 0);
-        return get_new_view();
-    }
+    assert(view_idx < views.size());
+    return *views.at(view_idx);
 }
 
 void State::remove_if_empty(View& which_view) {
     if (which_view.get_num_cols() == 0) {
-        views.erase(views.find(&which_view));
-        which_view.remove_all();
-        delete &which_view;
+        vector<View*>::iterator it;
+        for (it = views.begin(); it != views.end(); ++it) {
+            if (*it == &which_view) {
+                views.erase(it);
+                which_view.remove_all();
+                delete &which_view;
+                break;
+            }
+        }
     }
 }
 
 void State::remove_all() {
     view_lookup.empty();
-    set<View*>::iterator it = views.begin();
-    while (it != views.end()) {
-        View& which_view = **it;
-        which_view.remove_all();
-        views.erase(views.find(&which_view));
-        delete &which_view;
-        it = views.begin();
+    vector<View*>::const_iterator it;
+    for (it = views.begin(); it != views.end(); ++it) {
+        View& view = **it;
+        view.remove_all();
+        delete &view;
     }
+    views.resize(0);
 }
 
 double State::get_column_crp_alpha() const {
@@ -425,10 +420,10 @@ double State::get_column_crp_score() const {
 }
 
 double State::get_data_score() const {
-    set<View*>::const_iterator it;
+    vector<View*>::const_iterator it;
     double data_score = 0;
     for (it = views.begin(); it != views.end(); ++it) {
-        double data_score_i = (**it).get_score();
+        double data_score_i = (*it)->get_score();
         data_score += data_score_i;
     }
     return data_score;
@@ -440,24 +435,16 @@ double State::get_marginal_logp() const {
 
 map<string, double> State::get_row_partition_model_hypers_i(
     int view_idx) const {
-    set<View*>::const_iterator it = views.begin();
-    std::advance(it, view_idx);
-    return (**it).get_row_partition_model_hypers();
+    return views.at(view_idx)->get_row_partition_model_hypers();
 }
 
 vector<int> State::get_row_partition_model_counts_i(int view_idx) const {
-    set<View*>::const_iterator it = views.begin();
-    std::advance(it, view_idx);
-    return (**it).get_row_partition_model_counts();
+    return views.at(view_idx)->get_row_partition_model_counts();
 }
 
 vector<vector<map<string, double> > > State::get_column_component_suffstats_i(
     int view_idx) const {
-    // ordering should be same as column_names
-    set<View*>::const_iterator it = views.begin();
-    std::advance(it, view_idx);
-    assert(it != views.end());
-    return (**it).get_column_component_suffstats();
+    return views.at(view_idx)->get_column_component_suffstats();
 }
 
 vector<CM_Hypers> State::get_column_hypers() const {
@@ -493,7 +480,7 @@ vector<int> State::get_column_partition_counts() const {
 
 vector<vector<int> > State::get_X_D() const {
     vector<vector<int> > X_D;
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     for (it = views.begin(); it != views.end(); ++it) {
         View& v = **it;
         vector<int> canonical_clustering = v.get_canonical_clustering();
@@ -504,7 +491,7 @@ vector<vector<int> > State::get_X_D() const {
 
 vector<double> State::get_draw(int row_idx, int random_seed) const {
     RandomNumberGenerator rng(random_seed);
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     vector<double> _draw;
     vector<int> global_col_indices;
     for (it = views.begin(); it != views.end(); ++it) {
@@ -526,10 +513,10 @@ vector<double> State::get_draw(int row_idx, int random_seed) const {
 }
 
 map<int, vector<int> > State::get_column_groups() const {
-    map<View*, int> view_to_int = set_to_map(views);
+    map<View*, int> view_to_int = vector_to_map(views);
     map<View*, set<int> > view_to_set = group_by_value(view_lookup);
     map<int, vector<int> > view_idx_to_vec;
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     for (it = views.begin(); it != views.end(); ++it) {
         View* p_v = *it;
         int view_idx = view_to_int[p_v];
@@ -543,10 +530,7 @@ map<int, vector<int> > State::get_column_groups() const {
 
 double State::transition_view_i(int which_view,
                                 const map<int, vector<double> >& row_data_map) {
-    // assumes views set ordering stays constant between calls
-    set<View*>::iterator it = views.begin();
-    std::advance(it, which_view);
-    View& v = **it;
+    View& v = get_view(which_view);
     double score_delta = v.transition(row_data_map);
     data_score += score_delta;
     return score_delta;
@@ -588,10 +572,9 @@ double State::transition_row_partition_assignments(const MatrixD& data,
     if (num_rows == 0) {
         num_rows = data.size1();
         which_rows = create_sequence(num_rows);
-        //FIXME: use own shuffle so seed control is in effect
-        std::random_shuffle(which_rows.begin(), which_rows.end());
+        random_shuffle(which_rows.begin(), which_rows.end(), rng);
     }
-    set<View*>::iterator svp_it;
+    vector<View*>::const_iterator svp_it;
     for (svp_it = views.begin(); svp_it != views.end(); ++svp_it) {
         // for each view
         View& v = **svp_it;
@@ -641,18 +624,18 @@ double State::transition_views_row_partition_hyper() {
 double State::transition_row_partition_hyperparameters(const vector<int>&
         which_cols) {
     double score_delta = 0;
-    set<View*> which_views;
+    vector<View*> which_views;
     int num_cols = which_cols.size();
     if (num_cols != 0) {
         vector<int>::const_iterator it;
         for (it = which_cols.begin(); it != which_cols.end(); ++it) {
             View *v_p = view_lookup[*it];
-            which_views.insert(v_p);
+            which_views.push_back(v_p);
         }
     } else {
         which_views = views;
     }
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     for (it = which_views.begin(); it != which_views.end(); ++it) {
         score_delta += (*it)->transition_crp_alpha();
     }
@@ -667,8 +650,7 @@ double State::transition_column_hyperparameters(vector<int> which_cols) {
     if (num_cols == 0) {
         num_cols = view_lookup.size();
         which_cols = create_sequence(num_cols);
-        //FIXME: use own shuffle so seed control is in effect
-        std::random_shuffle(which_cols.begin(), which_cols.end());
+        random_shuffle(which_cols.begin(), which_cols.end(), rng);
     }
     vector<int>::const_iterator it;
     for (it = which_cols.begin(); it != which_cols.end(); ++it) {
@@ -716,7 +698,7 @@ vector<double> State::calc_feature_view_predictive_logps(
     int global_col_idx) const {
     vector<double> logps;
     CM_Hypers hypers = get(hypers_m, global_col_idx);
-    set<View*>::iterator it;
+    vector<View*>::const_iterator it;
     double crp_log_delta, data_log_delta;
     string col_datatype = get(global_col_datatypes, global_col_idx);
     for (it = views.begin(); it != views.end(); ++it) {
@@ -759,7 +741,7 @@ const {
 double State::calc_row_predictive_logp(const vector<double>& in_vd) {
     vector<double> view_sum_predictive_logps;
     vector<int> global_column_indices = create_sequence(in_vd.size());
-    set<View*>::iterator svp_it;
+    vector<View*>::const_iterator svp_it;
     for (svp_it = views.begin(); svp_it != views.end(); ++svp_it) {
         // for each view
         View& v = **svp_it;
@@ -791,8 +773,7 @@ double State::transition_column_crp_alpha() {
 
 double State::transition(const MatrixD& data) {
     vector<int> which_transitions = create_sequence(3);
-    //FIXME: use own shuffle so seed control is in effect
-    std::random_shuffle(which_transitions.begin(), which_transitions.end());
+    random_shuffle(which_transitions.begin(), which_transitions.end(), rng);
     double score_delta = 0;
     vector<int>::iterator it;
     for (it = which_transitions.begin(); it != which_transitions.end(); ++it) {
@@ -973,7 +954,7 @@ void State::init_views(const MatrixD& data,
                              vm_a_grids, vm_kappa_grids,
                              row_crp_alpha,
                              draw_rand_i());
-        views.insert(p_v);
+        views.push_back(p_v);
         vector<int>::const_iterator ci_it;
         for (ci_it = column_indices.begin(); ci_it != column_indices.end(); ++ci_it) {
             int column_index = *ci_it;
@@ -991,7 +972,7 @@ string State::to_string(const string& join_str, bool top_level) const {
     stringstream ss;
     if (!top_level) {
         int view_idx = 0;
-        set<View*>::const_iterator it;
+        vector<View*>::const_iterator it;
         ss << "========" << std::endl;
         for (it = views.begin(); it != views.end(); ++it) {
             View v = **it;

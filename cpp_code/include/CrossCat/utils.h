@@ -22,7 +22,7 @@
 
 #include "numerics.h"
 #include "constants.h"
-class RandomNumberGenerator;
+#include "RandomNumberGenerator.h"
 //
 #include <iostream>
 #include <string>
@@ -220,6 +220,18 @@ std::map<T, int> set_to_map(const std::set<T>& in_set) {
 }
 
 template <class T>
+std::map<T, int> vector_to_map(const std::vector<T>& in_vector) {
+    std::map<T, int> out_map;
+    typename std::vector<T>::const_iterator it;
+    for (it = in_vector.begin(); it != in_vector.end(); ++it) {
+        T element = *it;
+        int out_map_size = out_map.size();
+        out_map[element] = out_map_size;
+    }
+    return out_map;
+}
+
+template <class T>
 std::string stringify(const T& element) {
     std::stringstream ss;
     ss << element;
@@ -242,9 +254,9 @@ std::map<V, std::set<K> > group_by_value(const std::map<K, V>& in_map) {
 
 template <class V>
 std::vector<int> define_group_ordering(const std::map<int, V>& local_lookup,
-                                       const std::set<V>& in_set) {
+                                       const std::vector<V>& in_vector) {
     std::vector<int> group_ordering;
-    std::map<V, int> V_to_int = set_to_map(in_set);
+    std::map<V, int> V_to_int = vector_to_map(in_vector);
     int num_elements = local_lookup.size();
     for (int element_idx = 0; element_idx < num_elements; element_idx++) {
         V v = get(local_lookup, element_idx);
@@ -302,5 +314,13 @@ bool isnan(const std::string& value);
 #define DISALLOW_COPY_AND_ASSIGN(CLASS)         \
   CLASS(const CLASS&);                          \
   void operator=(const CLASS&)
+
+template <class T>
+void
+random_shuffle(T begin, T end, RandomNumberGenerator& rng) {
+  typename std::iterator_traits<T>::difference_type n = end - begin;
+  for (int i = 0; i < n; i++)
+    std::swap(begin[i], begin[rng.nexti(i)]);
+}
 
 #endif // GUARD_utils_H

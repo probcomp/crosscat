@@ -31,28 +31,6 @@
 using namespace std;
 
 
-string DateTime::GetDateTimeStr() {
-    time_t rawtime;
-    char buffer[30];
-    time(&rawtime);
-
-#ifdef _WIN32
-    struct tm *timeinfo;
-    timeinfo = localtime(&rawtime);
-    strcpy(buffer,asctime(timeinfo));
-#else
-    struct tm timeinfo;
-    ::localtime_r(&rawtime, &timeinfo);
-    ::asctime_r(&timeinfo, buffer) ;
-#endif
-
-    int len = ::strlen(buffer);
-    buffer[len - 1] = 0x00;
-    return buffer;
-    //  return string(buffer);
-}
-
-
 Timer::Timer(bool reset) {
     _start_t = 0.0;
     if (reset) {

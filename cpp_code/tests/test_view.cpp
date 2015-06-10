@@ -354,7 +354,7 @@ int main(int argc, char** argv) {
         v.transition_zs(data_map);
         v.transition_crp_alpha();
         for (int col_idx = 0; col_idx < num_cols; col_idx++) {
-            std::random_shuffle(hyper_strings.begin(), hyper_strings.end());
+            random_shuffle(hyper_strings.begin(), hyper_strings.end(), rng);
             for (vector<string>::iterator it = hyper_strings.begin();
                     it != hyper_strings.end(); it++) {
                 string hyper_string = *it;
