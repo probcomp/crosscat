@@ -113,10 +113,9 @@ def generate_separated_multinomial_weights(A,C):
 		# if there is no weight to decrease
 		if len(dns) == 0:
 			# send the lowest weight to zero, normalize and return
-			maxdex = lower_bounds.index(min(lower_bounds))
+			maxdex = numpy.argmin(lower_bounds)
 			B[maxdex] = 0
 			B /= numpy.sum(B)
-			print('Broke')
 			break
 
 		move_down = dns[random.randrange(len(dns))]
