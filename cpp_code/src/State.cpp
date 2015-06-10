@@ -736,8 +736,8 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
         // delta is log(0). 
 
         // Get the columns in this view
-        std::vector<int> cols_in_view;
-        for(std::map<int,int>::const_iterator it = v.global_to_local.begin();
+        vector<int> cols_in_view;
+        for(map<int,int>::const_iterator it = v.global_to_local.begin();
                 it != v.global_to_local.end(); it++) {
             cols_in_view.push_back(it->first);
         }
@@ -747,7 +747,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
             // make sure that all the dependencies are satisfied
             map<int, set<int> >::const_iterator deps = column_dependencies.find(global_col_idx); 
             for (its = deps->second.begin(); its != deps->second.end(); its++){
-                if(std::find(cols_in_view.begin(), cols_in_view.end(), *its) ==
+                if(find(cols_in_view.begin(), cols_in_view.end(), *its) ==
                         cols_in_view.end()){
                     view_violates_dep = true;
                 }
