@@ -542,8 +542,6 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             if col1 == col2:
                 raise ValueError("col1 cannot be the same as col2 in relinfo")
 
-            col_ensure_md[dependent][col1] = set([col2])
-
             if col_ensure_md[dependent].get(col1, None) is None:
                 col_ensure_md[dependent][col1] = set([col2])
             else:
