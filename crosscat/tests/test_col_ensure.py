@@ -38,7 +38,7 @@ def quick_le(seed, n_chains=1):
 
 
 @pytest.mark.parametrize("seed, dependent, analyze", single_args)
-def test_col_ensure_with_single_contraint(seed, dependent, analyze):
+def test_col_ensure_with_single_constraint(seed, dependent, analyze):
     T, M_r, M_c, X_L, X_D, engine = quick_le(seed)
     if dependent:
         while len(set(X_L['column_partition']['assignments'])) == 1:
@@ -56,10 +56,10 @@ def test_col_ensure_with_single_contraint(seed, dependent, analyze):
         assert X_L['column_partition']['assignments'][col1] == \
             X_L['column_partition']['assignments'][col2]
 
-    relinfo = [(col1, col2, True)]
+    relinfo = [(col1, col2, dependent)]
     X_L, X_D = engine.ensure_col(M_c, M_r, T, X_L, X_D, relinfo)
 
-    assert engine.assert_col(X_L, X_D, col1, col2, True, True)
+    assert engine.assert_col(X_L, X_D, col1, col2, dependent, True)
 
     if analyze:
         X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1)
