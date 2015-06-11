@@ -582,9 +582,41 @@ def continuous_imputation_confidence(samples, imputed,
                                      n_steps=100, n_chains=1,
                                      return_metadata=False):
     # XXX: the confidence in continuous imputation is "the probability that
-    # there exists a unimodal summary" which is deifined as the proportion of
+    # there exists a unimodal summary" which is defined as the proportion of
     # probability mass in the largest mode of a DPMM inferred from the simulate
-    # samples. We use crosscat on the samples.
+    # samples. We use crosscat on the samples for a given number of iterations,
+    # then calculate the proportion of mass in the largest mode.
+    #
+    # NOTE: The definition of confidence and its implementation do not agree.
+    # The probability of a unimodal summary is P(k=1|X), where k is the number
+    # of components in some infinite mixture model. I would describe the
+    # current implementation as "Is there a mode with sufficient enough mass
+    # that we can ignore the other modes". If this second formulation is to be
+    # used, it means that we need to not use the median of all the samples as
+    # the imputed value, but the median of the samples of the summary mode,
+    # because the summary (the imputed value) should come from the summary
+    # mode.
+    #
+    # There are a lot of problems with this second formulation.
+    # 0. SLOW. Like, for real.
+    # 1. Non-deterministic. The answer will be different given the same
+    #   samples.
+    # 2. Inaccurate. Approximate inference about approximate inferences.
+    #   In practice confidences on the sample samples could be significantly
+    #   different because the Gibbs sampler that underlies crosscat is
+    #   susceptible to getting stuck in local maximum. Of course, this could be
+    #   mitigated to some extent by using more chains, but things are slow
+    #   enough as it is.
+    # 3. Confidence (interval) has a distinct meaning to the people who will
+    #   be using this software. A unimodal summary does not necessarily mean
+    #   that inferences are within an acceptable range. We are going to need to
+    #   be loud about this. Maybe there should be a notion of tolerance?
+    #
+    # An alternative: mutual predictive coverage
+    # ------------------------------------------
+    # Divide the number of samples in the intersection of the 90% CI's of each
+    # component model by the number of samples in the union of the 90% CI's of
+    # each component model.
 
     from crosscat.cython_code import State
 
