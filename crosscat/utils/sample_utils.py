@@ -30,6 +30,7 @@ import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
 import crosscat.cython_code.CyclicComponentModel as CYCM
 import crosscat.utils.general_utils as gu
+import crosscat.utils.data_utils as du
 from crosscat.utils.general_utils import logsumexp
 
 class Bunch(dict):
@@ -575,12 +576,93 @@ def get_continuous_mass_within_delta(samples, center, delta):
     mass_fraction = float(num_within_delta) / num_samples
     return mass_fraction
 
+
 def continuous_imputation_confidence(samples, imputed,
-                                     column_component_suffstats_i):
-    col_std = get_column_std(column_component_suffstats_i)
-    delta = .1 * col_std
-    confidence = get_continuous_mass_within_delta(samples, imputed, delta)
-    return confidence
+                                     column_component_suffstats_i,
+                                     n_steps=100, n_chains=1,
+                                     return_metadata=False):
+    # XXX: the confidence in continuous imputation is "the probability that
+    # there exists a unimodal summary" which is defined as the proportion of
+    # probability mass in the largest mode of a DPMM inferred from the simulate
+    # samples. We use crosscat on the samples for a given number of iterations,
+    # then calculate the proportion of mass in the largest mode.
+    #
+    # NOTE: The definition of confidence and its implementation do not agree.
+    # The probability of a unimodal summary is P(k=1|X), where k is the number
+    # of components in some infinite mixture model. I would describe the
+    # current implementation as "Is there a mode with sufficient enough mass
+    # that we can ignore the other modes". If this second formulation is to be
+    # used, it means that we need to not use the median of all the samples as
+    # the imputed value, but the median of the samples of the summary mode,
+    # because the summary (the imputed value) should come from the summary
+    # mode.
+    #
+    # There are a lot of problems with this second formulation.
+    # 0. SLOW. Like, for real.
+    # 1. Non-deterministic. The answer will be different given the same
+    #   samples.
+    # 2. Inaccurate. Approximate inference about approximate inferences.
+    #   In practice confidences on the sample samples could be significantly
+    #   different because the Gibbs sampler that underlies crosscat is
+    #   susceptible to getting stuck in local maximum. Of course, this could be
+    #   mitigated to some extent by using more chains, but things are slow
+    #   enough as it is.
+    # 3. Confidence (interval) has a distinct meaning to the people who will
+    #   be using this software. A unimodal summary does not necessarily mean
+    #   that inferences are within an acceptable range. We are going to need to
+    #   be loud about this. Maybe there should be a notion of tolerance?
+    #
+    # An alternative: mutual predictive coverage
+    # ------------------------------------------
+    # Divide the number of samples in the intersection of the 90% CI's of each
+    # component model by the number of samples in the union of the 90% CI's of
+    # each component model.
+
+    from crosscat.cython_code import State
+
+    # XXX: assumes samples somes in as a 1-D numpy.array or 1-D list
+    num_samples = float(len(samples))
+    T = [[x] for x in samples]
+
+    # XXX: This is a higly problematic consequence of the current definition of
+    # confidence. If the number of samples is 1, then the confidence is always
+    # 1 because there will be exactly 1 mode in the DPMM (recall the DPMM can
+    # have, at maximum, as many modes at data points). I figure if we're going
+    # to give a bad answer, we shoud give it quickly.
+    if num_samples == 1:
+        return 1.0
+
+    confs = []
+    tlist = ['column_hyperparameters',
+             'row_partition_hyperparameters',
+             'row_partition_assignments']
+    M_c = du.gen_M_c_from_T(T, cctypes=['continuous'])
+
+    if return_metadata:
+        X_L_list = []
+        X_D_list = []
+
+    for chain in range(n_chains):
+        ccstate = State.p_State(M_c, T)
+        ccstate.transition(which_transitions=tlist, n_steps=n_steps)
+
+        X_D = ccstate.get_X_D()
+
+        assignment = X_D[0]
+        num_cats = max(assignment)+1
+        props = numpy.histogram(assignment, num_cats)[0]/num_samples
+        confs.append(max(props))
+
+        if return_metadata:
+            X_L_list.append(ccstate.get_X_L())
+            X_D_list.append(X_D)
+
+    conf = numpy.mean(confs)
+    if return_metadata:
+        return conf, X_L_list, X_D_list
+    else:
+        return conf
+
 
 def continuous_imputation(samples, get_next_seed):
     imputed = numpy.median(samples)
