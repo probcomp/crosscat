@@ -44,12 +44,8 @@ namespace numerics {
 template <typename T> int sgn(T val);
 
 double estimate_vonmises_kappa(const std::vector<double>& X);
-double vonmises_rand(double mu, double kappa, int random_seed);
-double vonmises_log_pdf(double x, double mu, double kappa);
 
 double log_bessel_0(double x); // log I_0(x)
-
-double log_gamma_pdf(double x, double shape, double scale);
 
 double logaddexp(const std::vector<double>& logs);
 

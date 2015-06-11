@@ -161,7 +161,7 @@ public:
     double transition(const std::map<int, std::vector<double> >& row_data_map);
     //
     // data structures
-    std::set<Cluster*> clusters;
+    std::vector<Cluster*> clusters;
     std::map<int, Cluster*> cluster_lookup;
     std::vector<CM_Hypers*> hypers_v;
     //

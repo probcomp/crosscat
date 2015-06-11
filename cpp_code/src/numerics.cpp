@@ -18,9 +18,6 @@
 *   limitations under the License.
 */
 #include "numerics.h"
-#include <boost/math/distributions.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
 
 using namespace std;
 
@@ -60,53 +57,6 @@ double estimate_vonmises_kappa(const vector<double>& X) {
     kappa = kappa_1 - (Ap-R)/(1-Ap*Ap-Ap/kappa_1);
 
     return (kappa > 0) ? kappa : 1.0/X.size();
-}
-
-// draw random number from Von Mises distribution with mean mu and
-// concentration kappa
-double vonmises_rand(double mu, double kappa, int random_seed){
-    
-    boost::mt19937 gen(random_seed);
-    boost::uniform_01<boost::mt19937> randfloat(gen);
-
-    double a = 1 + sqrt(1 + 4 * (kappa*kappa));
-    double b = (a - sqrt(2 * a))/(2 * kappa);
-    double r = (1 + b*b)/(2 * b);
-    double vmr;
-    int tries = 0;
-    while (true) {
-        double U1 = randfloat();
-        double z = cos(M_PI * U1);
-        double f = (1 + r * z)/(r + z);
-        double c = kappa * (r - f);
-        double U2 = randfloat();
-        if (c * (2 - c) - U2 > 0){
-            double U3 = randfloat();
-            vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            vmr = fmod(vmr, 2.0*M_PI);
-            if(vmr < 0) vmr = 2*M_PI+vmr;
-            return vmr;
-        }else if (log(c/U2) + 1 - c >= 0){
-            double U3 = randfloat();
-            vmr = sgn(U3 - 0.5) * acos(f) + mu;
-            vmr = fmod(vmr, 2.0*M_PI);
-            if(vmr < 0) vmr = 2*M_PI+vmr;
-            return vmr;
-        }
-
-        ++tries;
-        if(tries % 100 == 0){
-            printf("vmrand tried: %i.\n", tries);
-        }
-    }
-}
-
-double vonmises_log_pdf(double x, double mu, double kappa){
-    return kappa*cos(x-mu) - log(2*M_PI) - log_bessel_0(kappa);
-}
-
-double log_gamma_pdf(double x, double shape, double scale){
-    return -lgamma(shape)-shape*log(scale) + (shape-1)*log(x)-x/scale;
 }
 
 double log_bessel_0(double x){
