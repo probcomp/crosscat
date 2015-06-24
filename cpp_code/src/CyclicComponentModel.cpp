@@ -238,7 +238,6 @@ double CyclicComponentModel::get_draw_constrained(int random_seed,
     }
     ++itr;
   }
-  printf("a: %f, b: %f, kappa: %f\n", a, b, kappa);
   assert(false);
   return 0;			// XXXGCC
 }
