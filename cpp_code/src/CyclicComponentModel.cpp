@@ -131,7 +131,6 @@ vector<double> CyclicComponentModel::calc_hyper_conditionals(
                 sum_cos_x, a, b);
     } else {
         // error condition
-        printf("Error: CyclicComponentModel::calc_hyper_conditionals invalid hyper");
         vector<double> error;
         return error;
     }
@@ -239,7 +238,6 @@ double CyclicComponentModel::get_draw_constrained(int random_seed,
     }
     ++itr;
   }
-  printf("CyclicComponentModel::get_draw_constrained failed to accept a sample after 1000 proposals.\n");
   printf("a: %f, b: %f, kappa: %f\n", a, b, kappa);
   assert(false);
   return 0;			// XXXGCC
