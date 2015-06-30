@@ -21,9 +21,6 @@
 
 
 using namespace std;
-using boost::numeric::ublas::matrix;
-using boost::numeric::ublas::project;
-using boost::numeric::ublas::range;
 
 
 // FIXME: shouldn't need T, not really using suffstats here

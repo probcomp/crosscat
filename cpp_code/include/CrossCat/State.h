@@ -30,7 +30,6 @@
 #include <algorithm>
  #include <math.h>   // for log()
 
-#include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
