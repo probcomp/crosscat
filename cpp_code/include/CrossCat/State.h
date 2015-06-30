@@ -30,7 +30,7 @@
 #include <algorithm>
  #include <math.h>   // for log()
 
-#include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
 const static std::vector<double> empty_vector_double;

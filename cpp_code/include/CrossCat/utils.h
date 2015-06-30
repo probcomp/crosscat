@@ -31,7 +31,6 @@
 #include <map>
 #include <math.h> // isnan, isfinite
 #include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
 
 typedef std::map<std::string, double> ComponentModelHypers;
 typedef ComponentModelHypers CM_Hypers;

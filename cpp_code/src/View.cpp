@@ -20,8 +20,6 @@
 #include "View.h"
 
 #include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/io.hpp>
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
 using namespace std;
