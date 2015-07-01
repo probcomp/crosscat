@@ -336,7 +336,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   is a triplet of (r, d, v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
+        :param Q: A list of values to sample.  Each value is doublet of (r, d, v):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
