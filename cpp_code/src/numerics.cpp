@@ -111,10 +111,7 @@ int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
         *it -= max_el;
         partition += exp(*it);
     }
-    double log_partition = log(partition);
-    int draw = draw_sample_with_partition(unorm_logps, log_partition,
-                                          rand_u);
-    return draw;
+    return draw_sample_with_partition(unorm_logps, log(partition), rand_u);
 }
 
 int draw_sample_with_partition(const vector<double>& unorm_logps,
