@@ -127,9 +127,7 @@ int draw_sample_with_partition(const vector<double>& unorm_logps,
         }
         draw++;
     }
-    // FIXME: should this fail?
-    assert(rand_u < 1E-10);
-    return draw;
+    return draw - 1;
 }
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)
