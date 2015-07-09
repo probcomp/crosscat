@@ -101,17 +101,17 @@ double logaddexp(const vector<double>& logs) {
 
 // subtract minimum value, logaddexp residuals, pass residuals and partition to
 // draw_sample_with_partition
-int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
-                             double rand_u) {
-    vector<double> unorm_logps = unorm_logps_given;
+int draw_sample_unnormalized(const vector<double>& unorm_logps,
+			     double rand_u) {
+    const size_t N = unorm_logps.size();
+    vector<double> shifted_logps(N);
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
-    vector<double>::iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        *it -= max_el;
-        partition += exp(*it);
+    for (size_t i = 0; i < N; i++) {
+	shifted_logps[i] = unorm_logps[i] - max_el;
+	partition += exp(shifted_logps[i]);
     }
-    return draw_sample_with_partition(unorm_logps, log(partition), rand_u);
+    return draw_sample_with_partition(shifted_logps, log(partition), rand_u);
 }
 
 int draw_sample_with_partition(const vector<double>& unorm_logps,
