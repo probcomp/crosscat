@@ -90,46 +90,39 @@ double calc_continuous_hyperprior(double r, double nu, double s) {
 }
 
 double logaddexp(const vector<double>& logs) {
+    double maximum = *std::max_element(logs.begin(), logs.end());
     double result = 0;
     vector<double>::const_iterator it;
     for (it = logs.begin(); it != logs.end(); it++) {
-        result += exp(*it);
+        result += exp(*it - maximum);
     }
-    return log(result);
+    return log(result) + maximum;
 }
 
 // subtract minimum value, logaddexp residuals, pass residuals and partition to
 // draw_sample_with_partition
-int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
-                             double rand_u) {
-    vector<double> unorm_logps = unorm_logps_given;
+int draw_sample_unnormalized(const vector<double>& unorm_logps,
+			     double rand_u) {
+    const size_t N = unorm_logps.size();
+    vector<double> shifted_logps(N);
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
-    vector<double>::iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        *it -= max_el;
-        partition += exp(*it);
+    for (size_t i = 0; i < N; i++) {
+	shifted_logps[i] = unorm_logps[i] - max_el;
+	partition += exp(shifted_logps[i]);
     }
-    double log_partition = log(partition);
-    int draw = draw_sample_with_partition(unorm_logps, log_partition,
-                                          rand_u);
-    return draw;
+    return draw_sample_with_partition(shifted_logps, log(partition), rand_u);
 }
 
 int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
-    int draw = 0;
-    vector<double>::const_iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        rand_u -= exp(*it - log_partition);
-        if (rand_u < 0) {
-            return draw;
-        }
-        draw++;
+    const size_t N = unorm_logps.size();
+    for (size_t i = 0; i < N; i++) {
+	rand_u -= exp(unorm_logps[i] - log_partition);
+	if (rand_u < 0)
+	    return i;
     }
-    // FIXME: should this fail?
-    assert(rand_u < 1E-10);
-    return draw;
+    return N - 1;
 }
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)
