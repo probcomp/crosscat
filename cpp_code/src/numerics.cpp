@@ -90,12 +90,13 @@ double calc_continuous_hyperprior(double r, double nu, double s) {
 }
 
 double logaddexp(const vector<double>& logs) {
+    double maximum = *std::max_element(logs.begin(), logs.end());
     double result = 0;
     vector<double>::const_iterator it;
     for (it = logs.begin(); it != logs.end(); it++) {
-        result += exp(*it);
+        result += exp(*it - maximum);
     }
-    return log(result);
+    return log(result) + maximum;
 }
 
 // subtract minimum value, logaddexp residuals, pass residuals and partition to
