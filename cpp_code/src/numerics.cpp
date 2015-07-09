@@ -116,16 +116,13 @@ int draw_sample_unnormalized(const vector<double>& unorm_logps,
 
 int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
-    int draw = 0;
-    vector<double>::const_iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        rand_u -= exp(*it - log_partition);
-        if (rand_u < 0) {
-            return draw;
-        }
-        draw++;
+    const size_t N = unorm_logps.size();
+    for (size_t i = 0; i < N; i++) {
+	rand_u -= exp(unorm_logps[i] - log_partition);
+	if (rand_u < 0)
+	    return i;
     }
-    return draw - 1;
+    return N - 1;
 }
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)
