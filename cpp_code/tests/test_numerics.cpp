@@ -17,6 +17,7 @@
 #include <limits>
 
 #include "numerics.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -52,6 +53,11 @@ static void test_draw(void) {
     assert(draw_sample_unnormalized(weights, 1 - epsilon/2) < weights.size());
 }
 
+static void test_linspace(void) {
+    vector<double> v = linspace(0, 1, 7);
+    assert(v[6] == 1);
+}
+
 static void test_logaddexp(void) {
     vector<double> v(1);
 
@@ -63,6 +69,7 @@ static void test_logaddexp(void) {
 
 int main(int argc, char** argv) {
     test_draw();
+    test_linspace();
     test_logaddexp();
 
     return 0;

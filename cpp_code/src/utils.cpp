@@ -79,34 +79,24 @@ bool is_almost(double val1, double val2, double precision) {
   return abs(val1-val2) < precision;
 }
 
-// http://stackoverflow.com/a/11747023/1769715
 vector<double> linspace(double a, double b, size_t n) {
-  vector<double> values;
-  if(a > b) {
-	  /*
-    cerr << "linspace: passed lower bound greater than upper bound!" << endl;
-    cerr << "linspace: using upper bound equal to lower bound" << endl;
-    */
-    b = a;
+  assert(0 < n);
+  a = std::min(a, b);           // XXX Hysterical nonsense semantics.
+  if (a == b)
+    n = 1;                      // XXX Hysterical nonsense semantics.
+
+  vector<double> v(n);
+  if (n == 1) {
+    v[0] = a;
+    return v;
   }
-  if(a == b && n != 1) {
-	  /*
-    cerr << "linspace: passed lower bound equal upper bound but n != 1!" << endl;
-    cerr << "linspace: using n = 1" << endl;
-    */
-    n = 1;
-  }
-  if(n == 1) {
-    values.push_back(a);
-  } else {
-    double step = (b-a) / (n-1);
-    double epsilon = step * 1E-6;
-    while(a <= (b + epsilon)) {
-      values.push_back(a);
-      a += step;
-    }
-  }
-  return values;
+
+  const double s = (b - a)/(n - 1);
+  for (size_t i = 0; i < (n - 1); i++)
+    v[i] = a + i*s;
+  v[n - 1] = b;
+
+  return v;
 }
 
 vector<double> log_linspace(double a, double b, size_t n) {
