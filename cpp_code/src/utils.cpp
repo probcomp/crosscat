@@ -80,7 +80,7 @@ bool is_almost(double val1, double val2, double precision) {
 }
 
 // http://stackoverflow.com/a/11747023/1769715
-vector<double> linspace(double a, double b, int n) {
+vector<double> linspace(double a, double b, size_t n) {
   vector<double> values;
   if(a > b) {
 	  /*
@@ -109,7 +109,7 @@ vector<double> linspace(double a, double b, int n) {
   return values;
 }
 
-vector<double> log_linspace(double a, double b, int n) {
+vector<double> log_linspace(double a, double b, size_t n) {
   vector<double> values = linspace(log(a), log(b), n);
   std::transform(values.begin(), values.end(), values.begin(),
 		 (double (*)(double))exp);
@@ -262,7 +262,7 @@ vector<vector<double> > reorder_per_map(const vector<vector<double> >& raw_value
   return arranged_values_v;
 }
   
-vector<int> create_sequence(int len, int start) {
+vector<int> create_sequence(size_t len, int start) {
   vector<int> sequence(len, 1);
   if(len==0) return sequence;
   sequence[0] = start;
