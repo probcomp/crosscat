@@ -79,6 +79,20 @@ bool is_almost(double val1, double val2, double precision) {
   return abs(val1-val2) < precision;
 }
 
+// linspace(a, b, n)
+//
+//      Return an array of n equidistant points between a and b,
+//      inclusive.  That is,
+//
+//              [a, a + s, a + 2s, a + 3s, ..., a + (n - 2)s, b],
+//
+//      where s = (b - a)/(n - 1) is the distance between consecutive
+//      points.  If v is the result, then v[0] = a, and if n >= 2,
+//      then v[n - 1] = b.
+//
+//      As a special kludge^Wcase, if a > b then a is ignored and
+//      treated as b instead.  As another special kludge, if a = b
+//      then n is ignored and treated as 1 instead.
 vector<double> linspace(double a, double b, size_t n) {
   assert(0 < n);
   a = std::min(a, b);           // XXX Hysterical nonsense semantics.
@@ -99,6 +113,16 @@ vector<double> linspace(double a, double b, size_t n) {
   return v;
 }
 
+// log_linspace(a, b, n)
+//
+//      Return an array of n `equiratioed' points between a and b,
+//      inclusive.  That is,
+//
+//              [a, a s, a s^2, a s^3, ..., a s^(n - 2), b],
+//
+//      where s = (b/a)^1/(n - 1) is the ratio of consecutive points.
+//      If v is the result, then v[0] = a, and if n >= 2, then v[n -
+//      1] = b.
 vector<double> log_linspace(double a, double b, size_t n) {
   vector<double> values = linspace(log(a), log(b), n);
   std::transform(values.begin(), values.end(), values.begin(),
