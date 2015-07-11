@@ -114,11 +114,15 @@ vector<double> linspace(double a, double b, size_t n) {
 //      If v is the result, then v[0] = a and v[n - 1] = b, except in
 //      the case described below.
 //
-//	If a or b is too close to zero to be represented as nonzero,
-//	it is first rounded up to the smallest positive normal value.
-//	(Analytically, zero makes no sense for either a or b, but
-//	values sufficiently close to zero will have been rounded to
-//	zero beforehand.)
+//      If a or b is too close to zero to be represented normally, it
+//      is first rounded up to the smallest positive normal value.
+//      Analytically, zero makes no sense for either a or b, but
+//      values sufficiently close to zero will have been rounded to
+//      zero beforehand.
+//
+//      We ignore subnormals because starting your computation with
+//      them is unlikely to help you but quite likely to slow you
+//      down.
 vector<double> log_linspace(double a, double b, size_t n) {
   assert(2 <= n);
   assert(a <= b);
@@ -132,7 +136,7 @@ vector<double> log_linspace(double a, double b, size_t n) {
 
   v[0] = a;
   for (size_t i = 1; i < (n - 1); i++)
-    v[i] = std::min(b, exp(log_a + i*log_r));
+    v[i] = std::max(a, std::min(b, exp(log_a + i*log_r)));
   v[n - 1] = b;
 
   return v;
