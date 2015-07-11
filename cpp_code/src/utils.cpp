@@ -111,28 +111,29 @@ vector<double> linspace(double a, double b, size_t n) {
 //              [a, a s, a s^2, a s^3, ..., a s^(n - 2), b],
 //
 //      where s = (b/a)^1/(n - 1) is the ratio of consecutive points.
-//      If v is the result, then v[0] = a and v[n - 1] = b.
+//      If v is the result, then v[0] = a and v[n - 1] = b, except in
+//      the case described below.
 //
 //	If a or b is too close to zero to be represented as nonzero,
-//	it is first rounded up to the smallest positive normal value
-//	in order to compute s and the intermediate values between v[0]
-//	and v[1].  (Analytically, zero makes no sense for either a or
-//	b, but values sufficiently close to zero will have been
-//	rounded to zero beforehand.)
+//	it is first rounded up to the smallest positive normal value.
+//	(Analytically, zero makes no sense for either a or b, but
+//	values sufficiently close to zero will have been rounded to
+//	zero beforehand.)
 vector<double> log_linspace(double a, double b, size_t n) {
   assert(2 <= n);
   assert(a <= b);
+
+  a = std::max(a, std::numeric_limits<double>::min());
+  b = std::max(b, std::numeric_limits<double>::min());
 
   vector<double> v(n);
   v[0] = a;
   v[n - 1] = b;
 
-  a = std::max(a, std::numeric_limits<double>::min());
-  b = std::max(b, std::numeric_limits<double>::min());
   const double log_a = log(a);
   const double log_r = (log(b) - log_a)/(n - 1);
   for (size_t i = 1; i < (n - 1); i++)
-    v[i] = exp(log_a + i*log_r);
+    v[i] = std::min(b, exp(log_a + i*log_r));
 
   return v;
 }

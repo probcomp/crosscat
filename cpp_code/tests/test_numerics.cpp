@@ -93,8 +93,12 @@ static void test_log_linspace(void) {
     assert(v[3] == 8);
 
     v = log_linspace(0, 42, 4);
-    assert(v[0] == 0);
+    assert(v[0] == std::numeric_limits<double>::min());
     assert(v[3] == 42);
+
+    v = log_linspace(0, 0, 42);
+    for (size_t i = 0; i < v.size(); i++)
+        assert(v[i] == std::numeric_limits<double>::min());
 }
 
 static void test_logaddexp(void) {
