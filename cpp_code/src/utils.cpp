@@ -82,33 +82,23 @@ bool is_almost(double val1, double val2, double precision) {
 // linspace(a, b, n)
 //
 //      Return an array of n equidistant points between a and b,
-//      inclusive.  That is,
+//      inclusive, for n >= 2.  That is,
 //
 //              [a, a + s, a + 2s, a + 3s, ..., a + (n - 2)s, b],
 //
 //      where s = (b - a)/(n - 1) is the distance between consecutive
-//      points.  If v is the result, then v[0] = a, and if n >= 2,
-//      then v[n - 1] = b.
-//
-//      As a special kludge^Wcase, if a > b then a is ignored and
-//      treated as b instead.  As another special kludge, if a = b
-//      then n is ignored and treated as 1 instead.
+//      points.  If v is the result, then v[0] = a and v[n - 1] = b.
 vector<double> linspace(double a, double b, size_t n) {
-  assert(0 < n);
-  a = std::min(a, b);           // XXX Hysterical nonsense semantics.
-  if (a == b)
-    n = 1;                      // XXX Hysterical nonsense semantics.
+  assert(2 <= n);
+  assert(a <= b);
 
   vector<double> v(n);
-  if (n == 1) {
-    v[0] = a;
-    return v;
-  }
+  v[0] = a;
+  v[n - 1] = b;
 
   const double s = (b - a)/(n - 1);
-  for (size_t i = 0; i < (n - 1); i++)
+  for (size_t i = 1; i < (n - 1); i++)
     v[i] = a + i*s;
-  v[n - 1] = b;
 
   return v;
 }
@@ -116,18 +106,35 @@ vector<double> linspace(double a, double b, size_t n) {
 // log_linspace(a, b, n)
 //
 //      Return an array of n `equiratioed' points between a and b,
-//      inclusive.  That is,
+//      inclusive, for n >= 2.  That is,
 //
 //              [a, a s, a s^2, a s^3, ..., a s^(n - 2), b],
 //
 //      where s = (b/a)^1/(n - 1) is the ratio of consecutive points.
-//      If v is the result, then v[0] = a, and if n >= 2, then v[n -
-//      1] = b.
+//      If v is the result, then v[0] = a and v[n - 1] = b.
+//
+//	If a or b is too close to zero to be represented as nonzero,
+//	it is first rounded up to the smallest positive normal value
+//	in order to compute s and the intermediate values between v[0]
+//	and v[1].  (Analytically, zero makes no sense for either a or
+//	b, but values sufficiently close to zero will have been
+//	rounded to zero beforehand.)
 vector<double> log_linspace(double a, double b, size_t n) {
-  vector<double> values = linspace(log(a), log(b), n);
-  std::transform(values.begin(), values.end(), values.begin(),
-		 (double (*)(double))exp);
-  return values;
+  assert(2 <= n);
+  assert(a <= b);
+
+  vector<double> v(n);
+  v[0] = a;
+  v[n - 1] = b;
+
+  a = std::max(a, std::numeric_limits<double>::min());
+  b = std::max(b, std::numeric_limits<double>::min());
+  const double log_a = log(a);
+  const double log_r = (log(b) - log_a)/(n - 1);
+  for (size_t i = 1; i < (n - 1); i++)
+    v[i] = exp(log_a + i*log_r);
+
+  return v;
 }
 
 vector<double> std_vector_add(const vector<double>& vec1,

@@ -54,8 +54,47 @@ static void test_draw(void) {
 }
 
 static void test_linspace(void) {
-    vector<double> v = linspace(0, 1, 7);
+    vector<double> v;
+
+    v = linspace(42, 43, 2);
+    assert(v.size() == 2);
+    assert(v[0] == 42);
+    assert(v[1] == 43);
+
+    v = linspace(42, 42, 2);
+    assert(v.size() == 2);
+    assert(v[0] == 42);
+    assert(v[1] == 42);
+
+    v = linspace(42, 43, 3);
+    assert(v.size() == 3);
+    assert(v[0] == 42);
+    assert(v[1] == 42.5);
+    assert(v[2] == 43);
+
+    v = linspace(42, 42, 3);
+    assert(v.size() == 3);
+    assert(v[0] == 42);
+    assert(v[1] == 42);
+    assert(v[2] == 42);
+
+    v = linspace(0, 1, 7);
+    assert(v.size() == 7);
     assert(v[6] == 1);
+}
+
+static void test_log_linspace(void) {
+    vector<double> v;
+
+    v = log_linspace(1, 8, 4);
+    assert(v[0] == 1);
+    assert(v[1] == 2);
+    assert(v[2] == 4);
+    assert(v[3] == 8);
+
+    v = log_linspace(0, 42, 4);
+    assert(v[0] == 0);
+    assert(v[3] == 42);
 }
 
 static void test_logaddexp(void) {
@@ -70,6 +109,7 @@ static void test_logaddexp(void) {
 int main(int argc, char** argv) {
     test_draw();
     test_linspace();
+    test_log_linspace();
     test_logaddexp();
 
     return 0;
