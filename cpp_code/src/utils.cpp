@@ -81,7 +81,7 @@ bool is_almost(double val1, double val2, double precision) {
 
 // linspace(a, b, n)
 //
-//      Return an array of n equidistant points between a and b,
+//      Return a vector of n equidistant points between a and b,
 //      inclusive, for n >= 2.  That is,
 //
 //              [a, a + s, a + 2s, a + 3s, ..., a + (n - 2)s, b],
@@ -105,7 +105,7 @@ vector<double> linspace(double a, double b, size_t n) {
 
 // log_linspace(a, b, n)
 //
-//      Return an array of n `equiratioed' points between a and b,
+//      Return a vector of n `equiratioed' points between a and b,
 //      inclusive, for n >= 2.  That is,
 //
 //              [a, a s, a s^2, a s^3, ..., a s^(n - 2), b],
