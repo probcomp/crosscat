@@ -93,12 +93,12 @@ vector<double> linspace(double a, double b, size_t n) {
   assert(a <= b);
 
   vector<double> v(n);
-  v[0] = a;
-  v[n - 1] = b;
-
   const double s = (b - a)/(n - 1);
+
+  v[0] = a;
   for (size_t i = 1; i < (n - 1); i++)
     v[i] = a + i*s;
+  v[n - 1] = b;
 
   return v;
 }
@@ -127,13 +127,13 @@ vector<double> log_linspace(double a, double b, size_t n) {
   b = std::max(b, std::numeric_limits<double>::min());
 
   vector<double> v(n);
-  v[0] = a;
-  v[n - 1] = b;
-
   const double log_a = log(a);
   const double log_r = (log(b) - log_a)/(n - 1);
+
+  v[0] = a;
   for (size_t i = 1; i < (n - 1); i++)
     v[i] = std::min(b, exp(log_a + i*log_r));
+  v[n - 1] = b;
 
   return v;
 }
