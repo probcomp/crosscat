@@ -34,6 +34,18 @@ CrossCat can also be installed in a local Python virtual environment: ::
 
 A similar process has been found to work on OSX.
 
+Tests
+=====
+
+CrossCat's automatic tests are in a sorry state.  To cursorily test
+the C++ part of CrossCat, run:
+
+    $ cd cpp_code
+    $ make runtests
+
+Automatic tests for the Python part of CrossCat are currently
+completely broken and unusable.
+
 Documentation
 =============
 
