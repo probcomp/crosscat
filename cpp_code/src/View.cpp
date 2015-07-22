@@ -616,7 +616,7 @@ void View::remove_if_empty(Cluster& which_cluster) {
 }
 
 void View::remove_all() {
-    cluster_lookup.empty();
+    cluster_lookup.clear();
     vector<Cluster*>::const_iterator it = clusters.begin();
     for (; it != clusters.end(); ++it) {
         Cluster& which_cluster = **it;
