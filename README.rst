@@ -16,8 +16,8 @@ $ pip install crosscat
 
 If you'd like to install from source, CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with::
 
-    $ sudo apt-get install cython libboost-all-dev python python-setuptools
-    $ sudo apt-get install python-numpy
+    $ sudo apt-get install build-essential cython libboost-all-dev python
+    $ sudo apt-get install python-setuptools python-numpy
     $ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
 
     $ cd crosscat
