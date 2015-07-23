@@ -106,9 +106,9 @@ double logaddexp(const vector<double>& logs) {
 //	a dart thrown at the interval [0, 1], i.e. a real number u in
 //	[0, 1].  Return the i such that
 //
-//		\sum_{k=0}^i p_k < u*P <= \sum_{k=0}^{i+1} p_k,
+//		\sum_{k=0}^{i-1} p_k <= u*P < \sum_{k=0}^i p_k,
 //
-//	where P = \sum_{k=0}^{n-1} p_k may be any real number.
+//	where P = \sum_{k=0}^{n-1} p_k.
 //
 //	Strategy: Log/sum/exp and draw_sample_unnormalized.  Let m =
 //	\max_j p_j, and let q_i = p_i/m.
@@ -154,25 +154,21 @@ int draw_sample_unnormalized(const vector<double>& unorm_logps,
 //	[0, 1].  log_partition is a real number L representing \log P
 //	= \log \sum_j p_j.  Return the i such that:
 //
-//		\sum_{k=0}^i p_k < u*P <= \sum_{k=0}^{i+1} p_k.
+//		\sum_{k=0}^{i-1} p_k <= u*P < \sum_{k=0}^i p_k.
 //
-//	For each i, let S_i = \sum_{k=0}^{i - 1} p_k/P and T_i = u -
+//	For each i, let S_i = \sum_{k=0}^{i-1} p_k/P and T_i = u -
 //	S_i.  We sequentially compute
 //
 //		T_0 := u,
 //		T_{i+1} := T_i - \exp (u_i - L)
 //
-//	until the first negative T_i, since if
-//
-//		0 > T_i = u - \sum_{k=0}^{i - 1} p_k/P,
-//
+//	until the first negative T_{i+1}, since if T_i > 0 > T_{i+1},
 //	then
-//
-//		u < \sum_{k=0}^{i - 1} p_k/P,
-//
+//		u - \sum_{k=0}^{i-1} p_k/P > 0 > u - \sum_{k=0}^i p_k/P,
 //	or
-//
-//		u*P < \sum_{k=0}^{i - 1} p_k/P.
+//		\sum_{k=0}^{i-1} p_k/P < u < \sum_{k=0}^i p_k/P,
+//	hence
+//		\sum_{k=0}^{i-1} p_k < u*P < \sum_{k=0}^i p_k.
 //
 int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
