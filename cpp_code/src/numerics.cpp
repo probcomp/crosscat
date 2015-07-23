@@ -135,6 +135,7 @@ double logaddexp(const vector<double>& logs) {
 int draw_sample_unnormalized(const vector<double>& unorm_logps,
 			     double rand_u) {
     const size_t N = unorm_logps.size();
+    assert(0 < N);
     vector<double> shifted_logps(N);
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
@@ -176,6 +177,7 @@ int draw_sample_unnormalized(const vector<double>& unorm_logps,
 int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
     const size_t N = unorm_logps.size();
+    assert(0 < N);
     for (size_t i = 0; i < N; i++) {
 	rand_u -= exp(unorm_logps[i] - log_partition);
 	if (rand_u < 0)
