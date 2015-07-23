@@ -37,13 +37,12 @@ A similar process has been found to work on OSX.
 Tests
 =====
 
-CrossCat's automatic tests are in a sorry state.  To cursorily test
-the C++ part of CrossCat, run:
+To run the automatic tests:
 
-    $ cd cpp_code
-    $ make runtests
+    $ ./check.sh
 
-Automatic tests for the Python part of CrossCat are currently
+The automatic tests are in a sorry state -- check.sh only runs the
+limited C++ tests for now, and the Python tests are currently
 completely broken and unusable.
 
 Documentation
