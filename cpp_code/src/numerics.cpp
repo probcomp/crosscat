@@ -183,6 +183,20 @@ int draw_sample_with_partition(const vector<double>& unorm_logps,
 	if (rand_u < 0)
 	    return i;
     }
+    // Since we require rand_u to be in [0, 1] and the partition to be
+    // normalized so the p_i sum to P, failing to hit zero by
+    // subtracting e^{u_i - \log P} = p_i/P repeatedly can occur only
+    // because of numerical error.
+    //
+    // We hope the error will not be much larger than one machine
+    // epsilon away for each operation we do.  Previously this bound
+    // was fixed at 1e-10, which should be much larger than we need in
+    // most cases.
+    //
+    // XXX This requires more careful numerical analysis: it is easy
+    // to imagine catastrophic cancellation from the subtractions
+    // above.
+    assert(rand_u < 1000*N*std::numeric_limits<double>::epsilon());
     return N - 1;
 }
 
