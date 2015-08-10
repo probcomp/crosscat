@@ -8,3 +8,9 @@
 *.csv
 *.DS_Store
 *.jar
+build/
+dist/
+website/build
+website/index.html
+cpp_code/gmon.out
+CrossCat.egg-info
