@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
         //
         //    test 'mu' hyper
         cout << "testing mu conditionals" << endl;
-        hyper_grid = log_linspace(mu / test_scale, mu * test_scale, N_grid);
+        hyper_grid = linspace(mu - test_scale, mu + test_scale, N_grid);
         hyper_conditionals = cd.calc_hyper_conditionals(which_col, "mu", hyper_grid);
         cout << "mu_grid: " << hyper_grid << endl;
         cout << "mu_conditionals: " << hyper_conditionals << endl;

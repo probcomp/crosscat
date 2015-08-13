@@ -32,7 +32,7 @@ double RandomNumberGenerator::next() {
 // dist if called with same max
 int RandomNumberGenerator::nexti(int max) {
     double D = (double)max;
-    return (int)std::floor((next() * D));
+    return static_cast<int>(next() * D);
 }
 
 /////////////////////////////

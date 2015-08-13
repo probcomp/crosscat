@@ -333,8 +333,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   is a triplet of (r, d, v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
+        :param Q: A list of values to sample.  Each value is triplet of (r, d, v):
+                  r is the row index, d is the column index, and v is the value at
+                  which the density is evaluated.
         :type Q: list of lists
         :returns: list of floats -- probabilities of the values specified by Q
 
@@ -351,11 +352,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :param X_D_list: list of the particular cluster assignments of each row in each view
         :type X_D_list: list of list of lists
         :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
+                  is a triplet of (r,d,v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is doublet of (r, d):
-                  r is the row index, d is the column index
+        :param Q: A list of values to sample.  Each value is triplet of (r,d,v):
+                  r is the row index, d is the column index, and v is the value at
+                  which the density is evaluated.
         :type Q: list of lists
         :returns: list of floats -- probabilities of the values specified by Q
 
@@ -439,7 +441,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :param X_D: the particular cluster assignments of each row in each view
         :type X_D: list of lists
         :param Y: A list of constraints to apply when sampling.  Each constraint
-                  is a triplet of (r, d, v): r is the row index, d is the column
+                  is a triplet of (r,d,v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
         :param Q: A list of values to sample.  Each value is doublet of (r, d):

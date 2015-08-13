@@ -23,7 +23,7 @@
 #include <fstream>      // fstream
 #include <boost/tokenizer.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <numeric>
 #include <algorithm>
 
@@ -79,41 +79,67 @@ bool is_almost(double val1, double val2, double precision) {
   return abs(val1-val2) < precision;
 }
 
-// http://stackoverflow.com/a/11747023/1769715
-vector<double> linspace(double a, double b, int n) {
-  vector<double> values;
-  if(a > b) {
-	  /*
-    cerr << "linspace: passed lower bound greater than upper bound!" << endl;
-    cerr << "linspace: using upper bound equal to lower bound" << endl;
-    */
-    b = a;
-  }
-  if(a == b && n != 1) {
-	  /*
-    cerr << "linspace: passed lower bound equal upper bound but n != 1!" << endl;
-    cerr << "linspace: using n = 1" << endl;
-    */
-    n = 1;
-  }
-  if(n == 1) {
-    values.push_back(a);
-  } else {
-    double step = (b-a) / (n-1);
-    double epsilon = step * 1E-6;
-    while(a <= (b + epsilon)) {
-      values.push_back(a);
-      a += step;
-    }
-  }
-  return values;
+// linspace(a, b, n)
+//
+//      Return a vector of n equidistant points between a and b,
+//      inclusive, for n >= 2.  That is,
+//
+//              [a, a + s, a + 2s, a + 3s, ..., a + (n - 2)s, b],
+//
+//      where s = (b - a)/(n - 1) is the distance between consecutive
+//      points.  If v is the result, then v[0] = a and v[n - 1] = b.
+vector<double> linspace(double a, double b, size_t n) {
+  assert(2 <= n);
+  assert(a <= b);
+
+  vector<double> v(n);
+  const double s = (b - a)/(n - 1);
+
+  v[0] = a;
+  for (size_t i = 1; i < (n - 1); i++)
+    v[i] = a + i*s;
+  v[n - 1] = b;
+
+  return v;
 }
 
-vector<double> log_linspace(double a, double b, int n) {
-  vector<double> values = linspace(log(a), log(b), n);
-  std::transform(values.begin(), values.end(), values.begin(),
-		 (double (*)(double))exp);
-  return values;
+// log_linspace(a, b, n)
+//
+//      Return a vector of n `equiratioed' points between a and b,
+//      inclusive, for n >= 2.  That is,
+//
+//              [a, a s, a s^2, a s^3, ..., a s^(n - 2), b],
+//
+//      where s = (b/a)^1/(n - 1) is the ratio of consecutive points.
+//      If v is the result, then v[0] = a and v[n - 1] = b, except in
+//      the case described below.
+//
+//      If a or b is too close to zero to be represented normally, it
+//      is first rounded up to the smallest positive normal value.
+//      Analytically, zero makes no sense for either a or b, but
+//      values sufficiently close to zero will have been rounded to
+//      zero beforehand.
+//
+//      We ignore subnormals because starting your computation with
+//      them is unlikely to help you but quite likely to slow you
+//      down.
+vector<double> log_linspace(double a, double b, size_t n) {
+  assert(2 <= n);
+  assert(a <= b);
+
+  a = std::max(a, std::numeric_limits<double>::min());
+  b = std::max(b, std::numeric_limits<double>::min());
+
+  vector<double> v(n);
+  const double log_a = log(a);
+  const double log_r = (log(b) - log_a)/(n - 1);
+
+  v[0] = a;
+  for (size_t i = 1; i < (n - 1); i++)
+    v[i] = std::max(a, std::min(b, exp(log_a + i*log_r)));
+  v[n - 1] = b;
+
+  return v;
 }
 
 vector<double> std_vector_add(const vector<double>& vec1,
@@ -262,7 +288,7 @@ vector<vector<double> > reorder_per_map(const vector<vector<double> >& raw_value
   return arranged_values_v;
 }
   
-vector<int> create_sequence(int len, int start) {
+vector<int> create_sequence(size_t len, int start) {
   vector<int> sequence(len, 1);
   if(len==0) return sequence;
   sequence[0] = start;

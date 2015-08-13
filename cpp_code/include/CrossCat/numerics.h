@@ -28,8 +28,6 @@
 #include <map>
 #include "utils.h"
 #include "assert.h"
-#include <boost/math/special_functions/bessel.hpp> 
-#include <boost/random/mersenne_twister.hpp>
 
 static const double LOG_2PI = log(2.0 * M_PI);
 static const double HALF_LOG_2PI = .5 * LOG_2PI;

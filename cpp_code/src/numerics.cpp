@@ -19,6 +19,9 @@
 */
 #include "numerics.h"
 
+#include <boost/math/special_functions/bessel.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 using namespace std;
 
 namespace numerics {
@@ -87,46 +90,110 @@ double calc_continuous_hyperprior(double r, double nu, double s) {
 }
 
 double logaddexp(const vector<double>& logs) {
+    double maximum = *std::max_element(logs.begin(), logs.end());
     double result = 0;
     vector<double>::const_iterator it;
     for (it = logs.begin(); it != logs.end(); it++) {
-        result += exp(*it);
+        result += exp(*it - maximum);
     }
-    return log(result);
+    return log(result) + maximum;
 }
 
-// subtract minimum value, logaddexp residuals, pass residuals and partition to
-// draw_sample_with_partition
-int draw_sample_unnormalized(const vector<double>& unorm_logps_given,
-                             double rand_u) {
-    vector<double> unorm_logps = unorm_logps_given;
+// draw_sample_unnormalized(unorm_logps, rand_u)
+//
+//	unorm_logps is an array [u_0, u_1, ..., u_{n-1}], where each
+//	u_i represents a log probability density \log p_i.  rand_u is
+//	a dart thrown at the interval [0, 1], i.e. a real number u in
+//	[0, 1].  Return the i such that
+//
+//		\sum_{k=0}^{i-1} p_k <= u*P < \sum_{k=0}^i p_k,
+//
+//	where P = \sum_{k=0}^{n-1} p_k.
+//
+//	Strategy: Log/sum/exp and draw_sample_unnormalized.  Let m =
+//	\max_j p_j, and let q_i = p_i/m.
+//
+//	1. Compute M := \max_j u_j, so that
+//
+//		M = \max_j u_j = \max_j \log p_j
+//		  = \log \max_j p_j
+//		  = \log m.
+//
+//	2. Compute s_i := u_i - M, so that
+//
+//		s_i = u_i - M = \log p_i - \log m
+//		    = \log (p_i/m)
+//		    = \log q_i.
+//
+//	3. Compute P := \sum_i e^{s_i}, so that
+//
+//		P = \sum_i e^{s_i} = \sum_i e^{\log q_i} = \sum_i q_i.
+//
+//	4. Reduce to draw_sample_unnormalized([s_0, s_1, ..., s_{n-1}],
+//	\log P, u), where s_i = \log q_i and \log P = \log \sum_i q_i.
+//
+int draw_sample_unnormalized(const vector<double>& unorm_logps,
+			     double rand_u) {
+    const size_t N = unorm_logps.size();
+    assert(0 < N);
+    vector<double> shifted_logps(N);
     double max_el = *std::max_element(unorm_logps.begin(), unorm_logps.end());
     double partition = 0;
-    vector<double>::iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        *it -= max_el;
-        partition += exp(*it);
+    for (size_t i = 0; i < N; i++) {
+	shifted_logps[i] = unorm_logps[i] - max_el;
+	partition += exp(shifted_logps[i]);
     }
-    double log_partition = log(partition);
-    int draw = draw_sample_with_partition(unorm_logps, log_partition,
-                                          rand_u);
-    return draw;
+    return draw_sample_with_partition(shifted_logps, log(partition), rand_u);
 }
 
+// draw_sample_with_partition(unorm_logps, log_partition, rand_u)
+//
+//	unorm_logps is an array [u_0, u_1, ..., u_{n-1}], where each
+//	u_i represents a log probability density \log p_i.  rand_u is
+//	a dart thrown at the interval [0, 1], i.e. a real number u in
+//	[0, 1].  log_partition is a real number L representing \log P
+//	= \log \sum_j p_j.  Return the i such that:
+//
+//		\sum_{k=0}^{i-1} p_k <= u*P < \sum_{k=0}^i p_k.
+//
+//	For each i, let S_i = \sum_{k=0}^{i-1} p_k/P and T_i = u -
+//	S_i.  We sequentially compute
+//
+//		T_0 := u,
+//		T_{i+1} := T_i - \exp (u_i - L)
+//
+//	until the first negative T_{i+1}, since if T_i > 0 > T_{i+1},
+//	then
+//		u - \sum_{k=0}^{i-1} p_k/P > 0 > u - \sum_{k=0}^i p_k/P,
+//	or
+//		\sum_{k=0}^{i-1} p_k/P < u < \sum_{k=0}^i p_k/P,
+//	hence
+//		\sum_{k=0}^{i-1} p_k < u*P < \sum_{k=0}^i p_k.
+//
 int draw_sample_with_partition(const vector<double>& unorm_logps,
                                double log_partition, double rand_u) {
-    int draw = 0;
-    vector<double>::const_iterator it = unorm_logps.begin();
-    for (; it != unorm_logps.end(); it++) {
-        rand_u -= exp(*it - log_partition);
-        if (rand_u < 0) {
-            return draw;
-        }
-        draw++;
+    const size_t N = unorm_logps.size();
+    assert(0 < N);
+    for (size_t i = 0; i < N; i++) {
+	rand_u -= exp(unorm_logps[i] - log_partition);
+	if (rand_u < 0)
+	    return i;
     }
-    // FIXME: should this fail?
-    assert(rand_u < 1E-10);
-    return draw;
+    // Since we require rand_u to be in [0, 1] and the partition to be
+    // normalized so the p_i sum to P, failing to hit zero by
+    // subtracting e^{u_i - \log P} = p_i/P repeatedly can occur only
+    // because of numerical error.
+    //
+    // We hope the error will not be much larger than one machine
+    // epsilon away for each operation we do.  Previously this bound
+    // was fixed at 1e-10, which should be much larger than we need in
+    // most cases.
+    //
+    // XXX This requires more careful numerical analysis: it is easy
+    // to imagine catastrophic cancellation from the subtractions
+    // above.
+    assert(rand_u < 1000*N*std::numeric_limits<double>::epsilon());
+    return N - 1;
 }
 
 // draw_sample_with_partition w/o exp() of ratio and no test for p(last)

@@ -31,7 +31,6 @@
 #include <map>
 #include <math.h> // isnan, isfinite
 #include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
 
 typedef std::map<std::string, double> ComponentModelHypers;
 typedef ComponentModelHypers CM_Hypers;
@@ -87,9 +86,9 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vT) {
 
 bool is_almost(double val1, double val2, double precision);
 
-std::vector<double> linspace(double a, double b, int n);
-std::vector<double> log_linspace(double a, double b, int n);
-std::vector<int> create_sequence(int len, int start = 0);
+std::vector<double> linspace(double a, double b, size_t n);
+std::vector<double> log_linspace(double a, double b, size_t n);
+std::vector<int> create_sequence(size_t len, int start = 0);
 
 std::vector<double> std_vector_add(const std::vector<double>& vec1,
                                    const std::vector<double>& vec2);

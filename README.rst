@@ -16,8 +16,8 @@ $ pip install crosscat
 
 If you'd like to install from source, CrossCat can be successfully installed locally on bare Ubuntu server 14.04 systems with::
 
-    $ sudo apt-get install cython libboost-all-dev python python-setuptools
-    $ sudo apt-get install python-numpy
+    $ sudo apt-get install build-essential cython libboost-all-dev python
+    $ sudo apt-get install python-setuptools python-numpy
     $ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
 
     $ cd crosscat
@@ -33,6 +33,17 @@ CrossCat can also be installed in a local Python virtual environment: ::
     $ python setup.py install  # or python setup.py develop
 
 A similar process has been found to work on OSX.
+
+Tests
+=====
+
+To run the automatic tests:
+
+    $ ./check.sh
+
+The automatic tests are in a sorry state -- check.sh only runs the
+limited C++ tests for now, and the Python tests are currently
+completely broken and unusable.
 
 Documentation
 =============

@@ -21,9 +21,6 @@
 
 
 using namespace std;
-using boost::numeric::ublas::matrix;
-using boost::numeric::ublas::project;
-using boost::numeric::ublas::range;
 
 
 // FIXME: shouldn't need T, not really using suffstats here
@@ -408,7 +405,7 @@ void State::remove_if_empty(View& which_view) {
 }
 
 void State::remove_all() {
-    view_lookup.empty();
+    view_lookup.clear();
     vector<View*>::const_iterator it;
     for (it = views.begin(); it != views.end(); ++it) {
         View& view = **it;
