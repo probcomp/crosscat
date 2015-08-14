@@ -56,14 +56,14 @@ def test_col_ensure_with_single_constraint(seed, dependent, analyze):
         assert X_L['column_partition']['assignments'][col1] == \
             X_L['column_partition']['assignments'][col2]
 
-    relinfo = [(col1, col2, dependent)]
-    X_L, X_D = engine.ensure_col(M_c, M_r, T, X_L, X_D, relinfo)
+    dep_constraints = [(col1, col2, dependent)]
+    X_L, X_D = engine.ensure_col_dep_constraints(M_c, M_r, T, X_L, X_D, dep_constraints)
 
-    assert engine.assert_col(X_L, X_D, col1, col2, dependent, True)
+    assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dependent, True)
 
     if analyze:
         X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1)
-        assert engine.assert_col(X_L, X_D, col1, col2, dependent, True)
+        assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dependent, True)
 
 
 @pytest.mark.parametrize("seed, analyze", one_each_args)
@@ -79,17 +79,17 @@ def test_one_of_each_init(seed, analyze):
     del colrange[colrange.index(ind_col1)]
     ind_col2 = random.choice(colrange)
 
-    relinfo = [(dep_col1, dep_col2, True), (ind_col1, ind_col2, False)]
-    X_L, X_D = engine.ensure_col(M_c, M_r, T, X_L, X_D, relinfo)
+    dep_constraints = [(dep_col1, dep_col2, True), (ind_col1, ind_col2, False)]
+    X_L, X_D = engine.ensure_col_dep_constraints(M_c, M_r, T, X_L, X_D, dep_constraints)
 
-    for col1, col2, dependent in relinfo:
-        assert engine.assert_col(X_L, X_D, col1, col2, dependent, True)
+    for col1, col2, dependent in dep_constraints:
+        assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dependent, True)
 
     if analyze:
         X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1)
 
-        for col1, col2, dependent in relinfo:
-            assert engine.assert_col(X_L, X_D, col1, col2, dependent, True)
+        for col1, col2, dependent in dep_constraints:
+            assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dependent, True)
 
 
 @pytest.mark.parametrize("seed, dependent, analyze", single_args)
@@ -97,15 +97,15 @@ def test_multiple_col_ensure(seed, dependent, analyze):
     T, M_r, M_c, X_L, X_D, engine = quick_le(seed)
     col_pairs = [(c1, c2,) for c1, c2 in it.combinations(range(N_COLS), 2)]
     ensure_pairs = random.sample(col_pairs, 4)
-    relinfo = [(c1, c2, dependent) for c1, c2 in ensure_pairs]
+    dep_constraints = [(c1, c2, dependent) for c1, c2 in ensure_pairs]
 
-    X_L, X_D = engine.ensure_col(M_c, M_r, T, X_L, X_D, relinfo)
+    X_L, X_D = engine.ensure_col_dep_constraints(M_c, M_r, T, X_L, X_D, dep_constraints)
 
-    for col1, col2, dep in relinfo:
-        assert engine.assert_col(X_L, X_D, col1, col2, dep, True)
+    for col1, col2, dep in dep_constraints:
+        assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dep, True)
 
     if analyze:
-        X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1)
+        X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=1000)
 
-        for col1, col2, dep in relinfo:
-            assert engine.assert_col(X_L, X_D, col1, col2, dep, True)
+        for col1, col2, dep in dep_constraints:
+            assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dep, True)
