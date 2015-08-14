@@ -491,45 +491,46 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e, confidence)
 
-    def ensure_col(self, M_c, M_r, T, X_L, X_D, relinfo, max_rejections=100):
-        ''' Ensures dependencey or indepdendency between columns
+    def ensure_col_dep_constraints(self, M_c, M_r, T, X_L, X_D, dep_constraints,
+            max_rejections=100):
+        """Ensures dependencey or indepdendency between columns.
 
-        relinfo is a list of where each entry is an (int, int, bool) tuple
+        dep_constraints is a list of where each entry is an (int, int, bool) tuple
         where the first two entries are column indices and the third entry
         describes whether the columns are to be dependent (True) or independent
         (False).
 
         Behavior Notes:
-        ensure_col will add col_esnure enforcement to the metadata (top level
-        of X_L); unensure_col will remove it. Calling ensure_col twice will
-        replace the first ensure.
+        ensure_col_dep_constraints will add col_esnure enforcement to the
+        metadata (top level of X_L); unensure_col will remove it. Calling
+        ensure_col_dep_constraints twice will replace the first ensure.
 
         This operation destroys the existing X_L and X_D metadata; the user
         should be aware that it will clobber any existing analyses.
 
         Implementation Notes:
-        Initialization is implemented via rejection (by repeatedyl initalizing
-        states and throwing ones out that do not adhear to relinfo). This means
-        that in the event the contraints in relinfo are complex, or impossible,
-        that the rejection alogrithm may fail.
+        Initialization is implemented via rejection (by repeatedly initalizing
+        states and throwing ones out that do not adhear to dep_constraints).
+        This means that in the event the contraints in dep_constraints are
+        complex, or impossible, that the rejection alogrithm may fail.
 
-        The meta data looks like this:
-        >>> relinfo
+        The returned metadata looks like this:
+        >>> dep_constraints
         [(1, 2, True), (2, 5, True), (1, 5, True), (1, 3, False)]
         >>> X_L['col_ensure']
         {
-        "dependent" :
-        {
-            1 : [2, 5],
-            2 : [1, 5],
-            5 : [1, 2]
-        },
-        "independent" :
-        {
-            1 : [3],
-            3 : [1]
+            "dependent" :
+            {
+                1 : [2, 5],
+                2 : [1, 5],
+                5 : [1, 2]
+            },
+            "independent" :
+            {
+                1 : [3],
+                3 : [1]
         }
-        '''
+        """
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         if was_multistate:
             num_states = len(X_L_list)
@@ -540,23 +541,23 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         col_ensure_md[True] = dict()
         col_ensure_md[False] = dict()
 
-        for col1, col2, dependent in relinfo:
+        for col1, col2, dependent in dep_constraints:
             if col1 == col2:
-                raise ValueError("col1 cannot be the same as col2 in relinfo")
-
-            if col_ensure_md[dependent].get(col1, None) is None:
-                col_ensure_md[dependent][col1] = set([col2])
+                raise ValueError("Cannot specify same columns in dependence"\
+                    " constraints.")
+            if str(col1) in col_ensure_md[dependent]:
+                col_ensure_md[dependent][str(col1)].append(col2)
             else:
-                col_ensure_md[dependent][col1].add(col2)
-
-            if col_ensure_md[dependent].get(col2, None) is None:
-                col_ensure_md[dependent][col2] = set([col1])
+                col_ensure_md[dependent][str(col1)] = [col2]
+            if col2 in col_ensure_md[dependent]:
+                col_ensure_md[dependent][str(col2)].append(col1)
             else:
-                col_ensure_md[dependent][col2].add(col1)
+                col_ensure_md[dependent][str(col2)] = [col1]
 
-        def assert_relinfo(X_L, X_D, relinfo):
-            for col1, col2, dep in relinfo:
-                if not self.assert_col(X_L, X_D, col1, col2, dep, True):
+        def assert_dep_constraints(X_L, X_D, dep_constraints):
+            for col1, col2, dep in dep_constraints:
+                if not self.assert_col_dep_constraints(X_L, X_D, col1, col2,
+                    dep, True):
                     return False
             return True
 
@@ -565,11 +566,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         for _ in range(num_states):
             counter = 0
             X_L_i, X_D_i = self.initialize(M_c, M_r, T)
-            while not assert_relinfo(X_L_i, X_D_i, relinfo):
+            while not assert_dep_constraints(X_L_i, X_D_i, dep_constraints):
                 if counter > max_rejections:
-                    raise RuntimeError("Could not ranomly generate a partition \
-                                       that satisfies the constraints in \
-                                       relinfo")
+                    raise RuntimeError("Could not ranomly generate a partition"\
+                        " that satisfies the constraints in dep_constraints.")
                 counter += 1
                 X_L_i, X_D_i = self.initialize(M_c, M_r, T)
 
@@ -585,10 +585,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             return X_L_out[0], X_D_out[0]
 
-    def ensure_row(self, M_c, T, X_L, X_D, row1, row2, dependent=True, wrt=None, max_iter=100,
-                   force=False):
-        ''' Ensures dependencey or indepdendency between rows with respect to (wrt) columns
-        '''
+    def ensure_row_dep_constraint(self, M_c, T, X_L, X_D, row1, row2,
+            dependent=True, wrt=None, max_iter=100, force=False):
+        """Ensures dependencey or indepdendency between rows with respect to
+        (wrt) columns."""
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         if force:
             raise NotImplementedError
@@ -598,12 +598,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 iters = 0
                 X_L_tmp = copy.deepcopy(X_L_i)
                 X_D_tmp = copy.deepcopy(X_D_i)
-                while not self.assert_row(X_L_tmp, X_D_tmp, row1, row2, dependent=dependent,
-                                          wrt=wrt):
+                while not self.assert_row(X_L_tmp, X_D_tmp, row1, row2,
+                        dependent=dependent, wrt=wrt):
                     if iters >= max_iter:
                         raise RuntimeError('Maximum ensure iterations reached.')
                     res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=kernel_list,
-                                       n_steps=1, r=(row1,))
+                        n_steps=1, r=(row1,))
                     X_L_tmp = res[0]
                     X_D_tmp = res[1]
                     iters += 1
@@ -615,7 +615,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             return X_L_list[0], X_D_list[0]
 
-    def assert_col(self, X_L, X_D, col1, col2, dependent=True, single_bool=False):
+    def assert_col_dep_constraints(self, X_L, X_D, col1, col2, dependent=True,
+        single_bool=False):
         # TODO: X_D is not used for anything other than ensure_multistate.
         # I should probably edit ensure_multistate to take X_L or X_D using
         # keyword arguments.
@@ -793,7 +794,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         diagnostic_func_dict = dict()
         every_N = None
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
-    #
+    # import ipdb; ipdb.set_trace()
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
                             ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
                             COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
