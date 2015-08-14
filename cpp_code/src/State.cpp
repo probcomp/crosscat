@@ -736,7 +736,7 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
         if (independencies_for_col){
             // Make sure that none of the columns in this view are supposed to
             // be dependent of the column at global_col_idx
-            for (int i = 0; i < cols_in_view.size(); ++i){
+            for (size_t i = 0; i < cols_in_view.size(); ++i){
                 int col = cols_in_view[i];
                 map<int, set<int> >::const_iterator inds = column_independencies.find(global_col_idx); 
                 if(inds->second.find(col) != inds->second.end()){
