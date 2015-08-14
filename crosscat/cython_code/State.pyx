@@ -421,9 +421,19 @@ cdef class p_State:
           column_partition = self.get_column_partition()
           column_hypers = self.get_column_hypers()
           view_state = self.get_view_state()
-          
+
+          # Need to convert from c_map[int c_set[int] to dict(string:list).
           col_ensure_dep = self.get_col_ensure_dep()
           col_ensure_ind = self.get_col_ensure_ind()
+
+          if col_ensure_dep is None:
+             col_ensure_dep_json = {}
+          else:
+             col_ensure_dep_json = {str(k):list(v) for (k,v) in col_ensure_dep.items()}
+          if col_ensure_ind is None:
+             col_ensure_ind_json = {}
+          else:
+             col_ensure_ind_json = {str(k):list(v) for (k,v) in col_ensure_ind.items()}
 
           X_L = dict()
           X_L['column_partition'] = column_partition
@@ -431,8 +441,8 @@ cdef class p_State:
           X_L['view_state'] = view_state
           if col_ensure_dep is not None or col_ensure_ind is not None:
               X_L['col_ensure'] = dict()
-              X_L['col_ensure']['dependent'] = col_ensure_dep 
-              X_L['col_ensure']['independent'] = col_ensure_ind
+              X_L['col_ensure']['dependent'] = col_ensure_dep_json
+              X_L['col_ensure']['independent'] = col_ensure_ind_json
 
           sparsify_X_L(self.M_c, X_L)
           return X_L
@@ -485,14 +495,21 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      row_partition_v = map(indicator_list_to_list_of_list, X_D)
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
 
+     # Need to convert from dict(string:list) to c_map[int c_set[int].
      if X_L.get('col_ensure', None) is None:
          col_ensure_dep = empty_map_of_int_set()
          col_ensure_ind = empty_map_of_int_set()
      else:
-         col_ensure_dep = X_L['col_ensure'].get('dependent',
-                                                empty_map_of_int_set())
-         col_ensure_ind = X_L['col_ensure'].get('independent',
-                                                empty_map_of_int_set())
+         col_ensure_dep_json = X_L['col_ensure'].get('dependent', None)
+         if col_ensure_dep_json is None:
+           col_ensure_dep = empty_map_of_int_set()
+         else:
+           col_ensure_dep = {int(k):set(v) for (k,v) in col_ensure_dep_json.items()}
+         col_ensure_ind_json = X_L['col_ensure'].get('independent', None)
+         if col_ensure_ind_json is None:
+           col_ensure_ind = empty_map_of_int_set()
+         else:
+           col_ensure_ind = {int(k):set(v) for (k,v) in col_ensure_ind_json.items()}
 
      n_grid = 31
      seed = 0
