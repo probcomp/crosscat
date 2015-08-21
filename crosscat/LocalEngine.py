@@ -30,8 +30,6 @@ import crosscat.utils.sample_utils as su
 import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
 
-from scipy.sparse.csgraph import connected_components
-
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
 
