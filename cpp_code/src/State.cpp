@@ -31,6 +31,8 @@ State::State(const MatrixD& data,
              const vector<int>& global_col_indices,
              const map<int, CM_Hypers>& HYPERS_M,
              const vector<vector<int> >& column_partition,
+             const std::map<int, std::set<int> >& col_ensure_dep,
+             const std::map<int, std::set<int> >& col_ensure_ind,
              double COLUMN_CRP_ALPHA,
              const vector<vector<vector<int> > >& row_partition_v,
              const vector<double>& row_crp_alpha_v,
@@ -43,6 +45,8 @@ State::State(const MatrixD& data,
     ct_kernel = CT_KERNEL;
     column_crp_score = 0;
     data_score = 0;
+    column_dependencies = col_ensure_dep;
+    column_independencies = col_ensure_ind;
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -169,7 +173,8 @@ double State::insert_feature(int feature_idx,
                          which_view,
                          crp_logp_delta,
                          data_logp_delta,
-                         hypers);
+                         hypers,
+                         feature_idx);
     vector<int> data_global_row_indices = create_sequence(feature_data.size());
     which_view.insert_col(feature_data,
                           data_global_row_indices, feature_idx,
@@ -212,7 +217,8 @@ double State::remove_feature(int feature_idx,
                          which_view,
                          crp_logp_delta,
                          other_data_logp_delta,
-                         hypers);
+                         hypers,
+                         feature_idx);
     //
     if(view_num_cols==1) {
         p_singleton_view = &which_view;
@@ -284,7 +290,8 @@ double State::mh_choose(int feature_idx,
                                        col_datatype, proposed_view,
                                        crp_log_delta_new,
                                        data_log_delta_new,
-                                       hypers);
+                                       hypers,
+                                       feature_idx);
 
     double state_log_ratio = proposed_view_score_delta - original_view_score_delta;
     double proposal_log_ratio = get_proposal_log_ratio(original_view, proposed_view);
@@ -473,6 +480,14 @@ vector<int> State::get_column_partition_assignments() const {
 
 vector<int> State::get_column_partition_counts() const {
     return get_view_counts();
+}
+
+std::map<int, std::set<int> > State::get_column_dependencies() const {
+    return column_dependencies;
+}
+
+std::map<int, std::set<int> > State::get_column_independencies() const {
+    return column_independencies;
 }
 
 vector<vector<int> > State::get_X_D() const {
@@ -674,7 +689,8 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
         const string& col_datatype, const View& v,
         double& crp_log_delta,
         double& data_log_delta,
-        const CM_Hypers& hypers) const {
+        const CM_Hypers& hypers,
+        const int& global_col_idx) const {
     int view_column_count = v.get_num_cols();
     int num_columns = get_num_cols();
     crp_log_delta = numerics::calc_cluster_crp_logp(view_column_count, num_columns,
@@ -685,8 +701,63 @@ double State::calc_feature_view_predictive_logp(const vector<double>& col_data,
     data_log_delta = v.calc_column_predictive_logp(col_data, col_datatype,
                      data_global_row_indices,
                      hypers);
-    //
+   
+    bool view_violates_dep = false;
+    bool view_violates_ind = false;
+    bool dependencies_for_col = (column_dependencies.find(global_col_idx)
+            != column_dependencies.end());
+
+    bool independencies_for_col = (column_independencies.find(global_col_idx)
+            != column_independencies.end());
+    if (dependencies_for_col or independencies_for_col){
+        // Check whether the feature can or cannot belong to this view. If it
+        // violates either column_dependencies or column_independencies, then
+        // delta is log(0). 
+
+        // Get the columns in this view
+        vector<int> cols_in_view;
+        for(map<int,int>::const_iterator it = v.global_to_local.begin();
+                it != v.global_to_local.end(); it++) {
+            cols_in_view.push_back(it->first);
+        }
+
+        if (dependencies_for_col){
+            std::set<int>::const_iterator its;
+            // make sure that all the dependencies are satisfied
+            map<int, set<int> >::const_iterator deps = column_dependencies.find(global_col_idx); 
+            for (its = deps->second.begin(); its != deps->second.end(); its++){
+                if(find(cols_in_view.begin(), cols_in_view.end(), *its) ==
+                        cols_in_view.end()){
+                    view_violates_dep = true;
+                }
+            }
+        }
+
+        if (independencies_for_col){
+            // Make sure that none of the columns in this view are supposed to
+            // be dependent of the column at global_col_idx
+            for (size_t i = 0; i < cols_in_view.size(); ++i){
+                int col = cols_in_view[i];
+                map<int, set<int> >::const_iterator inds = column_independencies.find(global_col_idx); 
+                if(inds->second.find(col) != inds->second.end()){
+                    view_violates_ind = true;
+                }
+            }
+        }
+
+        // Either dependence or independence can be violated but not both, if
+        // the state was initalized properly.
+        assert( !(view_violates_dep and view_violates_ind) );
+
+    }
+
     double score_delta = data_log_delta + crp_log_delta;
+    if(view_violates_ind or view_violates_dep){
+        // XXX: I have a feeling that this is going to wreck multinomial draws
+        // due to terrible floating point error.
+        score_delta = -INFINITY;
+    }
+
     return score_delta;
 }
 
@@ -705,7 +776,8 @@ vector<double> State::calc_feature_view_predictive_logps(
                              v,
                              crp_log_delta,
                              data_log_delta,
-                             hypers);
+                             hypers,
+                             global_col_idx);
         logps.push_back(score_delta);
     }
     return logps;

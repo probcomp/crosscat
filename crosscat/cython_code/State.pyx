@@ -21,6 +21,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.map cimport map as c_map
+from libcpp.set cimport set as c_set
 from cython.operator import dereference
 cimport numpy as np
 #
@@ -30,6 +31,10 @@ import numpy
 import crosscat.utils.file_utils as fu
 import crosscat.utils.general_utils as gu
 
+
+cdef c_map[int, c_set[int]] empty_map_of_int_set():
+    cdef c_map[int, c_set[int]] retval
+    return retval
 
 cdef double set_double(double& to_set, double value):
      (&to_set)[0] = value	# (&...)[0] works around Cython >=0.18 bug.
@@ -103,6 +108,8 @@ cdef extern from "State.h":
           vector[int] get_column_partition_counts()
           #
           c_map[string, double] get_row_partition_model_hypers_i(int view_idx)
+          c_map[int, c_set[int]] get_column_dependencies()
+          c_map[int, c_set[int]] get_column_independencies()
           vector[int] get_row_partition_model_counts_i(int view_idx)
           vector[vector[c_map[string, double]]] get_column_component_suffstats_i(int view_idx)
           #
@@ -127,6 +134,8 @@ cdef extern from "State.h":
                                    vector[int] global_col_indices,
                                    c_map[int, c_map[string, double]] hypers_m,
                                    vector[vector[int]] column_partition,
+                                   c_map[int, c_set[int]] col_ensure_dep,
+                                   c_map[int, c_set[int]] col_ensure_ind,
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
@@ -223,12 +232,20 @@ cdef class p_State:
               column_crp_alpha = constructor_args['column_crp_alpha']
               row_partition_v = constructor_args['row_partition_v']
               row_crp_alpha_v = constructor_args['row_crp_alpha_v']
+              col_ensure_dep = constructor_args['col_ensure_dep']
+              col_ensure_ind = constructor_args['col_ensure_ind']
+              if col_ensure_dep is None:
+                  col_ensure_dep = empty_map_of_int_set()
+                  col_ensure_ind = empty_map_of_int_set()
               self.thisptr = new_State(dereference(self.dataptr),
                                        self.column_types,
                                        self.event_counts,
                                        self.gri, self.gci,
                                        hypers_m,
-                                       column_partition, column_crp_alpha,
+                                       column_partition,
+                                       col_ensure_dep,
+                                       col_ensure_ind,
+                                       column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
                                        ROW_CRP_ALPHA_GRID,
                                        COLUMN_CRP_ALPHA_GRID,
@@ -335,6 +352,21 @@ cdef class p_State:
             view_state_i = self.get_view_state_i(view_idx)
             view_state.append(view_state_i)
         return view_state
+
+    def get_col_ensure_dep(self):
+        retval = self.thisptr.get_column_dependencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
+
+    def get_col_ensure_ind(self):
+        retval = self.thisptr.get_column_independencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
+
     # mutators
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
@@ -389,10 +421,29 @@ cdef class p_State:
           column_partition = self.get_column_partition()
           column_hypers = self.get_column_hypers()
           view_state = self.get_view_state()
+
+          # Need to convert from c_map[int c_set[int] to dict(string:list).
+          col_ensure_dep = self.get_col_ensure_dep()
+          col_ensure_ind = self.get_col_ensure_ind()
+
+          if col_ensure_dep is None:
+             col_ensure_dep_json = {}
+          else:
+             col_ensure_dep_json = {str(k):list(v) for (k,v) in col_ensure_dep.items()}
+          if col_ensure_ind is None:
+             col_ensure_ind_json = {}
+          else:
+             col_ensure_ind_json = {str(k):list(v) for (k,v) in col_ensure_ind.items()}
+
           X_L = dict()
           X_L['column_partition'] = column_partition
           X_L['column_hypers'] = column_hypers
           X_L['view_state'] = view_state
+          if col_ensure_dep is not None or col_ensure_ind is not None:
+              X_L['col_ensure'] = dict()
+              X_L['col_ensure']['dependent'] = col_ensure_dep_json
+              X_L['col_ensure']['independent'] = col_ensure_ind_json
+
           sparsify_X_L(self.M_c, X_L)
           return X_L
     def save(self, filename, dir='', **kwargs):
@@ -443,6 +494,23 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      column_crp_alpha = X_L['column_partition']['hypers']['alpha']
      row_partition_v = map(indicator_list_to_list_of_list, X_D)
      row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
+
+     # Need to convert from dict(string:list) to c_map[int c_set[int].
+     if X_L.get('col_ensure', None) is None:
+         col_ensure_dep = empty_map_of_int_set()
+         col_ensure_ind = empty_map_of_int_set()
+     else:
+         col_ensure_dep_json = X_L['col_ensure'].get('dependent', None)
+         if col_ensure_dep_json is None:
+           col_ensure_dep = empty_map_of_int_set()
+         else:
+           col_ensure_dep = {int(k):set(v) for (k,v) in col_ensure_dep_json.items()}
+         col_ensure_ind_json = X_L['col_ensure'].get('independent', None)
+         if col_ensure_ind_json is None:
+           col_ensure_ind = empty_map_of_int_set()
+         else:
+           col_ensure_ind = {int(k):set(v) for (k,v) in col_ensure_ind_json.items()}
+
      n_grid = 31
      seed = 0
      ct_kernel=0
@@ -458,6 +526,8 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      constructor_args['N_GRID'] = n_grid
      constructor_args['SEED'] = seed
      constructor_args['CT_KERNEL'] = ct_kernel
+     constructor_args['col_ensure_dep'] = col_ensure_dep
+     constructor_args['col_ensure_ind'] = col_ensure_ind
      #
      return constructor_args
 

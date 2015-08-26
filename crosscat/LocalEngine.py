@@ -17,19 +17,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import copy
 import itertools
 import collections
-import copy
-#
 import numpy
-#
+
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
 import crosscat.utils.sample_utils as su
 import crosscat.utils.general_utils as gu
 import crosscat.utils.inference_utils as iu
+
 # for default_diagnostic_func_dict below
 import crosscat.utils.diagnostic_utils
+
 
 class LocalEngine(EngineTemplate.EngineTemplate):
 
@@ -115,10 +116,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             X_L_list, X_D_list = X_L_list[0], X_D_list[0]
         return X_L_list, X_D_list
 
-
     def get_insert_arg_tuples(self, M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL):
-        n_chains = len(X_L_list)
-        # seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
             itertools.cycle([M_c]),
             itertools.cycle([T]),
@@ -129,10 +127,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         )
         return arg_tuples
 
-
     def insert(self, M_c, T, X_L_list, X_D_list, new_rows=None, N_GRID=31, CT_KERNEL=0):
         """
-        Insert mutates the data T. 
+        Insert mutates the data T.
         """
 
         if new_rows is None:
@@ -146,7 +143,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L_list, X_D_list)
 
         # get insert arg tuples
-        arg_tuples = self.get_insert_arg_tuples(M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL)
+        arg_tuples = self.get_insert_arg_tuples(M_c, T, X_L_list, X_D_list, new_rows, N_GRID,
+                                                CT_KERNEL)
 
         chain_tuples = self.mapper(self.do_insert, arg_tuples)
         X_L_list, X_D_list = zip(*chain_tuples)
@@ -160,15 +158,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         return ret_tuple
 
-
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
-                               n_steps, c, r, max_iterations, max_time, diagnostic_func_dict, every_N,
-                               ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
-                               S_GRID, MU_GRID,
-                               N_GRID,
-                               do_timing,
-                               CT_KERNEL,
-                               ):
+                               n_steps, c, r, max_iterations, max_time, diagnostic_func_dict,
+                               every_N, ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+                               S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = itertools.izip(
@@ -236,7 +229,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         if n_steps <= 0:
             raise ValueError("You must do at least one analyze step.")
 
-        if CT_KERNEL not in [0,1]:
+        if CT_KERNEL not in [0, 1]:
             raise ValueError("CT_KERNEL must be 0 (Gibbs) or 1 (MH)")
 
         if do_timing:
@@ -246,7 +239,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             do_diagnostics)
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         arg_tuples = self.get_analyze_arg_tuples(M_c, T, X_L_list, X_D_list,
-                                                 kernel_list, n_steps, c, r, max_iterations, max_time,
+                                                 kernel_list, n_steps, c, r,
+                                                 max_iterations, max_time,
                                                  diagnostic_func_dict, diagnostics_every_N,
                                                  ROW_CRP_ALPHA_GRID,
                                                  COLUMN_CRP_ALPHA_GRID,
@@ -290,8 +284,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             matching_row_indices = range(len(T))
             pass
         was_single_row = len(matching_row_indices) == 1
-        draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D,
-                matching_row_indices)
+        draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D, matching_row_indices)
         if was_single_row:
             draws = draws[0]
             pass
@@ -371,7 +364,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         Return the estimated mutual information for each pair of columns on Q given
         the set of samples.
-        
+
         :param M_c: The column metadata
         :type M_c: dict
         :param X_L_list: list of the latent variables associated with the latent state
@@ -382,14 +375,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :type Q: list of two-tuples of ints
         :param n_samples: the number of simple predictive samples to use
         :type n_samples: int
-        :returns: list of list, where each sublist is a set of MIs and Linfoots from each crosscat sample.
+        :returns: list of list, where each sublist is a set of MIs and Linfoots from each crosscat
+        sample.
         """
         return iu.mutual_information(M_c, X_L_list, X_D_list, Q, n_samples)
 
     def row_structural_typicality(self, X_L_list, X_D_list, row_id):
         """
         Returns the typicality (opposite of anomalousness) of the given row.
-        
+
         :param X_L_list: list of the latent variables associated with the latent state
         :type X_L_list: list of dict
         :param X_D_list: list of the particular cluster assignments of each row in each view
@@ -403,7 +397,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def column_structural_typicality(self, X_L_list, col_id):
         """
         Returns the typicality (opposite of anomalousness) of the given column.
-        
+
         :param X_L_list: list of the latent variables associated with the latent state
         :type X_L_list: list of dict
         :param col_id: id of the target col
@@ -484,13 +478,186 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         if isinstance(X_L, (list, tuple)):
             assert isinstance(X_D, (list, tuple))
             # TODO: multistate impute doesn't exist yet
-            #e,confidence = su.impute_and_confidence_multistate(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+            # e,confidence = su.impute_and_confidence_multistate(M_c, X_L, X_D, Y, Q, n,
+            #                                                    self.get_next_seed)
             e, confidence = su.impute_and_confidence(
                 M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         else:
             e, confidence = su.impute_and_confidence(
                 M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
         return (e, confidence)
+
+    def ensure_col_dep_constraints(self, M_c, M_r, T, X_L, X_D, dep_constraints,
+            max_rejections=100):
+        """Ensures dependencey or indepdendency between columns.
+
+        dep_constraints is a list of where each entry is an (int, int, bool) tuple
+        where the first two entries are column indices and the third entry
+        describes whether the columns are to be dependent (True) or independent
+        (False).
+
+        Behavior Notes:
+        ensure_col_dep_constraints will add col_esnure enforcement to the
+        metadata (top level of X_L); unensure_col will remove it. Calling
+        ensure_col_dep_constraints twice will replace the first ensure.
+
+        This operation destroys the existing X_L and X_D metadata; the user
+        should be aware that it will clobber any existing analyses.
+
+        Implementation Notes:
+        Initialization is implemented via rejection (by repeatedly initalizing
+        states and throwing ones out that do not adhear to dep_constraints).
+        This means that in the event the contraints in dep_constraints are
+        complex, or impossible, that the rejection alogrithm may fail.
+
+        The returned metadata looks like this:
+        >>> dep_constraints
+        [(1, 2, True), (2, 5, True), (1, 5, True), (1, 3, False)]
+        >>> X_L['col_ensure']
+        {
+            "dependent" :
+            {
+                1 : [2, 5],
+                2 : [1, 5],
+                5 : [1, 2]
+            },
+            "independent" :
+            {
+                1 : [3],
+                3 : [1]
+        }
+        """
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        if was_multistate:
+            num_states = len(X_L_list)
+        else:
+            num_states = 1
+
+        col_ensure_md = dict()
+        col_ensure_md[True] = dict()
+        col_ensure_md[False] = dict()
+
+        for col1, col2, dependent in dep_constraints:
+            if col1 == col2:
+                raise ValueError("Cannot specify same columns in dependence"\
+                    " constraints.")
+            if str(col1) in col_ensure_md[dependent]:
+                col_ensure_md[dependent][str(col1)].append(col2)
+            else:
+                col_ensure_md[dependent][str(col1)] = [col2]
+            if col2 in col_ensure_md[dependent]:
+                col_ensure_md[dependent][str(col2)].append(col1)
+            else:
+                col_ensure_md[dependent][str(col2)] = [col1]
+
+        def assert_dep_constraints(X_L, X_D, dep_constraints):
+            for col1, col2, dep in dep_constraints:
+                if not self.assert_col_dep_constraints(X_L, X_D, col1, col2,
+                    dep, True):
+                    return False
+            return True
+
+        X_L_out = []
+        X_D_out = []
+        for _ in range(num_states):
+            counter = 0
+            X_L_i, X_D_i = self.initialize(M_c, M_r, T)
+            while not assert_dep_constraints(X_L_i, X_D_i, dep_constraints):
+                if counter > max_rejections:
+                    raise RuntimeError("Could not ranomly generate a partition"\
+                        " that satisfies the constraints in dep_constraints.")
+                counter += 1
+                X_L_i, X_D_i = self.initialize(M_c, M_r, T)
+
+            X_L_i['col_ensure'] = dict()
+            X_L_i['col_ensure']['dependent'] = col_ensure_md[True]
+            X_L_i['col_ensure']['independent'] = col_ensure_md[False]
+
+            X_D_out.append(X_D_i)
+            X_L_out.append(X_L_i)
+
+        if was_multistate:
+            return X_L_out, X_D_out
+        else:
+            return X_L_out[0], X_D_out[0]
+
+    def ensure_row_dep_constraint(self, M_c, T, X_L, X_D, row1, row2,
+            dependent=True, wrt=None, max_iter=100, force=False):
+        """Ensures dependencey or indepdendency between rows with respect to
+        (wrt) columns."""
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        if force:
+            raise NotImplementedError
+        else:
+            kernel_list = ('row_partition_assignements',)
+            for i, (X_L_i, X_D_i) in enumerate(zip(X_L_list, X_D_list)):
+                iters = 0
+                X_L_tmp = copy.deepcopy(X_L_i)
+                X_D_tmp = copy.deepcopy(X_D_i)
+                while not self.assert_row(X_L_tmp, X_D_tmp, row1, row2,
+                        dependent=dependent, wrt=wrt):
+                    if iters >= max_iter:
+                        raise RuntimeError('Maximum ensure iterations reached.')
+                    res = self.analyze(M_c, T, X_L_i, X_D_i, kernel_list=kernel_list,
+                        n_steps=1, r=(row1,))
+                    X_L_tmp = res[0]
+                    X_D_tmp = res[1]
+                    iters += 1
+                X_L_list[i] = X_L_tmp
+                X_D_list[i] = X_D_tmp
+
+        if was_multistate:
+            return X_L_list, X_D_list
+        else:
+            return X_L_list[0], X_D_list[0]
+
+    def assert_col_dep_constraints(self, X_L, X_D, col1, col2, dependent=True,
+        single_bool=False):
+        # TODO: X_D is not used for anything other than ensure_multistate.
+        # I should probably edit ensure_multistate to take X_L or X_D using
+        # keyword arguments.
+        X_L_list, _, was_multistate = su.ensure_multistate(X_L, X_D)
+        model_assertions = []
+        assertion = True
+        for X_L_i in X_L_list:
+            assg = X_L_i['column_partition']['assignments']
+            assertion = (assg[col1] == assg[col2]) == dependent
+            if single_bool and not assertion:
+                return False
+            model_assertions.append(assertion)
+
+        if single_bool:
+            return True
+
+        if was_multistate:
+            return model_assertions
+        else:
+            return model_assertions[0]
+
+    def assert_row(self, X_L, X_D, row1, row2, dependent=True, wrt=None):
+        X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
+        if wrt is None:
+            num_cols = len(X_L_list[0]['column_partition']['assignments'])
+            wrt = range(num_cols)
+        else:
+            if not isinstance(wrt, list):
+                raise TypeError('wrt must be a list')
+        model_assertions = []
+        for X_L_i, X_D_i in zip(X_L_list, X_D_list):
+            view_assg = X_L_i['column_partition']['assignments']
+            views_wrt = list(set([view_assg[col] for col in wrt]))
+            model_assertion = True
+            for view in views_wrt:
+                if (X_D_i[view][row1] == X_D_i[view][row2]) != dependent:
+                    model_assertion = False
+                    break
+            model_assertions.append(model_assertion)
+
+        if was_multistate:
+            return model_assertions
+        else:
+            return model_assertions[0]
+        pass
 
 
 def do_diagnostics_to_func_dict(do_diagnostics):
@@ -549,8 +716,8 @@ def _do_initialize_tuple(arg_tuple):
 def _do_insert_tuple(arg_tuple):
     return _do_insert(*arg_tuple)
 
-def _do_insert( M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
 
+def _do_insert(M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
     p_State = State.p_State(M_c, T, X_L=X_L, X_D=X_D,
                             N_GRID=N_GRID,
                             CT_KERNEL=CT_KERNEL)
@@ -567,6 +734,7 @@ def _do_insert( M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
 
 # switched ordering so args that change come first
 # FIXME: change LocalEngine.analyze to match ordering here
+
 
 def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 max_iterations, max_time,
@@ -593,6 +761,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
 def _do_analyze_tuple(arg_tuple):
     return _do_analyze_with_diagnostic(*arg_tuple)
 
+
 def get_child_n_steps_list(n_steps, every_N):
     if every_N is None:
         # results in one block of size n_steps
@@ -609,19 +778,19 @@ none_summary = lambda p_State: None
 
 
 def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
-        max_iterations, max_time, diagnostic_func_dict, every_N,
-        ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
-        S_GRID, MU_GRID,
-        N_GRID,
-        do_timing,
-        CT_KERNEL,
-        ):
+                                max_iterations, max_time, diagnostic_func_dict, every_N,
+                                ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
+                                S_GRID, MU_GRID,
+                                N_GRID,
+                                do_timing,
+                                CT_KERNEL,
+                                ):
     diagnostics_dict = collections.defaultdict(list)
     if diagnostic_func_dict is None:
         diagnostic_func_dict = dict()
         every_N = None
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
-    #
+    # import ipdb; ipdb.set_trace()
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
                             ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
                             COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
@@ -699,15 +868,6 @@ if __name__ == '__main__':
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
         data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
 
-    # There is currently (4/7/2014) no ttu.get_generative_clustering function which 
-    # X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
-    #                                                  data_inverse_permutation_indices, num_clusters, num_views)
-    # T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
-    # #
-    # generative_mean_test_log_likelihood = ctu.calc_mean_test_log_likelihood(
-    #     M_c, T,
-    #     X_L_gen, X_D_gen, T_test)
-
     # run some tests
     engine = LocalEngine(seed=inf_seed)
     multi_state_ARIs = []
@@ -716,8 +876,6 @@ if __name__ == '__main__':
     multi_state_ARIs.append(
         ctu.get_column_ARIs(X_L_list, view_assignment_truth))
 
-    # multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
-    #                                                                     X_L_list, X_D_list, T_test))
     for time_i in range(n_times):
         X_L_list, X_D_list = engine.analyze(
             M_c, T, X_L_list, X_D_list, n_steps=n_steps, CT_KERNEL=CT_KERNEL)
@@ -733,11 +891,11 @@ if __name__ == '__main__':
 
     # print results
     ct_kernel_name = 'UNKNOWN'
-    if CT_KERNEL==0:
+    if CT_KERNEL == 0:
         ct_kernel_name = 'GIBBS'
-    elif CT_KERNEL==1:
+    elif CT_KERNEL == 1:
         ct_kernel_name = 'METROPOLIS'
-    
+
     print 'Running with %s CT_KERNEL' % (ct_kernel_name)
     print 'generative_mean_test_log_likelihood'
     # print generative_mean_test_log_likelihood
