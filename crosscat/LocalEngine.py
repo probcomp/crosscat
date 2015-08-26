@@ -20,8 +20,6 @@
 import copy
 import itertools
 import collections
-import random
-import itertools as it
 import numpy
 
 import crosscat.cython_code.State as State
