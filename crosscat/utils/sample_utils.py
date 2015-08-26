@@ -172,10 +172,14 @@ def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
     Returns the simple predictive probability, averaged over each sample.
     """
-    avg_prob = 0
-    for X_L, X_D in zip(X_L_list, X_D_list):
-        avg_prob += simple_predictive_probability(M_c, X_L, X_D, Y, Q)
-    return float(avg_prob)/len(X_L_list)
+    logprobs = [float(simple_predictive_probability(M_c, X_L, X_D, Y, Q))
+        for X_L, X_D in zip(X_L_list, X_D_list)]
+    # probs = map(exp, logprobs)
+    # log(mean(probs)) = log(sum(probs) / len(probs))
+    #   = log(sum(probs)) - log(len(probs))
+    #   = log(sum(map(exp, probs))) - log(len(probs))
+    #   = logsumexp(logprobs) - log(len(logprobs))
+    return logsumexp(logprobs) - numpy.log(len(logprobs))
 
 
 #############################################################################

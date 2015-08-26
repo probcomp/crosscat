@@ -934,7 +934,7 @@ CM_Hypers State::uniform_sample_hypers(int global_col_idx) {
         int b_draw = draw_rand_i(N_GRID);
         hypers["b"] = vm_b_grid[b_draw];
         int a_draw = draw_rand_i(N_GRID);
-        hypers["a"] = vm_a_grids[global_col_idx][b_draw];
+        hypers["a"] = vm_a_grids[global_col_idx][a_draw];
         int kappa_draw = draw_rand_i(N_GRID);
         hypers["kappa"] = vm_kappa_grids[global_col_idx][kappa_draw];
     } else if (col_datatype == MULTINOMIAL_DATATYPE) {
