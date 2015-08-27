@@ -187,10 +187,13 @@ cdef class p_State:
                   N_GRID=31, SEED=0, CT_KERNEL=0):
          column_types, event_counts = extract_column_types_counts(M_c)
          global_row_indices = range(len(T))
-         global_col_indices = range(len(T[0]))
+         global_col_indices = range(len(M_c['column_metadata']))
          #
          # FIXME: keeping TWO copies of the data here
-         self.T_array = numpy.array(T)
+         if len(T) == 0:
+             self.T_array = numpy.empty((0, len(M_c['column_metadata'])))
+         else:
+             self.T_array = numpy.array(T)
          self.dataptr = convert_data_to_cpp(self.T_array)
          self.column_types = convert_string_vector_to_cpp(column_types)
          self.event_counts = convert_int_vector_to_cpp(event_counts)
