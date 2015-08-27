@@ -674,7 +674,7 @@ default_diagnostic_func_dict = dict(
 )
 
 
-if __name__ == '__main__':
+def main():
     import crosscat.tests.timing_test_utils as ttu
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
@@ -747,3 +747,6 @@ if __name__ == '__main__':
     #
     print 'multi_state_ARIs:'
     print multi_state_ARIs
+
+if __name__ == '__main__':
+    main()
