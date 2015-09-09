@@ -67,7 +67,7 @@ def simple_predictive_probability(M_c, X_L, X_D, Y, Q):
             M_c, X_L, X_D, Y, query_row, query_columns, elements)
     else:
         x = simple_predictive_probability_observed(
-            M_c, X_L, X_D, Y, query_row, query_columns, elements)    
+            M_c, X_L, X_D, Y, query_row, query_columns, elements)
 
     return x
 
@@ -81,7 +81,7 @@ def simple_predictive_probability_observed(M_c, X_L, X_D, Y, query_row,
     for n in range(n_queries):
         query_column = query_columns[n]
         x = elements[n]
-        
+
         # get the view to which this column is assigned
         view_idx = X_L['column_partition']['assignments'][query_column]
         # get cluster
@@ -95,9 +95,9 @@ def simple_predictive_probability_observed(M_c, X_L, X_D, Y, query_row,
 
         # return the PDF value (exp)
         p_x = component_model.calc_element_predictive_logp_constrained(x, draw_constraints)
-        
+
         answer[n] = p_x
-        
+
     return answer
 
 def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_columns, elements):
@@ -110,12 +110,12 @@ def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_
     for n in range(n_queries):
         query_column = query_columns[n]
         x = elements[n]
-        
+
         # get the view to which this column is assigned
         view_idx = X_L['column_partition']['assignments'][query_column]
         # get the logps for all the clusters (plus a new one) in this view
         cluster_logps = determine_cluster_logps(M_c, X_L, X_D, Y, query_row, view_idx)
-    
+
         answers_n = numpy.zeros(len(cluster_logps))
 
         # cluster_logps should logsumexp to log(1)
@@ -133,12 +133,12 @@ def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_
 
             # return the PDF value (exp)
             p_x = component_model.calc_element_predictive_logp_constrained(x, draw_constraints)
-        
+
 
             answers_n[cluster_idx] = p_x+cluster_logps[cluster_idx]
 
         answer[n] = logsumexp(answers_n)
-        
+
     return answer
 
 ##############################################################################
@@ -155,7 +155,7 @@ def row_structural_typicality(X_L_list, X_D_list, row_id):
                 if X_D[X_L['column_partition']['assignments'][c]][r] == X_D[X_L['column_partition']['assignments'][c]][row_id]:
                     count += 1
     return float(count) / (len(X_D_list) * len(X_D[0]) * len(X_L_list[0]['column_partition']['assignments']))
-                
+
 
 def column_structural_typicality(X_L_list, col_id):
     """
@@ -204,7 +204,7 @@ def similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_colu
     else:
         col_idxs = M_c['idx_to_name'].keys()
     col_idxs = [int(col_idx) for col_idx in col_idxs]
-    
+
     ## Iterate over all latent states.
     for X_L, X_D in zip(X_L_list, X_D_list):
         for col_idx in col_idxs:
@@ -232,7 +232,7 @@ def simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed, n=1):
             M_c, X_L, X_D, Y, query_row, query_columns, get_next_seed, n)
     else:
         x = simple_predictive_sample_observed(
-            M_c, X_L, X_D, Y, query_row, query_columns, get_next_seed, n)    
+            M_c, X_L, X_D, Y, query_row, query_columns, get_next_seed, n)
     # # more modular logic
     # observed_view_cluster_tuples = ()
     # if is_observed_row:
@@ -296,7 +296,7 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
             cluster_model = view_to_cluster_model[which_view]
             # get the component model for this column
             component_model = cluster_model[which_column]
-            # 
+            #
             draw_constraints = get_draw_constraints(X_L, X_D, Y,
                                                     which_row, which_column)
             # get a random int for seeding the rng
@@ -354,7 +354,7 @@ def get_component_model_constructor(modeltype):
         assert False, \
             "get_model_constructor: unknown modeltype: %s" % modeltype
     return component_model_constructor
-    
+
 def create_component_model(column_metadata, column_hypers, suffstats):
     suffstats = copy.deepcopy(suffstats)
     count = suffstats.pop('N', 0)
@@ -477,10 +477,7 @@ def determine_cluster_data_logps(M_c, X_L, X_D, Y, query_row, view_idx):
 
 def determine_cluster_crp_logps(view_state_i):
     counts = view_state_i['row_partition_model']['counts']
-    # FIXME: remove branch after Avinash is done with old saved states 
     alpha = view_state_i['row_partition_model']['hypers'].get('alpha')
-    if alpha is None:
-        alpha = numpy.exp(view_state_i['row_partition_model']['hypers']['log_alpha'])
     counts_appended = numpy.append(counts, alpha)
     sum_counts_appended = sum(counts_appended)
     logps = numpy.log(counts_appended / float(sum_counts_appended))
@@ -493,9 +490,9 @@ def determine_cluster_logps(M_c, X_L, X_D, Y, query_row, view_idx):
     cluster_data_logps = determine_cluster_data_logps(M_c, X_L, X_D, Y,
                                                       query_row, view_idx)
     cluster_data_logps = numpy.array(cluster_data_logps)
-    # 
+    #
     cluster_logps = cluster_crp_logps + cluster_data_logps
-    
+
     return cluster_logps
 
 def sample_from_cluster(cluster_model, random_state):
@@ -808,9 +805,9 @@ def ensure_multistate(X_L_list, X_D_list):
     was_multistate = get_is_multistate(X_L_list, X_D_list)
     if not was_multistate:
         X_L_list, X_D_list = [X_L_list], [X_D_list]
-    # NOTE: We must do deepcopy or changes made to X_L (but, curiously, 
-    # not X_D)  hereafter shall be present in the original variables in 
-    # the original scope. 
+    # NOTE: We must do deepcopy or changes made to X_L (but, curiously,
+    # not X_D)  hereafter shall be present in the original variables in
+    # the original scope.
     # FIXME: The culprits are likely sparsify_X_L and desparsify_X_L in
     # State.pyx
     return copy.deepcopy(X_L_list), copy.deepcopy(X_D_list), was_multistate
