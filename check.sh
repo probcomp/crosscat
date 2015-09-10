@@ -19,7 +19,6 @@ root=`cd -- "$(dirname -- "$0")" && pwd`
     ./pythenv.sh "$PYTHON" setup.py build
     if [ $# -eq 0 ]; then
         ./pythenv.sh "$PYTHON" "$PY_TEST" \
-            crosscat/tests/crash \
             crosscat/tests/unit_tests \
             # end of tests
     else
