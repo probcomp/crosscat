@@ -41,10 +41,6 @@ To run the automatic tests:
 
     $ ./check.sh
 
-The automatic tests are in a sorry state -- check.sh only runs the
-limited C++ tests for now, and the Python tests are currently
-completely broken and unusable.
-
 Documentation
 =============
 
