@@ -55,6 +55,9 @@ class TestComponentModelQuality(unittest.TestCase):
         assert(check_one_feature_mixture(mcmext.p_MultinomialComponentModel,
                 show_plot=self.show_plot) > .1)
 
+    # Github issue #50
+    # https://github.com/mit-probabilistic-computing-project/crosscat/issues/50
+    @unittest.expectedFailure
     def test_vonmises_vonmises_model(self):
         assert(check_one_feature_mixture(cycmext.p_CyclicComponentModel,
                 show_plot=self.show_plot) > .1)
