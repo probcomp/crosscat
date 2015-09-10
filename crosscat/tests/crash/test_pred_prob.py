@@ -87,11 +87,11 @@ def quick_le(seed, n_chains=1):
 
     return T, M_r, M_c, X_L, X_D, engine
 
-def simple_predictive_probability_observed():
+def test_simple_predictive_probability_observed():
     # TODO
     pass
 
-def simple_predictive_probability_unobserved(seed=0):
+def test_simple_predictive_probability_unobserved(seed=0):
     T, M_r, M_c, X_L, X_D, engine = quick_le(seed)
 
     # Must query unobserved rows. CrossCat can only assess same row. We will
