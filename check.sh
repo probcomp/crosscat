@@ -18,7 +18,10 @@ root=`cd -- "$(dirname -- "$0")" && pwd`
     rm -rf build
     ./pythenv.sh "$PYTHON" setup.py build
     if [ $# -eq 0 ]; then
-        ./pythenv.sh "$PYTHON" "$PY_TEST" crosscat/tests/crash
+        ./pythenv.sh "$PYTHON" "$PY_TEST" \
+            crosscat/tests/crash \
+            crosscat/tests/unit_tests \
+            # end of tests
     else
         ./pythenv.sh "$PYTHON" "$PY_TEST" "$@"
     fi
