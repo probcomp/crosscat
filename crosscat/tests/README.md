@@ -1,10 +1,23 @@
+XXX THIS DOCUMENT IS OUT OF DATE AND NEEDS TO BE UPDATED XXX
+
+- We are switching from unittest to pytest.
+- Quality tests need to be more reliably automated.
+- Anything that is not automatic should be made so.
+- Anything that is a cruddy command-line tool should be made a library.
+
 # Component model class extensions for quality testing
 
 This document covers how to extend the cython class in python so that new data types can be added to quality tests.
 
 ## Adding the git hook
 
-The hook script is `git_unittest_hook.sh` in the crosscat root directory. To add a pre-commit hook copy the contents of the file to `.git/hooks/pre-commit` then make it executable.
+The hook script is `check.sh` in the crosscat root directory. To add a pre-commit hook, put
+
+	#!/bin/sh
+	set -Ceu
+	exec ./check.sh
+
+into `.git/hooks/pre-commit` and make it executable:
 
 	chmod +x .git/hooks/pre-commit
 
