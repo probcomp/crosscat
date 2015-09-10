@@ -490,8 +490,19 @@ def determine_cluster_logps(M_c, X_L, X_D, Y, query_row, view_idx):
     cluster_data_logps = determine_cluster_data_logps(M_c, X_L, X_D, Y,
                                                       query_row, view_idx)
     cluster_data_logps = numpy.array(cluster_data_logps)
-    #
-    cluster_logps = cluster_crp_logps + cluster_data_logps
+    # We need to compute the vector of probabilities log[P(Z=j|Y)] where `Z`
+    # is the row cluster, `Y` are the constraints, and `j` iterates from 1 to
+    # the number of clusters (plus 1 for a new cluster) in the row partition of
+    # `view_idx`. Mathematically:
+    # log{P(Z=j|Y)} = log{P(Z=j)P(Y|Z=j) / P(Y) }
+    #               = log{P(Z=j)} + log{P(Y|Z=j)} - log{sum_k(P(Z=k)P(Y|Z=k))}
+    #               = cluster_crp_logps + cluster_data_logps - BAZ
+    # The final term BAZ is computed by:
+    # log{sum_k(P(Z=k)P(Y|Z=k))}
+    # = log{sum_k(exp(log{P(Z=k)}+log{P(Y|Z=k)}))
+    # = logsumexp(cluster_crp_logps + cluster_data_logps)
+    cluster_logps = cluster_crp_logps + cluster_data_logps - \
+        logsumexp(cluster_crp_logps + cluster_data_logps)
 
     return cluster_logps
 
