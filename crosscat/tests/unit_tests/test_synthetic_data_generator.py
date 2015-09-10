@@ -1,4 +1,4 @@
-import crosscat.tests.quality_tests.synthetic_data_generator as sdg
+import crosscat.tests.synthetic_data_generator as sdg
 import crosscat.cython_code.State as State
 import crosscat.utils.data_utils as du
 

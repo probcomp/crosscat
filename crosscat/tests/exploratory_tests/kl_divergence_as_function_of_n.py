@@ -1,7 +1,7 @@
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
-import crosscat.tests.quality_tests.synthetic_data_generator as sdg
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.synthetic_data_generator as sdg
+import crosscat.tests.quality_test_utils as qtu
 import crosscat.utils.data_utils as du
 import crosscat.MultiprocessingEngine as mpe
 

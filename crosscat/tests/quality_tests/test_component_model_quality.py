@@ -38,15 +38,15 @@ class TestComponentModelQuality(unittest.TestCase):
         self.show_plot = True
 
     def test_normal_inverse_gamma_model(self):
-        assert(test_one_feature_sampler(ccmext.p_ContinuousComponentModel, 
+        assert(check_one_feature_sampler(ccmext.p_ContinuousComponentModel,
             show_plot=self.show_plot) > .1)
 
     def test_dirchlet_multinomial_model(self):
-        assert(test_one_feature_sampler(mcmext.p_MultinomialComponentModel, 
+        assert(check_one_feature_sampler(mcmext.p_MultinomialComponentModel,
             show_plot=self.show_plot) > .1)
 
     def test_vonmises_vonmises_model(self):
-        assert(test_one_feature_sampler(cycmext.p_CyclicComponentModel, 
+        assert(check_one_feature_sampler(cycmext.p_CyclicComponentModel,
             show_plot=self.show_plot) > .1)
 
 
@@ -70,7 +70,7 @@ def cdf_array(X, component_model):
     assert i > 0
     return cdf
 
-def test_one_feature_sampler(component_model_type, show_plot=False):
+def check_one_feature_sampler(component_model_type, show_plot=False):
     """
     Tests the ability of component model of component_model_type to capture the
     distribution of the data.
