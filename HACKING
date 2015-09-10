@@ -1,0 +1,40 @@
+Do work on branches made from master named YYYYMMDD-USERNAME-TOPIC,
+e.g. 20150910-riastradh-tests.  When a branch is ready to merge, first
+run:
+
+    % git checkout master
+    % git merge --no-ff --no-commit 20150910-riastradh-tests
+
+Next, make sure you have a clean tree, and run the automatic tests:
+
+    % ./check.sh
+
+I recommend running check.sh in your Git pre-commit hook
+(.git/hooks/pre-commit).
+
+Then edit setup.py to bump the version number, and finish the merge with:
+
+    % git add setup.py
+    % git commit
+
+Name the new version number in the commit message.  E.g.,
+
+    Merge branch '20150910-riastradh-tests'
+
+    Bump version to 0.1.24.
+
+Finally, once it is all merged, you may push master to origin, if
+nobody else has done that yet.  If someone else has pushed anything,
+discard your merge and start over:
+
+    % git reset --hard origin/master
+
+Thus, every functional commit on master merges a branch and bumps the
+version number simultaneously, and passes the automatic tests.
+Limited non-functional changes, e.g. to README or HACKING, may occur
+on master without a branch or version number bump.
+
+If you add new functionality, add automatic tests for it.  If you fix
+something that the automatic tests don't detect, add tests for it and
+make sure they fail without your fix.  If you break the tests, fix
+them.
