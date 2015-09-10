@@ -4,9 +4,9 @@ import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
-import crosscat.tests.quality_tests.synthetic_data_generator as sdg
+import crosscat.tests.synthetic_data_generator as sdg
 
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.quality_test_utils as qtu
 
 import random
 import pylab
@@ -29,17 +29,17 @@ class TestCondifdence(unittest.TestCase):
 		self.show_plot=True
 
 	def test_normal_inverse_gamma_predictive_sample_improves_over_iterations(self):
-		improvement = test_predictive_sample_improvement(
+		improvement = check_predictive_sample_improvement(
 						ccmext.p_ContinuousComponentModel, 
 						seed=0, show_plot=self.show_plot)
 		assert improvement
 
 	def test_dirchlet_multinomial_predictive_sample_improves_over_iterations(self):
-		improvement = test_predictive_sample_improvement(
+		improvement = check_predictive_sample_improvement(
 			mcmext.p_MultinomialComponentModel, seed=0, show_plot=self.show_plot)
 		assert improvement
 
-def test_predictive_sample_improvement(component_model_type, seed=0, show_plot=True):
+def check_predictive_sample_improvement(component_model_type, seed=0, show_plot=True):
 	""" Shows the error of predictive sample over iterations.
 	"""
 

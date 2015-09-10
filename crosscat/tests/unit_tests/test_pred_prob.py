@@ -26,7 +26,7 @@ import tempfile
 
 import numpy
 
-from crosscat.tests.quality_tests import synthetic_data_generator as sdg
+import crosscat.tests.synthetic_data_generator as sdg
 from crosscat.LocalEngine import LocalEngine
 import crosscat.cython_code.State as State
 

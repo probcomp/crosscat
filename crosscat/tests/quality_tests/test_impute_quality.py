@@ -4,9 +4,9 @@ import crosscat.utils.data_utils as du
 
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
-import crosscat.tests.quality_tests.synthetic_data_generator as sdg
+import crosscat.tests.synthetic_data_generator as sdg
 
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.quality_test_utils as qtu
 
 import random
 import pylab
@@ -25,11 +25,11 @@ def main():
 
 class TestComponentModelQuality(unittest.TestCase):
     def test_normal_inverse_gamma_model(self):
-    	mse_sample, mse_ave = test_impute_vs_column_average_single(
+    	mse_sample, mse_ave = check_impute_vs_column_average_single(
     							ccmext.p_ContinuousComponentModel, 2)
         assert mse_sample < mse_ave
 
-def test_impute_vs_column_average_single(component_model_type, num_clusters, seed=0):
+def check_impute_vs_column_average_single(component_model_type, num_clusters, seed=0):
 	"""	tests predictive row generation vs column average
 		Note: This test does not make sense for categorical data
 		Inputs:

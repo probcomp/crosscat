@@ -1,4 +1,4 @@
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.quality_test_utils as qtu
 
 import pylab
 import numpy

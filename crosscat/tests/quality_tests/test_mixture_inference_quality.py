@@ -5,8 +5,8 @@ import crosscat.utils.data_utils as du
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
 import crosscat.tests.component_model_extensions.CyclicComponentModel as cycmext
-import crosscat.tests.quality_tests.synthetic_data_generator as sdg
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.synthetic_data_generator as sdg
+import crosscat.tests.quality_test_utils as qtu
 
 import matplotlib
 matplotlib.use('Agg')
@@ -48,15 +48,18 @@ class TestComponentModelQuality(unittest.TestCase):
         self.show_plot = True
 
     def test_normal_inverse_gamma_model(self):
-        assert(test_one_feature_mixture(ccmext.p_ContinuousComponentModel, 
+        assert(check_one_feature_mixture(ccmext.p_ContinuousComponentModel,
                 show_plot=self.show_plot) > .1)
 
     def test_dirchlet_multinomial_model(self):
-        assert(test_one_feature_mixture(mcmext.p_MultinomialComponentModel, 
+        assert(check_one_feature_mixture(mcmext.p_MultinomialComponentModel,
                 show_plot=self.show_plot) > .1)
 
+    # Github issue #50
+    # https://github.com/mit-probabilistic-computing-project/crosscat/issues/50
+    @unittest.expectedFailure
     def test_vonmises_vonmises_model(self):
-        assert(test_one_feature_mixture(cycmext.p_CyclicComponentModel, 
+        assert(check_one_feature_mixture(cycmext.p_CyclicComponentModel,
                 show_plot=self.show_plot) > .1)
 
 
@@ -80,7 +83,7 @@ def cdf_array(X, component_model):
     assert i > 0
     return cdf
 
-def test_one_feature_mixture(component_model_type, num_clusters=3, show_plot=False, seed=None):
+def check_one_feature_mixture(component_model_type, num_clusters=3, show_plot=False, seed=None):
     """
 
     """

@@ -1,7 +1,7 @@
 import crosscat.tests.component_model_extensions.ContinuousComponentModel as ccmext
 import crosscat.tests.component_model_extensions.MultinomialComponentModel as mcmext
 
-import crosscat.tests.quality_tests.quality_test_utils as qtu
+import crosscat.tests.quality_test_utils as qtu
 
 import numpy
 
