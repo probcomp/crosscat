@@ -50,7 +50,9 @@ static void test_draw(void) {
     for (size_t i = 1; i < weights.size(); i++)
 	weights[i] = -1;
     assert(draw_sample_unnormalized(weights, 0) == 0);
-    assert(draw_sample_unnormalized(weights, 1 - epsilon/2) < weights.size());
+    assert(0 <= draw_sample_unnormalized(weights, 1 - epsilon/2));
+    assert((size_t)draw_sample_unnormalized(weights, 1 - epsilon/2) <
+      weights.size());
 }
 
 static void test_linspace(void) {

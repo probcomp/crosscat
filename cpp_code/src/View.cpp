@@ -278,8 +278,8 @@ vector<int> View::get_global_col_indices() {
 
 Cluster& View::get_cluster(int cluster_idx) {
     assert(0 <= cluster_idx);
-    assert(cluster_idx <= clusters.size());
-    bool not_new = ((unsigned int) cluster_idx) < clusters.size();
+    assert((size_t)cluster_idx <= clusters.size());
+    bool not_new = (size_t)cluster_idx < clusters.size();
     if (not_new) {
         return *clusters[cluster_idx];
     } else {
