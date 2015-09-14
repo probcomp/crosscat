@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     }
 
     map<int, string> global_col_types;
-    for (int i = 0; i < global_column_indices.size(); i++) {
+    for (size_t i = 0; i < global_column_indices.size(); i++) {
         global_col_types[i] = CONTINUOUS_DATATYPE;
     }
     vector<double> multinomial_alpha_grid = \
@@ -329,7 +329,7 @@ int main(int argc, char** argv) {
     }
     cout << "score_deltas: " << score_deltas << endl;
     double data_score_0 = v.get_data_score();
-    for (int grid_idx = 0; grid_idx < hyper_grid.size(); grid_idx++) {
+    for (size_t grid_idx = 0; grid_idx < hyper_grid.size(); grid_idx++) {
         double new_hyper_value = hyper_grid[grid_idx];
         v.set_hyper(col_idx, hyper_string, new_hyper_value);
         double new_data_score = v.get_data_score();

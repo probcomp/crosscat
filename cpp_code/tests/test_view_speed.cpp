@@ -53,7 +53,7 @@ map<string, double> create_default_hypers() {
 
 void print_cluster_memberships(View& v) {
     cout << "Cluster memberships" << endl;
-    setCp_it it = v.clusters.begin();
+    vector<Cluster *>::const_iterator it = v.clusters.begin();
     for (; it != v.clusters.end(); it++) {
         Cluster& cd = **it;
         cout << cd.get_row_indices_set() << endl;
@@ -87,7 +87,9 @@ void remove_all_data(View& v, map<int, vector<double> > data_map) {
     cout << "removed all data" << endl;
     v.print();
     //
-    for (setCp_it it = v.clusters.begin(); it != v.clusters.end(); it++) {
+    for (vector<Cluster *>::const_iterator it = v.clusters.begin();
+	 it != v.clusters.end();
+	 it++) {
         v.remove_if_empty(**it);
     }
     assert(v.get_num_vectors() == 0);
@@ -145,7 +147,7 @@ int main(int argc, char** argv) {
                 mu_grids[global_col_idx]);
     }
     map<int, string> global_col_types;
-    for (int i = 0; i < global_column_indices.size(); i++) {
+    for (size_t i = 0; i < global_column_indices.size(); i++) {
         global_col_types[i] = CONTINUOUS_DATATYPE;
     }
     vector<double> multinomial_alpha_grid = \

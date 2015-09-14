@@ -386,7 +386,8 @@ View& State::get_new_view() {
 }
 
 View& State::get_view(int view_idx) {
-    assert(view_idx < views.size());
+    assert(0 <= view_idx);
+    assert((size_t)view_idx < views.size());
     return *views.at(view_idx);
 }
 

@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     vector<int> global_column_indices = create_sequence(data.size2());
     vector<string> global_col_types;
     vector<int> global_col_multinomial_counts;
-    for (int i = 0; i < global_column_indices.size(); i++) {
+    for (size_t i = 0; i < global_column_indices.size(); i++) {
         global_col_types.push_back(CONTINUOUS_DATATYPE);
         global_col_multinomial_counts.push_back(0);
     }
