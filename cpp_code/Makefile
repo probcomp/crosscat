@@ -7,14 +7,16 @@ endif
 
 CC = gcc
 CXX = g++
-CXXOPTS :=  $(CXXOPTS) -lm -L$(BOOST_ROOT)/lib -I$(BOOST_ROOT)/include
+CXXOPTS := $(CXXOPTS) -lm
+
+ifdef BOOST_ROOT
+CXXOPTS := $(CXXOPTS) -L$(BOOST_ROOT)/lib -I$(BOOST_ROOT)/include
+endif
 
 INC=include/CrossCat
 SRC=src
 OBJ=obj
 TEST=tests
-# Assume BOOST_ROOT set as environment variable.
-# /usr/local/boost
 BIN = main
 MAIN = main.cpp
 NAMES = \

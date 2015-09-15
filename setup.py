@@ -35,6 +35,12 @@ else:
     numpy_includes = [numpy.get_include()]
 
 
+boost_includes = []
+if 'BOOST_ROOT' in os.environ:
+    BOOST_ROOT = os.environ['BOOST_ROOT']
+    boost_includes.append(os.path.join(BOOST_ROOT, 'include'))
+
+
 # http://stackoverflow.com/a/18992595
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
@@ -87,7 +93,10 @@ os.chdir(this_dir)
 # locations
 pyx_src_dir = 'crosscat/cython_code'
 cpp_src_dir = 'cpp_code/src'
-include_dirs = ['cpp_code/include/CrossCat'] + numpy_includes
+include_dirs = ['cpp_code/include/CrossCat'] \
+    + boost_includes \
+    + numpy_includes \
+    + []
 
 
 # specify sources
@@ -153,7 +162,6 @@ State_sources = generate_sources([
 # create exts
 ContinuousComponentModel_ext = Extension(
     'crosscat.cython_code.ContinuousComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
@@ -161,7 +169,6 @@ ContinuousComponentModel_ext = Extension(
 )
 MultinomialComponentModel_ext = Extension(
     'crosscat.cython_code.MultinomialComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
@@ -169,7 +176,6 @@ MultinomialComponentModel_ext = Extension(
 )
 CyclicComponentModel_ext = Extension(
     'crosscat.cython_code.CyclicComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=CyclicComponentModel_sources,
     include_dirs=include_dirs,
@@ -177,7 +183,6 @@ CyclicComponentModel_ext = Extension(
 )
 State_ext = Extension(
     'crosscat.cython_code.State',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
@@ -192,7 +197,7 @@ ext_modules = [
 ]
 
 # XXX Mega-kludge!
-if USE_CYTHON and sys.argv[1] == 'sdist':
+if USE_CYTHON and len(sys.argv) > 1 and sys.argv[1] == 'sdist':
     from Cython.Build import cythonize
     ext_modules = cythonize(ext_modules)
 
@@ -223,7 +228,7 @@ if os.path.exists('README.rst'):
 
 setup(
     name='CrossCat',
-    version='0.1.25',
+    version='0.1.26',
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
