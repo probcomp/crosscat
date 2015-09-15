@@ -153,7 +153,6 @@ State_sources = generate_sources([
 # create exts
 ContinuousComponentModel_ext = Extension(
     'crosscat.cython_code.ContinuousComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=ContinuousComponentModel_sources,
     include_dirs=include_dirs,
@@ -161,7 +160,6 @@ ContinuousComponentModel_ext = Extension(
 )
 MultinomialComponentModel_ext = Extension(
     'crosscat.cython_code.MultinomialComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=MultinomialComponentModel_sources,
     include_dirs=include_dirs,
@@ -169,7 +167,6 @@ MultinomialComponentModel_ext = Extension(
 )
 CyclicComponentModel_ext = Extension(
     'crosscat.cython_code.CyclicComponentModel',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=CyclicComponentModel_sources,
     include_dirs=include_dirs,
@@ -177,7 +174,6 @@ CyclicComponentModel_ext = Extension(
 )
 State_ext = Extension(
     'crosscat.cython_code.State',
-    libraries = ['boost_random'],
     extra_compile_args = [],
     sources=State_sources,
     include_dirs=include_dirs,
