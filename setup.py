@@ -35,6 +35,12 @@ else:
     numpy_includes = [numpy.get_include()]
 
 
+boost_includes = []
+if 'BOOST_ROOT' in os.environ:
+    BOOST_ROOT = os.environ['BOOST_ROOT']
+    boost_includes.append(os.path.join(BOOST_ROOT, 'include'))
+
+
 # http://stackoverflow.com/a/18992595
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
@@ -87,7 +93,10 @@ os.chdir(this_dir)
 # locations
 pyx_src_dir = 'crosscat/cython_code'
 cpp_src_dir = 'cpp_code/src'
-include_dirs = ['cpp_code/include/CrossCat'] + numpy_includes
+include_dirs = ['cpp_code/include/CrossCat'] \
+    + boost_includes \
+    + numpy_includes \
+    + []
 
 
 # specify sources
