@@ -7,6 +7,17 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
+version = '0.1.27'
+
+try:
+    with open('crosscat/version.py', 'rU') as f:
+        version_old = f.readlines()
+except IOError:
+    version_old = None
+version_new = ['__version__ = %s\n' % (repr(version),)]
+if version_old != version_new:
+    with open('crosscat/version.py', 'w') as f:
+        f.writelines(version_new)
 
 # If we're building from Git (no PKG-INFO), we use Cython.  If we're
 # building from an sdist (PKG-INFO exists), we will already have run
@@ -228,7 +239,7 @@ if os.path.exists('README.rst'):
 
 setup(
     name='CrossCat',
-    version='0.1.26',
+    version=version,
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
