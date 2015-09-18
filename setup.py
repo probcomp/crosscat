@@ -232,7 +232,7 @@ setup(
     author='MIT.PCP',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
-    url='https://github.com/mit-probabilistic-computing-project/crosscat',
+    url='https://github.com/probcomp/crosscat',
     long_description=long_description,
     packages=packages,
     setup_requires=[

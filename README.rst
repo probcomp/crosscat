@@ -18,7 +18,7 @@ If you'd like to install from source, CrossCat can be successfully installed loc
 
     $ sudo apt-get install build-essential cython libboost-all-dev python
     $ sudo apt-get install python-setuptools python-numpy
-    $ git clone https://github.com/mit-probabilistic-computing-project/crosscat.git
+    $ git clone https://github.com/probcomp/crosscat.git
 
     $ cd crosscat
     $ python setup.py build
@@ -60,7 +60,7 @@ Example
 
 dha\_example.py (github_) is a basic example of analysis using CrossCat.  For a first test, run the following from above the top level crosscat dir
 
-.. _github: https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/examples/dha_example.py
+.. _github: https://github.com/probcomp/crosscat/blob/master/examples/dha_example.py
 
 ::
 
@@ -74,4 +74,4 @@ License
 
 `Apache License, Version 2.0`_
 
-.. _`Apache License, Version 2.0`: https://github.com/mit-probabilistic-computing-project/crosscat/blob/master/LICENSE)
+.. _`Apache License, Version 2.0`: https://github.com/probcomp/crosscat/blob/master/LICENSE)
