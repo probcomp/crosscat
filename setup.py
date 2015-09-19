@@ -240,7 +240,8 @@ if os.path.exists('README.rst'):
 setup(
     name='CrossCat',
     version=version,
-    author='MIT.PCP',
+    author='MIT Probabilistic Computing Project',
+    author_email='bayesdb@mit.edu',
     license='Apache License, Version 2.0',
     description='A domain-general, Bayesian method for analyzing high-dimensional data tables',
     url='https://github.com/probcomp/crosscat',
