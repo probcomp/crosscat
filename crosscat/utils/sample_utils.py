@@ -349,15 +349,17 @@ def create_component_model(column_metadata, column_hypers, suffstats):
     modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
         component_model = CCM.p_ContinuousComponentModel(
-            column_hypers, count=count, sum_x=suffstats['sum_x'],
-            sum_x_squared=suffstats['sum_x_squared'])
+            column_hypers, count=count,
+            sum_x=suffstats.get('sum_x', None),
+            sum_x_squared=suffstats.get('sum_x_squared', None))
     elif modeltype == 'symmetric_dirichlet_discrete':
         component_model = MCM.p_MultinomialComponentModel(
             column_hypers, count=count, counts=suffstats)
     elif modeltype == 'vonmises':
         component_model = CYCM.p_CyclicComponentModel(
-            column_hypers, count=count, sum_sin_x=suffstats['sum_sin_x'],
-            sum_cos_x=suffstats['sum_cos_x'])
+            column_hypers, count=count,
+            sum_sin_x=suffstats.get('sum_sin_x', None),
+            sum_cos_x=suffstats.get('sum_cos_x', None))
     else:
         assert False, \
             "create_component_model: unknown modeltype: %s" % modeltype
