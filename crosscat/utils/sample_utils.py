@@ -349,18 +349,22 @@ def create_component_model(column_metadata, column_hypers, suffstats):
     modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
         component_model_constructor = CCM.p_ContinuousComponentModel
+        component_model = component_model_constructor(column_hypers, count,
+                                                      **suffstats)
     elif modeltype == 'symmetric_dirichlet_discrete':
         component_model_constructor = MCM.p_MultinomialComponentModel
         # FIXME: this is a hack
         if suffstats is not None:
             suffstats = dict(counts=suffstats)
+        component_model = component_model_constructor(column_hypers, count,
+                                                      **suffstats)
     elif modeltype == 'vonmises':
         component_model_constructor = CYCM.p_CyclicComponentModel
+        component_model = component_model_constructor(column_hypers, count,
+                                                      **suffstats)
     else:
         assert False, \
             "create_component_model: unknown modeltype: %s" % modeltype
-    component_model = component_model_constructor(column_hypers, count,
-                                                  **suffstats)
     return component_model
 
 def create_cluster_model(zipped_column_info, row_partition_model,
