@@ -348,8 +348,9 @@ def create_component_model(column_metadata, column_hypers, suffstats):
     count = suffstats.pop('N', 0)
     modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
-        component_model = CCM.p_ContinuousComponentModel(column_hypers, count,
-                                                         **suffstats)
+        component_model = CCM.p_ContinuousComponentModel(
+            column_hypers, count=count, sum_x=suffstats['sum_x'],
+            sum_x_squared=suffstats['sum_x_squared'])
     elif modeltype == 'symmetric_dirichlet_discrete':
         # FIXME: this is a hack
         if suffstats is not None:
