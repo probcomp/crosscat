@@ -540,6 +540,8 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
                                                 view_idx)
         cluster_logps_list.append(cluster_logps)
     #
+    query_row_constraints = dict() if Y is None else \
+        dict((col, val) for row, col, val in Y if row == query_row)
     samples_list = []
     for sample_idx in range(n):
         view_cluster_draws = dict()
@@ -564,14 +566,25 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
         #
         this_sample_draws = []
         for query_column in query_columns:
-            which_view = get_which_view(query_column)
-            cluster_model = view_to_cluster_model[which_view]
-            component_model = cluster_model[query_column]
-            draw_constraints = get_draw_constraints(X_L, X_D, Y,
-                                                    query_row, query_column)
-            SEED = get_next_seed()
-            draw = component_model.get_draw_constrained(SEED,
-                                                        draw_constraints)
+            # If the caller specified this column in the constraints,
+            # give the specified value -- otherwise by sampling from
+            # the column's component model, we might get any other
+            # value that is possible in this cluster, so that
+            #
+            #   SIMULATE x GIVEN x = 0
+            #
+            # might give 1 instead, which makes no sense.
+            if query_column in query_row_constraints:
+                draw = query_row_constraints[query_column]
+            else:
+                which_view = get_which_view(query_column)
+                cluster_model = view_to_cluster_model[which_view]
+                component_model = cluster_model[query_column]
+                draw_constraints = get_draw_constraints(X_L, X_D, Y,
+                                                        query_row, query_column)
+                SEED = get_next_seed()
+                draw = component_model.get_draw_constrained(SEED,
+                                                            draw_constraints)
             this_sample_draws.append(draw)
         samples_list.append(this_sample_draws)
     return samples_list
