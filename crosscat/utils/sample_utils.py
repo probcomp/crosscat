@@ -269,6 +269,21 @@ def simple_predictive_sample_multistate(M_c, X_L_list, X_D_list, Y, Q,
 
 def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
                                       which_columns, get_next_seed, n=1):
+    # Reject attempts to query columns on which we are conditioned for
+    # this observed row.  This amounts to asking Crosscat to predict
+    # what value a column C would hold in an observed row, if it had a
+    # specified value -- which is trivially itself.
+    #
+    # It is not clear that this is the product of any sensible
+    # computation (unlike in the unobserved case, where we are
+    # fantasizing new rows and want to present the whole fantasy), so
+    # we reject it rather than provide the sole obvious answer, until
+    # such time as someone argues it is the product of a sensible
+    # computation.
+    constrained_columns = set(col for row, col, _val in Y if row == which_row)
+    assert not set(c for c in which_columns if c in constrained_columns), \
+        'Query for constrained column in observed row makes no sense!'
+    #
     get_which_view = lambda which_column: \
         X_L['column_partition']['assignments'][which_column]
     column_to_view = dict()
