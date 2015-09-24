@@ -356,7 +356,7 @@ def get_component_model_constructor(modeltype):
     return component_model_constructor
 
 def create_component_model(column_metadata, column_hypers, suffstats):
-    suffstats = copy.deepcopy(suffstats)
+    suffstats = copy.copy(suffstats)
     count = suffstats.pop('N', 0)
     modeltype = column_metadata['modeltype']
     component_model_constructor = get_component_model_constructor(modeltype)
