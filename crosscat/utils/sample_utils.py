@@ -358,7 +358,7 @@ def create_component_model(column_metadata, column_hypers, suffstats):
         component_model_constructor = CYCM.p_CyclicComponentModel
     else:
         assert False, \
-            "get_model_constructor: unknown modeltype: %s" % modeltype
+            "create_component_model: unknown modeltype: %s" % modeltype
     component_model = component_model_constructor(column_hypers, count,
                                                   **suffstats)
     return component_model
