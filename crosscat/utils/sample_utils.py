@@ -358,28 +358,31 @@ def get_column_info_subset(zipped_column_info, column_indices):
                 zipped_column_info[column_index]
     return column_info_subset
 
-def get_component_model_constructor(modeltype):
+def create_component_model(column_metadata, column_hypers, suffstats):
+    modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
-        component_model_constructor = CCM.p_ContinuousComponentModel
+        component_model = CCM.p_ContinuousComponentModel(
+            column_hypers,
+            count=suffstats.get('N', 0),
+            sum_x=suffstats.get('sum_x', None),
+            sum_x_squared=suffstats.get('sum_x_squared', None))
     elif modeltype == 'symmetric_dirichlet_discrete':
-        component_model_constructor = MCM.p_MultinomialComponentModel
+        # TODO Can we change the suffstats data structure not to
+        # include the total count in the dictionary of per-item
+        # counts, please?
+        suffstats = copy.copy(suffstats)
+        count = suffstats.pop('N', 0)
+        component_model = MCM.p_MultinomialComponentModel(
+            column_hypers, count=count, counts=suffstats)
     elif modeltype == 'vonmises':
-        component_model_constructor = CYCM.p_CyclicComponentModel
+        component_model = CYCM.p_CyclicComponentModel(
+            column_hypers,
+            count=suffstats.get('N', 0),
+            sum_sin_x=suffstats.get('sum_sin_x', None),
+            sum_cos_x=suffstats.get('sum_cos_x', None))
     else:
         assert False, \
-            "get_model_constructor: unknown modeltype: %s" % modeltype
-    return component_model_constructor
-
-def create_component_model(column_metadata, column_hypers, suffstats):
-    suffstats = copy.deepcopy(suffstats)
-    count = suffstats.pop('N', 0)
-    modeltype = column_metadata['modeltype']
-    component_model_constructor = get_component_model_constructor(modeltype)
-    # FIXME: this is a hack
-    if modeltype == 'symmetric_dirichlet_discrete' and suffstats is not None:
-        suffstats = dict(counts=suffstats)
-    component_model = component_model_constructor(column_hypers, count,
-                                                  **suffstats)
+            "create_component_model: unknown modeltype: %s" % modeltype
     return component_model
 
 def create_cluster_model(zipped_column_info, row_partition_model,
