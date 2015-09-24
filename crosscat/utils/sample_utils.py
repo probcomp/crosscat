@@ -351,14 +351,14 @@ def create_component_model(column_metadata, column_hypers, suffstats):
         component_model_constructor = CCM.p_ContinuousComponentModel
     elif modeltype == 'symmetric_dirichlet_discrete':
         component_model_constructor = MCM.p_MultinomialComponentModel
+        # FIXME: this is a hack
+        if suffstats is not None:
+            suffstats = dict(counts=suffstats)
     elif modeltype == 'vonmises':
         component_model_constructor = CYCM.p_CyclicComponentModel
     else:
         assert False, \
             "get_model_constructor: unknown modeltype: %s" % modeltype
-    # FIXME: this is a hack
-    if modeltype == 'symmetric_dirichlet_discrete' and suffstats is not None:
-        suffstats = dict(counts=suffstats)
     component_model = component_model_constructor(column_hypers, count,
                                                   **suffstats)
     return component_model
