@@ -358,8 +358,9 @@ def create_component_model(column_metadata, column_hypers, suffstats):
         component_model = MCM.p_MultinomialComponentModel(column_hypers, count,
                                                           **suffstats)
     elif modeltype == 'vonmises':
-        component_model = CYCM.p_CyclicComponentModel(column_hypers, count,
-                                                      **suffstats)
+        component_model = CYCM.p_CyclicComponentModel(
+            column_hypers, count=count, sum_sin_x=suffstats['sum_sin_x'],
+            sum_cos_x=suffstats['sum_cos_x'])
     else:
         assert False, \
             "create_component_model: unknown modeltype: %s" % modeltype
