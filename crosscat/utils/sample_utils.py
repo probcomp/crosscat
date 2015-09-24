@@ -343,7 +343,10 @@ def get_column_info_subset(zipped_column_info, column_indices):
                 zipped_column_info[column_index]
     return column_info_subset
 
-def get_component_model_constructor(modeltype):
+def create_component_model(column_metadata, column_hypers, suffstats):
+    suffstats = copy.copy(suffstats)
+    count = suffstats.pop('N', 0)
+    modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
         component_model_constructor = CCM.p_ContinuousComponentModel
     elif modeltype == 'symmetric_dirichlet_discrete':
@@ -353,13 +356,6 @@ def get_component_model_constructor(modeltype):
     else:
         assert False, \
             "get_model_constructor: unknown modeltype: %s" % modeltype
-    return component_model_constructor
-
-def create_component_model(column_metadata, column_hypers, suffstats):
-    suffstats = copy.copy(suffstats)
-    count = suffstats.pop('N', 0)
-    modeltype = column_metadata['modeltype']
-    component_model_constructor = get_component_model_constructor(modeltype)
     # FIXME: this is a hack
     if modeltype == 'symmetric_dirichlet_discrete' and suffstats is not None:
         suffstats = dict(counts=suffstats)
