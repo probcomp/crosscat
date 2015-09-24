@@ -348,19 +348,16 @@ def create_component_model(column_metadata, column_hypers, suffstats):
     count = suffstats.pop('N', 0)
     modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
-        component_model_constructor = CCM.p_ContinuousComponentModel
-        component_model = component_model_constructor(column_hypers, count,
-                                                      **suffstats)
+        component_model = CCM.p_ContinuousComponentModel(column_hypers, count,
+                                                         **suffstats)
     elif modeltype == 'symmetric_dirichlet_discrete':
-        component_model_constructor = MCM.p_MultinomialComponentModel
         # FIXME: this is a hack
         if suffstats is not None:
             suffstats = dict(counts=suffstats)
-        component_model = component_model_constructor(column_hypers, count,
-                                                      **suffstats)
+        component_model = MCM.p_MultinomialComponentModel(column_hypers, count,
+                                                          **suffstats)
     elif modeltype == 'vonmises':
-        component_model_constructor = CYCM.p_CyclicComponentModel
-        component_model = component_model_constructor(column_hypers, count,
+        component_model = CYCM.p_CyclicComponentModel(column_hypers, count,
                                                       **suffstats)
     else:
         assert False, \
