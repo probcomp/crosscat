@@ -352,11 +352,8 @@ def create_component_model(column_metadata, column_hypers, suffstats):
             column_hypers, count=count, sum_x=suffstats['sum_x'],
             sum_x_squared=suffstats['sum_x_squared'])
     elif modeltype == 'symmetric_dirichlet_discrete':
-        # FIXME: this is a hack
-        if suffstats is not None:
-            suffstats = dict(counts=suffstats)
-        component_model = MCM.p_MultinomialComponentModel(column_hypers, count,
-                                                          **suffstats)
+        component_model = MCM.p_MultinomialComponentModel(
+            column_hypers, count=count, counts=suffstats)
     elif modeltype == 'vonmises':
         component_model = CYCM.p_CyclicComponentModel(
             column_hypers, count=count, sum_sin_x=suffstats['sum_sin_x'],
