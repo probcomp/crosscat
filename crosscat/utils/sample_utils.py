@@ -344,18 +344,22 @@ def get_column_info_subset(zipped_column_info, column_indices):
     return column_info_subset
 
 def create_component_model(column_metadata, column_hypers, suffstats):
-    suffstats = copy.copy(suffstats)
-    count = suffstats.pop('N', 0)
     modeltype = column_metadata['modeltype']
     if modeltype == 'normal_inverse_gamma':
+        suffstats = copy.copy(suffstats)
+        count = suffstats.pop('N', 0)
         component_model = CCM.p_ContinuousComponentModel(
             column_hypers, count=count,
             sum_x=suffstats.get('sum_x', None),
             sum_x_squared=suffstats.get('sum_x_squared', None))
     elif modeltype == 'symmetric_dirichlet_discrete':
+        suffstats = copy.copy(suffstats)
+        count = suffstats.pop('N', 0)
         component_model = MCM.p_MultinomialComponentModel(
             column_hypers, count=count, counts=suffstats)
     elif modeltype == 'vonmises':
+        suffstats = copy.copy(suffstats)
+        count = suffstats.pop('N', 0)
         component_model = CYCM.p_CyclicComponentModel(
             column_hypers, count=count,
             sum_sin_x=suffstats.get('sum_sin_x', None),
