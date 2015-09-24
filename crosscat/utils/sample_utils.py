@@ -352,6 +352,9 @@ def create_component_model(column_metadata, column_hypers, suffstats):
             sum_x=suffstats.get('sum_x', None),
             sum_x_squared=suffstats.get('sum_x_squared', None))
     elif modeltype == 'symmetric_dirichlet_discrete':
+        # TODO Can we change the suffstats data structure not to
+        # include the total count in the dictionary of per-item
+        # counts, please?
         suffstats = copy.copy(suffstats)
         count = suffstats.pop('N', 0)
         component_model = MCM.p_MultinomialComponentModel(
