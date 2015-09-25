@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.31'
+version = '0.1.32'
 
 try:
     with open('crosscat/version.py', 'rU') as f:
@@ -238,7 +238,7 @@ if os.path.exists('README.rst'):
     long_description = open('README.rst').read()
 
 setup(
-    name='CrossCat',
+    name='crosscat',
     version=version,
     author='MIT Probabilistic Computing Project',
     author_email='bayesdb@mit.edu',
