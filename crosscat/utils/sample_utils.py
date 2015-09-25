@@ -553,7 +553,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
     def view_for(column):
         return X_L['column_partition']['assignments'][column]
     cluster_model_cache = dict()
-    def cluster_model(view, cluster):
+    def cluster_model_for(view, cluster):
         if (view, cluster) in cluster_model_cache:
             return cluster_model_cache[(view, cluster)]
         else:
@@ -572,7 +572,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
         #
         def component_model_for(column):
             view = view_for(column)
-            return cluster_model(view, view_cluster_draws[view])[column]
+            return cluster_model_for(view, view_cluster_draws[view])[column]
         this_sample_draws = []
         for query_column in query_columns:
             # If the caller specified this column in the constraints,
