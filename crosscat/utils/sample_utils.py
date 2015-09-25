@@ -565,9 +565,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
     for _ in range(n):
         view_cluster_draws = dict()
         for view_idx, cluster_logps in enumerate(cluster_logps_list):
-            probs = numpy.exp(cluster_logps)
-            probs /= sum(probs)
-            draw = numpy.nonzero(numpy.random.multinomial(1, probs))[0][0]
+            draw = categorical_sample(cluster_logps, get_next_seed(), 1)[0]
             view_cluster_draws[view_idx] = draw
         #
         def component_model_for(column):
@@ -855,3 +853,54 @@ def ensure_multistate(X_L_list, X_D_list):
 #         cluster_logps = determine_cluster_logps(M_c, X_L, X_D, Y, view_idx)
 #         cluster_logps_list.append(cluster_logp)
 #     return cluster_view_logps
+
+
+def categorical_sample(logps, seed, k):
+    logps = numpy.array(logps)
+    n = len(logps)
+    logp_max = numpy.amax(logps)        # log M = max_i log p_i
+    assert numpy.isfinite(logp_max)
+    logps = logps - logp_max            # [log (p_0/M), ..., log (p_n-1/M)]
+    C = numpy.sum(numpy.exp(logps))     # C = p_0/M + ... + p_n-1/M
+    logC = numpy.log(C)                 # log (p_0/M + ... + p_n-1/M)
+    ps = numpy.exp(logps - logC)        # [p_0/MC, ..., p_n-1/MC]
+    return numpy.random.RandomState(seed).choice(n, k, p=ps)
+
+def kl_sample(observed, logexpected):
+    index = observed != 0
+    observed = observed[index]
+    logexpected = logexpected[index]
+    return numpy.dot(observed, numpy.log(observed) - logexpected)
+
+def test_categorical():
+    logps = numpy.log([1., 1./2, 1./4, 1./8, 1./16, 1./32, 1./32])
+    N = 1000
+    samples = categorical_sample(logps, 12345, N)
+    counts = numpy.bincount(samples, minlength=len(logps))
+    # psi = \sum_i n_i \log (n_i / N p_i)
+    import sys
+    print >>sys.stderr, 'counts', counts
+    print >>sys.stderr, 'log10ps', (numpy.log(N) + logps)
+    psi = kl_sample(counts, numpy.log(N) + logps)
+    import sys
+    print >>sys.stderr, 'psi', psi
+    psi_d = psi*10/math.log(10)
+    import sys
+    print >>sys.stderr, 'psi_d', psi_d
+    assert psi_d < 20
+    expected = numpy.exp(numpy.log(N) + logps)
+    import sys
+    print >>sys.stderr, 'errors', (counts - expected)
+    print >>sys.stderr, 'errors^2', (counts - expected)**2
+    print >>sys.stderr, 'relerrors^2', (counts - expected)**2 / expected
+    chi2 = numpy.sum((counts - expected)**2 / expected)
+    import sys
+    print >>sys.stderr, 'observed', counts
+    print >>sys.stderr, 'expected', expected
+    print >>sys.stderr, 'chi^2', chi2
+    import scipy.stats
+    print >>sys.stderr, 'log Pr[chi^2 < x] =', math.log(scipy.stats.chi2.sf(500, N - 1))
+    assert scipy.stats.chi2.sf(chi2, N - 1) > .05
+    raise Exception
+
+test_categorical()
