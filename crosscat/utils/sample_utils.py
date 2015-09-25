@@ -284,39 +284,29 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
     assert not set(c for c in which_columns if c in constrained_columns), \
         'Query for constrained column in observed row makes no sense!'
     #
-    get_which_view = lambda which_column: \
-        X_L['column_partition']['assignments'][which_column]
-    column_to_view = dict()
-    # get the views to which each column is assigned
-    for which_column in which_columns:
-        column_to_view[which_column] = get_which_view(which_column)
-    #
-    view_to_cluster_model = dict()
-    for which_view in list(set(column_to_view.values())):
-        # which calegory in this view
-        which_cluster = X_D[which_view][which_row]
-        # pull the suffstats, hypers, and marignal logP's for clusters
-        cluster_model = create_cluster_model_from_X_L(M_c, X_L, which_view,
-                                                      which_cluster)
-        # store
-        view_to_cluster_model[which_view] = cluster_model
-    #
+    def view_for(column):
+        return X_L['column_partition']['assignments'][column]
+    cluster_model_cache = dict()
+    def cluster_model_for(view):
+        if view in cluster_model_cache:
+            return cluster_model_cache[view]
+        else:
+            cluster = X_D[view][which_row]
+            # pull the suffstats, hypers, and marignal logP's for clusters
+            cluster_model = create_cluster_model_from_X_L(
+                M_c, X_L, view, cluster)
+            cluster_model_cache[view] = cluster_model
+            return cluster_model
+    def component_model_for(column):
+        return cluster_model_for(view_for(column))[column]
     samples_list = []
     for _ in range(n):
         this_sample_draws = []
         for which_column in which_columns:
-            # get the view to which this column is assigned
-            which_view = column_to_view[which_column]
-            # get the cluster model (suffstats, hypers, etc)
-            cluster_model = view_to_cluster_model[which_view]
-            # get the component model for this column
-            component_model = cluster_model[which_column]
-            #
+            component_model = component_model_for(which_column)
             draw_constraints = get_draw_constraints(X_L, X_D, Y,
                                                     which_row, which_column)
-            # get a random int for seeding the rng
             SEED = get_next_seed()
-            # draw
             draw = component_model.get_draw_constrained(SEED,draw_constraints)
             this_sample_draws.append(draw)
         samples_list.append(this_sample_draws)
