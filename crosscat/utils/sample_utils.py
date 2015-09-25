@@ -561,9 +561,6 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
         #
         def view_for(column):
             return X_L['column_partition']['assignments'][column]
-        column_to_view = dict()
-        for query_column in query_columns:
-            column_to_view[query_column] = view_for(query_column)
         cluster_model_cache = dict()
         def cluster_model_for(view):
             if view in cluster_model_cache:
