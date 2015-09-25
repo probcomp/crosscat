@@ -559,11 +559,11 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
             draw = numpy.nonzero(numpy.random.multinomial(1, probs))[0][0]
             view_cluster_draws[view_idx] = draw
         #
-        get_which_view = lambda which_column: \
-            X_L['column_partition']['assignments'][which_column]
+        def view_for(column):
+            return X_L['column_partition']['assignments'][column]
         column_to_view = dict()
         for query_column in query_columns:
-            column_to_view[query_column] = get_which_view(query_column)
+            column_to_view[query_column] = view_for(query_column)
         view_to_cluster_model = dict()
         for which_view in list(set(column_to_view.values())):
             which_cluster = view_cluster_draws[which_view]
@@ -585,7 +585,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
             if query_column in query_row_constraints:
                 draw = query_row_constraints[query_column]
             else:
-                which_view = get_which_view(query_column)
+                which_view = view_for(query_column)
                 cluster_model = view_to_cluster_model[which_view]
                 component_model = cluster_model[query_column]
                 draw_constraints = get_draw_constraints(X_L, X_D, Y,
