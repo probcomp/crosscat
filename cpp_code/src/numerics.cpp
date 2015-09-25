@@ -297,6 +297,15 @@ void remove_from_continuous_suffstats(int& count,
   m' = m + (X-nm)/(r+n)
   s' = s + C + rm**2 - r'm'**2
 */
+// This is equivalent to the updates given in equations 141-144 of [1]
+// (NIX Normal hyperparameter updates) with the substitution
+//   r = kappa
+//   s = nu * sigma^2
+// which is also equivalent to the updates in equations 197-200 of
+// same (NIG Normal hyperparameter updates), with the substitution
+//   r = 1/V
+//   nu = 2 * a
+//   s = 2 * b
 void update_continuous_hypers(int count,
                               double sum_x, double sum_x_sq,
                               double& r, double& nu,
@@ -314,6 +323,10 @@ void update_continuous_hypers(int count,
     mu = mu_prime;
 }
 
+// This is equivalent to the n-subscripted component of equation 170
+// of [1] (NIX Normal marginal likelihood) with the same substitution,
+// except we can't figure out what the HALF_LOG_2PI term is doing.
+// However, we expect that term to cancel in calc_continuous_logp.
 double calc_continuous_log_Z(double r, double nu, double s)  {
     double nu_over_2 = .5 * nu;
     double log_Z = nu_over_2 * (LOG_2 - log(s))     \
@@ -324,6 +337,8 @@ double calc_continuous_log_Z(double r, double nu, double s)  {
     return log_Z;
 }
 
+// Assuming log_Z_0 was computed by applying calc_continuous_log_Z to
+// the non-updated hyperpriors, this computes equation 170 of [1].
 double calc_continuous_logp(int count,
                             double r, double nu,
                             double s,
@@ -654,3 +669,9 @@ vector<double> calc_cyclic_kappa_conditionals(const vector<double>& kappa_grid,
 }
 
 } // namespace numerics
+
+// References
+
+// [1] Kevin P. Murphy, "Conjugate Bayesian analysis of the Gaussian
+// distribution", murphyk@cs.ubc.ca, last updated October 3, 2007
+// http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
