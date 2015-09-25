@@ -302,7 +302,7 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
         view_to_cluster_model[which_view] = cluster_model
     #
     samples_list = []
-    for sample_idx in range(n):
+    for _ in range(n):
         this_sample_draws = []
         for which_column in which_columns:
             # get the view to which this column is assigned
@@ -561,7 +561,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
     query_row_constraints = dict() if Y is None else \
         dict((col, val) for row, col, val in Y if row == query_row)
     samples_list = []
-    for sample_idx in range(n):
+    for _ in range(n):
         view_cluster_draws = dict()
         for view_idx, cluster_logps in enumerate(cluster_logps_list):
             probs = numpy.exp(cluster_logps)
