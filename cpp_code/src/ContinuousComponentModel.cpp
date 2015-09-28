@@ -217,16 +217,14 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
     }
     numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
 
-    // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
     // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
     // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
-    s /= 2;
     //
     boost::mt19937  _engine(random_seed);
     boost::uniform_01<boost::mt19937> _dist(_engine);
     boost::random::student_t_distribution<double> student_t(nu);
     double student_t_draw = student_t(_dist);
-    double coeff = sqrt((s * (r + 1)) / (nu / 2. * r));
+    double coeff = sqrt((s * (r + 1)) / (nu * r));
     double draw = student_t_draw * coeff + mu;
     return draw;
 }
@@ -249,11 +247,8 @@ double ContinuousComponentModel::get_predictive_cdf(double element,
     }
     numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
 
-    // s must be divided by two to work in the T-distribution (see Kevin Murphy's 2007 cheat sheet)
-    s /= 2;
-
     boost::math::students_t dist(nu);
-    double coeff = sqrt((s * (r + 1)) / (nu / 2. * r));
+    double coeff = sqrt((s * (r + 1)) / (nu * r));
 
     // manipulate the number so it will fit in the standard t (reverse of the draw proceedure)
     double rev_draw = (element - mu) / coeff ;
