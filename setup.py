@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.32'
+version = '0.1.33'
 
 try:
     with open('crosscat/version.py', 'rU') as f:
