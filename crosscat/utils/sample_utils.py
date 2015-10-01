@@ -525,12 +525,10 @@ def create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx):
     num_clusters = len(row_partition_model['counts'])
     if cluster_idx==num_clusters:
         # drew a new cluster
-        cluster_model = create_empty_cluster_model(zipped_column_info)
+        return create_empty_cluster_model(zipped_column_info)
     else:
-        cluster_model = create_cluster_model(
-            zipped_column_info, row_partition_model, cluster_idx
-            )
-    return cluster_model
+        return create_cluster_model(
+            zipped_column_info, row_partition_model, cluster_idx)
 
 def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
                                         query_columns, get_next_seed, n=1):
