@@ -17,13 +17,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import sys
-import copy
-import math
 
+import copy
 from collections import Counter
-
-import copy
 import numpy
 #
 import crosscat.cython_code.ContinuousComponentModel as CCM
@@ -44,7 +40,7 @@ class Bunch(dict):
 
 Constraints = Bunch
 
-# Q is a list of three element tuples where each typle, (r,c,x) contains a
+# Q is a list of three element tuples where each tuple, (r,c,x) contains a
 # row, r; a column, c; and a value x. The contraints, Y follow an identical format.
 # Returns a numpy array where each entry, A[i] is the probability for query i given
 # the contraints in Y.
@@ -55,9 +51,9 @@ def simple_predictive_probability(M_c, X_L, X_D, Y, Q):
     query_columns = [query[1] for query in Q]
     elements = [query[2] for query in Q]
     # enforce query rows all same row
-    assert(all([query[0]==query_row for query in Q]))
+    assert all([query[0]==query_row for query in Q])
     # enforce query columns observed column
-    assert(all([query_column<num_cols for query_column in query_columns]))
+    assert all([query_column<num_cols for query_column in query_columns])
     is_observed_row = query_row < num_rows
 
     x = []
@@ -119,7 +115,7 @@ def simple_predictive_probability_unobserved(M_c, X_L, X_D, Y, query_row, query_
         answers_n = numpy.zeros(len(cluster_logps))
 
         # cluster_logps should logsumexp to log(1)
-        assert(numpy.abs(logsumexp(cluster_logps)) < .0000001)
+        assert numpy.abs(logsumexp(cluster_logps)) < .0000001
 
         # enumerate over the clusters
         for cluster_idx in range(len(cluster_logps)):
@@ -222,9 +218,9 @@ def simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed, n=1):
     query_row = Q[0][0]
     query_columns = [query[1] for query in Q]
     # enforce query rows all same row
-    assert(all([query[0]==query_row for query in Q]))
+    assert all([query[0]==query_row for query in Q])
     # enforce query columns observed column
-    assert(all([query_column<num_cols for query_column in query_columns]))
+    assert all([query_column<num_cols for query_column in query_columns])
     is_observed_row = query_row < num_rows
     x = []
     if not is_observed_row:
@@ -251,7 +247,7 @@ def simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed, n=1):
 def simple_predictive_sample_multistate(M_c, X_L_list, X_D_list, Y, Q,
                                         get_next_seed, n=1):
     num_states = len(X_L_list)
-    assert(num_states==len(X_D_list))
+    assert num_states==len(X_D_list)
     n_from_each = n / num_states
     n_sampled = n % num_states
     random_state = numpy.random.RandomState(get_next_seed())
@@ -390,7 +386,7 @@ def create_cluster_model(zipped_column_info, row_partition_model,
 def create_empty_cluster_model(zipped_column_info):
     cluster_component_models = dict()
     for global_column_idx in zipped_column_info:
-        column_metadata, column_hypers, column_component_suffstats = \
+        column_metadata, column_hypers, _column_component_suffstats = \
             zipped_column_info[global_column_idx]
         component_model = create_component_model(column_metadata,
                                                  column_hypers, dict(N=None))
@@ -456,13 +452,13 @@ def get_draw_constraints(X_L, X_D, Y, draw_row, draw_column):
         X_D_i = X_D[view_idx]
         try:
             draw_cluster = X_D_i[draw_row]
-        except IndexError, e:
+        except IndexError:
             draw_cluster = None
         for constraint in Y:
             constraint_row, constraint_col, constraint_value = constraint
             try:
                 constraint_cluster = X_D_i[constraint_row]
-            except IndexError, e:
+            except IndexError:
                 constraint_cluster = None
             if (constraint_col == draw_column) \
                     and (constraint_cluster == draw_cluster):
@@ -527,7 +523,7 @@ def create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx):
     zipped_column_info, row_partition_model = extract_view_column_info(
         M_c, X_L, view_idx)
     num_clusters = len(row_partition_model['counts'])
-    if(cluster_idx==num_clusters):
+    if cluster_idx==num_clusters:
         # drew a new cluster
         cluster_model = create_empty_cluster_model(zipped_column_info)
     else:
@@ -674,7 +670,7 @@ def continuous_imputation_confidence(samples, imputed,
         X_L_list = []
         X_D_list = []
 
-    for chain in range(n_chains):
+    for _ in range(n_chains):
         ccstate = State.p_State(M_c, T)
         ccstate.transition(which_transitions=tlist, n_steps=n_steps)
 
@@ -729,11 +725,11 @@ modeltype_to_imputation_confidence_function = {
 
 def impute(M_c, X_L, X_D, Y, Q, n, get_next_seed, return_samples=False):
     # FIXME: allow more than one cell to be imputed
-    assert(len(Q)==1)
+    assert len(Q)==1
     #
     col_idx = Q[0][1]
     modeltype = M_c['column_metadata'][col_idx]['modeltype']
-    assert(modeltype in modeltype_to_imputation_function)
+    assert modeltype in modeltype_to_imputation_function
     if get_is_multistate(X_L, X_D):
         samples = simple_predictive_sample_multistate(M_c, X_L, X_D, Y, Q,
                                            get_next_seed, n)
@@ -780,7 +776,7 @@ def get_column_component_suffstats_i(M_c, X_L, col_idx):
 
 def impute_and_confidence(M_c, X_L, X_D, Y, Q, n, get_next_seed):
     # FIXME: allow more than one cell to be imputed
-    assert(len(Q)==1)
+    assert len(Q)==1
     col_idx = Q[0][1]
     modeltype = M_c['column_metadata'][col_idx]['modeltype']
     imputation_confidence_function = \
