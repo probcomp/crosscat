@@ -519,7 +519,29 @@ def sample_from_cluster(cluster_model, random_state):
         sample.append(sample_i)
     return sample
 
+# LRU replacement, size 1
+__cache = (-1, None)
+def _cache_for(M_c):
+    global __cache
+    (cur_id, cur_cache) = __cache
+    if cur_id == id(M_c):
+        return cur_cache
+    else:
+        ans = {}
+        __cache = (id(M_c), ans)
+        return ans
+
 def create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx):
+    cache = _cache_for(M_c)
+    key = ('cluster_model', id(X_L), view_idx, cluster_idx)
+    if key in cache:
+        return cache[key]
+    else:
+        ans = do_create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx)
+        cache[key] = ans
+        return ans
+
+def do_create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx):
     zipped_column_info, row_partition_model = extract_view_column_info(
         M_c, X_L, view_idx)
     num_clusters = len(row_partition_model['counts'])
