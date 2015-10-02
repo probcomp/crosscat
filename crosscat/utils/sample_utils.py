@@ -282,17 +282,10 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
     #
     def view_for(column):
         return X_L['column_partition']['assignments'][column]
-    cluster_model_cache = dict()
     def cluster_model_for(view):
-        if view in cluster_model_cache:
-            return cluster_model_cache[view]
-        else:
-            cluster = X_D[view][which_row]
-            # pull the suffstats, hypers, and marignal logP's for clusters
-            cluster_model = create_cluster_model_from_X_L(
-                M_c, X_L, view, cluster)
-            cluster_model_cache[view] = cluster_model
-            return cluster_model
+        cluster = X_D[view][which_row]
+        # pull the suffstats, hypers, and marignal logP's for clusters
+        return create_cluster_model_from_X_L(M_c, X_L, view, cluster)
     def component_model_for(column):
         return cluster_model_for(view_for(column))[column]
     samples_list = []
@@ -568,15 +561,8 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
         dict((col, val) for row, col, val in Y if row == query_row)
     def view_for(column):
         return X_L['column_partition']['assignments'][column]
-    cluster_model_cache = dict()
     def cluster_model_for(view, cluster):
-        if (view, cluster) in cluster_model_cache:
-            return cluster_model_cache[(view, cluster)]
-        else:
-            cluster_model = create_cluster_model_from_X_L(
-                M_c, X_L, view, cluster)
-            cluster_model_cache[(view, cluster)] = cluster_model
-            return cluster_model
+        return create_cluster_model_from_X_L(M_c, X_L, view, cluster)
     samples_list = []
     for _ in range(n):
         view_cluster_draws = dict()
