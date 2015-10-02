@@ -38,11 +38,11 @@ def mutual_information_to_linfoot(MI):
 
 # return the estimated mutual information for each pair of columns on Q given
 # the set of samples in X_Ls and X_Ds. Q is a list of tuples where each tuple
-# contains X and Y, the columns to compare. 
+# contains X and Y, the columns to compare.
 # Q = [(X_1, Y_1), (X_2, Y_2), ..., (X_n, Y_n)]
 # Returns a list of list where each sublist is a set of MI's and Linfoots from
-# each crosscat posterior sample. 
-# See tests/test_mutual_information.py and 
+# each crosscat posterior sample.
+# See tests/test_mutual_information.py and
 # tests/test_mutual_information_vs_correlation.py for useage examples
 def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
     #
@@ -68,9 +68,9 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
 
         MI_sample = []
         Linfoot_sample = []
-        
+
         for sample in range(n_postertior_samples):
-            
+
             X_L = X_Ls[sample]
             X_D = X_Ds[sample]
 
@@ -81,7 +81,7 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
                 MI_s = estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=n_samples)
 
             linfoot = mutual_information_to_linfoot(MI_s)
-            
+
             MI_sample.append(MI_s)
 
             Linfoot_sample.append(linfoot)
@@ -89,7 +89,7 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
         MI.append(MI_sample)
         Linfoot.append(Linfoot_sample)
 
-         
+
     assert(len(MI) == len(Q))
     assert(len(Linfoot) == len(Q))
 
@@ -140,7 +140,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
                 Py[j] = component_models_Y[j].calc_element_predictive_logp(y)
                 Pxy[j] = Px[j] + Py[j] + cluster_logps[j]   # \sum_c P(x|c)P(y|c)P(c), Joint distribution
                 Px[j] += cluster_logps[j]                   # \sum_c P(x|c)P(c)
-                Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c) 
+                Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c)
 
             # sum over clusters
             Px = logsumexp(Px)
@@ -152,14 +152,14 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
     # ignore MI < 0
     if MI <= 0.0:
         MI = 0.0
-        
+
     return MI
 
 
 
 # estimates the mutual information for columns X and Y.
 def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
-    
+
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
     view_X = get_view_index(X)
@@ -188,7 +188,7 @@ def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
     weights = numpy.zeros(n_samples)
 
     for i in range(n_samples):
-        # draw a cluster 
+        # draw a cluster
         cluster_idx = numpy.nonzero(numpy.random.multinomial(1, cluster_crps))[0][0]
 
         # get a sample from each cluster
@@ -207,10 +207,10 @@ def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
             Py[j] = component_models_Y[j].calc_element_predictive_logp(y)
             Pxy[j] = Px[j] + Py[j] + cluster_logps[j]   # \sum_c P(x|c)P(y|c)P(c), Joint distribution
             Px[j] += cluster_logps[j]                   # \sum_c P(x|c)P(c)
-            Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c)    
+            Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c)
 
         # pdb.set_trace()
-        
+
         # sum over clusters
         Px = logsumexp(Px)
         Py = logsumexp(Py)
@@ -230,19 +230,19 @@ def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
     # ignore MI < 0
     if MI_ret <= 0.0:
         MI_ret = 0.0
-        
+
     return MI_ret
 
 # Histogram estimations are biased and shouldn't be used, this is just for testing purposes.
 def estimiate_MI_sample_hist(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=10000):
-    
+
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
     view_X = get_view_index(X)
     view_Y = get_view_index(Y)
 
     # independent
-    if view_X != view_Y:        
+    if view_X != view_Y:
         return 0.0
 
     # get cluster logps
@@ -266,7 +266,7 @@ def estimiate_MI_sample_hist(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=10000
 
     # draw the samples
     for i in range(n_samples):
-        # draw a cluster 
+        # draw a cluster
         cluster_idx = numpy.nonzero(numpy.random.multinomial(1, cluster_crps))[0][0]
 
         x = component_models_X[cluster_idx].get_draw(get_next_seed())
@@ -296,18 +296,18 @@ def estimiate_MI_sample_hist(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=10000
     MI = 0
 
     for i_x in range(PXY.shape[0]):
-        for i_y in range(PXY.shape[1]):            
+        for i_y in range(PXY.shape[1]):
             Pxy = PXY[i_x,i_y]
             Px = PX[i_x]
             Py = PY[i_y]
-            
+
             if Pxy > 0.0 and Px > 0.0 and Py > 0.0:
                 MI += (Pxy/N)*math.log(Pxy*N/(Px*Py))
-            
+
 
 
     # ignore MI < 0
     if MI <= 0.0:
         MI = 0.0
-        
+
     return MI
