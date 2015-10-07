@@ -21,11 +21,8 @@ import numpy
 import random
 import math
 
-import crosscat.cython_code.ContinuousComponentModel as CCM
-import crosscat.cython_code.MultinomialComponentModel as MCM
 from crosscat.utils.general_utils import logsumexp
 import crosscat.utils.sample_utils as su
-import pdb # fixme: remove
 
 def column_is_bounded_discrete(M_c, col_index):
     return M_c['column_metadata'][col_index]['modeltype'] == 'symmetric_dirichlet_discrete'
@@ -46,22 +43,20 @@ def mutual_information_to_linfoot(MI):
 # tests/test_mutual_information_vs_correlation.py for useage examples
 def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
     #
-    assert(len(X_Ds) == len(X_Ls))
+    assert len(X_Ds) == len(X_Ls)
     n_postertior_samples = len(X_Ds)
 
-    n_rows = len(X_Ds[0][0])
     n_cols = len(M_c['column_metadata'])
 
     MI = []
     Linfoot = []
-    NMI = []
 
     get_next_seed = lambda: random.randrange(32767)
 
     for query in Q:
-        assert(len(query) == 2)
-        assert(query[0] >= 0 and query[0] < n_cols)
-        assert(query[1] >= 0 and query[1] < n_cols)
+        assert len(query) == 2
+        assert query[0] >= 0 and query[0] < n_cols
+        assert query[1] >= 0 and query[1] < n_cols
 
         X = query[0]
         Y = query[1]
@@ -90,12 +85,12 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
         Linfoot.append(Linfoot_sample)
 
 
-    assert(len(MI) == len(Q))
-    assert(len(Linfoot) == len(Q))
+    assert len(MI) == len(Q)
+    assert len(Linfoot) == len(Q)
 
     return MI,  Linfoot
 
-def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
+def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
     view_X = get_view_index(X)
@@ -158,7 +153,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
 
 
 # estimates the mutual information for columns X and Y.
-def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
+def estimiate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
@@ -234,7 +229,7 @@ def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
     return MI_ret
 
 # Histogram estimations are biased and shouldn't be used, this is just for testing purposes.
-def estimiate_MI_sample_hist(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=10000):
+def estimiate_MI_sample_hist(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=10000):
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
