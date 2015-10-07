@@ -73,7 +73,7 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
             if column_is_bounded_discrete(M_c, X) and column_is_bounded_discrete(M_c, Y):
                 MI_s = calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D)
             else:
-                MI_s = estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=n_samples)
+                MI_s = estimate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=n_samples)
 
             linfoot = mutual_information_to_linfoot(MI_s)
 
@@ -153,7 +153,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
 
 
 # estimates the mutual information for columns X and Y.
-def estimiate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
+def estimate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
@@ -229,7 +229,7 @@ def estimiate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
     return MI_ret
 
 # Histogram estimations are biased and shouldn't be used, this is just for testing purposes.
-def estimiate_MI_sample_hist(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=10000):
+def estimate_MI_sample_hist(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=10000):
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
