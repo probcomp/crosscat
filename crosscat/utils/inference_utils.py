@@ -118,30 +118,45 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
         component_models_X[i] = cluster_models[X]
         component_models_Y[i] = cluster_models[Y]
 
+    def marginal_predictive_by_cluster(value, component_models):
+        return [component_models[j].calc_element_predictive_logp(value)
+                + cluster_logps[j]
+                for j in range(n_clusters)]
+
+    x_marginal_predictives_by_cluster = \
+        [marginal_predictive_by_cluster(x, component_models_X)
+         for x in x_values]
+
+    # \sum_c P(x|c)P(c)
+    x_net_marginal_predictives = \
+        [logsumexp(ps) for ps in x_marginal_predictives_by_cluster]
+
+    y_marginal_predictives_by_cluster = \
+        [marginal_predictive_by_cluster(y, component_models_Y)
+         for y in y_values]
+
+    # \sum_c P(y|c)P(c)
+    y_net_marginal_predictives = \
+        [logsumexp(ps) for ps in y_marginal_predictives_by_cluster]
+
     MI = 0.0
 
-    for x in x_values:
-        for y in y_values:
-             # calculate marginal logs
-            Pxy = numpy.zeros(n_clusters)   # P(x,y), Joint distribution
-            Px = numpy.zeros(n_clusters)    # P(x)
-            Py = numpy.zeros(n_clusters)    # P(y)
+    for (i,x) in enumerate(x_values):
+        x_marginals = x_marginal_predictives_by_cluster[i]
+        for (j,y) in enumerate(y_values):
+            y_marginals = y_marginal_predictives_by_cluster[j]
+            # cluster prob is double-counted in sum of marginals
+            joint_predictive_by_cluster = \
+                [x_marginals[k] + y_marginals[k] - cluster_logps[k]
+                 for k in range(n_clusters)]
 
-            # get logp of x and y in each cluster. add cluster logp's
-            for j in range(n_clusters):
+            # \sum_c P(x|c)P(y|c)P(c), Joint distribution
+            joint_predictive = logsumexp(joint_predictive_by_cluster)
 
-                Px[j] = component_models_X[j].calc_element_predictive_logp(x)
-                Py[j] = component_models_Y[j].calc_element_predictive_logp(y)
-                Pxy[j] = Px[j] + Py[j] + cluster_logps[j]   # \sum_c P(x|c)P(y|c)P(c), Joint distribution
-                Px[j] += cluster_logps[j]                   # \sum_c P(x|c)P(c)
-                Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c)
-
-            # sum over clusters
-            Px = logsumexp(Px)
-            Py = logsumexp(Py)
-            Pxy = logsumexp(Pxy)
-
-            MI += numpy.exp(Pxy)*(Pxy - (Px + Py))
+            MI += math.exp(joint_predictive) * \
+                  (joint_predictive - \
+                   (x_net_marginal_predictives[i] + \
+                    y_net_marginal_predictives[j]))
 
     # ignore MI < 0
     if MI <= 0.0:
