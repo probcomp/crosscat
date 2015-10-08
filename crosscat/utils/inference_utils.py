@@ -103,8 +103,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
     # get cluster logps
     view_state = X_L['view_state'][view_X]
     cluster_logps = su.determine_cluster_crp_logps(view_state)
-    cluster_crps = numpy.exp(cluster_logps) # get exp'ed values for multinomial
-    n_clusters = len(cluster_crps)
+    n_clusters = len(cluster_logps)
 
     # get X values
     x_values = M_c['column_metadata'][X]['code_to_value'].values()
