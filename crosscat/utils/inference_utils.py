@@ -21,11 +21,8 @@ import numpy
 import random
 import math
 
-import crosscat.cython_code.ContinuousComponentModel as CCM
-import crosscat.cython_code.MultinomialComponentModel as MCM
 from crosscat.utils.general_utils import logsumexp
 import crosscat.utils.sample_utils as su
-import pdb # fixme: remove
 
 def column_is_bounded_discrete(M_c, col_index):
     return M_c['column_metadata'][col_index]['modeltype'] == 'symmetric_dirichlet_discrete'
@@ -46,22 +43,20 @@ def mutual_information_to_linfoot(MI):
 # tests/test_mutual_information_vs_correlation.py for useage examples
 def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
     #
-    assert(len(X_Ds) == len(X_Ls))
+    assert len(X_Ds) == len(X_Ls)
     n_postertior_samples = len(X_Ds)
 
-    n_rows = len(X_Ds[0][0])
     n_cols = len(M_c['column_metadata'])
 
     MI = []
     Linfoot = []
-    NMI = []
 
     get_next_seed = lambda: random.randrange(32767)
 
     for query in Q:
-        assert(len(query) == 2)
-        assert(query[0] >= 0 and query[0] < n_cols)
-        assert(query[1] >= 0 and query[1] < n_cols)
+        assert len(query) == 2
+        assert query[0] >= 0 and query[0] < n_cols
+        assert query[1] >= 0 and query[1] < n_cols
 
         X = query[0]
         Y = query[1]
@@ -78,7 +73,7 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
             if column_is_bounded_discrete(M_c, X) and column_is_bounded_discrete(M_c, Y):
                 MI_s = calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D)
             else:
-                MI_s = estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=n_samples)
+                MI_s = estimate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=n_samples)
 
             linfoot = mutual_information_to_linfoot(MI_s)
 
@@ -90,12 +85,12 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
         Linfoot.append(Linfoot_sample)
 
 
-    assert(len(MI) == len(Q))
-    assert(len(Linfoot) == len(Q))
+    assert len(MI) == len(Q)
+    assert len(Linfoot) == len(Q)
 
     return MI,  Linfoot
 
-def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
+def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
     view_X = get_view_index(X)
@@ -107,9 +102,8 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
 
     # get cluster logps
     view_state = X_L['view_state'][view_X]
-    cluster_logps = su.determine_cluster_crp_logps(view_state)
-    cluster_crps = numpy.exp(cluster_logps) # get exp'ed values for multinomial
-    n_clusters = len(cluster_crps)
+    cluster_logps = numpy.array(su.determine_cluster_crp_logps(view_state))
+    n_clusters = len(cluster_logps)
 
     # get X values
     x_values = M_c['column_metadata'][X]['code_to_value'].values()
@@ -124,30 +118,45 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
         component_models_X[i] = cluster_models[X]
         component_models_Y[i] = cluster_models[Y]
 
+    def marginal_predictive_logps_by_cluster(value, component_models):
+        return numpy.array([
+            component_models[j].calc_element_predictive_logp(value)
+            + cluster_logps[j]
+            for j in range(n_clusters)])
+
+    x_marginal_predictive_logps_by_cluster = \
+        [marginal_predictive_logps_by_cluster(x, component_models_X)
+         for x in x_values]
+
+    # \sum_c P(x|c)P(c)
+    x_net_marginal_predictive_logps = \
+        [logsumexp(ps) for ps in x_marginal_predictive_logps_by_cluster]
+
+    y_marginal_predictive_logps_by_cluster = \
+        [marginal_predictive_logps_by_cluster(y, component_models_Y)
+         for y in y_values]
+
+    # \sum_c P(y|c)P(c)
+    y_net_marginal_predictive_logps = \
+        [logsumexp(ps) for ps in y_marginal_predictive_logps_by_cluster]
+
     MI = 0.0
 
-    for x in x_values:
-        for y in y_values:
-             # calculate marginal logs
-            Pxy = numpy.zeros(n_clusters)   # P(x,y), Joint distribution
-            Px = numpy.zeros(n_clusters)    # P(x)
-            Py = numpy.zeros(n_clusters)    # P(y)
+    for (i,x) in enumerate(x_values):
+        x_marginals = x_marginal_predictive_logps_by_cluster[i]
+        for (j,y) in enumerate(y_values):
+            y_marginals = y_marginal_predictive_logps_by_cluster[j]
+            # cluster prob is double-counted in sum of marginals
+            joint_predictive_logp_by_cluster = \
+                x_marginals + y_marginals - cluster_logps
 
-            # get logp of x and y in each cluster. add cluster logp's
-            for j in range(n_clusters):
+            # \sum_c P(x|c)P(y|c)P(c), Joint distribution
+            joint_predictive_logp = logsumexp(joint_predictive_logp_by_cluster)
 
-                Px[j] = component_models_X[j].calc_element_predictive_logp(x)
-                Py[j] = component_models_Y[j].calc_element_predictive_logp(y)
-                Pxy[j] = Px[j] + Py[j] + cluster_logps[j]   # \sum_c P(x|c)P(y|c)P(c), Joint distribution
-                Px[j] += cluster_logps[j]                   # \sum_c P(x|c)P(c)
-                Py[j] += cluster_logps[j]                   # \sum_c P(y|c)P(c)
-
-            # sum over clusters
-            Px = logsumexp(Px)
-            Py = logsumexp(Py)
-            Pxy = logsumexp(Pxy)
-
-            MI += numpy.exp(Pxy)*(Pxy - (Px + Py))
+            MI += math.exp(joint_predictive_logp) * \
+                  (joint_predictive_logp - \
+                   (x_net_marginal_predictive_logps[i] + \
+                    y_net_marginal_predictive_logps[j]))
 
     # ignore MI < 0
     if MI <= 0.0:
@@ -158,7 +167,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, X_D):
 
 
 # estimates the mutual information for columns X and Y.
-def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
+def estimate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
@@ -232,82 +241,3 @@ def estimiate_MI_sample(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=1000):
         MI_ret = 0.0
 
     return MI_ret
-
-# Histogram estimations are biased and shouldn't be used, this is just for testing purposes.
-def estimiate_MI_sample_hist(X, Y, M_c, X_L, X_D, get_next_seed, n_samples=10000):
-
-    get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
-
-    view_X = get_view_index(X)
-    view_Y = get_view_index(Y)
-
-    # independent
-    if view_X != view_Y:
-        return 0.0
-
-    # get cluster logps
-    view_state = X_L['view_state'][view_X]
-    cluster_logps = su.determine_cluster_crp_logps(view_state)
-    cluster_crps = numpy.exp(cluster_logps)
-    n_clusters = len(cluster_crps)
-
-    # get components models for each cluster for columns X and Y
-    component_models_X = [0]*n_clusters
-    component_models_Y = [0]*n_clusters
-    for i in range(n_clusters):
-        cluster_models = su.create_cluster_model_from_X_L(M_c, X_L, view_X, i)
-        component_models_X[i] = cluster_models[X]
-        component_models_Y[i] = cluster_models[Y]
-
-    MI = 0.0
-    samples = numpy.zeros((n_samples,2), dtype=float)
-    samples_x = numpy.zeros(n_samples, dtype=float)
-    samples_y = numpy.zeros(n_samples, dtype=float)
-
-    # draw the samples
-    for i in range(n_samples):
-        # draw a cluster
-        cluster_idx = numpy.nonzero(numpy.random.multinomial(1, cluster_crps))[0][0]
-
-        x = component_models_X[cluster_idx].get_draw(get_next_seed())
-        y = component_models_Y[cluster_idx].get_draw(get_next_seed())
-
-        samples[i,0] = x
-        samples[i,1] = y
-        samples_x[i] = x
-        samples_y[i] = y
-
-    # calculate the number of bins and ranges
-    N = float(n_samples)
-    r,_ = corr(samples_x, samples_y)
-    k = round(.5+.5*(1+4*((6*N*r**2.)/(1-r**2.))**.5)**.5)+1
-    sigma_x = numpy.std(samples_x)
-    mu_x = numpy.mean(samples_x)
-    sigma_y = numpy.std(samples_y)
-    mu_y = numpy.mean(samples_y)
-    range_x = numpy.linspace(mu_x-3.*sigma_x,mu_x+3*sigma_x,k)
-    range_y = numpy.linspace(mu_y-3.*sigma_y,mu_y+3*sigma_y,k)
-
-
-    PXY, _, _ = numpy.histogram2d(samples[:,0], samples[:,1], bins=[range_x,range_y])
-    PX,_ = numpy.histogram(samples_x,bins=range_x)
-    PY,_ = numpy.histogram(samples_y,bins=range_y)
-
-    MI = 0
-
-    for i_x in range(PXY.shape[0]):
-        for i_y in range(PXY.shape[1]):
-            Pxy = PXY[i_x,i_y]
-            Px = PX[i_x]
-            Py = PY[i_y]
-
-            if Pxy > 0.0 and Px > 0.0 and Py > 0.0:
-                MI += (Pxy/N)*math.log(Pxy*N/(Px*Py))
-
-
-
-    # ignore MI < 0
-    if MI <= 0.0:
-        MI = 0.0
-
-    return MI
