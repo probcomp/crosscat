@@ -102,7 +102,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
 
     # get cluster logps
     view_state = X_L['view_state'][view_X]
-    cluster_logps = su.determine_cluster_crp_logps(view_state)
+    cluster_logps = numpy.array(su.determine_cluster_crp_logps(view_state))
     n_clusters = len(cluster_logps)
 
     # get X values
@@ -119,9 +119,10 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
         component_models_Y[i] = cluster_models[Y]
 
     def marginal_predictive_by_cluster(value, component_models):
-        return [component_models[j].calc_element_predictive_logp(value)
-                + cluster_logps[j]
-                for j in range(n_clusters)]
+        return numpy.array([
+            component_models[j].calc_element_predictive_logp(value)
+            + cluster_logps[j]
+            for j in range(n_clusters)])
 
     x_marginal_predictives_by_cluster = \
         [marginal_predictive_by_cluster(x, component_models_X)
@@ -147,8 +148,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
             y_marginals = y_marginal_predictives_by_cluster[j]
             # cluster prob is double-counted in sum of marginals
             joint_predictive_by_cluster = \
-                [x_marginals[k] + y_marginals[k] - cluster_logps[k]
-                 for k in range(n_clusters)]
+                x_marginals + y_marginals - cluster_logps
 
             # \sum_c P(x|c)P(y|c)P(c), Joint distribution
             joint_predictive = logsumexp(joint_predictive_by_cluster)
