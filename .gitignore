@@ -14,4 +14,4 @@ dist
 website/build
 website/index.html
 cpp_code/gmon.out
-/crosscat/version.py
+/src/version.py

@@ -7,16 +7,16 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.35'
+version = '0.1.36'
 
 try:
-    with open('crosscat/version.py', 'rU') as f:
+    with open('src/version.py', 'rU') as f:
         version_old = f.readlines()
 except IOError:
     version_old = None
 version_new = ['__version__ = %s\n' % (repr(version),)]
 if version_old != version_new:
-    with open('crosscat/version.py', 'w') as f:
+    with open('src/version.py', 'w') as f:
         f.writelines(version_new)
 
 # If we're building from Git (no PKG-INFO), we use Cython.  If we're
@@ -102,7 +102,7 @@ os.chdir(this_dir)
 
 
 # locations
-pyx_src_dir = 'crosscat/cython_code'
+pyx_src_dir = 'src/cython_code'
 cpp_src_dir = 'cpp_code/src'
 include_dirs = ['cpp_code/include/CrossCat'] \
     + boost_includes \
@@ -254,7 +254,16 @@ setup(
     install_requires=[
         'numpy>=1.7.0',
     ],
-    package_dir={'crosscat': 'crosscat'},
+    package_dir={
+        'crosscat': 'src',
+        'crosscat.binary_creation': 'src/binary_creation',
+        'crosscat.cython_code': 'src/cython_code',
+        'crosscat.jsonrpc_http': 'src/jsonrpc_http',
+        'crosscat.tests': 'src/tests',
+        'crosscat.tests.component_model_extensions':
+            'src/tests/component_model_extensions',
+        'crosscat.utils': 'src/utils',
+    },
     ext_modules=ext_modules,
     cmdclass=cmdclass,
 )
