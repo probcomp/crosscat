@@ -254,15 +254,16 @@ setup(
     install_requires=[
         'numpy>=1.7.0',
     ],
-    package_dir={'crosscat': 'src',
-                 'crosscat.binary_creation': 'src/binary_creation',
-                 'crosscat.cython_code': 'src/cython_code',
-                 'crosscat.jsonrpc_http': 'src/jsonrpc_http',
-                 'crosscat.tests': 'src/tests',
-                 'crosscat.tests.component_model_extensions':
-                     'src/tests/component_model_extensions',
-                 'crosscat.utils': 'src/utils',
-                 },
+    package_dir={
+        'crosscat': 'src',
+        'crosscat.binary_creation': 'src/binary_creation',
+        'crosscat.cython_code': 'src/cython_code',
+        'crosscat.jsonrpc_http': 'src/jsonrpc_http',
+        'crosscat.tests': 'src/tests',
+        'crosscat.tests.component_model_extensions':
+            'src/tests/component_model_extensions',
+        'crosscat.utils': 'src/utils',
+    },
     ext_modules=ext_modules,
     cmdclass=cmdclass,
 )
