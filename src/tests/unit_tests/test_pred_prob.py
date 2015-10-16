@@ -225,6 +225,11 @@ def test_predictive_probability_unobserved(seed=0):
     vals_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
     assert vals_0 == vals_1
 
-    # Do some full joint queries.
+    # Do some full joint queries, all on the same row.
+    Q = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
+    Y = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
     vals = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
 
+    Q = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
+    Y = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
+    vals = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
