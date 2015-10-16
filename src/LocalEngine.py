@@ -360,6 +360,50 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         return su.simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q)
 
+    def predictive_probability(self, M_c, X_L, X_D, Y, Q):
+        """Calculate the probability of cellS jointly taking values given a latent state
+
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L: the latent variables associated with the latent state
+        :type X_L: dict
+        :param X_D: the particular cluster assignments of each row in each view
+        :type X_D: list of lists
+        :param Y: A list of constraints to apply when sampling.  Each constraint
+                  is a triplet of (r, d, v): r is the row index, d is the column
+                  index and v is the value of the constraint
+        :type Y: list of lists
+        :param Q: A list of values to sample.  Each value is triplet of (r, d, v):
+                  r is the row index, d is the column index, and v is the value at
+                  which the density is evaluated.
+        :type Q: list of lists
+        :returns: list of floats -- probabilities of the values specified by Q
+
+        """
+        return su.predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    def predictive_probability_multistate(self, M_c, X_L_list, X_D_list, Y, Q):
+        """Calculate the probability of cellS jointly taking values given a latent state
+
+        :param M_c: The column metadata
+        :type M_c: dict
+        :param X_L_list: list of the latent variables associated with the latent state
+        :type X_L_list: list of dict
+        :param X_D_list: list of the particular cluster assignments of each row in each view
+        :type X_D_list: list of list of lists
+        :param Y: A list of constraints to apply when sampling.  Each constraint
+                  is a triplet of (r,d,v): r is the row index, d is the column
+                  index and v is the value of the constraint
+        :type Y: list of lists
+        :param Q: A list of values to sample.  Each value is triplet of (r,d,v):
+                  r is the row index, d is the column index, and v is the value at
+                  which the density is evaluated.
+        :type Q: list of lists
+        :returns: list of floats -- probabilities of the values specified by Q
+
+        """
+        return su.predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q)
+
     def mutual_information(self, M_c, X_L_list, X_D_list, Q, n_samples=1000):
         """
         Return the estimated mutual information for each pair of columns on Q given

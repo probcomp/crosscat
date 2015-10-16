@@ -66,6 +66,9 @@ class EngineTemplate(object):
     def predictive_probability(self, M_c, X_L_list, X_D_list, T, q, n=1):
         return None
 
+    def predictive_probability_multistate(self, M_c, X_L_list, X_D_list, T, q, n=1):
+        return None
+
     def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
         return None
 
