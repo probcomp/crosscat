@@ -157,3 +157,75 @@ def test_simple_predictive_probability_unobserved(seed=0):
     Y = [(N_ROWS, 2, 4), (N_ROWS+1, 2, 5)]
     with pytest.raises(IndexError):
         vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q[1])
+
+def test_predictive_probability_observed(seed=0):
+    # TODO
+    pass
+
+def test_predictive_probability_unobserved(seed=0):
+    # This function tests the predictive probability for the joint distirbution.
+    # Throughout, we will check that the result is the same for the joint and
+    # simple calls.
+    T, M_r, M_c, X_L, X_D, engine = quick_le(seed)
+
+    # Hypothetical column number should throw an error.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 10, 2)]
+    Y = []
+    with pytest.raises(IndexError):
+        vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Inconsistent row numbers should throw an error.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS-1, 10, 2)]
+    Y = []
+    with pytest.raises(IndexError):
+        vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Duplicate column numbers should throw an error,
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 1, 2)]
+    Y = []
+    with pytest.raises(IndexError):
+        vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Different row numbers should throw an error.
+    Q = [(N_ROWS, 0, 1.5), (N_ROWS+1, 1, 2)]
+    Y = [(N_ROWS, 1, 1.5), (N_ROWS, 2, 3)]
+    with pytest.raises(IndexError):
+        vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q[0])
+
+    # Inconsistent with constraints should be negative infinity.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 1, 1.6)]
+    vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert vals == -float('inf')
+
+    # Consistent with constraints should be log(1) == 0.
+    Q = [(N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 0, 1.3)]
+    vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert vals == 0
+
+    # Consistent with constraints should not impact other queries.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 1, 1.5), (N_ROWS, 2, 3)]
+    vals_0 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    vals_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q[1:])
+    assert vals_0 == vals_1
+
+
+    # Predictive and simple should be the same in univariate case (cont).
+    Q = [(N_ROWS, 0, 0.5)]
+    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    vals_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    vals_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert vals_0 == vals_1
+
+    # Predictive and simple should be the same in univariate case (disc).
+    Q = [(N_ROWS, 2, 1)]
+    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    vals_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    vals_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert vals_0 == vals_1
+
+    # Do some full joint queries.
+    vals = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+
