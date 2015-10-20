@@ -325,11 +325,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :type X_L: dict
         :param X_D: the particular cluster assignments of each row in each view
         :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
+        :param Y: A list of constraints to apply when querying.  Each constraint
                   is a triplet of (r, d, v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is triplet of (r, d, v):
+        :param Q: A list of values to query.  Each value is triplet of (r, d, v):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
@@ -347,11 +347,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :type X_L_list: list of dict
         :param X_D_list: list of the particular cluster assignments of each row in each view
         :type X_D_list: list of list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
+        :param Y: A list of constraints to apply when querying.  Each constraint
                   is a triplet of (r,d,v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is triplet of (r,d,v):
+        :param Q: A list of values to query.  Each value is triplet of (r,d,v):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
@@ -369,11 +369,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :type X_L: dict
         :param X_D: the particular cluster assignments of each row in each view
         :type X_D: list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
+        :param Y: A list of constraints to apply when querying.  Each constraint
                   is a triplet of (r, d, v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is triplet of (r, d, v):
+        :param Q: A list of values to query.  Each value is triplet of (r, d, v):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
@@ -391,11 +391,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :type X_L_list: list of dict
         :param X_D_list: list of the particular cluster assignments of each row in each view
         :type X_D_list: list of list of lists
-        :param Y: A list of constraints to apply when sampling.  Each constraint
+        :param Y: A list of constraints to apply when querying.  Each constraint
                   is a triplet of (r,d,v): r is the row index, d is the column
                   index and v is the value of the constraint
         :type Y: list of lists
-        :param Q: A list of values to sample.  Each value is triplet of (r,d,v):
+        :param Q: A list of values to query.  Each value is triplet of (r,d,v):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
