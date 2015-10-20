@@ -18,17 +18,10 @@
 #   limitations under the License.
 #
 
-import argparse
 import pytest
-import random
-import sys
-import tempfile
-
-import numpy
 
 import crosscat.tests.synthetic_data_generator as sdg
 from crosscat.LocalEngine import LocalEngine
-import crosscat.cython_code.State as State
 
 '''
 This test suite ensures that invoking simple_predictive_probability_observed
