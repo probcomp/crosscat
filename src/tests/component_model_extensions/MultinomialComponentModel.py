@@ -1,11 +1,11 @@
 import crosscat.cython_code.MultinomialComponentModel as mcm
 import math
 import random
-import sys
 import numpy
 
-from scipy.misc import logsumexp as logsumexp
 from scipy.special import gammaln as gammaln
+
+from crosscat.utils.general_utils import logmeanexp
 
 next_seed = lambda : random.randrange(2147483647)
 
@@ -391,15 +391,13 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         K = hypers['K']
         check_data_vs_k(X,K)
 
-        N = float(len(X))
-
         random.seed(gen_seed)
         log_likelihoods = [0]*n_samples
         for i in range(n_samples):
             params = self.sample_parameters_given_hyper(gen_seed=next_seed())
             log_likelihoods[i] = self.log_likelihood(X, params)
 
-        log_marginal_likelihood = logsumexp(log_likelihoods) - math.log(N)
+        log_marginal_likelihood = logmeanexp(log_likelihoods)
 
         return log_marginal_likelihood
 

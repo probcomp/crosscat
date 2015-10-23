@@ -1,12 +1,11 @@
 import crosscat.cython_code.CyclicComponentModel as ccm
 import math
 import random
-import sys
 import numpy
-import math
 
-from scipy.misc import logsumexp as logsumexp
 from scipy.stats import vonmises
+
+from crosscat.utils.general_utils import logmeanexp
 
 import pdb
 
@@ -312,7 +311,7 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
             params = self.sample_parameters_given_hyper(gen_seed=next_seed())
             log_likelihoods[i] = self.log_likelihood(X, params)
 
-        log_marginal_likelihood = logsumexp(log_likelihoods) - math.log(N)
+        log_marginal_likelihood = logmeanexp(log_likelihoods)
 
         return log_marginal_likelihood
 

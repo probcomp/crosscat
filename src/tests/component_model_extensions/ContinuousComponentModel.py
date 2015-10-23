@@ -1,11 +1,11 @@
 import crosscat.cython_code.ContinuousComponentModel as ccm
 import math
 import random
-import sys
 import numpy
 
-from scipy.misc import logsumexp as logsumexp
 from scipy.stats import norm as norm
+
+from crosscat.utils.general_utils import logmeanexp
 
 next_seed = lambda : random.randrange(2147483647)
 
@@ -307,14 +307,13 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        N = float(len(X))
         random.seed(gen_seed)
         log_likelihoods = [0]*n_samples
         for i in range(n_samples):
             params = self.sample_parameters_given_hyper(gen_seed=next_seed())
             log_likelihoods[i] = self.log_likelihood(X, params)
 
-        log_marginal_likelihood = logsumexp(log_likelihoods) - math.log(N)
+        log_marginal_likelihood = logmeanexp(log_likelihoods)
 
         return log_marginal_likelihood
 
