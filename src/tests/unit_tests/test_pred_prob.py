@@ -190,6 +190,7 @@ def test_predictive_probability_unobserved(seed=0):
     Y = [(N_ROWS, 1, 1.6)]
     val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
     assert val == -float('inf')
+    assert isinstance(val, float)
 
     # Consistent with constraints should be log(1) == 0.
     Q = [(N_ROWS, 0, 1.3)]
@@ -222,7 +223,9 @@ def test_predictive_probability_unobserved(seed=0):
     Q = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
     Y = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
     val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert isinstance(val, float)
 
     Q = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
     Y = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
     val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert isinstance(val, float)
