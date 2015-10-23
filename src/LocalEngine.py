@@ -377,7 +377,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
-        :returns: list of floats -- probabilities of the values specified by Q
+        :returns: float -- joint log probability of the values specified by Q
 
         """
         return su.predictive_probability(M_c, X_L, X_D, Y, Q)
@@ -399,7 +399,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   r is the row index, d is the column index, and v is the value at
                   which the density is evaluated.
         :type Q: list of lists
-        :returns: list of floats -- probabilities of the values specified by Q
+        :returns: float -- joint log probabilities of the values specified by Q
 
         """
         return su.predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q)
