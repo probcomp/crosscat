@@ -29,6 +29,7 @@ import crosscat.cython_code.CyclicComponentModel as CYCM
 import crosscat.utils.general_utils as gu
 import crosscat.utils.data_utils as du
 from crosscat.utils.general_utils import logsumexp
+from crosscat.utils.general_utils import logmeanexp
 
 class Bunch(dict):
     def __getattr__(self, key):
@@ -222,12 +223,7 @@ def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
     logprobs = [float(simple_predictive_probability(M_c, X_L, X_D, Y, Q))
         for X_L, X_D in zip(X_L_list, X_D_list)]
-    # probs = map(exp, logprobs)
-    # log(mean(probs)) = log(sum(probs) / len(probs))
-    #   = log(sum(probs)) - log(len(probs))
-    #   = log(sum(map(exp, probs))) - log(len(probs))
-    #   = logsumexp(logprobs) - log(len(logprobs))
-    return logsumexp(logprobs) - numpy.log(len(logprobs))
+    return logmeanexp(logprobs)
 
 def predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
@@ -235,12 +231,7 @@ def predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     """
     logprobs = [float(predictive_probability(M_c, X_L, X_D, Y, Q))
         for X_L, X_D in zip(X_L_list, X_D_list)]
-    # probs = map(exp, logprobs)
-    # log(mean(probs)) = log(sum(probs) / len(probs))
-    #   = log(sum(probs)) - log(len(probs))
-    #   = log(sum(map(exp, probs))) - log(len(probs))
-    #   = logsumexp(logprobs) - log(len(logprobs))
-    return logsumexp(logprobs) - numpy.log(len(logprobs))
+    return logmeanexp(logprobs)
 
 
 #############################################################################

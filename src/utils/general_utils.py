@@ -163,3 +163,11 @@ def logsumexp(array):
     return m + math.log(sum(math.exp(a - m) for a in array))
 
 assert logsumexp(range(10)) == 9.4586297444267107
+
+def logmeanexp(array):
+    # probs = map(exp, logprobs)
+    # log(mean(probs)) = log(sum(probs) / len(probs))
+    #   = log(sum(probs)) - log(len(probs))
+    #   = log(sum(map(exp, probs))) - log(len(probs))
+    #   = logsumexp(logprobs) - log(len(logprobs))
+    return logsumexp(array) - math.log(len(array))
