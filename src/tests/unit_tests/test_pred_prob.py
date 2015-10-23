@@ -18,17 +18,10 @@
 #   limitations under the License.
 #
 
-import argparse
 import pytest
-import random
-import sys
-import tempfile
-
-import numpy
 
 import crosscat.tests.synthetic_data_generator as sdg
 from crosscat.LocalEngine import LocalEngine
-import crosscat.cython_code.State as State
 
 '''
 This test suite ensures that invoking simple_predictive_probability_observed
@@ -157,3 +150,82 @@ def test_simple_predictive_probability_unobserved(seed=0):
     Y = [(N_ROWS, 2, 4), (N_ROWS+1, 2, 5)]
     with pytest.raises(IndexError):
         vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q[1])
+
+def test_predictive_probability_observed(seed=0):
+    # TODO
+    pass
+
+def test_predictive_probability_unobserved(seed=0):
+    # This function tests the predictive probability for the joint distirbution.
+    # Throughout, we will check that the result is the same for the joint and
+    # simple calls.
+    T, M_r, M_c, X_L, X_D, engine = quick_le(seed)
+
+    # Hypothetical column number should throw an error.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 10, 2)]
+    Y = []
+    with pytest.raises(ValueError):
+        vals = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Inconsistent row numbers should throw an error.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS-1, 10, 2)]
+    Y = []
+    with pytest.raises(ValueError):
+        vals = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Duplicate column numbers should throw an error,
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 1, 2)]
+    Y = []
+    with pytest.raises(ValueError):
+        val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+
+    # Different row numbers should throw an error.
+    Q = [(N_ROWS, 0, 1.5), (N_ROWS+1, 1, 2)]
+    Y = [(N_ROWS, 1, 1.5), (N_ROWS, 2, 3)]
+    with pytest.raises(Exception):
+        val = engine.predictive_probability(M_c, X_L, X_D, Y, Q[0])
+
+    # Inconsistent with constraints should be negative infinity.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 1, 1.6)]
+    val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert val == -float('inf')
+    assert isinstance(val, float)
+
+    # Consistent with constraints should be log(1) == 0.
+    Q = [(N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 0, 1.3)]
+    val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert val == 0
+
+    # Consistent with constraints should not impact other queries.
+    Q = [(N_ROWS, 1, 1.5), (N_ROWS, 0, 1.3)]
+    Y = [(N_ROWS, 1, 1.5), (N_ROWS, 2, 3)]
+    val_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    val_1 = engine.predictive_probability(M_c, X_L, X_D, Y, Q[1:])
+    assert val_0 == val_1
+
+    # Predictive and simple should be the same in univariate case (cont).
+    Q = [(N_ROWS, 0, 0.5)]
+    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    val_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    val_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert val_0 == val_1
+
+    # Predictive and simple should be the same in univariate case (disc).
+    Q = [(N_ROWS, 2, 1)]
+    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    val_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    val_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert val_0 == val_1
+
+    # Do some full joint queries, all on the same row.
+    Q = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
+    Y = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
+    val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert isinstance(val, float)
+
+    Q = [(N_ROWS, 0, 1), (N_ROWS, 1, -0.7), (N_ROWS, 2, 3)]
+    Y = [(N_ROWS, 3, 4), (N_ROWS, 4, 1.3)]
+    val = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
+    assert isinstance(val, float)

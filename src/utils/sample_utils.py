@@ -21,6 +21,7 @@
 import copy
 from collections import Counter
 import numpy
+import itertools
 #
 import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
@@ -39,6 +40,57 @@ class Bunch(dict):
         self[key] = value
 
 Constraints = Bunch
+
+def predictive_probability(M_c, X_L, X_D, Y, Q):
+    # Evaluates the joint logpdf of crosscat columns. This is acheived by
+    # invoking column_value_probability on univariate columns with
+    # cascading the constraints (the chain rule).
+
+    # Q (query): list of three element tuples where each tuple, (r,c,x)
+    #  contains a row r; column, c; value x. All rows must be the same.
+    # Y (contraints), follows an identical format.
+
+    # The current interface does not allow the query columns to have different
+    # row numbers, so this function will ensure the same constraint, pending
+    # a formalization of the semantic meaning of predictive_probability of
+    # arbitrary patterns of cells.
+    queries = dict()
+    for (row, col, val) in Q:
+        if row != Q[0][0]:
+            raise ValueError('Cannot specify different query rows.')
+        if (row, col) in queries:
+            raise ValueError('Cannot specify duplicate query columns.')
+        if len(M_c['column_metadata']) <= col:
+            raise ValueError('Cannot specify hypothetical query column.')
+        queries[(row, col)] = val
+    # Ensure consistency for nodes in both query and constraints.
+    # This behavior is correct, even for real-valued datatypes. Conditional
+    # probability is itself a complex topic, but consider random
+    # variable X continuous. Then the conditional density of X f(s|X=t) is
+    # 1 if s==t and 0 otherwise. Note change of the dominating measure from
+    # Lebesgue to counting. The argument is not rigorous but correct.
+    ignore = set()
+    constraints = set()
+    for (row, col, val) in Y:
+        if (row, col) in constraints:
+            raise ValueError('Cannot specify duplicate constraint row, column.')
+        if (row, col) in queries:
+            if queries[(row, col)] == val:
+                ignore.add(col)
+            else:
+                return float('-inf')
+        constraints.add((row, col))
+    Y_prime = list(Y)
+    # Chain rule.
+    prob = 0
+    for query in Q:
+        if query[1] in ignore:
+            continue
+        r = simple_predictive_probability(M_c, X_L, X_D, Y_prime, [query])
+        prob += float(r)
+        Y_prime.append(query)
+    return prob
+
 
 # Q is a list of three element tuples where each tuple, (r,c,x) contains a
 # row, r; a column, c; and a value x. The contraints, Y follow an identical format.
@@ -169,6 +221,19 @@ def simple_predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
     Returns the simple predictive probability, averaged over each sample.
     """
     logprobs = [float(simple_predictive_probability(M_c, X_L, X_D, Y, Q))
+        for X_L, X_D in zip(X_L_list, X_D_list)]
+    # probs = map(exp, logprobs)
+    # log(mean(probs)) = log(sum(probs) / len(probs))
+    #   = log(sum(probs)) - log(len(probs))
+    #   = log(sum(map(exp, probs))) - log(len(probs))
+    #   = logsumexp(logprobs) - log(len(logprobs))
+    return logsumexp(logprobs) - numpy.log(len(logprobs))
+
+def predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q):
+    """
+    Returns the predictive probability, averaged over each sample.
+    """
+    logprobs = [float(predictive_probability(M_c, X_L, X_D, Y, Q))
         for X_L, X_D in zip(X_L_list, X_D_list)]
     # probs = map(exp, logprobs)
     # log(mean(probs)) = log(sum(probs) / len(probs))
