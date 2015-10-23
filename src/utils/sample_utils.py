@@ -54,15 +54,15 @@ def predictive_probability(M_c, X_L, X_D, Y, Q):
     # row numbers, so this function will ensure the same constraint, pending
     # a formalization of the semantic meaning of predictive_probability of
     # arbitrary patterns of cells.
-    seen = set()
+    queries = dict()
     for (row, col, val) in Q:
-        if col in seen:
-            raise ValueError('Cannot specify duplicate columns.')
         if row != Q[0][0]:
-            raise ValueError('Cannot specify different rows.')
+            raise ValueError('Cannot specify different query rows.')
+        if (row, col) in queries:
+            raise ValueError('Cannot specify duplicate query columns.')
         if len(M_c['column_metadata']) <= col:
-            raise ValueError('Cannot specify hypothetical column.')
-        seen.add(col)
+            raise ValueError('Cannot specify hypothetical query column.')
+        queries[(row, col)] = val
     # Ensure consistency for nodes in both query and constraints.
     # This behavior is correct, even for real-valued datatypes. Conditional
     # probability is itself a complex topic, but consider random
@@ -70,20 +70,24 @@ def predictive_probability(M_c, X_L, X_D, Y, Q):
     # 1 if s==t and 0 otherwise. Note change of the dominating measure from
     # Lebesgue to counting. The argument is not rigorous but correct.
     ignore = set()
-    for (rq, cq, vq), (rv, cy, vy) in itertools.product(Q, Y):
-        if cq == cy and rq == rv:
-            if vq == vy:
-                ignore.add(cq)
+    constraints = set()
+    for (row, col, val) in Y:
+        if (row, col) in constraints:
+            raise ValueError('Cannot specify duplicate constraint row, column.')
+        if (row, col) in queries:
+            if queries[(row, col)] == val:
+                ignore.add(col)
             else:
-                return -float('inf')
-    Y_prime = copy.deepcopy(Y)
+                return float('-inf')
+        constraints.add((row, col))
+    Y_prime = list(Y)
     # Chain rule.
     prob = 0
     for query in Q:
         if query[1] in ignore:
             continue
         r = simple_predictive_probability(M_c, X_L, X_D, Y_prime, [query])
-        prob += r
+        prob += float(r)
         Y_prime.append(query)
     return prob
 
