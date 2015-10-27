@@ -604,6 +604,7 @@ def do_create_cluster_model_from_X_L(M_c, X_L, view_idx, cluster_idx):
 def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
                                         query_columns, get_next_seed, n=1):
     num_views = len(X_D)
+    random_state = numpy.random.RandomState(get_next_seed())
     #
     cluster_logps_list = []
     # for each view
@@ -625,7 +626,7 @@ def simple_predictive_sample_unobserved(M_c, X_L, X_D, Y, query_row,
         for view_idx, cluster_logps in enumerate(cluster_logps_list):
             probs = numpy.exp(cluster_logps)
             probs /= sum(probs)
-            draw = numpy.nonzero(numpy.random.multinomial(1, probs))[0][0]
+            draw = numpy.nonzero(random_state.multinomial(1, probs))[0][0]
             view_cluster_draws[view_idx] = draw
         #
         def component_model_for(column):

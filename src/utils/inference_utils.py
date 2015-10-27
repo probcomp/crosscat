@@ -168,6 +168,7 @@ def calculate_MI_bounded_discrete(X, Y, M_c, X_L, _X_D):
 
 # estimates the mutual information for columns X and Y.
 def estimate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
+    random_state = numpy.random.RandomState(get_next_seed())
 
     get_view_index = lambda which_column: X_L['column_partition']['assignments'][which_column]
 
@@ -198,7 +199,7 @@ def estimate_MI_sample(X, Y, M_c, X_L, _X_D, get_next_seed, n_samples=1000):
 
     for i in range(n_samples):
         # draw a cluster
-        cluster_idx = numpy.nonzero(numpy.random.multinomial(1, cluster_crps))[0][0]
+        cluster_idx = numpy.nonzero(random_state.multinomial(1, cluster_crps))[0][0]
 
         # get a sample from each cluster
         x = component_models_X[cluster_idx].get_draw(get_next_seed())
