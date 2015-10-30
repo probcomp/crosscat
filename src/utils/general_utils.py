@@ -154,7 +154,7 @@ def ensure_listlike(input):
     return input
 
 def get_dict_as_text(parameters, join_with='\n'):
-    create_line = lambda (key, value): key + ' = ' + str(value)
+    create_line = lambda key_value: key_value[0] + ' = ' + str(key_value[1])
     lines = map(create_line, parameters.iteritems())
     text = join_with.join(lines)
     return text

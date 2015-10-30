@@ -27,7 +27,7 @@ import crosscat.utils.sample_utils as su
 def calc_ari(group_idx_list_1, group_idx_list_2):
     def make_set_dict(list):
         set_dict = defaultdict(set)
-        add_element = lambda (idx, group): set_dict[group].add(idx)
+        add_element = lambda idx_group: set_dict[idx_group[1]].add(idx_group[0])
         map(add_element, enumerate(list))
         return set_dict
     def check_short_circuit(set_dict_1, list_1, set_dict_2, list_2):

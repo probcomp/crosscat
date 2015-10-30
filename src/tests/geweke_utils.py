@@ -361,7 +361,8 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
 def make_same_length(*args):
     return zip(*zip(*args))
 
-def get_count((values, bins)):
+def get_count(values_bins_pair):
+    values, bins = values_bins_pair
     return numpy.histogram(values, bins)[0]
 
 def get_log_density_series(values, bins):
@@ -389,7 +390,8 @@ def _get_kl(grid, true_series, inferred_series):
         pass
     return kld
 
-def _get_kl_tuple((grid, true_series, inferred_series)):
+def _get_kl_tuple(grid_true_series_inferred_series_tuple):
+    grid, true_series, inferred_series = grid_true_series_inferred_series_tuple
     return _get_kl(grid, true_series, inferred_series)
 
 def get_fixed_gibbs_kl_series(forward, not_forward):
@@ -615,7 +617,7 @@ def arbitrate_args(args):
 
 def get_chisquare(not_forward, forward=None):
     def get_sorted_counts(values):
-        get_count = lambda (value, count): count
+        get_count = lambda value_count: value_count[1]
         tuples = sorted(collections.Counter(values).items())
         return map(get_count, counts)
     args = (not_forward, forward)
