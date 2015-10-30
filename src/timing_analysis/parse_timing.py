@@ -85,7 +85,7 @@ def parse_timing_to_csv(filename, outfile='parsed_timing.csv'):
             try:
             	parsed_line = parse_reduced_line(reduced_line)
 	    	csvwriter.writerow(parsed_line)
-            except Exception, e:
+            except Exception as e:
                 pass
 
 
@@ -108,6 +108,6 @@ if __name__ == '__main__':
         try:
             parsed_line = parse_reduced_line(reduced_line)
             print(','.join(map(str, parsed_line)))
-        except Exception, e:
+        except Exception as e:
             pass
 

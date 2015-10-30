@@ -56,7 +56,7 @@ def parse_to_csv(in_filename, out_filename='parsed_convergence.csv'):
               output_row = parsed_line_to_output_row(parsed_line,
                       variable_names_to_extract=variable_names_to_extract)
               csvwriter.writerow(output_row)
-            except Exception, e:
+            except Exception as e:
               sys.stderr.write(line + '\n' + str(e) + '\n')
 
 

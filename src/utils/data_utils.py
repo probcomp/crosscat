@@ -465,7 +465,7 @@ def get_can_cast_to_float(column_data):
     can_cast = True
     try:
         [float(datum) for datum in column_data]
-    except ValueError, e:
+    except ValueError as e:
         can_cast = False
     return can_cast
     

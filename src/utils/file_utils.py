@@ -65,7 +65,7 @@ def rm_local(path, DEBUG=False):
 def ensure_dir(dir):
   try:
     os.makedirs(dir)
-  except Exception, e:
+  except Exception as e:
     if e.strerror.upper()=='FILE EXISTS':
       pass
     else:

@@ -85,7 +85,7 @@ def parse_hadoop_line(line):
         key, dict_in_str = match.groups()
         try:
           dict_in = my_loads(dict_in_str)
-        except Exception, e:
+        except Exception as e:
           # for parsing new NLineInputFormat
           match = pattern.match(dict_in_str)
           if match is None:

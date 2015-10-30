@@ -352,7 +352,7 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
             plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                     kl_series_list,
                     variable_name, parameters, save_kwargs)
-        except Exception, e:
+        except Exception as e:
             print('Failed to plot_diagnostic_data for %s' % variable_name)
             print(e)
             pass
@@ -409,7 +409,7 @@ def get_fixed_gibbs_kl_series(forward, not_forward):
         with gu.MapperContext() as mapper:
             kls = mapper(_get_kl_tuple, arg_tuples)
             pass
-    except Exception, e:
+    except Exception as e:
         # this definitley happens if len(grid) == 1; as in column crp alpha for
         # single column model
         pass
