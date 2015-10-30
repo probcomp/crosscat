@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 #
 import crosscat.utils.xnet_utils as xu
@@ -31,7 +32,7 @@ def rm_hdfs(hdfs_uri, path, hdfs_base_dir='', DEBUG=False):
     cmd_str = 'hadoop fs %s %s %s >rm_hdfs.out 2>rm_hdfs.err'
     cmd_str %= (fs_str, rm_infix_args, hdfs_path)
     if DEBUG:
-        print cmd_str
+        print(cmd_str)
         return cmd_str
     else:
         os.system(cmd_str)
@@ -46,7 +47,7 @@ def get_hdfs(hdfs_uri, path, hdfs_base_dir='', DEBUG=False):
     cmd_str = 'hadoop fs %s -get %s %s'
     cmd_str %= (fs_str, hdfs_path, path)
     if DEBUG:
-        print cmd_str
+        print(cmd_str)
         return cmd_str
     else:
         os.system(cmd_str)
@@ -57,7 +58,7 @@ def ensure_dir_hdfs(fs_str, hdfs_path, DEBUG=False):
   cmd_str = 'hadoop fs %s -mkdir %s'
   cmd_str %= (fs_str, dirname)
   if DEBUG:
-    print cmd_str
+    print(cmd_str)
     return cmd_str
   else:
     os.system(cmd_str)
@@ -73,7 +74,7 @@ def put_hdfs(hdfs_uri, path, hdfs_base_dir='', DEBUG=False):
     cmd_str = 'hadoop fs %s -put %s %s >put_hdfs.out 2>put_hdfs.err'
     cmd_str %= (fs_str, path, hdfs_path)
     if DEBUG:
-        print cmd_str
+        print(cmd_str)
         return cmd_str
     else:
         os.system(cmd_str)
@@ -120,7 +121,7 @@ def create_hadoop_cmd_str(hdfs_uri, hdfs_dir, jobtracker_uri,
             '-file %s' % command_dict_filename,
             cmd_env_str,
             ])
-    print hadoop_cmd_str
+    print(hadoop_cmd_str)
     return hadoop_cmd_str
 
 def get_was_successful(output_path):
@@ -145,7 +146,7 @@ def send_hadoop_command(hdfs_uri, hdfs_dir, jobtracker_uri,
       task_timeout)
   was_successful = None
   if DEBUG:
-    print hadoop_cmd_str
+    print(hadoop_cmd_str)
     return hadoop_cmd_str
   else:
     fu.ensure_dir(output_path)

@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 import time
 #
@@ -50,7 +51,7 @@ id = args.start_id
 
 # settings
 URI = 'http://' + hostname + ':8007'
-print 'URI: ', URI
+print('URI: ', URI)
 
 T, M_r, M_c = du.gen_factorial_data_objects(
     seed, num_clusters,
@@ -97,7 +98,7 @@ values = []
 for idx in range(3):
     out, id = au.call_and_print(method_name, args_dict, URI)
     values.append(out[0])
-print values
+print(values)
 time.sleep(1)
 
 method_name = 'impute'
@@ -126,8 +127,8 @@ time.sleep(1)
 method_name_to_args = gu.get_method_name_to_args(LE.LocalEngine)
 for method_name, arg_str_list in method_name_to_args.iteritems():
     if method_name in non_stub:
-        print 'skipping non-stub method:', method_name
-        print
+        print('skipping non-stub method:', method_name)
+        print()
         continue
     args_dict = dict(zip(arg_str_list, arg_str_list))
     au.call_and_print(method_name, args_dict, URI)

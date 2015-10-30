@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import random
 import argparse
 import tempfile
@@ -129,8 +130,8 @@ def run_test_continuous(n, observed):
     for i in range(len(X)-1):
         area_density += (X[i+1]-X[i])*(densities[i+1]+densities[i])/2.0
 
-    print "Area of PDF (should be close to, but not greater than, 1): " + str(area_density)
-    print "*Note: The area will be less than one because the range (integral) is truncated."
+    print("Area of PDF (should be close to, but not greater than, 1): " + str(area_density))
+    print("*Note: The area will be less than one because the range (integral) is truncated.")
 
     pylab.figure(facecolor='white')
 
@@ -189,7 +190,7 @@ def run_test_multinomial(n, observed):
     # get pdf values
     densities = numpy.exp(su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs))
 
-    print "Sum of densities (should be 1): %f" % (numpy.sum(densities))
+    print("Sum of densities (should be 1): %f" % (numpy.sum(densities)))
 
     pylab.clf()
 

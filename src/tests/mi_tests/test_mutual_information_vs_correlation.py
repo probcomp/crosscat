@@ -19,6 +19,7 @@
 #
 
 # calculates mutual information of a 2 column data set with different correlations
+from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 import numpy
@@ -108,7 +109,7 @@ for r in correlations:
 
 		pr, p = pearsonr(T[:,0], T[:,1])
 
-		print "num_samples: %i, R: %f, d: %i. Actual R: %f" % (n, r, d+1, pr)
+		print("num_samples: %i, R: %f, d: %i. Actual R: %f" % (n, r, d+1, pr))
 
 		M_c = du.gen_M_c_from_T(T,cctypes)
 		X_Ls = []

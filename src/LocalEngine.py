@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import copy
 import itertools
 import collections
@@ -940,12 +941,12 @@ if __name__ == '__main__':
     elif CT_KERNEL == 1:
         ct_kernel_name = 'METROPOLIS'
 
-    print 'Running with %s CT_KERNEL' % (ct_kernel_name)
-    print 'generative_mean_test_log_likelihood'
+    print('Running with %s CT_KERNEL' % ct_kernel_name)
+    print('generative_mean_test_log_likelihood')
     # print generative_mean_test_log_likelihood
     #
-    print 'multi_state_mean_test_lls:'
-    print multi_state_mean_test_lls
+    print('multi_state_mean_test_lls:')
+    print(multi_state_mean_test_lls)
     #
-    print 'multi_state_ARIs:'
-    print multi_state_ARIs
+    print('multi_state_ARIs:')
+    print(multi_state_ARIs)

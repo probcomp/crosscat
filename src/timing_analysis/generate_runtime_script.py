@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import itertools
 
 
@@ -46,4 +47,4 @@ take_product_of = [num_rows_list, num_cols_list, num_clusters_list, num_splits_l
 for num_rows, num_cols, num_clusters, num_splits \
     in itertools.product(*take_product_of):
   this_base_str = base_str % (num_rows, num_cols, num_clusters, num_splits)
-  print this_base_str
+  print(this_base_str)

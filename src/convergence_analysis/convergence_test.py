@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 import csv
 import time
@@ -81,7 +82,7 @@ num_cols = len(T[0])
 ari_table = []
 ari_views = []
 
-print 'Initializing ...'
+print('Initializing ...')
 # Call Initialize and Analyze
 M_c, M_r, X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains = numChains)
 if truth_flag:
@@ -92,7 +93,7 @@ if truth_flag:
 completed_transitions = 0
 
 n_steps = min(block_size, num_transitions)
-print 'Analyzing ...'
+print('Analyzing ...')
 while (completed_transitions < num_transitions):
     # We won't be limiting by time in the convergence runs
     X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, kernel_list=(),
@@ -110,7 +111,7 @@ while (completed_transitions < num_transitions):
         f_utils.pickle(saved_dict, filename = pkl_filename)
 
     completed_transitions = completed_transitions+block_size
-    print completed_transitions
+    print(completed_transitions)
     
 # Always save the last model
 saved_dict = {'T':T, 'M_c':M_c, 'X_L_list':X_L_list, 'X_D_list': X_D_list}

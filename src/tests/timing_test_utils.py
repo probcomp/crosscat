@@ -302,6 +302,6 @@ if __name__ == '__main__':
     dirname = 'timing_analysis'
     er = ExperimentRunner(runner, dirname_prefix=dirname)
     er.do_experiments(config_list, dirname)
-    print er.frame
+    print(er.frame)
 
     results_dict = er.get_results(er.frame[er.frame.same_shape])

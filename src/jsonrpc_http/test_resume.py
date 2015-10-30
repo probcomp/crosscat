@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 #
 import crosscat.utils.api_utils as au
@@ -37,7 +38,7 @@ id = args.start_id
 
 # settings
 URI = 'http://' + hostname + ':8007'
-print 'URI: ', URI
+print('URI: ', URI)
 
 save_dict = fu.unpickle(pkl_name)
 method_name = 'analyze'

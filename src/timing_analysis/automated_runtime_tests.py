@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 import csv
 import argparse
@@ -146,11 +147,11 @@ if __name__ == '__main__':
     num_splits_list = args.num_splits_list
     which_engine_binary = args.which_engine_binary
     #
-    print 'using num_rows_list: %s' % num_rows_list
-    print 'using num_cols_list: %s' % num_cols_list
-    print 'using num_clusters_list: %s' % num_clusters_list
-    print 'using num_splits_list: %s' % num_splits_list
-    print 'using engine_binary: %s' % which_engine_binary
+    print('using num_rows_list: %s' % num_rows_list)
+    print('using num_cols_list: %s' % num_cols_list)
+    print('using num_clusters_list: %s' % num_clusters_list)
+    print('using num_splits_list: %s' % num_splits_list)
+    print('using engine_binary: %s' % which_engine_binary)
     time.sleep(2)
 
 
@@ -160,7 +161,7 @@ if __name__ == '__main__':
     fu.ensure_dir(dirname)
     temp_dir = tempfile.mkdtemp(prefix='runtime_analysis_',
                                 dir=dirname)
-    print 'using dir: %s' % temp_dir
+    print('using dir: %s' % temp_dir)
     #
     table_data_filename = os.path.join(temp_dir, 'table_data.pkl.gz')
     input_filename = os.path.join(temp_dir, 'hadoop_input')
@@ -187,7 +188,7 @@ if __name__ == '__main__':
 
     if do_local:
         xu.run_script_local(input_filename, script_filename, output_filename, table_data_filename)
-        print 'Local Engine for automated timing runs has not been completely implemented/tested'
+        print('Local Engine for automated timing runs has not been completely implemented/tested')
     elif do_remote:
         hadoop_engine = HE.HadoopEngine(which_engine_binary=which_engine_binary,
                 output_path=output_path,
@@ -203,7 +204,7 @@ if __name__ == '__main__':
             coeff_list = find_regression_coeff(parsed_out_file, parameter_list)
 
         else:
-            print 'remote hadoop job NOT successful'
+            print('remote hadoop job NOT successful')
     else:
         # print what the command would be
         hadoop_engine = HE.HadoopEngine(which_engine_binary=which_engine_binary,
@@ -217,4 +218,4 @@ if __name__ == '__main__':
                 hadoop_engine.input_filename, hadoop_engine.table_data_filename,
                 hadoop_engine.command_dict_filename, hadoop_engine.output_path,
                 n_tasks, hadoop_engine.one_map_task_per_line)
-        print cmd_str
+        print(cmd_str)

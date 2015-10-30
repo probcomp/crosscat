@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import numpy as np
 import random
 import sys
@@ -61,7 +62,7 @@ NS = state_partitions.N;
 # the number of states to run the test on (randomly seelected)
 n_states = 10;
 
-print "Testing the sampler against enumerated answer for data generated from \n%i random states." % n_states
+print("Testing the sampler against enumerated answer for data generated from \n%i random states." % n_states)
 
 for state in random.sample(state_partitions.states, n_states):
 # for state in state_partitions.states:
@@ -110,7 +111,7 @@ for state in random.sample(state_partitions.states, n_states):
 		state_idx = state_partitions.findState(scp, srp)
 		state_count[state_idx] += 1.0
 
-	print "%sdone.%s" % ('\b'*mlen, ' '*mlen)
+	print("%sdone.%s" % ('\b'*mlen, ' '*mlen))
 	# normalize
 	state_count = state_count/sum(state_count)
 	
@@ -132,7 +133,7 @@ for state in random.sample(state_partitions.states, n_states):
 	# print true_highest_probs
 	# print "Inferred"
 	# print inferred_highest_probs
-	print "\tCorrelation, (R,p)" + str(PR)
+	print("\tCorrelation, (R,p)" + str(PR))
 
 	if do_plot:
 		pylab.clf()
@@ -151,4 +152,3 @@ for state in random.sample(state_partitions.states, n_states):
 		pylab.xlim(0,n_highest)
 		pylab.legend(loc='upper right')
 		pylab.draw()
-		

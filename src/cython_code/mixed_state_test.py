@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 #
 import pylab
@@ -80,10 +81,10 @@ T, M_c = du.convert_columns_to_multinomial(T, M_c,
 # create the state
 p_State = State.p_State(M_c, T, N_GRID=N_GRID, SEED=inf_seed)
 p_State.plot_T(filename='T')
-print M_c
-print numpy.array(T)
-print p_State
-print "multinomial_column_indices: %s" % str(multinomial_column_indices)
+print(M_c)
+print(numpy.array(T))
+print(p_State)
+print("multinomial_column_indices: %s" % str(multinomial_column_indices))
 
 def summarize_p_State(p_State):
     counts = [
@@ -104,14 +105,14 @@ def summarize_p_State(p_State):
         p_State.get_data_score(),
         p_State.get_marginal_logp(),
         )
-    print format_list % values_tuple    
+    print(format_list % values_tuple)
     if not numpy.isfinite(p_State.get_data_score()):
-        print "bad data score"
-        print p_State
+        print("bad data score")
+        print(p_State)
 
 # transition the sampler
 for transition_idx in range(num_transitions):
-    print "transition #: %s" % transition_idx
+    print("transition #: %s" % transition_idx)
     p_State.transition()
     summarize_p_State(p_State)
     iter_idx = None

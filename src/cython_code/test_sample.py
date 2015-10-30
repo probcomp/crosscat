@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 import sys
 from collections import Counter
@@ -91,7 +92,7 @@ for replicating_samples_params in views_replicating_samples_params:
             )
         this_view_this_sample, id = au.call(
             method_name, args_dict, URI)
-        print id
+        print(id)
         this_view_samples.extend(this_view_this_sample)
     views_samples.append(this_view_samples)
 for view_idx, view_samples in enumerate(views_samples):
