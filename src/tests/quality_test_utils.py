@@ -34,7 +34,7 @@ def get_mixture_pdf(X, component_model_class, parameters_list, component_weights
         raise ValueError("component_weights should sum to 1")
 
     for w in component_weights:
-        assert component_weights >= 0.0
+        assert w >= 0.0
 
     K = len(component_weights)
 
