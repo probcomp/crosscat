@@ -219,7 +219,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
               symmetric so only one value is needed
             gen_seed: a int to seed the rng
         """
-        # FIXME: Figure out a wat to accept a list of strings
+        # FIXME: Figure out a way to accept a list of strings
         check_data_type_column_data(X)
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
