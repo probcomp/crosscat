@@ -22,6 +22,7 @@ import copy
 from collections import Counter
 import numpy
 import itertools
+import six
 #
 import crosscat.cython_code.ContinuousComponentModel as CCM
 import crosscat.cython_code.MultinomialComponentModel as MCM
@@ -367,8 +368,8 @@ def names_to_global_indices(column_names, M_c):
     name_to_idx = M_c['name_to_idx']
     first_key = six.next(six.iterkeys(name_to_idx))
     # FIXME: str(column_name) is hack
-    if isinstance(first_key, (unicode, str)):
-        column_names = map(str, column_names)
+    if isinstance(first_key, (six.text_type, six.binary_type)):
+       column_names = map(str, column_names)
     return [name_to_idx[column_name] for column_name in column_names]
 
 def extract_view_column_info(M_c, X_L, view_idx):
