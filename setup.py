@@ -27,13 +27,9 @@ USE_CYTHON = not os.path.exists('PKG-INFO')
 
 cmdclass = dict()
 if USE_CYTHON:
-    try:
-        from Cython.Distutils import build_ext
-    except ImportError:
-        source_ext = '.cpp'
-    else:
-        cmdclass = {'build_ext': build_ext}
-        source_ext = '.pyx'
+    from Cython.Distutils import build_ext
+    cmdclass = {'build_ext': build_ext}
+    source_ext = '.pyx'
 else:
     source_ext = '.cpp'
 
