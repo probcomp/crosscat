@@ -27,12 +27,9 @@ USE_CYTHON = not os.path.exists('PKG-INFO')
 
 cmdclass = dict()
 if USE_CYTHON:
-    from Cython.Distutils import build_ext
-    cmdclass = {'build_ext': build_ext}
     source_ext = '.pyx'
 else:
     source_ext = '.cpp'
-
 
 try:
     import numpy
@@ -40,7 +37,6 @@ except ImportError:
     numpy_includes = []
 else:
     numpy_includes = [numpy.get_include()]
-
 
 boost_includes = []
 if 'BOOST_ROOT' in os.environ:
@@ -261,5 +257,4 @@ setup(
         'crosscat.utils': 'src/utils',
     },
     ext_modules=ext_modules,
-    cmdclass=cmdclass,
 )
