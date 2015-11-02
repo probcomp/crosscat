@@ -247,11 +247,8 @@ setup(
     url='https://github.com/probcomp/crosscat',
     long_description=long_description,
     packages=packages,
-    setup_requires=[
-        'cython>=0.20.1',
-        'numpy>=1.7.0',
-    ],
     install_requires=[
+        'cython>=0.20.1',
         'numpy>=1.7.0',
     ],
     package_dir={
