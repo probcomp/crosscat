@@ -6,6 +6,7 @@ try:
 except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
+from distutils.command.build_ext import build_ext
 
 version = '0.1.38'
 
@@ -18,24 +19,6 @@ version_new = ['__version__ = %s\n' % (repr(version),)]
 if version_old != version_new:
     with open('src/version.py', 'w') as f:
         f.writelines(version_new)
-
-# If we're building from Git (no PKG-INFO), we use Cython.  If we're
-# building from an sdist (PKG-INFO exists), we will already have run
-# Cython to compile the .pyx files into .cpp files, and we can treat
-# them as normal C++ extensions.
-USE_CYTHON = not os.path.exists('PKG-INFO')
-
-cmdclass = dict()
-if USE_CYTHON:
-    try:
-        from Cython.Distutils import build_ext
-    except ImportError:
-        source_ext = '.cpp'
-    else:
-        cmdclass = {'build_ext': build_ext}
-        source_ext = '.pyx'
-else:
-    source_ext = '.cpp'
 
 
 try:
@@ -111,7 +94,7 @@ include_dirs = ['cpp_code/include/CrossCat'] \
 
 
 # specify sources
-ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel'+source_ext]
+ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
 ContinuousComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -124,7 +107,7 @@ ContinuousComponentModel_sources = generate_sources([
     (cpp_src_dir, ContinuousComponentModel_cpp_sources),
 ])
 #
-MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel'+source_ext]
+MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -137,7 +120,7 @@ MultinomialComponentModel_sources = generate_sources([
     (cpp_src_dir, MultinomialComponentModel_cpp_sources),
 ])
 #
-CyclicComponentModel_pyx_sources = ['CyclicComponentModel'+source_ext]
+CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
 CyclicComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -150,7 +133,7 @@ CyclicComponentModel_sources = generate_sources([
     (cpp_src_dir, CyclicComponentModel_cpp_sources),
 ])
 #
-State_pyx_sources = ['State'+source_ext]
+State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -207,10 +190,71 @@ ext_modules = [
     State_ext,
 ]
 
-# XXX Mega-kludge!
-if USE_CYTHON and len(sys.argv) > 1 and sys.argv[1] == 'sdist':
-    from Cython.Build import cythonize
-    ext_modules = cythonize(ext_modules)
+def sha256_file(pathname):
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(pathname, 'r') as source_file:
+        for block in iter(lambda: source_file.read(65536), ''):
+            sha256.update(block)
+    return sha256
+
+def uptodate(path_in, path_out, path_sha256):
+    import errno
+    import os
+    try:
+        with open(path_sha256, 'r') as file_sha256:
+            # Strip newlines and compare.
+            if file_sha256.next()[:-1] != sha256_file(path_in).hexdigest():
+                return False
+            if file_sha256.next()[:-1] != sha256_file(path_out).hexdigest():
+                return False
+    except (IOError, OSError) as e:
+        if e.errno != errno.ENOENT:
+            raise
+        return False
+    return True
+
+def commit(path_in, path_out, path_sha256):
+    import os
+    with open(path_sha256 + '.tmp', 'w') as file_sha256:
+        file_sha256.write('%s\n' % (sha256_file(path_in).hexdigest(),))
+        file_sha256.write('%s\n' % (sha256_file(path_out).hexdigest(),))
+    os.rename(path_sha256 + '.tmp', path_sha256)
+
+class local_build_ext(build_ext):
+    def build_extension(self, extension):
+        from Cython.Compiler.Main import CompilationOptions
+        from Cython.Compiler.Main import compile
+        from Cython.Compiler.Main import default_options
+        import os.path
+        for i, source in enumerate(extension.sources):
+            base, ext = os.path.splitext(source)
+            if ext == '.pyx':
+                path_pyx = base + '.pyx'
+                path_cpp = base + '.cpp'
+                path_sha256 = base + '.sha256'
+                if not uptodate(path_pyx, path_cpp, path_sha256):
+                    options = CompilationOptions(default_options)
+                    options.cplus = 1
+                    options.output_file = path_cpp
+                    ok = False
+                    try:
+                        result = compile([path_pyx], options)
+                        if result.num_errors > 0:
+                            raise Exception('cython failed with %d error%s' %
+                                (result.num_errors,
+                                    '' if result.num_errors == 1 else 's'))
+                        ok = True
+                    finally:
+                        if ok:
+                            commit(path_pyx, path_cpp, path_sha256)
+                        else:
+                            # For whatever stupid reason, Cython
+                            # deliberately generates a garbage output
+                            # file if there were any errors.
+                            os.remove(path_cpp)
+                extension.sources[i] = path_cpp
+        build_ext.build_extension(self, extension)
 
 packages = [
     'crosscat',
@@ -265,5 +309,7 @@ setup(
         'crosscat.utils': 'src/utils',
     },
     ext_modules=ext_modules,
-    cmdclass=cmdclass,
+    cmdclass={
+        'build_ext': local_build_ext,
+    },
 )
