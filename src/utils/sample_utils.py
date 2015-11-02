@@ -55,6 +55,12 @@ def predictive_probability(M_c, X_L, X_D, Y, Q):
     # row numbers, so this function will ensure the same constraint, pending
     # a formalization of the semantic meaning of predictive_probability of
     # arbitrary patterns of cells.
+
+    # Permitting queries involving multiple hypothetical rows would
+    # amount to demanding computation of the full Crosscat posterior.
+    # That makes it reasonable to retain a restriction to at most one
+    # hypothetical row, forcing the user to fall back to insertion and
+    # analysis for more complex inquiries.
     queries = dict()
     for (row, col, val) in Q:
         if row != Q[0][0]:
