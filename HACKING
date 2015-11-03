@@ -23,6 +23,10 @@ Name the new version number in the commit message.  E.g.,
 
     Bump version to 0.1.24.
 
+Tag the commit with an annotated tag:
+
+    % git tag -a -m v0.1.24 v0.1.24
+
 Finally, once it is all merged, you may push master to origin, if
 nobody else has done that yet.  If someone else has pushed anything,
 discard your merge and start over:
