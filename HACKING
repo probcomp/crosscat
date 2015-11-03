@@ -38,3 +38,11 @@ If you add new functionality, add automatic tests for it.  If you fix
 something that the automatic tests don't detect, add tests for it and
 make sure they fail without your fix.  If you break the tests, fix
 them.
+
+Platforms:
+
+* Ubuntu 14.04 LTS and recent OS X are supported.
+* C++ code should be compatible with C++03.
+* New Python code should be in the same style as Bayeslite: Doubled blank lines
+  are not necessary, and continuation lines should be indented four spaces
+  instead of aligned.
