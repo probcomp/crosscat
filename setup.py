@@ -204,7 +204,6 @@ packages = [
     'crosscat.jsonrpc_http',
     'crosscat.cython_code',
     'crosscat.tests',
-    'crosscat.tests.quality_tests',
     'crosscat.tests.component_model_extensions',
 ]
 
