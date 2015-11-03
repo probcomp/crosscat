@@ -19,23 +19,13 @@ if version_old != version_new:
     with open('src/version.py', 'w') as f:
         f.writelines(version_new)
 
-# If we're building from Git (no PKG-INFO), we use Cython.  If we're
-# building from an sdist (PKG-INFO exists), we will already have run
-# Cython to compile the .pyx files into .cpp files, and we can treat
-# them as normal C++ extensions.
-USE_CYTHON = not os.path.exists('PKG-INFO')
-
-cmdclass = dict()
-if USE_CYTHON:
-    try:
-        from Cython.Distutils import build_ext
-    except ImportError:
-        source_ext = '.cpp'
-    else:
-        cmdclass = {'build_ext': build_ext}
-        source_ext = '.pyx'
-else:
-    source_ext = '.cpp'
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    import distutils.command.build_ext
+    class build_ext(distutils.command.build_ext.build_ext):
+        def build_extension(self, extension):
+            raise Exception('Cython is unavailable to compile .pyx files.')
 
 
 try:
@@ -111,7 +101,7 @@ include_dirs = ['cpp_code/include/CrossCat'] \
 
 
 # specify sources
-ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel'+source_ext]
+ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
 ContinuousComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -124,7 +114,7 @@ ContinuousComponentModel_sources = generate_sources([
     (cpp_src_dir, ContinuousComponentModel_cpp_sources),
 ])
 #
-MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel'+source_ext]
+MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -137,7 +127,7 @@ MultinomialComponentModel_sources = generate_sources([
     (cpp_src_dir, MultinomialComponentModel_cpp_sources),
 ])
 #
-CyclicComponentModel_pyx_sources = ['CyclicComponentModel'+source_ext]
+CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
 CyclicComponentModel_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -150,7 +140,7 @@ CyclicComponentModel_sources = generate_sources([
     (cpp_src_dir, CyclicComponentModel_cpp_sources),
 ])
 #
-State_pyx_sources = ['State'+source_ext]
+State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
     'utils.cpp',
     'numerics.cpp',
@@ -207,11 +197,6 @@ ext_modules = [
     State_ext,
 ]
 
-# XXX Mega-kludge!
-if USE_CYTHON and len(sys.argv) > 1 and sys.argv[1] == 'sdist':
-    from Cython.Build import cythonize
-    ext_modules = cythonize(ext_modules)
-
 packages = [
     'crosscat',
     'crosscat.utils',
@@ -247,11 +232,8 @@ setup(
     url='https://github.com/probcomp/crosscat',
     long_description=long_description,
     packages=packages,
-    setup_requires=[
-        'cython>=0.20.1',
-        'numpy>=1.7.0',
-    ],
     install_requires=[
+        'cython>=0.20.1',
         'numpy>=1.7.0',
     ],
     package_dir={
@@ -265,5 +247,7 @@ setup(
         'crosscat.utils': 'src/utils',
     },
     ext_modules=ext_modules,
-    cmdclass=cmdclass,
+    cmdclass={
+        'build_ext': build_ext,
+    },
 )

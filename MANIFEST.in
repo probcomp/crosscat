@@ -1,2 +1,2 @@
 recursive-include cpp_code *.h
-recursive-include crosscat/cython_code *.pyx *.cpp
+recursive-include src/cython_code *.pyx *.cpp
