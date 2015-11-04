@@ -167,10 +167,9 @@ def gen_multinomial_metadata(column_data):
             return True
     # get_is_not_nan = lambda el: el.upper() != 'NAN'
     #
-    unique_codes = list(set(column_data))
-    unique_codes = filter(get_is_not_nan, unique_codes)
+    unique_codes = [el for el in set(column_data) if get_is_not_nan(el)]
     #
-    values = range(len(unique_codes))
+    values = list(range(len(unique_codes)))
     value_to_code = dict(zip(values, unique_codes))
     code_to_value = dict(zip(unique_codes, values))
     return dict(

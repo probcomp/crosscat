@@ -52,7 +52,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         """
         super(LocalEngine, self).__init__(seed=seed)
-        self.mapper = map
+        self.mapper = lambda *args: list(six.moves.map(*args))
         self.do_initialize = _do_initialize_tuple
         self.do_analyze = _do_analyze_tuple
         self.do_insert = _do_insert_tuple
@@ -66,7 +66,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                   N_GRID,
                                   ):
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
-        arg_tuples = itertools.izip(
+        arg_tuples = six.moves.zip(
             seeds,
             itertools.cycle([M_c]),
             itertools.cycle([M_r]),
@@ -81,7 +81,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         )
         return arg_tuples
 
-    def initialize(self, M_c, M_r, T, initialization='from_the_prior',
+    def initialize(self, M_c, M_r, T, initialization=b'from_the_prior',
                    row_initialization=-1, n_chains=1,
                    ROW_CRP_ALPHA_GRID=(),
                    COLUMN_CRP_ALPHA_GRID=(),
@@ -120,7 +120,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_list, X_D_list
 
     def get_insert_arg_tuples(self, M_c, T, X_L_list, X_D_list, new_rows, N_GRID, CT_KERNEL):
-        arg_tuples = itertools.izip(
+        arg_tuples = six.moves.zip(
             itertools.cycle([M_c]),
             itertools.cycle([T]),
             X_L_list, X_D_list,
@@ -167,7 +167,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL):
         n_chains = len(X_L_list)
         seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
-        arg_tuples = itertools.izip(
+        arg_tuples = six.moves.zip(
             seeds,
             X_L_list, X_D_list,
             itertools.cycle([M_c]),
