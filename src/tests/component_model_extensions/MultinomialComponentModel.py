@@ -21,7 +21,7 @@ def check_type_force_float(x, name):
     if type(x) is int:
         return float(x)
     elif type(x) is not float and type(x) is not numpy.float64:
-        raise TypeError("%s should be a float" % name)
+        raise TypeError("%r should be a float" % (name,))
     else:
         return x
 
@@ -72,7 +72,7 @@ def check_model_parameters_dict(model_parameters_dict):
 
     for key in keys:
         if key not in model_parameters_dict:
-            raise KeyError("model_parameters_dict should have key %s" % key)
+            raise KeyError("model_parameters_dict should have key %r" % (key,))
 
     for key, value in six.iteritems(model_parameters_dict):
         if key == "weights":
@@ -83,7 +83,7 @@ def check_model_parameters_dict(model_parameters_dict):
             if math.fabs(sum(value) - 1.0) > .00000001:
                 raise ValueError("model parameters dict key 'weights' should sum to 1.0")
         else:
-            raise KeyError("invalid key, %s, for model parameters dict" % key)
+            raise KeyError("invalid key, %r, for model parameters dict" % (key,))
 
 def check_hyperparameters_dict(hyperparameters_dict):
 
@@ -91,8 +91,8 @@ def check_hyperparameters_dict(hyperparameters_dict):
     keys = ['dirichlet_alpha', 'K']
 
     for key in keys:
-        if key not in hyperparameters_dict.keys():
-            raise KeyError("hyperparameters_dict should have key %s" % key)
+        if key not in hyperparameters_dict:
+            raise KeyError("hyperparameters_dict should have key %r" % (key,))
 
     for key, value in six.iteritems(hyperparameters_dict):
         if key == "K":
@@ -106,11 +106,10 @@ def check_hyperparameters_dict(hyperparameters_dict):
                 raise TypeError("hyperparameters dict entry dirichlet_alpha should be a float or int")
             if value <= 0.0:
                 raise ValueError("hyperparameters dict entry dirichlet_alpha should be greater than 0")
-
         elif key == "fixed":
             pass
         else:
-            raise KeyError("invalid key, %s, for hyperparameters dict" % key)
+            raise KeyError("invalid key, %r, for hyperparameters dict" % (key,))
 
 def check_data_vs_k(X,K):
     if type(X) is numpy.ndarray:
