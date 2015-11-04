@@ -307,9 +307,6 @@ int count_elements(const std::vector<std::vector<T> >& v_v_T) {
     return num_elements;
 }
 
-bool is_bad_value(double value);
-bool isnan(const std::string& value);
-
 #define DISALLOW_COPY_AND_ASSIGN(CLASS)         \
   CLASS(const CLASS&);                          \
   void operator=(const CLASS&)

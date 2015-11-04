@@ -212,9 +212,8 @@ int main() {
     // cout << "draws are: " << draws << endl;
     cout << "draw_counts is: " << draw_counts << endl;
 
-    double sum_p = 0;
     for (int element = 0; element < NUM_BUCKETS; element++) {
-        double element_p = exp(mcm2.calc_element_predictive_logp(element));
+        mcm2.calc_element_predictive_logp(element);
     }
 
     cout << endl << "End:: test_multinomial_component_model" << endl;

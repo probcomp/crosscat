@@ -1,3 +1,4 @@
+CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++03
 OPTIMIZED = True
 ifdef OPTIMIZED
 CXXOPTS := -pg -O2 $(CXXOPTS)
