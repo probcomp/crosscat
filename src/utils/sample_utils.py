@@ -17,7 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
+from six.moves import range
 import copy
 from collections import Counter
 import numpy
@@ -313,7 +313,7 @@ def simple_predictive_sample_multistate(M_c, X_L_list, X_D_list, Y, Q,
     n_from_each = n / num_states
     n_sampled = n % num_states
     random_state = numpy.random.RandomState(get_next_seed())
-    which_sampled = random_state.permutation(xrange(num_states))[:n_sampled]
+    which_sampled = random_state.permutation(range(num_states))[:n_sampled]
     which_sampled = set(which_sampled)
     x = []
     for state_idx, (X_L, X_D) in enumerate(zip(X_L_list, X_D_list)):
@@ -365,7 +365,7 @@ def simple_predictive_sample_observed(M_c, X_L, X_D, Y, which_row,
 
 def names_to_global_indices(column_names, M_c):
     name_to_idx = M_c['name_to_idx']
-    first_key = name_to_idx.keys()[0]
+    first_key = six.next(six.iterkeys(name_to_idx))
     # FIXME: str(column_name) is hack
     if isinstance(first_key, (unicode, str)):
         column_names = map(str, column_names)
@@ -469,7 +469,7 @@ def determine_cluster_data_logp(cluster_model, cluster_sampling_constraints,
                                 X_D_i, cluster_idx):
     logp = 0
     for column_idx, column_constraint_dict \
-            in cluster_sampling_constraints.iteritems():
+            in six.iteritems(cluster_sampling_constraints):
         if column_idx in cluster_model:
             other_constraint_values = []
             for other_row, other_value in column_constraint_dict['others']:
@@ -871,7 +871,7 @@ def determine_replicating_samples_params(X_L, X_D):
         is_this_view = view_assignments_array == view_idx
         this_view_columns = numpy.nonzero(is_this_view)[0]
         this_view_replicating_samples = []
-        for cluster_idx, cluster_count in Counter(view_zs).iteritems():
+        for cluster_idx, cluster_count in six.iteritems(Counter(view_zs)):
             view_zs_array = numpy.array(view_zs)
             first_row_idx = numpy.nonzero(view_zs_array==cluster_idx)[0][0]
             Y = None

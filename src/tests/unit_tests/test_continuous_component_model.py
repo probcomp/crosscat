@@ -3,6 +3,7 @@ import random
 import math
 import numpy
 
+import six
 import unittest
 
 def main():
@@ -171,7 +172,7 @@ class TestContinuousComponentModelExtensions_FromParametersConstructor(unittest.
         
         model_parameter_bounds = self.component_model.get_model_parameter_bounds()
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert(key in ['mu', 'rho'])
             assert(type(value) is float or type(value) is numpy.float64)
             assert(not math.isnan(value))
@@ -211,7 +212,7 @@ class TestContinuousComponentModelExtensions_FromDataConstructor(unittest.TestCa
         
         assert type(draw) is dict
                 
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert(key in ['mu', 'rho'])
             assert(type(value) is float or type(value) is numpy.float64)
             assert(not math.isnan(value))
@@ -291,7 +292,7 @@ class TestContinuousComponentModelExtensions_static(unittest.TestCase):
 
         assert type(draw) is dict
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert key in ['mu', 'nu', 'r', 's']
             assert type(value) is float or type(value) is numpy.float64
             assert(not math.isnan(value))
@@ -310,7 +311,7 @@ class TestContinuousComponentModelExtensions_static(unittest.TestCase):
         for draw in draw_list:
             assert type(draw) is dict
         
-            for key, value in draw.iteritems():
+            for key, value in six.iteritems(draw):
                 assert key in ['mu', 'nu', 'r', 's']
                 assert type(value) is float or type(value) is numpy.float64
                 assert(not math.isnan(value))

@@ -69,8 +69,8 @@ def gen_correlated_data( n, rho ):
 def gen_correlated_data_discrete( n, r, SEED=0):
     K = 10
 
-    X = range(K)
-    Y = range(K)
+    X = list(range(K))
+    Y = list(range(K))
 
     if r < .05:
         r = .05

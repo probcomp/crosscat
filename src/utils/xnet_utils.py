@@ -18,10 +18,11 @@
 #   limitations under the License.
 #
 from __future__ import print_function
+from six.moves import cPickle
+from six.moves import range
 import os
 import re
 import argparse
-import cPickle
 import zlib
 import base64
 #
@@ -121,7 +122,7 @@ def write_analyze_files(analyze_input_filename, X_L_list, X_D_list,
     write_support_files(table_data, table_data_filename,
                         analyze_args_dict, analyze_args_dict_filename)
     if SEEDS is None:
-        SEEDS = xrange(len(X_L_list))
+        SEEDS = range(len(X_L_list))
     with open(analyze_input_filename, 'w') as out_fh:
         for SEED, X_L, X_D in zip(SEEDS, X_L_list, X_D_list):
             out_dict = dict(SEED=SEED, X_L=X_L, X_D=X_D)

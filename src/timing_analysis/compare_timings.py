@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 import csv
 import collections
+import six
 
 
 def timing_row_to_config_and_runtime(header, row):
@@ -45,7 +46,7 @@ def reparse_parsed_timing_csv(filename):
 
 def filter_dict(in_dict, key_filter):
     out_dict = dict()
-    for key, value in in_dict.iteritems():
+    for key, value in six.iteritems(in_dict):
         if key_filter(key):
             out_dict[key] = value
     return out_dict
@@ -72,7 +73,7 @@ def get_complete_configs_dict(in_dict):
     config_kernel_counter = collections.Counter(map(get_config, in_dict.keys()))
     complete_configs = set([
             config
-            for config, count in config_kernel_counter.iteritems()
+            for config, count in six.iteritems(config_kernel_counter)
             if count == 5
             ])
     is_complete_config = lambda key: get_config(key) in complete_configs
@@ -122,6 +123,6 @@ if __name__ == '__main__':
             comparison_dict = filter_dict(comparison_dict, which_filter)
         cmp_timing_tuples = lambda tuple1, tuple2: \
             cmp(tuple1[1], tuple2[1])
-        for key, value in sorted(comparison_dict.iteritems(), cmp=cmp_timing_tuples):
+        for key, value in sorted(comparison_dict.items(), cmp=cmp_timing_tuples):
             time_tuple = map(get_4_digits_str, value)
             print(key, time_tuple, get_4_digits_str(timing_div(value)))

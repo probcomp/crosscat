@@ -2,6 +2,7 @@ import crosscat.cython_code.CyclicComponentModel as ccm
 import math
 import random
 import numpy
+import six
 
 from scipy.stats import vonmises
 
@@ -48,15 +49,14 @@ def check_hyperparams_dict(hypers):
     keys = ['a', 'b', 'kappa']
 
     for key in keys:
-        if key not in hypers.keys():
+        if key not in hypers:
             raise KeyError("missing key in hypers: %s" % key)
 
-    for key, value in hypers.iteritems():
+    for key, value in six.iteritems(hypers):
         if key not in keys:
             raise KeyError("invalid hypers key: %s" % key)
 
-        if type(value) is not float \
-        and type(value) is not numpy.float64:
+        if not isinstance(value, (float, numpy.float64)):
             raise TypeError("%s should be float" % key)
 
         if key in ['a', 'kappa']:
@@ -76,10 +76,10 @@ def check_model_params_dict(params):
     keys = ['mu', 'kappa']
 
     for key in keys:
-        if key not in params.keys():
+        if key not in params:
             raise KeyError("missing key in params: %s" % key)
 
-    for key, value in params.iteritems():
+    for key, value in six.iteritems(params):
         if key not in keys:
             raise KeyError("invalid params key: %s" % key)
 

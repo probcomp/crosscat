@@ -93,7 +93,7 @@ def bincount(X, bins=None):
         minval = numpy.min(Y)
         maxval = numpy.max(Y)
 
-        bins = range(minval, maxval+1)
+        bins = list(range(minval, maxval+1))
 
     if not isinstance(bins, list):
         raise TypeError('bins should be a list')

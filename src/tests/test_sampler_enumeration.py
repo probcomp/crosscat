@@ -138,14 +138,14 @@ for state in random.sample(state_partitions.states, n_states):
 	if do_plot:
 		pylab.clf()
 
-		X = range(NS)
+		X = list(range(NS))
 		pylab.subplot(2,1,1,title="All states")
 		pylab.plot(X,P, color="blue", linewidth=2.5, linestyle="-", label="enumeration",alpha=.5)
 		pylab.plot(X,state_count, color="red", linewidth=2.5, linestyle="-", label="sampler",alpha=.5)
 		pylab.xlim(0,NS)
 		pylab.legend(loc='upper right')
 
-		X = range(n_highest)
+		X = list(range(n_highest))
 		pylab.subplot(2,1,2,title=("%i highest probability states" % n_highest))
 		pylab.plot(X,true_highest_probs[::-1], color="blue", linewidth=2.5, linestyle="-",label="enumeration",alpha=.5)
 		pylab.plot(X,inferred_highest_probs[::-1], color="red", linewidth=2.5, linestyle="-",label="sampler",alpha=.5)

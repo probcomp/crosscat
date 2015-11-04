@@ -18,7 +18,7 @@
 #   limitations under the License.
 #
 from __future__ import print_function
-import cPickle
+from six.moves import cPickle
 import gzip
 import os
 import sys

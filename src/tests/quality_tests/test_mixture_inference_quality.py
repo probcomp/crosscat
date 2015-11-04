@@ -18,6 +18,7 @@ import math
 
 import unittest
 import pdb
+import six
 
 from scipy import stats
 
@@ -65,7 +66,7 @@ class TestComponentModelQuality(unittest.TestCase):
 
 def get_params_string(params):
     string = dict()
-    for k,v in params.iteritems():
+    for k,v in six.iteritems(params):
         if isinstance(v, float):
             string[k] = round(v,3)
         elif isinstance(v, list):
@@ -139,7 +140,7 @@ def check_one_feature_mixture(component_model_type, num_clusters=3, show_plot=Fa
     # the normed property isn't normalizing the multinomial histogram to 1.
     # T = T[:,0]
     if is_discrete[component_model_type.model_type]:
-        bins = range(len(discrete_support))
+        bins = list(range(len(discrete_support)))
         T_hist = numpy.array(qtu.bincount(T, bins=bins))
         S_hist = numpy.array(qtu.bincount(predictive_samples, bins=bins))
         T_hist = T_hist/float(numpy.sum(T_hist))

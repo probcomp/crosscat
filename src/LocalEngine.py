@@ -18,6 +18,7 @@
 #   limitations under the License.
 #
 from __future__ import print_function
+from six.moves import range
 import copy
 import itertools
 import collections
@@ -282,13 +283,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
         matching_row_indices = gu.ensure_listlike(matching_row_idx)
         if len(matching_row_indices) == 0:
-            matching_row_indices = range(len(T))
-            pass
+            matching_row_indices = list(range(len(T)))
         was_single_row = len(matching_row_indices) == 1
         draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D, matching_row_indices)
         if was_single_row:
             draws = draws[0]
-            pass
         return draws, T, X_L, X_D
 
     def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
@@ -683,7 +682,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
         if wrt is None:
             num_cols = len(X_L_list[0]['column_partition']['assignments'])
-            wrt = range(num_cols)
+            wrt = list(range(num_cols))
         else:
             if not isinstance(wrt, list):
                 raise TypeError('wrt must be a list')
@@ -848,7 +847,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         for child_n_steps in child_n_steps_list:
             p_State.transition(kernel_list, child_n_steps, c, r,
                                max_iterations, max_time)
-            for diagnostic_name, diagnostic_func in diagnostic_func_dict.iteritems():
+            for diagnostic_name, diagnostic_func in six.iteritems(diagnostic_func_dict):
                 diagnostic_value = diagnostic_func(p_State)
                 diagnostics_dict[diagnostic_name].append(diagnostic_value)
                 pass

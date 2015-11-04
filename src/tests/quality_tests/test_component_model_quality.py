@@ -13,6 +13,7 @@ import random
 import pylab
 import numpy
 import math
+import six
 
 import unittest
 
@@ -52,7 +53,7 @@ class TestComponentModelQuality(unittest.TestCase):
 
 def get_params_string(params):
     string = dict()
-    for k,v in params.iteritems():
+    for k,v in six.iteritems(params):
         if isinstance(v, float):
             string[k] = round(v,3)
         elif isinstance(v, list):

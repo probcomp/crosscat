@@ -18,6 +18,7 @@
 #   limitations under the License.
 #
 from collections import Counter
+import six
 #
 import crosscat.utils.file_utils as fu
 
@@ -26,7 +27,7 @@ modeltypes = set(["asymmetric_beta_bernoulli", "normal_inverse_gamma", "pitmanyo
 
 strify_dict = lambda in_dict: dict([
         (str(key), str(value))
-        for key, value in in_dict.iteritems()
+        for key, value in six.iteritems(in_dict)
         ])
 
 ##################

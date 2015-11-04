@@ -67,7 +67,7 @@ def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
     M_r = du.gen_M_r_from_T(T)
     M_c = du.gen_M_c_from_T(T)
 
-    T, M_c = du.convert_columns_to_multinomial(T, M_c, range(n_cols))
+    T, M_c = du.convert_columns_to_multinomial(T, M_c, list(range(n_cols)))
 
     return T, M_r, M_c
 

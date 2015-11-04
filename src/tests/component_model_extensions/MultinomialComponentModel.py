@@ -2,6 +2,7 @@ import crosscat.cython_code.MultinomialComponentModel as mcm
 import math
 import random
 import numpy
+import six
 
 from scipy.special import gammaln as gammaln
 
@@ -70,10 +71,10 @@ def check_model_parameters_dict(model_parameters_dict):
     keys = ['weights']
 
     for key in keys:
-        if key not in model_parameters_dict.keys():
+        if key not in model_parameters_dict:
             raise KeyError("model_parameters_dict should have key %s" % key)
 
-    for key, value in model_parameters_dict.iteritems():
+    for key, value in six.iteritems(model_parameters_dict):
         if key == "weights":
             if type(value) is not list:
                 raise TypeError("model parameters dict key 'weights' should be a list")
@@ -93,7 +94,7 @@ def check_hyperparameters_dict(hyperparameters_dict):
         if key not in hyperparameters_dict.keys():
             raise KeyError("hyperparameters_dict should have key %s" % key)
 
-    for key, value in hyperparameters_dict.iteritems():
+    for key, value in six.iteritems(hyperparameters_dict):
         if key == "K":
             if type(value) is not int:
                 raise TypeError("hyperparameters dict entry K should be an int")
@@ -101,11 +102,8 @@ def check_hyperparameters_dict(hyperparameters_dict):
             if value < 1:
                 raise ValueError("hyperparameters dict entry K should be greater than 0")
         elif key == "dirichlet_alpha":
-            if type(value) is not float \
-            and type(value) is not numpy.float64 \
-            and type(value) is not int:
+            if not isinstance(value, (float, numpy.float64, int)):
                 raise TypeError("hyperparameters dict entry dirichlet_alpha should be a float or int")
-
             if value <= 0.0:
                 raise ValueError("hyperparameters dict entry dirichlet_alpha should be greater than 0")
 
@@ -410,7 +408,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         """
         check_model_parameters_dict(params)
 
-        return range(len(params['weights']))
+        return list(range(len(params['weights'])))
 
 
     @staticmethod

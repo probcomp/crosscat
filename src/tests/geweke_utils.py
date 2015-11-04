@@ -31,6 +31,7 @@ import argparse
 #
 import numpy
 import pylab
+import six
 #
 import crosscat.LocalEngine as LE
 import crosscat.tests.plot_utils as pu
@@ -47,13 +48,13 @@ result_filename = 'result.pkl'
 
 
 def sample_T(engine, M_c, T, X_L, X_D):
-    row_indices = range(len(T))
+    row_indices = list(range(len(T)))
     generated_T, T, X_L, X_D = engine.sample_and_insert(M_c, T, X_L, X_D,
             row_indices)
     return generated_T
 
 def collect_diagnostics(X_L, diagnostics_data, diagnostics_funcs):
-    for key, func in diagnostics_funcs.iteritems():
+    for key, func in six.iteritems(diagnostics_funcs):
         diagnostics_data[key].append(func(X_L))
     return diagnostics_data
 
@@ -171,7 +172,7 @@ def run_posterior_chains(M_c, T, num_chains, num_iters, probe_columns,
             # this breaks with multiprocessing
             plot_rand_idx=(num_chains==1),
             )
-    seeds = range(num_chains)
+    seeds = list(range(num_chains))
     do_multiprocessing = num_chains != 1
     with gu.MapperContext(do_multiprocessing) as mapper:
         diagnostics_data_list = mapper(helper, seeds)
@@ -432,11 +433,11 @@ def write_parameters_to_text(parameters, filename, dirname='./'):
 
 def gen_M_c(cctypes, num_values_list):
     num_cols = len(cctypes)
-    colnames = range(num_cols)
-    col_indices = range(num_cols)
+    colnames = list(range(num_cols))
+    col_indices = list(range(num_cols))
     def helper(cctype, num_values):
         metadata_generator = du.metadata_generator_lookup[cctype]
-        faux_data = range(num_values)
+        faux_data = list(range(num_values))
         return metadata_generator(faux_data)
     #
     name_to_idx = dict(zip(colnames, col_indices))
@@ -481,11 +482,11 @@ def post_process(forward_diagnostics_data, diagnostics_data_list):
             diagnostics_data_list)
     final_kls = {
             key : map(get_final, value)
-            for key, value in kl_series_list_dict.iteritems()
+            for key, value in six.iteritems(kl_series_list_dict)
             }
     summary_kls = {
             key : numpy.mean(value)
-            for key, value in final_kls.iteritems()
+            for key, value in six.iteritems(final_kls)
             }
     return dict(
             kl_series_list_dict=kl_series_list_dict,
@@ -564,7 +565,7 @@ def plot_result(result, dirname='./'):
     if 'cctypes' in config:
         # FIXME: remove this kludgy if statement
         counter = collections.Counter(config['cctypes'])
-        parameters['Counter(cctypes)'] = dict(counter.items())
+        parameters['Counter(cctypes)'] = dict(six.iteritems(counter))
         pass
     #
     plot_all_diagnostic_data(

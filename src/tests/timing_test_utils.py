@@ -22,6 +22,7 @@ import functools
 from collections import namedtuple, defaultdict
 #
 import pylab
+import six
 #
 import crosscat.utils.data_utils as du
 import crosscat.utils.xnet_utils as xu
@@ -223,7 +224,7 @@ def plot_grouped_data(dict_of_dicts, plot_parameters):
         return
     #
     fh = pylab.figure()
-    for configuration, run_data in dict_of_dicts.iteritems():
+    for configuration, run_data in six.iteritems(dict_of_dicts):
         plot_run_data(configuration, run_data)
     #
     pylab.xlabel('# %s' % vary_what)

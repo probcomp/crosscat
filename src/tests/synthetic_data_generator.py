@@ -27,6 +27,7 @@ import crosscat.tests.component_model_extensions.CyclicComponentModel as cycmext
 import random
 import numpy
 import math
+import six
 
 # default parameters for 'seeding' random categories
 default_data_parameters = dict(
@@ -348,7 +349,7 @@ def gen_data(cctypes, n_rows, cols_to_views, cluster_weights, separation, seed=0
 
 		K = len(cW)
 
-		rows_to_clusters_view = range(K)
+		rows_to_clusters_view = list(range(K))
 		for r in range(K,n_rows):
 			rows_to_clusters_view.append(p_draw(cW))
 
@@ -446,7 +447,7 @@ def predictive_columns(M_c, X_L, X_D, columns_list, optional_settings=False, see
 
 		for col_setting in optional_settings:
 			if isinstance(col_setting, dict):
-				for key, value in col_setting.iteritems():
+				for key, value in six.iteritems(col_setting):
 					if key not in supported_arguments:
 						raise KeyError("Invalid key in optional_settings, '%s'" % key)
 	else:
