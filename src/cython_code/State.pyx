@@ -26,6 +26,7 @@ from cython.operator import dereference
 cimport numpy as np
 #
 import numpy
+import six
 #
 # import crosscat.tests.plot_utils as pu
 import crosscat.utils.file_utils as fu
@@ -531,11 +532,8 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      #
      return constructor_args
 
-def remove_zero_values(dict_in):
-     for key in dict_in.keys():
-          if dict_in[key] == 0:
-               dict_in.pop(key)
-     return dict_in
+def without_zero_values(dict_in):
+    return {k: v for k, v in six.iteritems(dict_in) if v != 0}
 
 def insert_zero_values(dict_in, N_keys):
      for key in range(N_keys):
@@ -546,7 +544,7 @@ def insert_zero_values(dict_in, N_keys):
 
 def sparsify_column_component_suffstats(column_component_suffstats):
      for idx, suffstats_i in enumerate(column_component_suffstats):
-          suffstats_i = remove_zero_values(suffstats_i).copy()
+          suffstats_i = without_zero_values(suffstats_i)
           column_component_suffstats[idx] = suffstats_i
      return None
 
