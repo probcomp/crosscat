@@ -35,6 +35,7 @@
 # 13.(class) CrossCatPartitions: Partition object. Enumerates all states.
 # 14.(class) Partition: Used to enumerate partitions for CrossCatPartitions
 
+from __future__ import print_function
 from time import time
 
 import math
@@ -206,7 +207,7 @@ def pflip(P):
 	rand.seed(None)
 	if type(P) is float:
 		if P > 1 or P < 0:
-			print "Error: pflip: P is a single value not in [0,1]. P=" + str(P)
+			print("Error: pflip: P is a single value not in [0,1]. P=" + str(P))
 		else:
 			return 1 if rand.random() > .5 else 0
 	elif type(P) is np.ndarray:
@@ -217,7 +218,7 @@ def pflip(P):
 		# return the first entry greater than rdex	
 		return np.nonzero(P>rdex)[0][0]
 	else:
-		print "Error: pflip: P is an invalid type."
+		print("Error: pflip: P is an invalid type.")
 
 # Generates T, M_c, and M_r fitting the state defined by col_part and row_part.
 # Generates only continuous data.
@@ -359,11 +360,11 @@ class CrossCatPartitions(object):
 				else:
 					break
 			
-		print "Error: no state match found"
+		print("Error: no state match found")
 		return None
 
 	def test(self):
-		print "Testing CrossCatPartitions"
+		print("Testing CrossCatPartitions")
 		error = False
 		# make sure findState returns the appropriate state number
 		for state in self.states:
@@ -372,38 +373,38 @@ class CrossCatPartitions(object):
 			found_index = self.findState(cols,rows)
 			if state['idx'] != found_index:
 				error = True
-				print " "
-				print "findState returned incorrect state (%i instead of %i). " % found_index, state['idx']
-				print "Found state: "
-				print "Cols"
+				print(" ")
+				print("findState returned incorrect state (%i instead of %i). " % found_index, state['idx'])
+				print("Found state: ")
+				print("Cols")
 				print(self.states[found_index]['col_parts'])
-				print "Rows"
+				print("Rows")
 				print(self.states[found_index]['row_parts'])
-				print "Actual state: "
-				print "Cols"
+				print("Actual state: ")
+				print("Cols")
 				print(cols)
-				print "Rows"
+				print("Rows")
 				print(rows)
-				print " "
+				print(" ")
 			# make sure state mathces after set to zero index
 			cols = cols - 1
 			rows = rows - 1
 			found_index = self.findState(cols,rows)
 			if state['idx'] != found_index:
 				error = True
-				print " "
-				print "findState returned incorrect for relabled state (%i instead of %i). " % found_index, state['idx']
-				print "Found state: "
-				print "Cols"
+				print(" ")
+				print("findState returned incorrect for relabled state (%i instead of %i). " % found_index, state['idx'])
+				print("Found state: ")
+				print("Cols")
 				print(self.states[found_index]['col_parts'])
-				print "Rows"
+				print("Rows")
 				print(self.states[found_index]['row_parts'])
-				print "Actual state: "
-				print "Cols"
+				print("Actual state: ")
+				print("Cols")
 				print(cols)
-				print "Rows"
+				print("Rows")
 				print(rows)
-				print " "
+				print(" ")
 
 		if error:
 			print("Test failed.")
@@ -544,13 +545,13 @@ def NGML(X,mu,r,nu,s):
 		# print "X-xbar"
 		# print(X-xbar)
 		# print"sum((X-xbar)**2): %f" % sum((X-xbar)**2)
-		print "xbar: %f" % xbar
-		print "nu_n: %f" % nu_n
-		print "mu_n: %f" % mu_n
-		print "k_n: %f" % k_n
-		print "s_n: %f" % s_n
-		print "lp1: %f" % lp1
-		print "lp2: %f" % lp2
+		print("xbar: %f" % xbar)
+		print("nu_n: %f" % nu_n)
+		print("mu_n: %f" % mu_n)
+		print("k_n: %f" % k_n)
+		print("s_n: %f" % s_n)
+		print("lp1: %f" % lp1)
+		print("lp2: %f" % lp2)
 
 		sys.exit(0)
 

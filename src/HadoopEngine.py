@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 #
 import crosscat.utils.file_utils as fu
@@ -78,7 +79,7 @@ class HadoopEngine(object):
 
     def get_hadoop_results(self):
         was_successful = hu.get_hadoop_results(self.hdfs_uri, self.output_path, self.hdfs_dir)
-        print 'was_successful: %s' % was_successful
+        print('was_successful: %s' % was_successful)
         return was_successful
 
     def initialize(self, M_c, M_r, T, initialization='from_the_prior',
@@ -303,7 +304,7 @@ if __name__ == '__main__':
         if hadoop_output is not None:
             X_L_list, X_D_list = hadoop_output
     else:
-        print 'Unknown command: %s' % command
+        print('Unknown command: %s' % command)
         import sys
         sys.exit()
         

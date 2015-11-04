@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import itertools
 import csv
 import os
@@ -62,7 +63,7 @@ with open(script_name, 'w') as script_file:
     for num_rows, num_cols, num_clusters, num_splits \
         in itertools.product(*take_product_of):
         this_base_str = base_str % (num_rows, num_cols, num_clusters, num_splits)
-        print this_base_str
+        print(this_base_str)
         count = count + 1
         script_file.write(this_base_str + '\n')
 

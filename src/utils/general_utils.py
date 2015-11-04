@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import itertools
 import inspect
 from timeit import default_timer
@@ -55,7 +56,7 @@ class Timer(object):
         self.elapsed_secs = self.get_elapsed_secs()
         self.elapsed = self.elapsed_secs * 1000 # millisecs
         if self.verbose:
-            print '%s took:\t% 7d ms' % (self.task, self.elapsed)
+            print('%s took:\t% 7d ms' % (self.task, self.elapsed))
 
 class MapperContext(object):
     def __init__(self, do_multiprocessing=True, Pool=multiprocessing.Pool,
@@ -145,7 +146,7 @@ def get_getname(name):
 def print_ts(in_str):
     now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print_str = '%s:: %s' % (now_str, in_str)
-    print print_str
+    print(print_str)
 
 def ensure_listlike(input):
     if not isinstance(input, (list, tuple,)):

@@ -149,7 +149,7 @@ def plot_predicted_value(value, samples, modelType, filename='imputed_value_hist
         bin_edges = numpy.arange(numpy.min(samples)-0.5, numpy.max(samples)-0.5, 1)  
         nx, xbins, rectangles = pylab.hist(samples,bin_edges,normed=0,color=plotcolor)
     else:
-        print 'Unsupported model type'
+        print('Unsupported model type')
 
     pylab.clf()
 

@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import argparse
 #
 import pylab
@@ -74,9 +75,9 @@ p_State = State.p_State(M_c, T, N_GRID=N_GRID, SEED=inf_seed)
 p_State.plot_T(filename='T')
 
 # transition the sampler
-print "p_State.get_marginal_logp():", p_State.get_marginal_logp()
+print("p_State.get_marginal_logp():", p_State.get_marginal_logp())
 for transition_idx in range(num_transitions):
-    print "transition #: %s" % transition_idx
+    print("transition #: %s" % transition_idx)
     p_State.transition()
     counts = [
         view_state['row_partition_model']['counts']
@@ -96,7 +97,7 @@ for transition_idx in range(num_transitions):
         p_State.get_data_score(),
         p_State.get_marginal_logp(),
         )
-    print format_list % values_tuple
+    print(format_list % values_tuple)
     plot_filename = 'X_D'
     save_filename = 'last_state.pkl.gz'
     if transition_idx % 10 == 0:

@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import itertools as it
 import time
 
@@ -119,13 +120,13 @@ if __name__ == '__main__':
 	corr_list = args.corr_list
 	which_engine_binary = args.which_engine_binary
 	#
-	print 'using burn_in: %i' % burn_in
-	print 'using num_rows_list: %s' % num_rows_list
-	print 'using num_cols_list: %s' % num_cols_list
-	print 'using num_clusters_list: %s' % num_clusters_list
-	print 'using num_views_list: %s' % num_views_list
-	print 'using corr_list: %s' % corr_list
-	print 'using engine_binary: %s' % which_engine_binary
+	print('using burn_in: %i' % burn_in)
+	print('using num_rows_list: %s' % num_rows_list)
+	print('using num_cols_list: %s' % num_cols_list)
+	print('using num_clusters_list: %s' % num_clusters_list)
+	print('using num_views_list: %s' % num_views_list)
+	print('using corr_list: %s' % corr_list)
+	print('using engine_binary: %s' % which_engine_binary)
 	time.sleep(2)
 
 	dirname = 'mi_analysis'
@@ -162,7 +163,7 @@ if __name__ == '__main__':
 	try:
 		pd_file = open( params_filename, "wb" )
 	except IOError as err:
-		print "Could not create %s. " % params_filename, err
+		print("Could not create %s. " % params_filename, err)
 		raise
 
 	pickle.dump( params_dict, pd_file )
@@ -173,7 +174,7 @@ if __name__ == '__main__':
 
 	testlist = []
 	
-	print "Writing tests file."	
+	print("Writing tests file.")
 	test_idx = 0
 	for n_rows, n_clusters, n_cols, n_views, corr in tests:	
 		if n_rows >= n_clusters and n_cols >= n_views:
@@ -198,7 +199,7 @@ if __name__ == '__main__':
 						testlist.append(impute_run_parameters)
 			test_idx += 1
 	
-	print "Done."
+	print("Done.")
 	
 	# table data is empty because we generate it in the mapper
 	table_data=dict(T=[],M_c=[],X_L=[],X_D=[])
@@ -213,12 +214,12 @@ if __name__ == '__main__':
 				key, test_dict = xu.parse_hadoop_line(line)
 				ret_dict = run_mi_test_local.run_mi_test_local(test_dict)
 				xu.write_hadoop_line(output_file_object, key, ret_dict)
-				print "%s\n\t%s" % (str(test_dict), str(ret_dict))
+				print("%s\n\t%s" % (str(test_dict), str(ret_dict)))
 
 		output_file_object.close()
 		# generate the csv
 		parse_mi.parse_data_to_csv(input_filename, params_dict, test_idx, output_filename)
-		print "Done."
+		print("Done.")
 	elif do_remote:
 		# generate the massive hadoop files
 		hadoop_engine = HE.HadoopEngine(output_path=output_path,
@@ -237,8 +238,8 @@ if __name__ == '__main__':
 		if was_successful:
 			t_end = time.time()
 			t_total = t_end-t_start
-			print "That took %i seconds." % t_total
+			print("That took %i seconds." % t_total)
 			hu.copy_hadoop_output(hadoop_engine.output_path, output_filename)
 			parse_mi.parse_data_to_csv(input_filename, params_dict, test_idx, output_filename)
 		else:
-			print "Hadoop job was NOT successful. Check %s" % output_path
+			print("Hadoop job was NOT successful. Check %s" % output_path)

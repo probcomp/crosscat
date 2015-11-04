@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import numpy, pylab, os, csv
 import crosscat.utils.sample_utils as su
 from copy import copy
@@ -43,7 +44,7 @@ def impute_table(T, M_c, X_L_list, X_D_list, numDraws, get_next_seed):
             coltype.append('multinomial')
 
     rowsWithNans = [i for i in range(len(T)) if any(isnan_mixedtype(T[i]))]
-    print rowsWithNans
+    print(rowsWithNans)
     Q = []
     for x in rowsWithNans:
         y = [y for y in range(len(T[0])) if isnan_mixedtype([T[x][y]])]
@@ -124,7 +125,7 @@ def predict_in_table(T_test, T, M_c, X_L, X_D, numDraws, get_next_seed):
         Y = []
         for indx_col in range(len(condition_fields[0])):
             Y.append([num_rows+indx_row, condition_fields[0][indx_col], T_test[indx_row][condition_fields[0][indx_col]]])
-        #print [Q[queryindx]], Y
+        #print([Q[queryindx]], Y)
        
         values = predict(M_c, X_L, X_D, Y, [Q[queryindx]], numDraws, get_next_seed)
         values_list.append(values)
@@ -162,7 +163,7 @@ def row_similarity(row_index, column_indices, X_D_list, X_L_list, num_returns = 
 
         # Find which view each conditional attribute (column_indices) belongs to 
         views_for_cols = view_assignments[column_indices]
-        print views_for_cols
+        print(views_for_cols)
         for viewindx in views_for_cols:
             # Find which cluster the target row is in 
             tgt_cluster = X_D[viewindx][row_index]

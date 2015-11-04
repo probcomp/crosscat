@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 import argparse
 import tempfile
@@ -133,13 +134,13 @@ if __name__ == '__main__':
     # some hadoop processing related settings
     temp_dir = tempfile.mkdtemp(prefix='runtime_analysis_',
                                 dir='runtime_analysis')
-    print 'using dir: %s' % temp_dir
+    print('using dir: %s' % temp_dir)
     #
     table_data_filename = os.path.join(temp_dir, 'table_data.pkl.gz')
     input_filename = os.path.join(temp_dir, 'hadoop_input')
     output_filename = os.path.join(temp_dir, 'hadoop_output')
     output_path = os.path.join(temp_dir, 'output')
-    print table_data_filename
+    print(table_data_filename)
     # generate data
     T, M_c, M_r, X_L, X_D = generate_clean_state(gen_seed,
                                                  num_clusters,
@@ -166,8 +167,8 @@ if __name__ == '__main__':
         if was_successful:
             hu.copy_hadoop_output(output_path, output_filename)
         else:
-            print 'remote hadoop job NOT successful'
+            print('remote hadoop job NOT successful')
     else:
         hadoop_engine = HE.HadoopEngine()
         # print what the command would be
-        print HE.create_hadoop_cmd_str(hadoop_engine, n_tasks=n_tasks)
+        print(HE.create_hadoop_cmd_str(hadoop_engine, n_tasks=n_tasks))

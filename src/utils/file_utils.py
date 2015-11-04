@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import cPickle
 import gzip
 import os
@@ -56,7 +57,7 @@ def rm_local(path, DEBUG=False):
     cmd_str = 'rm -rf %s'
     cmd_str %= path
     if DEBUG:
-        print cmd_str
+        print(cmd_str)
     else:
         os.system(cmd_str)
     return

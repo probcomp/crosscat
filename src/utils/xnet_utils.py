@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 import re
 import argparse
@@ -51,7 +52,7 @@ def run_script_local(infile, script_name, outfile, table_data_filename=None):
         infix_str = '--table_data_filename %s' % table_data_filename
     cmd_str = 'cat %s | python %s %s > %s'
     cmd_str %= (infile, script_name, infix_str, outfile)
-    print cmd_str
+    print(cmd_str)
     os.system(cmd_str)
     return
 
@@ -88,7 +89,7 @@ def parse_hadoop_line(line):
           # for parsing new NLineInputFormat
           match = pattern.match(dict_in_str)
           if match is None:
-            print 'OMG: ' + dict_in_str[:50]
+            print('OMG: ' + dict_in_str[:50])
             import pdb; pdb.set_trace()
           key, dict_in_str = match.groups()
           dict_in = my_loads(dict_in_str)
@@ -207,8 +208,8 @@ if __name__ == '__main__':
         with open(hadoop_filename) as fh:
             for line in fh:
                 parsed_lines.append(parse_hadoop_line(line))
-                print len(parsed_lines)
+                print(len(parsed_lines))
         if pkl_filename != default_table_data_filename:
             fu.pickle(parsed_lines, pkl_filename)
     else:
-        print 'uknown do_what: %s' % do_what
+        print('unknown do_what: %s' % do_what)

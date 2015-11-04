@@ -67,8 +67,8 @@ cluster_counter = Counter(cluster_vals)
 cluster_ratio = float(cluster_counter[imputed]) / sum(cluster_counter.values())
 all_counter = Counter(all_vals)
 all_ratio = float(all_counter[imputed]) / sum(all_counter.values())
-print
-print 'imputed: %s' % imputed
-print 'all_ratio: %s' % all_ratio
-print 'cluster_ratio: %s' % cluster_ratio
-print 'confidence: %s' % confidence
+print()
+print('imputed: %s' % imputed)
+print('all_ratio: %s' % all_ratio)
+print('cluster_ratio: %s' % cluster_ratio)
+print('confidence: %s' % confidence)

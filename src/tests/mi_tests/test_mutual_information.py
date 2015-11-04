@@ -208,7 +208,7 @@ def MI_test(n, burn_in, cc_samples, which_test, n_MI_samples=500, correlation=0)
 		test_strn = "Test: %s, N: %i, burn_in: %i, samples: %i, MI_samples: %i\n\tMI: %f, Linfoot %f" % (which_test, n, burn_in, cc_samples, n_MI_samples, MI, Linfoot)
 		
 
-	print test_strn
+	print(test_strn)
 	return test_strn
 
 do_plot = False
@@ -219,7 +219,7 @@ N = [10, 100, 1000]
 burn_in = 200
 cc_samples = 10
 
-print " "
+print(" ")
 for n in N:
 	
 	strn = MI_test(n, burn_in, cc_samples, "correlated", correlation=.3)

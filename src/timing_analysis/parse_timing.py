@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import sys
 import csv
 import os
@@ -101,12 +102,12 @@ if __name__ == '__main__':
             lines.append(xu.parse_hadoop_line(line))
 
     header = 'num_rows,num_cols,num_clusters,num_views,time_per_step,which_kernel'
-    print header
+    print(header)
     reduced_lines = map(lambda x: x[1], lines)
     for reduced_line in reduced_lines:
         try:
             parsed_line = parse_reduced_line(reduced_line)
-            print ','.join(map(str, parsed_line))
+            print(','.join(map(str, parsed_line)))
         except Exception, e:
             pass
 

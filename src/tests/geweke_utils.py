@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 #
@@ -345,15 +346,15 @@ def plot_all_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
         parameters=None, save_kwargs=None,
         ):
     for variable_name in forward_diagnostics_data.keys():
-        print 'plotting for variable: %s' % variable_name
+        print('plotting for variable: %s' % variable_name)
         try:
             kl_series_list = kl_series_list_dict[variable_name]
             plot_diagnostic_data(forward_diagnostics_data, diagnostics_data_list,
                     kl_series_list,
                     variable_name, parameters, save_kwargs)
         except Exception, e:
-            print 'Failed to plot_diagnostic_data for %s' % variable_name
-            print e
+            print('Failed to plot_diagnostic_data for %s' % variable_name)
+            print(e)
             pass
     return
 

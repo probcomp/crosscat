@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import multiprocessing
 #
 import crosscat.LocalEngine as LE
@@ -116,17 +117,17 @@ if __name__ == '__main__':
             X_L_list, X_D_list, T_test))
 
     # print results
-    print 'generative_mean_test_log_likelihood'
-    print generative_mean_test_log_likelihood
+    print('generative_mean_test_log_likelihood')
+    print(generative_mean_test_log_likelihood)
     #
-    print 'single_state_mean_test_lls:'
-    print single_state_mean_test_lls
+    print('single_state_mean_test_lls:')
+    print(single_state_mean_test_lls)
     #
-    print 'single_state_ARIs:'
-    print single_state_ARIs
+    print('single_state_ARIs:')
+    print(single_state_ARIs)
     #
-    print 'multi_state_mean_test_lls:'
-    print multi_state_mean_test_lls
+    print('multi_state_mean_test_lls:')
+    print(multi_state_mean_test_lls)
     #
-    print 'multi_state_ARIs:'
-    print multi_state_ARIs
+    print('multi_state_ARIs:')
+    print(multi_state_ARIs)

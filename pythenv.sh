@@ -4,8 +4,8 @@ set -Ceu
 
 : ${PYTHON:=python}
 root=`cd -- "$(dirname -- "$0")" && pwd`
-platform=`"${PYTHON}" -c 'import distutils.util as u; print u.get_platform()'`
-version=`"${PYTHON}" -c 'import sys; print sys.version[0:3]'`
+platform=`"${PYTHON}" -c 'import distutils.util as u; print(u.get_platform())'`
+version=`"${PYTHON}" -c 'import sys; print(sys.version[0:3])'`
 
 # The lib directory varies depending on
 #

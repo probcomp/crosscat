@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 import os
 import csv
 import collections
@@ -123,4 +124,4 @@ if __name__ == '__main__':
             cmp(tuple1[1], tuple2[1])
         for key, value in sorted(comparison_dict.iteritems(), cmp=cmp_timing_tuples):
             time_tuple = map(get_4_digits_str, value)
-            print key, time_tuple, get_4_digits_str(timing_div(value))
+            print(key, time_tuple, get_4_digits_str(timing_div(value)))
