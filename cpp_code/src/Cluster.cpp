@@ -261,15 +261,15 @@ void Cluster::init_columns(const vector<CM_Hypers*>& hypers_v) {
     for (it = hypers_v.begin(); it != hypers_v.end(); ++it) {
         CM_Hypers& hypers = **it;
         ComponentModel *p_cm;
-        if (in(hypers, continuous_key)) {
+        if (hypers.count(continuous_key)) {
             // FIXME: should be passed col_datatypes here
             //         and instantiate correct type?
             p_cm = new ContinuousComponentModel(hypers);
             p_model_v.push_back(p_cm);
-        } else if (in(hypers, multinomial_key)){
+        } else if (hypers.count(multinomial_key)) {
             p_cm = new MultinomialComponentModel(hypers);
             p_model_v.push_back(p_cm);
-        } else if (in(hypers, cyclic_key)) {
+        } else if (hypers.count(cyclic_key)) {
             p_cm = new CyclicComponentModel(hypers);
             p_model_v.push_back(p_cm);
         } else {

@@ -992,7 +992,7 @@ void State::init_column_hypers(const vector<int>& global_col_indices) {
             ++gci_it) {
         int global_col_idx = *gci_it;
         hypers_m[global_col_idx] = uniform_sample_hypers(global_col_idx);
-        if (!in(hypers_m[global_col_idx], (string) "fixed")) {
+        if (!hypers_m[global_col_idx].count("fixed")) {
             hypers_m[global_col_idx]["fixed"] = 0;
         }
     }
