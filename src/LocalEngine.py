@@ -23,6 +23,7 @@ import copy
 import itertools
 import collections
 import numpy
+import six
 
 import crosscat.cython_code.State as State
 import crosscat.EngineTemplate as EngineTemplate
