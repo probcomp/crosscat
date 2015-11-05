@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.42'
+version = '0.1.43'
 
 try:
     with open('src/version.py', 'rU') as f:
