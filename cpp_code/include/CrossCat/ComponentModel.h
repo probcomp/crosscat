@@ -38,25 +38,25 @@ public:
     CM_Hypers get_hypers() const;
     int get_count() const;
     std::map<std::string, double> get_suffstats() const;
-    virtual std::map<std::string, double> _get_suffstats() const;
-    virtual double get_draw(int random_seed) const;
-    virtual double get_draw_constrained(int random_seed,
-                                const std::vector<double>& constraints) const;
+    virtual std::map<std::string, double> _get_suffstats() const = 0;
+    virtual double get_draw(int random_seed) const = 0;
+    virtual double get_draw_constrained(
+        int random_seed, const std::vector<double>& constraints) const = 0;
     //
     //
     // calculators
-    virtual double calc_marginal_logp() const;
-    virtual double calc_element_predictive_logp(double element) const;
+    virtual double calc_marginal_logp() const = 0;
+    virtual double calc_element_predictive_logp(double element) const = 0;
     virtual double calc_element_predictive_logp_constrained(double element,
-            const std::vector<double>& constraints) const;
+            const std::vector<double>& constraints) const = 0;
     virtual std::vector<double> calc_hyper_conditionals(
             const std::string& which_hyper,
-            const std::vector<double>& hyper_grid) const;
+            const std::vector<double>& hyper_grid) const = 0;
     //
     // mutators
-    virtual double insert_element(double element);
-    virtual double remove_element(double element);
-    virtual double incorporate_hyper_update();
+    virtual double insert_element(double element) = 0;
+    virtual double remove_element(double element) = 0;
+    virtual double incorporate_hyper_update() = 0;
     //
     // helpers
     friend std::ostream& operator<<(std::ostream& os, const ComponentModel& cm);
@@ -69,8 +69,8 @@ protected:
     double score;
     //
     // helpers
-    virtual void set_log_Z_0();
-    virtual void init_suffstats();
+    virtual void set_log_Z_0() = 0;
+    virtual void init_suffstats() = 0;
 private:
 };
 

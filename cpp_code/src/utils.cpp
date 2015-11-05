@@ -468,15 +468,3 @@ void construct_multinomial_base_hyper_grids(int n_grid,
 					    vector<double> &multinomial_alpha_grid) {
   multinomial_alpha_grid = log_linspace(1., data_num_vectors, n_grid);
 }
-
-bool is_bad_value(double value) {
-  return isnan(value) || !isfinite(value);
-}
-
-bool isnan(const string& value_str) {
-  bool isnan = (value_str.compare("NaN") == 0) || (value_str.compare("nan") == 0);
-  if(isnan) {
-    cout << "utils::isnan(" << value_str << ") = True" << endl;
-  }
-  return isnan;
-}

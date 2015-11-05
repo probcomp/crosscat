@@ -108,13 +108,6 @@ std::vector<T> append(const std::vector<T>& vec1, const std::vector<T>& vec2) {
 }
 
 template <class K, class V>
-bool in(const std::map<K, V>& m, const K& key) {
-    typename std::map<K, V>::const_iterator it = m.find(key);
-    bool is_in = it != m.end();
-    return is_in;
-}
-
-template <class K, class V>
 V setdefault(std::map<K, V>& m, const K& key, const V& value) {
     typename std::map<K, V>::const_iterator it = m.find(key);
     if (it == m.end())
@@ -306,9 +299,6 @@ int count_elements(const std::vector<std::vector<T> >& v_v_T) {
     }
     return num_elements;
 }
-
-bool is_bad_value(double value);
-bool isnan(const std::string& value);
 
 #define DISALLOW_COPY_AND_ASSIGN(CLASS)         \
   CLASS(const CLASS&);                          \

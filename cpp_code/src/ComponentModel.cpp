@@ -21,60 +21,6 @@
 
 using namespace std;
 
-// virtuals that should be component model specific
-double ComponentModel::calc_marginal_logp() const {
-    assert(0);
-    return NaN;
-}
-double ComponentModel::calc_element_predictive_logp(double element) const {
-    assert(0);
-    return NaN;
-}
-double ComponentModel::calc_element_predictive_logp_constrained(double element,
-        const vector<double>& constraints) const {
-    assert(0);
-    return NaN;
-}
-vector<double> ComponentModel::calc_hyper_conditionals(const string& which_hyper,
-        const vector<double>& hyper_grid) const {
-    assert(0);
-    vector<double> vd;
-    return vd;
-}
-map<string, double> ComponentModel::_get_suffstats() const {
-    assert(0);
-    map<string, double> suffstats;
-    return suffstats;
-}
-double ComponentModel::get_draw(int random_seed) const {
-    assert(0);
-    return NaN;
-}
-double ComponentModel::get_draw_constrained(int random_seed,
-        const vector<double>& constraints) const {
-    assert(0);
-    return NaN;
-}
-//
-double ComponentModel::insert_element(double element) {
-    assert(0);
-    return NaN;
-}
-double ComponentModel::remove_element(double element) {
-    assert(0);
-    return NaN;
-}
-double ComponentModel::incorporate_hyper_update() {
-    assert(0);
-    return NaN;
-}
-void ComponentModel::set_log_Z_0() {
-    assert(0);
-}
-void ComponentModel::init_suffstats() {
-    assert(0);
-}
-
 CM_Hypers ComponentModel::get_hypers() const {
     return *p_hypers;
 }

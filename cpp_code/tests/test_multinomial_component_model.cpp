@@ -154,11 +154,7 @@ int main() {
         int rand_int = rng.nexti();
         double draw = mcm.get_draw(rand_int);
         draws.push_back(draw);
-        if (in(draw_counts, draw)) {
-            draw_counts[draw]++;
-        } else {
-            draw_counts[draw] = 1;
-        }
+        draw_counts[draw]++;
     }
     // cout << "draws are: " << draws << endl;
     cout << "draw_counts is: " << draw_counts << endl;
@@ -203,18 +199,13 @@ int main() {
         int rand_int = rng.nexti();
         double draw = mcm2.get_draw(rand_int);
         draws.push_back(draw);
-        if (in(draw_counts, draw)) {
-            draw_counts[draw]++;
-        } else {
-            draw_counts[draw] = 1;
-        }
+        draw_counts[draw]++;
     }
     // cout << "draws are: " << draws << endl;
     cout << "draw_counts is: " << draw_counts << endl;
 
-    double sum_p = 0;
     for (int element = 0; element < NUM_BUCKETS; element++) {
-        double element_p = exp(mcm2.calc_element_predictive_logp(element));
+        mcm2.calc_element_predictive_logp(element);
     }
 
     cout << endl << "End:: test_multinomial_component_model" << endl;

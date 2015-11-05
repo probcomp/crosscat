@@ -122,8 +122,7 @@ double Cluster::calc_column_predictive_logp(const vector<double>& column_data,
         const CM_Hypers& hypers) {
     // FIXME: global_to_data must be used if not all rows are present
     // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
-    ComponentModel prevent_warning;
-    ComponentModel *p_cm = &prevent_warning;
+    ComponentModel *p_cm = NULL;
     if (col_datatype == CONTINUOUS_DATATYPE) {
         p_cm = new ContinuousComponentModel(hypers);
     } else if (col_datatype == CYCLIC_DATATYPE) {
@@ -203,8 +202,7 @@ double Cluster::insert_col(const vector<double>& data,
                            const CM_Hypers& hypers) {
     // FIXME: global_to_data must be used if not all rows are present
     // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
-    ComponentModel prevent_warning;
-    ComponentModel *p_cm = &prevent_warning;
+    ComponentModel *p_cm = NULL;
     if (col_datatype == CONTINUOUS_DATATYPE) {
         p_cm = new ContinuousComponentModel(hypers);
     } else if (col_datatype == MULTINOMIAL_DATATYPE) {
@@ -213,8 +211,7 @@ double Cluster::insert_col(const vector<double>& data,
         p_cm = new CyclicComponentModel(hypers);
     } else {
         cout << "ERROR: Cluster::insert_col: col_datatype=" << col_datatype << endl;
-        assert(1 == 0);
-        exit(EXIT_FAILURE);
+        abort();
     }
     set<int>::const_iterator it;
     for (it = row_indices.begin(); it != row_indices.end(); ++it) {
@@ -264,15 +261,15 @@ void Cluster::init_columns(const vector<CM_Hypers*>& hypers_v) {
     for (it = hypers_v.begin(); it != hypers_v.end(); ++it) {
         CM_Hypers& hypers = **it;
         ComponentModel *p_cm;
-        if (in(hypers, continuous_key)) {
+        if (hypers.count(continuous_key)) {
             // FIXME: should be passed col_datatypes here
             //         and instantiate correct type?
             p_cm = new ContinuousComponentModel(hypers);
             p_model_v.push_back(p_cm);
-        } else if (in(hypers, multinomial_key)){
+        } else if (hypers.count(multinomial_key)) {
             p_cm = new MultinomialComponentModel(hypers);
             p_model_v.push_back(p_cm);
-        } else if (in(hypers, cyclic_key)) {
+        } else if (hypers.count(cyclic_key)) {
             p_cm = new CyclicComponentModel(hypers);
             p_model_v.push_back(p_cm);
         } else {
