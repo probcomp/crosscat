@@ -19,6 +19,7 @@
 #
 from __future__ import print_function
 import argparse
+import six
 import time
 #
 import crosscat.LocalEngine as LE
@@ -125,7 +126,7 @@ time.sleep(1)
 
 # programmatically call all the other method calls
 method_name_to_args = gu.get_method_name_to_args(LE.LocalEngine)
-for method_name, arg_str_list in method_name_to_args.iteritems():
+for method_name, arg_str_list in six.iteritems(method_name_to_args):
     if method_name in non_stub:
         print('skipping non-stub method:', method_name)
         print()

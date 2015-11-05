@@ -2,6 +2,7 @@ import crosscat.cython_code.MultinomialComponentModel as mcm
 import math
 import random
 import numpy
+import six
 
 from scipy.special import gammaln as gammaln
 
@@ -20,7 +21,7 @@ def check_type_force_float(x, name):
     if type(x) is int:
         return float(x)
     elif type(x) is not float and type(x) is not numpy.float64:
-        raise TypeError("%s should be a float" % name)
+        raise TypeError("%r should be a float" % (name,))
     else:
         return x
 
@@ -70,10 +71,10 @@ def check_model_parameters_dict(model_parameters_dict):
     keys = ['weights']
 
     for key in keys:
-        if key not in model_parameters_dict.keys():
-            raise KeyError("model_parameters_dict should have key %s" % key)
+        if key not in model_parameters_dict:
+            raise KeyError("model_parameters_dict should have key %r" % (key,))
 
-    for key, value in model_parameters_dict.iteritems():
+    for key, value in six.iteritems(model_parameters_dict):
         if key == "weights":
             if type(value) is not list:
                 raise TypeError("model parameters dict key 'weights' should be a list")
@@ -82,7 +83,7 @@ def check_model_parameters_dict(model_parameters_dict):
             if math.fabs(sum(value) - 1.0) > .00000001:
                 raise ValueError("model parameters dict key 'weights' should sum to 1.0")
         else:
-            raise KeyError("invalid key, %s, for model parameters dict" % key)
+            raise KeyError("invalid key, %r, for model parameters dict" % (key,))
 
 def check_hyperparameters_dict(hyperparameters_dict):
 
@@ -90,10 +91,10 @@ def check_hyperparameters_dict(hyperparameters_dict):
     keys = ['dirichlet_alpha', 'K']
 
     for key in keys:
-        if key not in hyperparameters_dict.keys():
-            raise KeyError("hyperparameters_dict should have key %s" % key)
+        if key not in hyperparameters_dict:
+            raise KeyError("hyperparameters_dict should have key %r" % (key,))
 
-    for key, value in hyperparameters_dict.iteritems():
+    for key, value in six.iteritems(hyperparameters_dict):
         if key == "K":
             if type(value) is not int:
                 raise TypeError("hyperparameters dict entry K should be an int")
@@ -101,18 +102,14 @@ def check_hyperparameters_dict(hyperparameters_dict):
             if value < 1:
                 raise ValueError("hyperparameters dict entry K should be greater than 0")
         elif key == "dirichlet_alpha":
-            if type(value) is not float \
-            and type(value) is not numpy.float64 \
-            and type(value) is not int:
+            if not isinstance(value, (float, numpy.float64, int)):
                 raise TypeError("hyperparameters dict entry dirichlet_alpha should be a float or int")
-
             if value <= 0.0:
                 raise ValueError("hyperparameters dict entry dirichlet_alpha should be greater than 0")
-
         elif key == "fixed":
             pass
         else:
-            raise KeyError("invalid key, %s, for hyperparameters dict" % key)
+            raise KeyError("invalid key, %r, for hyperparameters dict" % (key,))
 
 def check_data_vs_k(X,K):
     if type(X) is numpy.ndarray:
@@ -219,7 +216,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
               symmetric so only one value is needed
             gen_seed: a int to seed the rng
         """
-        # FIXME: Figure out a wat to accept a list of strings
+        # FIXME: Figure out a way to accept a list of strings
         check_data_type_column_data(X)
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
@@ -410,7 +407,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         """
         check_model_parameters_dict(params)
 
-        return range(len(params['weights']))
+        return list(range(len(params['weights'])))
 
 
     @staticmethod

@@ -20,6 +20,7 @@
 import csv
 import argparse
 import collections
+import six
 #
 import pylab
 pylab.ion()
@@ -56,7 +57,7 @@ def get_default_dict():
     return ret_dict
 
 def update_convergence_metrics(convergence_metrics, new_values_dict):
-    for key, value in new_values_dict.iteritems():
+    for key, value in six.iteritems(new_values_dict):
         convergence_metrics[key].append(value)
     return convergence_metrics
 
@@ -142,7 +143,7 @@ if __name__ == '__main__':
     # actually plot
     fh_list = []
     save_filename = None
-    for run_key, convergence_metrics in convergence_metrics_dict.iteritems():
+    for run_key, convergence_metrics in six.iteritems(convergence_metrics_dict):
       if do_save:
         n_bins = 20
         cumulative = True

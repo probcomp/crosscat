@@ -27,6 +27,7 @@ import itertools
 from collections import namedtuple
 #
 import numpy
+import six
 #
 import crosscat.utils.data_utils as du
 import crosscat.utils.hadoop_utils as hu
@@ -183,7 +184,7 @@ if __name__ == '__main__':
 
     if do_plot and (do_local or do_remote):
       convergence_metrics_dict = plot_cr.parse_convergence_metrics_csv(parsed_out_file)
-      for run_key, convergence_metrics in convergence_metrics_dict.iteritems():
+      for run_key, convergence_metrics in six.iteritems(convergence_metrics_dict):
         save_filename = str(run_key) + '.png'
         fh = plot_cr.plot_convergence_metrics(convergence_metrics,
             title_append=str(run_key), save_filename=save_filename)

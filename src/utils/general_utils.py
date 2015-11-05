@@ -27,6 +27,7 @@ import multiprocessing
 import multiprocessing.pool
 import threading
 import math
+import six
 
 #http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 class NoDaemonProcess(multiprocessing.Process):
@@ -154,8 +155,8 @@ def ensure_listlike(input):
     return input
 
 def get_dict_as_text(parameters, join_with='\n'):
-    create_line = lambda (key, value): key + ' = ' + str(value)
-    lines = map(create_line, parameters.iteritems())
+    create_line = lambda key_value: key_value[0] + ' = ' + str(key_value[1])
+    lines = map(create_line, six.iteritems(parameters))
     text = join_with.join(lines)
     return text
 

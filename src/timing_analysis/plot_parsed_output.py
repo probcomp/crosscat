@@ -21,6 +21,7 @@ import argparse
 from collections import namedtuple
 from collections import defaultdict
 from collections import Counter
+import six
 #
 import pylab
 #
@@ -137,7 +138,7 @@ def plot_grouped_data(dict_of_dicts, plot_parameters, plot_filename=None):
     which_kernel = plot_parameters['which_kernel']
     #
     fh = pylab.figure()
-    for configuration, run_data in dict_of_dicts.iteritems():
+    for configuration, run_data in six.iteritems(dict_of_dicts):
         x = sorted(run_data.keys())
         _y = [run_data[el] for el in x]
         y = map(get_time_per_step, _y)

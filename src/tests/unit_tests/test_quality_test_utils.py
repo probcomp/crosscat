@@ -80,7 +80,7 @@ class TestGetMixtureSupport(unittest.TestCase):
 class TestGetMixturePDF(unittest.TestCase):
 	def setUp(self):
 		self.X_normal = numpy.array([0, .1 , .2 , .4, -.1, -.2])
-		self.X_multinomial = numpy.array(range(5))
+		self.X_multinomial = numpy.array(list(range(5)))
 
 		self.params_list_normal = [
 			{'mu':0.0, 'rho': 2.0},
@@ -153,7 +153,7 @@ class TestBincount(unittest.TestCase):
 		self.assertRaises(ValueError, qtu.bincount, X)
 
 	def test_bins_not_list_should_raise_exception(self):
-		X = range(10)
+		X = list(range(10))
 		bins = dict()
 		self.assertRaises(TypeError, qtu.bincount, X, bins=bins)
 
@@ -172,7 +172,7 @@ class TestBincount(unittest.TestCase):
 		counts = qtu.bincount(X)
 		assert counts == [1, 2, 0, 1, 0, 1]
 
-		bins = range(7)
+		bins = list(range(7))
 		counts = qtu.bincount(X,bins)
 		assert counts == [0, 1, 2, 0, 1, 0, 1]
 
@@ -189,7 +189,7 @@ class TestBincount(unittest.TestCase):
 		counts = qtu.bincount(X)
 		assert counts == [1, 2, 0, 1, 0, 1]
 
-		bins = range(7)
+		bins = list(range(7))
 		counts = qtu.bincount(X,bins)
 		assert counts == [0, 1, 2, 0, 1, 0, 1]
 

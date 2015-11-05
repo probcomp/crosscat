@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from six.moves import range
 import sys
 import csv
 import copy
@@ -117,7 +118,7 @@ def gen_factorial_data(gen_seed, num_clusters,
     random_state = numpy.random.RandomState(gen_seed)
     data_list = []
     inverse_permutation_indices_list = []
-    for data_idx in xrange(num_splits):
+    for data_idx in range(num_splits):
         data_i, zs_i = gen_data(
             gen_seed=gen_seed,
             num_clusters=num_clusters,
@@ -127,7 +128,7 @@ def gen_factorial_data(gen_seed, num_clusters,
             max_std=max_std,
             max_mean=max_mean
             )
-        permutation_indices = random_state.permutation(xrange(num_rows))
+        permutation_indices = random_state.permutation(range(num_rows))
         # permutation_indices = get_ith_ordering(range(num_rows), data_idx)
         inverse_permutation_indices = numpy.argsort(permutation_indices)
         inverse_permutation_indices_list.append(inverse_permutation_indices)
@@ -190,7 +191,7 @@ def gen_M_c_from_T(T, cctypes=None, colnames=None):
     if cctypes is None:
         cctypes = ['continuous'] * num_cols
     if colnames is None:
-        colnames = range(num_cols)
+        colnames = list(range(num_cols))
     #
     T_array_transpose = numpy.array(T).T
     column_metadata = []
@@ -284,7 +285,7 @@ def at_most_N_rows(T, N, gen_seed=0):
     num_rows = len(T)
     if (N is not None) and (num_rows > N):
         random_state = numpy.random.RandomState(gen_seed)
-        which_rows = random_state.permutation(xrange(num_rows))
+        which_rows = random_state.permutation(range(num_rows))
         which_rows = which_rows[:N]
         T = [T[which_row] for which_row in which_rows]
     return T
@@ -326,7 +327,7 @@ def continuous_or_ignore_from_file_with_colnames(filename, cctypes, max_rows=Non
         num_rows = len(T)
         if (max_rows is not None) and (num_rows > max_rows):
             random_state = numpy.random.RandomState(gen_seed)
-            which_rows = random_state.permutation(xrange(num_rows))
+            which_rows = random_state.permutation(range(num_rows))
             which_rows = which_rows[:max_rows]
             T = [T[which_row] for which_row in which_rows]
         M_r = gen_M_r_from_T(T)
@@ -465,7 +466,7 @@ def get_can_cast_to_float(column_data):
     can_cast = True
     try:
         [float(datum) for datum in column_data]
-    except ValueError, e:
+    except ValueError as e:
         can_cast = False
     return can_cast
     

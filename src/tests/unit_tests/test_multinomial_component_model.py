@@ -3,6 +3,7 @@ import random
 import math
 import numpy
 
+import six
 import unittest
 
 def main():
@@ -192,7 +193,7 @@ class TestMultinomialComponentModelExtensions_FromParametersConstructor(unittest
         
         assert type(draw) is dict
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert key in ['weights']
             assert type(value) is list
             assert math.fabs(sum(value)-1.0) < .0000001
@@ -256,7 +257,7 @@ class TestMultinomialComponentModelExtensions_FromDataConstructor(unittest.TestC
         
         assert type(draw) is dict
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert key in ['weights']
             assert type(value) is list
             assert math.fabs(sum(value)-1.0) < .0000001
@@ -318,7 +319,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
 
         assert type(draw) is dict
 
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert key in ['K', 'dirichlet_alpha']
 
             assert(not math.isnan(value))
@@ -343,7 +344,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
 
         assert type(draw) is dict
 
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert key in ['K', 'dirichlet_alpha']
 
             assert(not math.isnan(value))
@@ -369,7 +370,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
         for draw in draw_list:
             assert type(draw) is dict
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert(not math.isnan(value))
             assert(not math.isinf(value))
 
@@ -392,7 +393,7 @@ class TestMultinomialComponentModelExtensions_static(unittest.TestCase):
         for draw in draw_list:
             assert type(draw) is dict
         
-        for key, value in draw.iteritems():
+        for key, value in six.iteritems(draw):
             assert(not math.isnan(value))
             assert(not math.isinf(value))
 

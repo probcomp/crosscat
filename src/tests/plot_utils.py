@@ -52,7 +52,7 @@ def plot_T(T_array, M_c, filename=None, dir='./', close=True):
     pylab.figure()
     pylab.imshow(T_array, aspect=aspect_ratio, interpolation='none',
                  cmap=pylab.matplotlib.cm.Greens)
-    pylab.gca().set_xticks(range(num_cols))
+    pylab.gca().set_xticks(list(range(num_cols)))
     pylab.gca().set_xticklabels(column_names, rotation=90, size='x-small')
 
     pylab.show()
@@ -111,7 +111,7 @@ def plot_views(T_array, X_D, X_L, M_c, filename=None, dir='./', close=True,
                      interpolation='none', cmap=pylab.matplotlib.cm.Greens)
         plot_cluster_lines(X_D_i, num_cols_i)
         # munge plots
-        pylab.gca().set_xticks(range(num_cols_i))
+        pylab.gca().set_xticks(list(range(num_cols_i)))
         pylab.gca().set_xticklabels(column_names[is_this_view], rotation=90, size='x-small')
         pylab.gca().set_yticklabels([])
         pylab.xlim([-0.5, num_cols_i-0.5])
@@ -202,14 +202,14 @@ def do_gen_feature_z(X_L_list, X_D_list, M_c, filename, tablename=''):
                  cmap=pylab.matplotlib.cm.Greens)
     pylab.colorbar()
     if num_cols < 14:
-      pylab.gca().set_yticks(range(num_cols))
+      pylab.gca().set_yticks(list(range(num_cols)))
       pylab.gca().set_yticklabels(column_names_reordered, size='x-small')
-      pylab.gca().set_xticks(range(num_cols))
+      pylab.gca().set_xticks(list(range(num_cols)))
       pylab.gca().set_xticklabels(column_names_reordered, rotation=90, size='x-small')
     else:
-      pylab.gca().set_yticks(range(num_cols)[::2])
+      pylab.gca().set_yticks(list(range(0, num_cols, 2)))
       pylab.gca().set_yticklabels(column_names_reordered[::2], size='x-small')
-      pylab.gca().set_xticks(range(num_cols)[1::2])
+      pylab.gca().set_xticks(list(range(1, num_cols, 2)))
       pylab.gca().set_xticklabels(column_names_reordered[1::2],
                                   rotation=90, size='small')
     pylab.title('column dependencies for: %s' % tablename)

@@ -2,6 +2,7 @@ import crosscat.cython_code.ContinuousComponentModel as ccm
 import math
 import random
 import numpy
+import six
 
 from scipy.stats import norm as norm
 
@@ -25,7 +26,7 @@ def check_type_force_float(x, name):
     if type(x) is int:
         return float(x)
     elif type(x) is not float and type(x) is not numpy.float64:
-        raise TypeError("%s should be a float" % name)
+        raise TypeError("%r should be a float" % (name,))
     else:
         return x
 
@@ -47,19 +48,18 @@ def check_hyperparams_dict(hypers):
 
     for key in keys:
         if key not in hypers.keys():
-            raise KeyError("missing key in hypers: %s" % key)
+            raise KeyError("missing key in hypers: %r" % (key,))
 
-    for key, value in hypers.iteritems():
+    for key, value in six.iteritems(hypers):
         if key not in keys:
-            raise KeyError("invalid hypers key: %s" % key)
+            raise KeyError("invalid hypers key: %r" % (key,))
 
-        if type(value) is not float \
-        and type(value) is not numpy.float64:
-            raise TypeError("%s should be float" % key)
+        if not isinstance(value, (float, numpy.float64)):
+            raise TypeError("%r should be float" % (key,))
 
         if key in ['nu', 'r', 's']:
             if value <= 0.0:
-                raise ValueError("hypers[%s] should be greater than 0" % key)
+                raise ValueError("hypers[%r] should be greater than 0" % (key,))
 
 
 def check_model_params_dict(params):
@@ -69,22 +69,21 @@ def check_model_params_dict(params):
     keys = ['mu', 'rho']
 
     for key in keys:
-        if key not in params.keys():
-            raise KeyError("missing key in params: %s" % key)
+        if key not in params:
+            raise KeyError("missing key in params: %r" % (key,))
 
-    for key, value in params.iteritems():
+    for key, value in six.iteritems(params):
         if key not in keys:
-            raise KeyError("invalid params key: %s" % key)
+            raise KeyError("invalid params key: %r" % (key,))
 
-        if type(value) is not float \
-        and type(value) is not numpy.float64:
-            raise TypeError("%s should be float" % key)
+        if not isinstance(value, (float, numpy.float64)):
+            raise TypeError("%r should be float" % (key,))
 
         if key == "rho":
             if value <= 0.0:
                 raise ValueError("rho should be greater than 0")
         elif key != "mu":
-            raise KeyError("Invalid params key: %s" % key)
+            raise KeyError("Invalid params key: %r" % (key,))
 
 ###############################################################################
 #   The class extension

@@ -90,7 +90,7 @@ def check_predictive_sample_improvement(component_model_type, seed=0, show_plot=
 				for params in struc['component_params'][0]:
 					weights += numpy.array(params['weights'])*(1.0/num_clusters)
 				weights *= float(N)
-				inf_hist = qtu.bincount(T_inf, bins=range(K))
+				inf_hist = qtu.bincount(T_inf, bins=list(range(K)))
 				err, _ = stats.power_divergence(inf_hist, weights, lambda_='pearson')
 				err = numpy.ones(N)*err
 			else:
@@ -114,13 +114,13 @@ def check_predictive_sample_improvement(component_model_type, seed=0, show_plot=
 
 	if show_plot:
 		pylab.subplot(1,2,1)
-		pylab.errorbar(range(num_transitions), X_mean, yerr=X_err)
+		pylab.errorbar(list(range(num_transitions)), X_mean, yerr=X_err)
 		pylab.xlabel('iteration')
 		pylab.ylabel('error across each data point')
 		pylab.title('error of predictive sample over iterations, N=%i' % N)
 
 		pylab.subplot(1,2,2)
-		pylab.errorbar(range(num_transitions), KL_mean, yerr=KL_err)
+		pylab.errorbar(list(range(num_transitions)), KL_mean, yerr=KL_err)
 		pylab.xlabel('iteration')
 		pylab.ylabel('KL divergence')
 		pylab.title('KL divergence, N=%i' % N)

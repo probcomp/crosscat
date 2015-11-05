@@ -296,7 +296,7 @@ class CrossCatPartitions(object):
 		for i in range(0,self.col_partition.shape[1]):
 			# get the number of partitions
 			K = i+1
-			r = range(1,int(Bn)+1)
+			r = list(range(1, int(Bn)+1))
 
 			# generate the permutations with replacement
 			perms = [];
@@ -469,7 +469,7 @@ class Partition(object):
 # numbers of the second kind. http://en.wikipedia.org/wiki/Bell_number
 def Bell(N):
 	B_N = 0.0;
-	# range(n) produces an array 0,1,...,n-1
+	# range(n) produces an iterator over 0,1,...,n-1
 	for k in range(N+1):
 		snk = Stirling2nd(N,k)
 		B_N += snk
@@ -509,7 +509,7 @@ def lcrp(prt,alpha):
 		print(ns)
 		print("n: " + str(n))
 		print("k: " + str(k))
-		print(range(k))
+		print(list(range(k)))
 		print(" ")
 
 	return lp

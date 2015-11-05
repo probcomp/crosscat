@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.41'
+version = '0.1.42'
 
 try:
     with open('src/version.py', 'rU') as f:
@@ -234,6 +234,7 @@ setup(
     install_requires=[
         'cython>=0.20.1',
         'numpy>=1.7.0',
+        'six',
     ],
     package_dir={
         'crosscat': 'src',
