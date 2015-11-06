@@ -49,10 +49,10 @@ cdef vector[int] convert_int_vector_to_cpp(python_vector):
 
 cdef vector[string] convert_string_vector_to_cpp(python_vector):
      cdef vector[string] ret_vec
-     cdef string str
+     cdef string s
      for value in python_vector:
-          str = value
-          ret_vec.push_back(str)
+          s = value if isinstance(value, six.binary_type) else value.encode()
+          ret_vec.push_back(s)
      return ret_vec
 
 cdef extern from "<boost/numeric/ublas/matrix.hpp>" namespace "boost::numeric::ublas":
