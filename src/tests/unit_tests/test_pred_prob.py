@@ -95,7 +95,7 @@ def test_simple_predictive_probability_unobserved(seed=0):
     # Specify complex pattern of reasonable constraints. These tests demonstrate
     # desired behavior (no crashes), and were addressed in the branch
     # fsaad-conditional-pdf
-    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    Y = [(0, 0, 1), (N_ROWS//2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
     # - Numerical column Q[0].
     vals = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q[0])
     # - Categorical column Q[1].
@@ -207,14 +207,14 @@ def test_predictive_probability_unobserved(seed=0):
 
     # Predictive and simple should be the same in univariate case (cont).
     Q = [(N_ROWS, 0, 0.5)]
-    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    Y = [(0, 0, 1), (N_ROWS//2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
     val_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
     val_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
     assert val_0 == val_1
 
     # Predictive and simple should be the same in univariate case (disc).
     Q = [(N_ROWS, 2, 1)]
-    Y = [(0, 0, 1), (N_ROWS/2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
+    Y = [(0, 0, 1), (N_ROWS//2, 4, 5), (N_ROWS, 1, 0.5), (N_ROWS+1, 0, 1.2)]
     val_0 = engine.predictive_probability(M_c, X_L, X_D, Y, Q)
     val_1 = engine.simple_predictive_probability(M_c, X_L, X_D, Y, Q)
     assert val_0 == val_1
