@@ -184,10 +184,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         random.seed(gen_seed)
 
         hypers = self.get_hypers()
-        s = hypers['s']
-        r = hypers['r']
-        nu = hypers['nu']
-        m = hypers['mu']
+        s = hypers[b's']
+        r = hypers[b'r']
+        nu = hypers[b'nu']
+        m = hypers[b'mu']
 
         rho = random.gammavariate(nu/2.0, s)
         mu = random.normalvariate(m, (r/rho)**.5)
@@ -217,10 +217,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         N = float(len(X))
 
         hypers = self.get_hypers()
-        s = hypers['s']
-        r = hypers['r']
-        nu = hypers['nu']
-        m = hypers['mu']
+        s = hypers[b's']
+        r = hypers[b'r']
+        nu = hypers[b'nu']
+        m = hypers[b'mu']
 
         sum_err = numpy.sum((mu-X)**2.0)
 
