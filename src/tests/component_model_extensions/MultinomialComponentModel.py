@@ -268,8 +268,8 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         numpy.random.seed(gen_seed)
 
         hypers = self.get_hypers()
-        dirichlet_alpha = hypers['dirichlet_alpha']
-        K = hypers['K']
+        dirichlet_alpha = hypers[b'dirichlet_alpha']
+        K = hypers[b'K']
 
         alpha = numpy.array([dirichlet_alpha]*int(K))
 
@@ -294,10 +294,10 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 
         hypers = self.get_hypers()
 
-        assert len(params['weights']) == int(hypers['K'])
+        assert len(params['weights']) == int(hypers[b'K'])
 
-        dirichlet_alpha = hypers['dirichlet_alpha']
-        K = float(hypers['K'])
+        dirichlet_alpha = hypers[b'dirichlet_alpha']
+        K = float(hypers[b'K'])
         check_data_vs_k(X,K)
 
         weights = numpy.array(params['weights'])
@@ -385,7 +385,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
             raise TypeError("gen_seed should be an int")
 
         hypers = self.get_hypers()
-        K = hypers['K']
+        K = hypers[b'K']
         check_data_vs_k(X,K)
 
         random.seed(gen_seed)
