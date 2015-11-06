@@ -405,26 +405,25 @@ def create_component_model(column_metadata, column_hypers, suffstats):
     if modeltype == 'normal_inverse_gamma':
         component_model = CCM.p_ContinuousComponentModel(
             column_hypers,
-            count=suffstats.get('N', 0),
-            sum_x=suffstats.get('sum_x', None),
-            sum_x_squared=suffstats.get('sum_x_squared', None))
+            count=suffstats.get(b'N', 0),
+            sum_x=suffstats.get(b'sum_x', None),
+            sum_x_squared=suffstats.get(b'sum_x_squared', None))
     elif modeltype == 'symmetric_dirichlet_discrete':
         # TODO Can we change the suffstats data structure not to
         # include the total count in the dictionary of per-item
         # counts, please?
         suffstats = copy.copy(suffstats)
-        count = suffstats.pop('N', 0)
+        count = suffstats.pop(b'N', 0)
         component_model = MCM.p_MultinomialComponentModel(
             column_hypers, count=count, counts=suffstats)
     elif modeltype == 'vonmises':
         component_model = CYCM.p_CyclicComponentModel(
             column_hypers,
-            count=suffstats.get('N', 0),
-            sum_sin_x=suffstats.get('sum_sin_x', None),
-            sum_cos_x=suffstats.get('sum_cos_x', None))
+            count=suffstats.get(b'N', 0),
+            sum_sin_x=suffstats.get(b'sum_sin_x', None),
+            sum_cos_x=suffstats.get(b'sum_cos_x', None))
     else:
-        assert False, \
-            "create_component_model: unknown modeltype: %s" % modeltype
+        raise ValueError('unknown modeltype: %r' % (modeltype,))
     return component_model
 
 def create_cluster_model(zipped_column_info, row_partition_model,
@@ -445,7 +444,7 @@ def create_empty_cluster_model(zipped_column_info):
         column_metadata, column_hypers, _column_component_suffstats = \
             zipped_column_info[global_column_idx]
         component_model = create_component_model(column_metadata,
-                                                 column_hypers, dict(N=None))
+                                                 column_hypers, {b'N': None})
         cluster_component_models[global_column_idx] = component_model
     return cluster_component_models
 
@@ -537,7 +536,7 @@ def determine_cluster_data_logps(M_c, X_L, X_D, Y, query_row, view_idx):
 
 def determine_cluster_crp_logps(view_state_i):
     counts = view_state_i['row_partition_model']['counts']
-    alpha = view_state_i['row_partition_model']['hypers'].get('alpha')
+    alpha = view_state_i['row_partition_model']['hypers'].get(b'alpha')
     counts_appended = numpy.append(counts, alpha)
     sum_counts_appended = sum(counts_appended)
     logps = numpy.log(counts_appended / float(sum_counts_appended))
