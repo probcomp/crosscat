@@ -8,7 +8,10 @@ from scipy.stats import norm as norm
 
 from crosscat.utils.general_utils import logmeanexp
 
-next_seed = lambda : random.randrange(2147483647)
+# FIXME: Using this instead of randrange because randrange is different before
+# and after Python 3.2, and we hardcoded some likelihoods that depend on the
+# RNG.
+next_seed = lambda : int(random.random() * 2147483647)
 
 LOG_2 = math.log(2.0)
 default_hyperparameters = dict(nu=1.0, mu=0.0, s=1.0, r=1.0)
