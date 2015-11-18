@@ -21,6 +21,7 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string as cpp_string
 from libcpp.map cimport map as cpp_map
 from cython.operator import dereference
+import six
 
 
 cdef extern from "string" namespace "std":
@@ -34,7 +35,8 @@ cdef cpp_string get_string(in_string):
 
 cdef set_string_double_map(cpp_map[cpp_string, double] &out_map, in_map):
 	for key in in_map:
-		out_map[get_string(key)] = in_map[key]
+		kb = key.encode() if isinstance(key, six.text_type) else key
+		out_map[get_string(kb)] = in_map[key]
 
 cdef extern from "ContinuousComponentModel.h":
 	cdef cppclass ContinuousComponentModel:

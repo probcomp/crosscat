@@ -21,6 +21,7 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string as cpp_string
 from libcpp.map cimport map as cpp_map
 from cython.operator import dereference
+import six
 
 
 cdef extern from "string" namespace "std":
@@ -34,7 +35,8 @@ cdef cpp_string get_string(in_string):
 
 cdef set_string_double_map(cpp_map[cpp_string, double] &out_map, in_map):
     for key in in_map:
-        out_map[get_string(key)] = in_map[key]
+        kb = key.encode() if isinstance(key, six.text_type) else key
+        out_map[get_string(kb)] = in_map[key]
 
 cdef get_string_double_map(to_map, cpp_map[cpp_string, double] &from_map):
     for key, value in from_map:
@@ -64,12 +66,14 @@ cdef class p_MultinomialComponentModel:
     cdef MultinomialComponentModel *thisptr
     cdef cpp_map[cpp_string, double] hypers
     def __cinit__(self, in_map, count=None, counts=None):
+          cdef cpp_map[cpp_string, double] encoded_counts
           set_string_double_map(self.hypers, in_map)
           if count is None:
               self.thisptr = new_MultinomialComponentModel(self.hypers)
           else:
-              self.thisptr = new_MultinomialComponentModel(self.hypers,
-                                                          count, counts)
+              set_string_double_map(encoded_counts, counts)
+              self.thisptr = new_MultinomialComponentModel(
+                  self.hypers, count, encoded_counts)
     def __dealloc__(self):
         del_MultinomialComponentModel(self.thisptr)
     def get_draw(self, seed):

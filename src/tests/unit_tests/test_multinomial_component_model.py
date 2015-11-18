@@ -153,24 +153,24 @@ class TestMultinomialComponentModelExtensions_FromParametersConstructor(unittest
 
     def test_all_hyperparameters_intialized(self):  
         these_hyperparameters = self.component_model.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
         these_hyperparameters = self.component_model_w_params.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
         these_hyperparameters = self.component_model_w_hypers.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
         these_hyperparameters = self.component_model_w_params_and_hypers.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
     def test_all_suffstats_intialized(self):
         # make sure each key exists (should be keys 0,..,4)
-        key_key = [str(i) for i in range(5)]
+        key_key = [(u'%d' % i).encode() for i in range(5)]
 
         _, these_suffstats = self.component_model.get_suffstats()
         for suffstat in key_key:
@@ -232,17 +232,17 @@ class TestMultinomialComponentModelExtensions_FromDataConstructor(unittest.TestC
 
     def test_all_hyperparameters_intialized(self):  
         these_hyperparameters = self.component_model.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
         these_hyperparameters = self.component_model_w_hypers.get_hypers()
-        for hyperparameter in ['K', 'dirichlet_alpha']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'K', b'dirichlet_alpha']:
+            assert hyperparameter in these_hyperparameters
 
 
     def test_all_suffstats_intialized(self):
         # make sure each key exists (should be keys 0,..,4)
-        key_key = [str(i) for i in range(5)]
+        key_key = [(u'%d' % i).encode() for i in range(5)]
 
         _, these_suffstats = self.component_model.get_suffstats()
         for suffstat in key_key:

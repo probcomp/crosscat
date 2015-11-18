@@ -156,14 +156,14 @@ class TestContinuousComponentModelExtensions_FromParametersConstructor(unittest.
     def test_all_hyperparameters_intialized(self):  
         these_hyperparameters = self.component_model.get_hypers()
         # make sure each key exists
-        for hyperparameter in ['mu', 'nu', 'r', 's']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'mu', b'nu', b'r', b's']:
+            assert hyperparameter in these_hyperparameters
 
     def test_all_suffstats_intialized(self):
         these_suffstats = self.component_model.get_suffstats()
         # make sure each key exists
-        for suffstat in ['sum_x', 'sum_x_squared']:
-            assert suffstat in these_suffstats.keys()
+        for suffstat in [b'sum_x', b'sum_x_squared']:
+            assert suffstat in these_suffstats
 
     def test_draw_component_model_params(self):
         draw = self.component_model.sample_parameters_given_hyper()
@@ -198,14 +198,14 @@ class TestContinuousComponentModelExtensions_FromDataConstructor(unittest.TestCa
     def test_all_hyperparameters_intialized(self):  
         these_hyperparameters = self.component_model.get_hypers()
         # make sure each key exists
-        for hyperparameter in ['mu', 'nu', 'r', 's']:
-            assert(hyperparameter in these_hyperparameters.keys())
+        for hyperparameter in [b'mu', b'nu', b'r', b's']:
+            assert hyperparameter in these_hyperparameters
 
     def test_all_suffstats_intialized(self):
         these_suffstats = self.component_model.get_suffstats()
         # make sure each key exists
-        for suffstat in ['sum_x', 'sum_x_squared']:
-            assert suffstat in these_suffstats.keys()
+        for suffstat in [b'sum_x', b'sum_x_squared']:
+            assert suffstat in these_suffstats
 
     def test_draw_component_model_params(self):
         draw = self.component_model.sample_parameters_given_hyper()
