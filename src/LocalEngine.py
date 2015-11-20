@@ -627,11 +627,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             return X_L_out[0], X_D_out[0]
 
     def ensure_row_dep_constraints(self, M_c, M_r, T, X_L, X_D, dep_constraints,
-            wrt=None, max_rejections=100):
+            max_rejections=100):
+        """dep_constraints is a list of (row1, row2, [wrt_cols...], dep)."""
         X_L_new, X_D_new = X_L, X_D
-        for row1, row2, dep in dep_constraints:
+        for row1, row2, wrt_cols, dep in dep_constraints:
             X_L_new, X_D_new = self.ensure_row_dep_constraint(M_c, T, X_L_new,
-                X_D_new, row1, row2, dependent=dep, wrt=None,
+                X_D_new, row1, row2, dependent=dep, wrt=wrt_cols,
                 max_iter=max_rejections)
         return X_L_new, X_D_new
 
