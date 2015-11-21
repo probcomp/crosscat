@@ -627,7 +627,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             return X_L_out[0], X_D_out[0]
 
     def ensure_row_dep_constraints(self, M_c, M_r, T, X_L, X_D, dep_constraints,
-            max_rejections=100):
+            max_rejections=10000):
         """dep_constraints is a list of (row1, row2, [wrt_cols...], dep)."""
         X_L_new, X_D_new = X_L, X_D
         for row1, row2, wrt_cols, dep in dep_constraints:
@@ -637,7 +637,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         return X_L_new, X_D_new
 
     def ensure_row_dep_constraint(self, M_c, T, X_L, X_D, row1, row2,
-            dependent=True, wrt=None, max_iter=100, force=False):
+            dependent=True, wrt=None, max_iter=10000, force=False):
         """Ensures dependencey or indepdendency between rows with respect to
         (wrt) columns."""
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
@@ -659,6 +659,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                     X_D_tmp = res[1]
                     iters += 1
                 X_L_list[i] = X_L_tmp
+                if 'row_ensures' not in X_L_list[i]:
+                    X_L_list[i]['row_ensures'] = dict()
+                if 'row_ensures' in X_L_list[i]:
+                    for col in wrt:
+                        if col not in X_L_list[i]['row_ensures']:
+                            X_L_list[i]['row_ensures'][col] = []
+                        X_L_list[i]['row_ensures'][col].append(row1)
+                        X_L_list[i]['row_ensures'][col].append(row2)
                 X_D_list[i] = X_D_tmp
 
         if was_multistate:
