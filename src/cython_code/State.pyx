@@ -140,6 +140,8 @@ cdef extern from "State.h":
                                    vector[vector[int]] column_partition,
                                    c_map[int, c_set[int]] col_ensure_dep,
                                    c_map[int, c_set[int]] col_ensure_ind,
+                                   c_map[int, vector[c_set[int]]] row_ensure_dep,
+                                   c_map[int, vector[c_set[int]]] row_ensure_ind,
                                    double column_crp_alpha,
                                    vector[vector[vector[int]]] row_partition_v,
                                    vector[double] row_crp_alpha_v,
@@ -238,9 +240,8 @@ cdef class p_State:
               row_crp_alpha_v = constructor_args['row_crp_alpha_v']
               col_ensure_dep = constructor_args['col_ensure_dep']
               col_ensure_ind = constructor_args['col_ensure_ind']
-              if col_ensure_dep is None:
-                  col_ensure_dep = empty_map_of_int_set()
-                  col_ensure_ind = empty_map_of_int_set()
+              row_ensure_dep = constructor_args['row_ensure_dep']
+              row_ensure_ind = constructor_args['row_ensure_ind']
               self.thisptr = new_State(dereference(self.dataptr),
                                        self.column_types,
                                        self.event_counts,
@@ -249,6 +250,8 @@ cdef class p_State:
                                        column_partition,
                                        col_ensure_dep,
                                        col_ensure_ind,
+                                       row_ensure_dep,
+                                       row_ensure_ind,
                                        column_crp_alpha,
                                        row_partition_v, row_crp_alpha_v,
                                        ROW_CRP_ALPHA_GRID,
@@ -515,6 +518,21 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
          else:
            col_ensure_ind = {int(k):set(v) for (k,v) in col_ensure_ind_json.items()}
 
+     # Need to convert from dict(string:list) to c_map[int vector[c_set[int]]].
+     if X_L.get('row_ensure', None) is None:
+         row_ensure_dep = empty_map_of_int_vecset()
+         row_ensure_ind = empty_map_of_int_vecset()
+     else:
+         row_ensure_dep_json = X_L['row_ensure'].get('dependent', None)
+         if row_ensure_dep_json is None:
+           row_ensure_dep = empty_map_of_int_vecset()
+         else:
+           row_ensure_dep = {int(k):list(v) for (k,v) in row_ensure_dep_json.items()}
+         row_ensure_ind_json = X_L['row_ensure'].get('independent', None)
+         if row_ensure_ind_json is None:
+           row_ensure_ind = empty_map_of_int_vecset()
+         else:
+           row_ensure_ind = {int(k):list(v) for (k,v) in row_ensure_ind_json.items()}
      n_grid = 31
      seed = 0
      ct_kernel=0
@@ -532,6 +550,8 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
      constructor_args['CT_KERNEL'] = ct_kernel
      constructor_args['col_ensure_dep'] = col_ensure_dep
      constructor_args['col_ensure_ind'] = col_ensure_ind
+     constructor_args['row_ensure_dep'] = row_ensure_dep
+     constructor_args['row_ensure_ind'] = row_ensure_ind
      #
      return constructor_args
 
