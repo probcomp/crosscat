@@ -114,6 +114,8 @@ cdef extern from "State.h":
           c_map[string, double] get_row_partition_model_hypers_i(int view_idx)
           c_map[int, c_set[int]] get_column_dependencies()
           c_map[int, c_set[int]] get_column_independencies()
+          c_map[int, vector[c_set[int]]] get_row_dependencies()
+          c_map[int, vector[c_set[int]]] get_row_independencies()
           vector[int] get_row_partition_model_counts_i(int view_idx)
           vector[vector[c_map[string, double]]] get_column_component_suffstats_i(int view_idx)
           #
@@ -374,6 +376,20 @@ cdef class p_State:
         else:
             return retval
 
+    def get_row_ensure_dep(self):
+        retval = self.thisptr.get_row_dependencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
+
+    def get_row_ensure_ind(self):
+        retval = self.thisptr.get_row_independencies()
+        if len(retval) == 0:
+            return None
+        else:
+            return retval
+
     # mutators
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
@@ -442,6 +458,21 @@ cdef class p_State:
           else:
              col_ensure_ind_json = {str(k):list(v) for (k,v) in col_ensure_ind.items()}
 
+          def listify(list_of_sets):
+            return list(list(s) for s in list_of_sets)
+
+          # Need to convert from c_map[int vec[c_set[int]] to dict(string:list).
+          row_ensure_dep = self.get_row_ensure_dep()
+          row_ensure_ind = self.get_row_ensure_ind()
+          if row_ensure_dep is None:
+             row_ensure_dep_json = {}
+          else:
+             row_ensure_dep_json = {str(k):listify(v) for (k,v) in row_ensure_dep.items()}
+          if row_ensure_ind is None:
+             row_ensure_ind_json = {}
+          else:
+             row_ensure_ind_json = {str(k):listify(v) for (k,v) in row_ensure_ind.items()}
+
           X_L = dict()
           X_L['column_partition'] = column_partition
           X_L['column_hypers'] = column_hypers
@@ -450,6 +481,10 @@ cdef class p_State:
               X_L['col_ensure'] = dict()
               X_L['col_ensure']['dependent'] = col_ensure_dep_json
               X_L['col_ensure']['independent'] = col_ensure_ind_json
+          if row_ensure_dep is not None or row_ensure_ind is not None:
+              X_L['row_ensure'] = dict()
+              X_L['row_ensure']['dependent'] = row_ensure_dep_json
+              X_L['row_ensure']['independent'] = row_ensure_ind_json
 
           sparsify_X_L(self.M_c, X_L)
           return X_L
@@ -533,6 +568,7 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
            row_ensure_ind = empty_map_of_int_vecset()
          else:
            row_ensure_ind = {int(k):list(v) for (k,v) in row_ensure_ind_json.items()}
+
      n_grid = 31
      seed = 0
      ct_kernel=0
