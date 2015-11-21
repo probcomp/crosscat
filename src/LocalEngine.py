@@ -659,14 +659,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                     X_D_tmp = res[1]
                     iters += 1
                 X_L_list[i] = X_L_tmp
-                if 'row_ensures' not in X_L_list[i]:
-                    X_L_list[i]['row_ensures'] = dict()
-                if 'row_ensures' in X_L_list[i]:
+                if 'row_ensure' not in X_L_list[i]:
+                    X_L_list[i]['row_ensure'] = dict()
+                if 'row_ensure' in X_L_list[i]:
                     for col in wrt:
-                        if col not in X_L_list[i]['row_ensures']:
-                            X_L_list[i]['row_ensures'][col] = []
-                        X_L_list[i]['row_ensures'][col].append(row1)
-                        X_L_list[i]['row_ensures'][col].append(row2)
+                        if col not in X_L_list[i]['row_ensure']:
+                            X_L_list[i]['row_ensure'][col] = []
+                        X_L_list[i]['row_ensure'][col].append(row1)
+                        X_L_list[i]['row_ensure'][col].append(row2)
                 X_D_list[i] = X_D_tmp
 
         if was_multistate:
