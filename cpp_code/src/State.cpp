@@ -33,6 +33,8 @@ State::State(const MatrixD& data,
              const vector<vector<int> >& column_partition,
              const std::map<int, std::set<int> >& col_ensure_dep,
              const std::map<int, std::set<int> >& col_ensure_ind,
+             const std::map<int, vector<std::set<int> > >& row_ensure_dep,
+             const std::map<int, vector<std::set<int> > >& row_ensure_ind,
              double COLUMN_CRP_ALPHA,
              const vector<vector<vector<int> > >& row_partition_v,
              const vector<double>& row_crp_alpha_v,
@@ -47,6 +49,8 @@ State::State(const MatrixD& data,
     data_score = 0;
     column_dependencies = col_ensure_dep;
     column_independencies = col_ensure_ind;
+    row_dependencies = row_ensure_dep;
+    row_independencies = row_ensure_ind;
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -489,6 +493,14 @@ std::map<int, std::set<int> > State::get_column_dependencies() const {
 
 std::map<int, std::set<int> > State::get_column_independencies() const {
     return column_independencies;
+}
+
+std::map<int, vector<std::set<int> > > State::get_row_dependencies() const {
+    return row_dependencies;
+}
+
+std::map<int, vector<std::set<int> > > State::get_row_independencies() const {
+    return row_independencies;
 }
 
 vector<vector<int> > State::get_X_D() const {
