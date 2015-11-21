@@ -668,7 +668,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                         if col not in X_L_list[i]['row_ensure'][dependency]:
                             X_L_list[i]['row_ensure'][dependency][col] = []
                         X_L_list[i]['row_ensure'][dependency][col].append(
-                            set((row1, row2)))
+                            list((row1, row2)))
                 X_D_list[i] = X_D_tmp
 
         if was_multistate:
@@ -855,7 +855,6 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
         diagnostic_func_dict = dict()
         every_N = None
     child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
-    # import ipdb; ipdb.set_trace()
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
                             ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
                             COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID,
