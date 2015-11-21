@@ -661,12 +661,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 X_L_list[i] = X_L_tmp
                 if 'row_ensure' not in X_L_list[i]:
                     X_L_list[i]['row_ensure'] = dict()
-                if 'row_ensure' in X_L_list[i]:
-                    for col in wrt:
-                        if col not in X_L_list[i]['row_ensure']:
-                            X_L_list[i]['row_ensure'][col] = []
-                        X_L_list[i]['row_ensure'][col].append(row1)
-                        X_L_list[i]['row_ensure'][col].append(row2)
+                    X_L_list[i]['row_ensure']['dependent'] = dict()
+                    X_L_list[i]['row_ensure']['independent'] = dict()
+                for col in wrt:
+                        dependency = 'dependent' if dependent else 'independent'
+                        if col not in X_L_list[i]['row_ensure'][dependency]:
+                            X_L_list[i]['row_ensure'][dependency][col] = []
+                        X_L_list[i]['row_ensure'][dependency][col].append(
+                            set((row1, row2)))
                 X_D_list[i] = X_D_tmp
 
         if was_multistate:
