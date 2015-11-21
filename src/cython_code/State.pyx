@@ -32,6 +32,9 @@ import six
 import crosscat.utils.file_utils as fu
 import crosscat.utils.general_utils as gu
 
+cdef c_map[int, vector[c_set[int]]] empty_map_of_int_vecset():
+    cdef c_map[int, vector[c_set[int]]] retval
+    return retval
 
 cdef c_map[int, c_set[int]] empty_map_of_int_set():
     cdef c_map[int, c_set[int]] retval
