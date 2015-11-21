@@ -75,6 +75,8 @@ public:
           const std::vector<std::vector<int> >& column_partition,
           const std::map<int, std::set<int> >& col_ensure_dep,
           const std::map<int, std::set<int> >& col_ensure_ind,
+          const std::map<int, std::vector<std::set<int> > >& row_ensure_dep,
+          const std::map<int, std::vector<std::set<int> > >& row_ensure_ind,
           double COLUMN_CRP_ALPHA,
           const std::vector<std::vector<std::vector<int> > >& row_partition_v,
           const std::vector<double>& row_crp_alpha_v,
@@ -124,6 +126,8 @@ public:
     //
     std::map<int, std::set<int> > get_column_dependencies() const;
     std::map<int, std::set<int> > get_column_independencies() const;
+    std::map<int, std::vector<std::set<int> > > get_row_dependencies() const;
+    std::map<int, std::vector<std::set<int> > > get_row_independencies() const;
     /**
      * \return The number of columns in the state
      */
@@ -400,6 +404,9 @@ private:
     // column structure ensure
     std::map<int, std::set<int> > column_dependencies;
     std::map<int, std::set<int> > column_independencies;
+    // row structure ensure
+    std::map<int, std::vector<std::set<int> > > row_dependencies;
+    std::map<int, std::vector<std::set<int> > > row_independencies;
     // grids
     std::vector<double> column_crp_alpha_grid;
     std::vector<double> row_crp_alpha_grid;
