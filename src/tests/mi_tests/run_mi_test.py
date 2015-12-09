@@ -134,7 +134,7 @@ if __name__ == '__main__':
 	directory_path = tempfile.mkdtemp(prefix='mi_analysis_',
                                 dir=dirname)
 
-	print 'output sent to %s' % directory_path
+	print('output sent to %s' % directory_path)
 
 	output_path = os.path.join(directory_path, 'output')
 	output_filename = os.path.join(directory_path, 'hadoop_output')

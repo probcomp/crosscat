@@ -17,6 +17,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import print_function
 from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
@@ -316,7 +317,7 @@ cdef class p_State:
          column_names_i = []
          for idx in column_indices_i:
               if idx not in idx_to_name:
-                   print "%s not in %s" % (idx, idx_to_name)
+                   print("%r not in %r" % (idx, idx_to_name))
               value = idx_to_name[idx]
               column_names_i.append(value)
          return column_names_i
@@ -415,7 +416,7 @@ cdef class p_State:
                         else:
                              print_str = 'INVALID TRANSITION TYPE TO ' \
                                  'State.transition: %s' % which_transition
-                             print print_str
+                             print(print_str)
          return score_delta
     def transition_column_crp_alpha(self):
          return self.thisptr.transition_column_crp_alpha()
