@@ -23,7 +23,6 @@ import os
 #
 import numpy
 #
-import crosscat.settings as S
 import crosscat.utils.data_utils as du
 import crosscat.utils.file_utils as fu
 import crosscat.LocalEngine as LE
