@@ -8,7 +8,7 @@ endif
 
 CC = gcc
 CXX = g++
-CXXOPTS := $(CXXOPTS) -lm
+CXXOPTS := $(CXXOPTS)
 
 ifdef BOOST_ROOT
 CXXOPTS := $(CXXOPTS) -L$(BOOST_ROOT)/lib -I$(BOOST_ROOT)/include
@@ -69,7 +69,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(INC)/%.h $(HEADERS)
 	$(CXX) -c $< -o $@ $(CXXOPTS) -I$(INC)
 
 $(BIN): $(OBJECTS) $(MAIN) $(HEADERS)
-	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -lboost_program_options -I$(INC)
+	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -lm -lboost_program_options -I$(INC)
 
 $(TEST)/%: $(TEST)/%.cpp $(HEADERS) $(OBJECTS)
 	$(CXX) $< -o $@ $(CXXOPTS) -I$(INC) $(OBJECTS)
