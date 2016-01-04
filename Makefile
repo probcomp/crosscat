@@ -11,7 +11,6 @@ clean:
 	cd $(CPP_DIR) && $(MAKE) clean
 	cd $(CYT) && $(MAKE) clean
 	cd $(XNET) && $(MAKE) clean
-	#
 	cd $(DOCS)/sphinx && rm -rf _build
 	cd $(DOCS)/latex && $(MAKE) clean
 	cd $(DOCS)/doxygen && rm -rf html latex
