@@ -7,17 +7,47 @@ except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
 
-version = '0.1.45'
+def get_version():
+    with open('VERSION', 'rb') as f:
+        version = f.read().strip()
 
-try:
-    with open('src/version.py', 'rU') as f:
-        version_old = f.readlines()
-except IOError:
-    version_old = None
-version_new = ['__version__ = %s\n' % (repr(version),)]
-if version_old != version_new:
-    with open('src/version.py', 'w') as f:
-        f.writelines(version_new)
+    # Append the Git commit id if this is a development version.
+    if version.endswith('+'):
+        tag = 'v' + version[:-1]
+        try:
+            import subprocess
+            desc = subprocess.check_output([
+                'git', 'describe', '--dirty', '--match', tag,
+            ])
+        except Exception:
+            version += 'unknown'
+        else:
+            assert desc.startswith(tag)
+            import re
+            match = re.match(r'v([^-]*)-([0-9]+)-(.*)$', desc)
+            if match is None:       # paranoia
+                version += 'unknown'
+            else:
+                ver, rev, local = match.groups()
+                version = '%s.post%s+%s' % (ver, rev, local.replace('-', '.'))
+                assert '-' not in version
+
+    return version
+
+def write_version_py(path):
+    try:
+        with open(path, 'rb') as f:
+            version_old = f.read()
+    except IOError:
+        version_old = None
+    version_new = '__version__ = %r\n' % (version,)
+    if version_old != version_new:
+        print 'writing %s' % (path,)
+        with open(path, 'wb') as f:
+            f.write(version_new)
+
+version = get_version()
+write_version_py('src/version.py')  # .gitignored.
 
 try:
     from Cython.Distutils import build_ext
