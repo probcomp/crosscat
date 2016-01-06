@@ -42,8 +42,13 @@ def write_version_py(path):
         version_old = None
     version_new = '__version__ = %r\n' % (version,)
     if version_old != version_new:
-        with open(path, 'wb') as f:
-            f.write(version_new)
+        try:
+            with open(path, 'wb') as f:
+                f.write(version_new)
+        except IOError:
+            pass
+            # If this is a read-only filesystem, probably we're not making
+            # changes we'll want to commit anyway.
 
 version = get_version()
 
