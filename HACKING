@@ -1,52 +1,95 @@
-Do work on branches made from master named YYYYMMDD-USERNAME-TOPIC,
-e.g. 20150910-riastradh-tests.  When a branch is ready to merge, first
-run:
+Notes for anyone hacking crosscat
 
-    % git checkout master
-    % git merge --no-ff --no-commit 20150910-riastradh-tests
+* Automatic tests
 
-Next, make sure you have a clean tree, and run the automatic tests:
+Every commit on long-term branches including master should pass
 
-    % ./check.sh
+   % ./check.sh
 
-I recommend running check.sh in your Git pre-commit hook
-(.git/hooks/pre-commit).
+which builds crosscat and runs the automatic tests.  Please run this
+in your .git/hooks/pre-commit script during development, and in each
+commit please add or update automatic tests for any bugs you add or
+features you fix in the that commit.
 
-Then edit setup.py to bump the version number, and finish the merge with:
+check.sh does a clean build of crosscat into the build/ directory and
+then either runs `py.test tests shell', if you pass it no arguments;
+or runs py.test with the arguments supplied.
 
-    % git add setup.py
-    % git commit
+Thus, if you're hacking a limited part of crosscat, you can, e.g.,
+run a subset of tests, and stop at the first failure, with
 
-Name the new version number in the commit message.  E.g.,
+   % ./check.sh -x tests/test_frobnitz.py
 
-    Merge branch '20150910-riastradh-tests'
+However, please double-check that every commit you have made passes
+all tests before publishing the commits.
 
-    Bump version to 0.1.24.
+* Versions
 
-Tag the commit with an annotated tag:
+Our version scheme, compatible with PEP 440:
 
-    % git tag -a -m v0.1.24 v0.1.24
+    <major>.<minor>[.<teeny>]a<date>    (prerelease snapshot)
+    <major>.<minor>[.<teeny>]rc<N>      (release candidate)
+    <major>.<minor>[.<teeny>]           (release)
 
-Finally, once it is all merged, you may push master to origin, if
-nobody else has done that yet.  If someone else has pushed anything,
-discard your merge and start over:
+We do not currently make any semantic API compatibility guarantees
+about the meaning of <major>, <minor>, and <teeny>.
 
-    % git reset --hard origin/master
+In the source tree, the VERSION file contains either the current
+release version number, or the most recent tagged version number
+followed by a plus sign `+'.  In that case, a suffix will be added to
+the most recent version number, derived from `git describe', of the
+form:
 
-Thus, every functional commit on master merges a branch and bumps the
-version number simultaneously, and passes the automatic tests.
+    .post<N>+g<commitid>[.<dirty>]
+
+The Git tag for a tagged version is named with a `v' prefix.  Note
+that the content of VERSION for any tagged version MUST NOT include a
+`+' suffix, so that `cat VERSION' is sufficient to find the version
+number, and `git describe' is not necessary.
+
+To tag a new version:
+
+1. Set VERSION to the new version, say `0.2.42':
+
+    % echo 0.2.42 > VERSION
+    % git commit -m 'Bump version to 0.2.42.' VERSION
+
+2. Tag it with an annotated tag:
+
+    % git tag -a -m v0.2.42 v0.2.42
+
+   If you want, you can include release notes in the annotated tag
+   message.
+
+3. Append `+' to the version in VERSION:
+
+    % echo 0.2.42+ > VERSION
+    % git commit -m 'Bump version to 0.2.42+.' VERSION
+
+There is a handy script that automates most of the above:
+  https://github.com/gregory-marton/git-porcelain/blob/master/src/git-bump
+Please do write meaningful change logs.
+
+* Branches
+
+We prefer pull-request branches to be named as YYYYMMDD-USERNAME-TOPIC,
+e.g. 20150910-riastradh-tests.
+
+Every functional change should bump the version number (see Versions above).
 Limited non-functional changes, e.g. to README or HACKING, may occur
 on master without a branch or version number bump.
+
+* Tests
 
 If you add new functionality, add automatic tests for it.  If you fix
 something that the automatic tests don't detect, add tests for it and
 make sure they fail without your fix.  If you break the tests, fix
 them.
 
-Platforms:
+* Platforms:
 
-* Ubuntu 14.04 LTS and recent OS X are supported.
-* C++ code should be compatible with C++03.
-* New Python code should be in the same style as Bayeslite: Doubled blank lines
-  are not necessary, and continuation lines should be indented four spaces
-  instead of aligned.
+    * Ubuntu 14.04 LTS and recent OS X are supported.
+    * C++ code should be compatible with C++03.
+    * New Python code should be in the same style as Bayeslite: Doubled blank
+      lines are not necessary, and continuation lines should be indented four
+      spaces instead of aligned.
