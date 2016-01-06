@@ -42,12 +42,10 @@ def write_version_py(path):
         version_old = None
     version_new = '__version__ = %r\n' % (version,)
     if version_old != version_new:
-        print 'writing %s' % (path,)
         with open(path, 'wb') as f:
             f.write(version_new)
 
 version = get_version()
-write_version_py('src/version.py')  # .gitignored.
 
 try:
     from Cython.Distutils import build_ext
