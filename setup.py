@@ -51,6 +51,7 @@ def write_version_py(path):
             # changes we'll want to commit anyway.
 
 version = get_version()
+write_version_py()
 
 try:
     from Cython.Distutils import build_ext
