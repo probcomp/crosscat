@@ -18,7 +18,8 @@
 *   limitations under the License.
 */
 #include "State.h"
-
+#include <assert.h>
+#include <math.h>
 
 using namespace std;
 
@@ -435,7 +436,10 @@ double State::get_data_score() const {
 }
 
 double State::get_marginal_logp() const {
-    return column_crp_score + get_data_score();
+    assert(!isnan(column_crp_score));
+    double ds = get_data_score();
+    assert(!isnan(ds));
+    return column_crp_score + ds;
 }
 
 map<string, double> State::get_row_partition_model_hypers_i(
