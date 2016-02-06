@@ -60,7 +60,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CrossCat'
-copyright = u'2013, MIT Probabilistic Computing Project + Univ. of Louisville'
+copyright = (u'2010-2016, MIT Probabilistic Computing Project '
+             u'+ Univ. of Louisville')
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
