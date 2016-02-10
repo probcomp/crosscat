@@ -24,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <math.h>   // for log()
+#include <cmath>   // for log()
 #include <set>
 #include <vector>
 

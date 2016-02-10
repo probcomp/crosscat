@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <map>
-#include <math.h> // isnan, isfinite
+#include <cmath> // isnan, isfinite
 #include <set>
 #include <sstream> // stringstream in stringify()
 #include <string>
