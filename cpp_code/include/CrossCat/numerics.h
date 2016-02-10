@@ -21,13 +21,13 @@
 #define GUARD_numerics_h
 
 #include <vector>
+#include <cassert>
 #include <cmath>
 #include <algorithm>
 #include <numeric>
 #include <string>
 #include <map>
 #include "utils.h"
-#include "assert.h"
 
 static const double LOG_2PI = log(2.0 * M_PI);
 static const double HALF_LOG_2PI = .5 * LOG_2PI;

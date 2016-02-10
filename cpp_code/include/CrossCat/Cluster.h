@@ -27,7 +27,7 @@
 #include <map>
 #include <set>
 #include <stdio.h>
-#include "assert.h"
+#include <cassert>
 //
 #include "utils.h"
 #include "constants.h"

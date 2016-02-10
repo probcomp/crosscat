@@ -17,9 +17,10 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
-#include "State.h"
-#include <assert.h>
+#include <cassert>
 #include <math.h>
+
+#include "State.h"
 
 using namespace std;
 
