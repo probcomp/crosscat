@@ -20,18 +20,20 @@
 #ifndef GUARD_state_h
 #define GUARD_state_h
 
-#include <set>
-#include <vector>
-#include "View.h"
-#include "utils.h"
-#include "constants.h"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
-#include <math.h>   // for log()
 #include <limits>
+#include <math.h>   // for log()
+#include <set>
+#include <vector>
 
 #include <boost/numeric/ublas/matrix.hpp>
+
+#include "View.h"
+#include "constants.h"
+#include "utils.h"
+
 typedef boost::numeric::ublas::matrix<double> MatrixD;
 
 const static std::vector<double> empty_vector_double;

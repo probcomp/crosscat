@@ -20,17 +20,18 @@
 #ifndef GUARD_utils_h
 #define GUARD_utils_h
 
+#include <iostream>
+#include <map>
+#include <math.h> // isnan, isfinite
+#include <set>
+#include <sstream> // stringstream in stringify()
+#include <string>
+
+#include <boost/numeric/ublas/matrix.hpp>
+
 #include "numerics.h"
 #include "constants.h"
 #include "RandomNumberGenerator.h"
-//
-#include <iostream>
-#include <string>
-#include <sstream> // stringstream in stringify()
-#include <set>
-#include <map>
-#include <math.h> // isnan, isfinite
-#include <boost/numeric/ublas/matrix.hpp>
 
 typedef std::map<std::string, double> ComponentModelHypers;
 typedef ComponentModelHypers CM_Hypers;
