@@ -26,7 +26,7 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <stdio.h>
+#include <cstdio>
 #include <cassert>
 //
 #include "utils.h"

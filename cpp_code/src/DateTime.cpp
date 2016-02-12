@@ -23,16 +23,12 @@
 // Description :
 ///////////////////////////////////////////
 
-#include <sys/time.h>
-#include <string.h>
+#include <ctime>
+#include <cstring>
 #include "DateTime.h"
 
-
-using namespace std;
-
-
 Timer::Timer(bool reset) {
-    _start_t = 0.0;
+    _start_t = mktime(NULL);
     if (reset) {
         Reset();
     }
@@ -43,17 +39,11 @@ void Timer::Reset() {
 }
 
 double Timer::GetElapsed() {
-    double t = get_time() - _start_t;
-    return t;
+    return difftime(get_time(), _start_t);
 }
 
-double Timer::get_time() {
-    double t;
-    struct timeval tv;
-    ::gettimeofday(&tv, NULL);
-    t = (double)tv.tv_sec;
-    t += ((double)tv.tv_usec) * 0.000001;
-    return t;
+time_t Timer::get_time() {
+  return time(NULL);
 }
 
 
@@ -65,4 +55,3 @@ bool Timer::Period(Timer& T, double* t, double period) {
 
     return false;
 }
-

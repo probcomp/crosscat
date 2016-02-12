@@ -8,8 +8,8 @@
 #ifndef OPCODEDATETIME_H
 #define OPCODEDATETIME_H
 
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
 #include <string>
 
 //  need to move Timer to its own
@@ -36,16 +36,11 @@ public:
     static bool Period(Timer& T, double* t, double period);
 protected:
 
-    double get_time();
+    time_t get_time();
     // time at reset call in seconds
-    double _start_t;
+    time_t _start_t;
 
 };
 
 
 #endif // OPCODEDATETIME_H
-
-
-
-
-

@@ -17,7 +17,7 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
-#include <stdlib.h>
+#include <cstdlib>
 #include "Cluster.h"
 
 using namespace std;
