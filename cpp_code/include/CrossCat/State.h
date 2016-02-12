@@ -28,7 +28,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include <math.h>   // for log()
+#include <cmath>   // for log()
 #include <limits>
 
 #include <boost/numeric/ublas/matrix.hpp>

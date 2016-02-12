@@ -18,7 +18,7 @@
 *   limitations under the License.
 */
 #include <cassert>
-#include <math.h>
+#include <cmath>
 
 #include "State.h"
 
