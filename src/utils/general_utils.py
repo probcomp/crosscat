@@ -25,6 +25,7 @@ import datetime
 import random
 import multiprocessing
 import multiprocessing.pool
+import numbers
 import threading
 import math
 import six
@@ -80,12 +81,20 @@ class MapperContext(object):
             pass
         return False
 
-def int_generator(start=None):
-    r = random.Random(start if start is not None else 32767)
+def int_generator(prngstate=None):
+    if prngstate is None:
+        prngstate = random.Random(32767)
+    elif isinstance(prngstate, numbers.Integral):
+        prngstate = random.Random(prngstate)
+    else:
+        if not hasattr(prngstate, 'randint'):
+            raise TypeError('prngstate must be None, an integer, or a PRNG '
+                            'with a randint method.  (E.g., random.Random '
+                            'or numpy.random.RandomState instance.)')
+    lock = threading.Lock()
     for _ in xrange(10):
-        # This is thread safe because r's state changes in Random.random, which
-        # is C code and therefore constrained by the Global Interpreter Lock.
-        yield r.randint(0, 2147483646)
+        with lock:
+            yield prngstate.randint(0, 2147483646)
 
 def roundrobin(*iterables):
     "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
