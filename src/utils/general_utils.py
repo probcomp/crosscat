@@ -80,22 +80,12 @@ class MapperContext(object):
             pass
         return False
 
-class int_generator(object):
-    """Int generator with mutex."""
-    def __init__(self, start=None):
-        self.start = start
-        if start is None:
-            self.start = random.randrange(32767)
-        self.next_i = self.start
-        self.lock = threading.Lock()
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        with self.lock:
-            self.next_i += 1
-            return self.next_i
+def int_generator(start=None):
+    r = random.Random(start if start is not None else 32767)
+    for _ in xrange(10):
+        # This is thread safe because r's state changes in Random.random, which
+        # is C code and therefore constrained by the Global Interpreter Lock.
+        yield r.randint(0, 2147483646)
 
 def roundrobin(*iterables):
     "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
