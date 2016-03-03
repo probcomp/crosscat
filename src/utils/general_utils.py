@@ -92,7 +92,7 @@ def int_generator(prngstate=None):
                             'with a randint method.  (E.g., random.Random '
                             'or numpy.random.RandomState instance.)')
     lock = threading.Lock()
-    for _ in xrange(10):
+    for _ in xrange(2**62):
         with lock:
             yield prngstate.randint(0, 2147483646)
 
