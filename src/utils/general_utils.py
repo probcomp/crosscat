@@ -25,6 +25,7 @@ import datetime
 import random
 import multiprocessing
 import multiprocessing.pool
+import numbers
 import threading
 import math
 import six
@@ -80,22 +81,20 @@ class MapperContext(object):
             pass
         return False
 
-class int_generator(object):
-    """Int generator with mutex."""
-    def __init__(self, start=None):
-        self.start = start
-        if start is None:
-            self.start = random.randrange(32767)
-        self.next_i = self.start
-        self.lock = threading.Lock()
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        with self.lock:
-            self.next_i += 1
-            return self.next_i
+def int_generator(prngstate=None):
+    if prngstate is None:
+        prngstate = random.Random(32767)
+    elif isinstance(prngstate, numbers.Integral):
+        prngstate = random.Random(prngstate)
+    else:
+        if not hasattr(prngstate, 'randint'):
+            raise TypeError('prngstate must be None, an integer, or a PRNG '
+                            'with a randint method.  (E.g., random.Random '
+                            'or numpy.random.RandomState instance.)')
+    lock = threading.Lock()
+    for _ in xrange(2**62):
+        with lock:
+            yield prngstate.randint(0, 2147483646)
 
 def roundrobin(*iterables):
     "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
