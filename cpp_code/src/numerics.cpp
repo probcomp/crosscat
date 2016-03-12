@@ -20,7 +20,6 @@
 #include "numerics.h"
 
 #include <boost/math/special_functions/bessel.hpp>
-#include <boost/random/mersenne_twister.hpp>
 
 using namespace std;
 
