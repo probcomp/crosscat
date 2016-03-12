@@ -215,8 +215,7 @@ double CyclicComponentModel::get_draw_constrained(int random_seed,
   // Proposal distribution is uniform scaled to the the max value of the 
   // predictive pdf
   // FIXME: This will lead to a lot of rejections especially for high kappa
-  boost::mt19937 gen(random_seed);
-  boost::uniform_01<boost::mt19937> randfloat(gen);
+  RandomNumberGenerator gen(random_seed);
 
   bool rejected = true;
   double x; // random number
@@ -226,8 +225,8 @@ double CyclicComponentModel::get_draw_constrained(int random_seed,
   unsigned short int itr = 0;
   while(rejected && itr < 1000){
     // generate random number in domain from proposal distribution
-    x = randfloat()*2*M_PI;
-    l_p = log(randfloat()) + log_M;
+    x = gen.next()*2*M_PI;
+    l_p = log(gen.next()) + log_M;
 
     // get pdf at target
     pdf_t = calc_element_predictive_logp_constrained(x, constraints);
