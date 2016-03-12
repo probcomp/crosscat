@@ -21,7 +21,6 @@
 #include "utils.h"
 //
 #include <fstream>      // fstream
-#include <boost/tokenizer.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <numeric>
@@ -39,36 +38,43 @@ using boost::numeric::ublas::matrix;
 void LoadData(const string& file, matrix<double>& M) {
   ifstream in(file.c_str());
   if (!in.is_open()) return;
-  typedef tokenizer< char_separator<char> > Tokenizer;
-  char_separator<char> sep(",");
 
   string line;
-  int nrows = 0; 
-  int ncols = 0;
-  vector<string> vec;
+  size_t nrows = 0;
+  size_t ncols = 0;
 
   // get the size first
-  while (std::getline(in,line)) {
-    Tokenizer tok(line, sep);
-    vec.assign(tok.begin(), tok.end());
-    ncols = vec.end() - vec.begin();
+  while (std::getline(in, line)) {
+    size_t ncol = 0, start = 0, end;
+    for (;;) {
+      end = line.find(',', start);
+      ncol++;
+      if (end == string::npos)
+        break;
+      start = end + 1;
+    }
+    ncols = ncol;
     nrows++;
   }
   cout << "num rows = "<< nrows << "  num cols = " << ncols << endl;
 
   // create a matrix to hold data
   matrix<double> Data(nrows, ncols);
-  
-  // make second pass 
+
+  // make second pass
   in.clear();
   in.seekg(0);
   int r = 0;
-  while (std::getline(in,line)) {
-    Tokenizer tok(line, sep);
-    vec.assign(tok.begin(), tok.end());
-    unsigned int i = 0;
-    for(i=0; i < vec.size() ; i++) {
-      Data(r, i) = ::strtod(vec[i].c_str(), 0);
+  while (std::getline(in, line)) {
+    size_t c = 0, start = 0, end;
+    for (;;) {
+      end = line.find(',', start);
+      string column = line.substr(start,
+          end == string::npos ? string::npos : end - start);
+      Data(r, c++) = ::strtod(column.c_str(), 0);
+      if (end == string::npos)
+        break;
+      start = end + 1;
     }
     r++;
   }
