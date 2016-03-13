@@ -4,7 +4,7 @@ set -Ceu
 
 : ${PYTHON:=python}
 : ${PY_TEST:=py.test}
-case $PY_TEST in */*);; *) PY_TEST=`which "$PY_TEST"`;; esac
+case $PY_TEST in */*);; *) PY_TEST=`which "$PY_TEST"` || PY_TEST=;; esac
 
 if [ ! -x "${PY_TEST}" ]; then
     printf >&2 'unable to find pytest\n'
