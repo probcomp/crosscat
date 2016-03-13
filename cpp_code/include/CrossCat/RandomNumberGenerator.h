@@ -20,26 +20,20 @@
 #ifndef GUARD_randomnumbergenerator_h
 #define GUARD_randomnumbergenerator_h
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
 #include <ctime>
-//
-#include "constants.h"
+#include <stdint.h>
 
-/////////////////////////
-// from runModel_v2.cpp
+#include "constants.h"
+#include "weakprng.h"
+
 class RandomNumberGenerator {
 public:
-    RandomNumberGenerator() : _engine(0), _dist(_engine) {};
-    RandomNumberGenerator(int SEED) : _engine(SEED), _dist(_engine) {};
+    RandomNumberGenerator(int seed = 0) { set_seed(seed); }
     double next();
-    int nexti(int max = MAX_INT);
+    int nexti(int bound = MAX_INT);
     void set_seed(std::time_t seed);
 protected:
-    // Mersenne Twister
-    boost::mt19937  _engine;
-    // uniform Distribution
-    boost::uniform_01<boost::mt19937> _dist;
+    struct crypto_weakprng _weakprng;
 };
 
 #endif // GUARD_randomnumbergenerator_h

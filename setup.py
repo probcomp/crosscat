@@ -142,6 +142,7 @@ ContinuousComponentModel_cpp_sources = [
     'RandomNumberGenerator.cpp',
     'numerics.cpp',
     'utils.cpp',
+    'weakprng.cpp',
 ]
 ContinuousComponentModel_sources = generate_sources([
     (pyx_src_dir, ContinuousComponentModel_pyx_sources),
@@ -155,6 +156,7 @@ MultinomialComponentModel_cpp_sources = [
     'RandomNumberGenerator.cpp',
     'numerics.cpp',
     'utils.cpp',
+    'weakprng.cpp',
 ]
 MultinomialComponentModel_sources = generate_sources([
     (pyx_src_dir, MultinomialComponentModel_pyx_sources),
@@ -168,6 +170,7 @@ CyclicComponentModel_cpp_sources = [
     'RandomNumberGenerator.cpp',
     'numerics.cpp',
     'utils.cpp',
+    'weakprng.cpp',
 ]
 CyclicComponentModel_sources = generate_sources([
     (pyx_src_dir, CyclicComponentModel_pyx_sources),
@@ -187,6 +190,7 @@ State_cpp_sources = [
     'View.cpp',
     'numerics.cpp',
     'utils.cpp',
+    'weakprng.cpp',
 ]
 State_sources = generate_sources([
     (pyx_src_dir, State_pyx_sources),

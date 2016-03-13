@@ -32,6 +32,7 @@ NAMES = \
 	View \
 	numerics \
 	utils \
+	weakprng \
 	# end of NAMES
 TEST_NAMES = \
 	test_cluster \
