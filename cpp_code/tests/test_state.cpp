@@ -19,14 +19,11 @@
 */
 #include <iostream>
 //
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-//
+#include "Matrix.h"
 #include "State.h"
 #include "utils.h"
 #include "constants.h"
 //
-typedef boost::numeric::ublas::matrix<double> matrixD;
 using namespace std;
 
 

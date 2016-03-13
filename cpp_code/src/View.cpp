@@ -17,10 +17,10 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
-#include "View.h"
 
-#include <boost/numeric/ublas/matrix.hpp>
-typedef boost::numeric::ublas::matrix<double> MatrixD;
+#include "Matrix.h"
+
+#include "View.h"
 
 using namespace std;
 

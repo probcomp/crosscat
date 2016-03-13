@@ -30,9 +30,7 @@
 #include <algorithm>
 #include <cmath>   // for log()
 #include <limits>
-
-#include <boost/numeric/ublas/matrix.hpp>
-typedef boost::numeric::ublas::matrix<double> MatrixD;
+#include "Matrix.h"
 
 const static std::vector<double> empty_vector_double;
 
@@ -417,11 +415,11 @@ private:
     // sub-objects
     RandomNumberGenerator rng;
     // resources
-    void construct_base_hyper_grids(const boost::numeric::ublas::matrix<double>&
+    void construct_base_hyper_grids(const matrix<double>&
                                     data, int N_GRID,
                                     std::vector<double> ROW_CRP_ALPHA_GRID,
                                     std::vector<double> COLUMN_CRP_ALPHA_GRID);
-    void construct_column_hyper_grids(const boost::numeric::ublas::matrix<double>&
+    void construct_column_hyper_grids(const matrix<double>&
                                       data,
                                       const std::vector<int>& global_col_indices,
                                       const std::vector<std::string>& global_col_datatypes,

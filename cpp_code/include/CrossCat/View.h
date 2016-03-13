@@ -30,9 +30,8 @@
 #include "RandomNumberGenerator.h"
 #include "utils.h"
 #include "Cluster.h"
+#include "Matrix.h"
 #include "numerics.h"
-
-typedef boost::numeric::ublas::matrix<double> MatrixD;
 
 class Cluster;
 

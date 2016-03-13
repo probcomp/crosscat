@@ -25,13 +25,10 @@
 #include "View.h"
 #include "MultinomialComponentModel.h"
 #include "ContinuousComponentModel.h"
+#include "Matrix.h"
 
 #include <iostream>
 
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
-typedef boost::numeric::ublas::matrix<double> matrixD;
 using namespace std;
 
 int main() {

@@ -23,6 +23,7 @@
 #include "numerics.h"
 #include "constants.h"
 #include "RandomNumberGenerator.h"
+#include "Matrix.h"
 //
 #include <iostream>
 #include <string>
@@ -30,12 +31,9 @@
 #include <set>
 #include <map>
 #include <cmath> // isnan, isfinite
-#include <boost/numeric/ublas/matrix.hpp>
 
 typedef std::map<std::string, double> ComponentModelHypers;
 typedef ComponentModelHypers CM_Hypers;
-
-typedef boost::numeric::ublas::matrix<double> MatrixD;
 
 void LoadData(const std::string& file, MatrixD& M);
 
@@ -282,8 +280,8 @@ void construct_multinomial_base_hyper_grids(int n_grid,
         std::vector<double>& multinomial_alpha_grid);
 
 template <class T>
-boost::numeric::ublas::matrix<T> vector_to_matrix(const std::vector<T>& vT) {
-    boost::numeric::ublas::matrix<T> matrix_out(1, vT.size());
+matrix<T> vector_to_matrix(const std::vector<T>& vT) {
+    matrix<T> matrix_out(1, vT.size());
     for (unsigned int i = 0; i < vT.size(); i++) {
         matrix_out(0, i) = vT[i];
     }

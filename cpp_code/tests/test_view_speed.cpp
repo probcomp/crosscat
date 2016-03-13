@@ -25,9 +25,7 @@
 #include "numerics.h"
 #include "View.h"
 #include "RandomNumberGenerator.h"
-
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
+#include "Matrix.h"
 
 using namespace std;
 typedef vector<Cluster*> vectorCp;
