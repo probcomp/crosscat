@@ -65,8 +65,10 @@ int main() {
     // elements to add
     vector<double> values_to_test;
     for (int i = 0; i < num_values_to_test; i++) {
-        int rand_i = rng.nexti(NUM_BUCKETS);
-        values_to_test.push_back(rand_i);
+        static const double v[] = {
+            2,2,3,4,3,4,2,4,2,3,3,1,2,1,4,0,4,1,1,2,3,4,2,2,2,1,4,4,0,1
+        };
+        values_to_test.push_back(v[i]);
     }
     //
     cout << "values_to_test: " << values_to_test << endl;
