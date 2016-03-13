@@ -20,10 +20,53 @@
 #ifndef GUARD_CrossCat_Matrix_h
 #define GUARD_CrossCat_Matrix_h
 
-#include <boost/numeric/ublas/matrix.hpp>
+#include <algorithm>
+#include <stdexcept>
 
-using boost::numeric::ublas::matrix;
+template<typename T>
+class matrix {
+public:
+    size_t size1() const { return _nrows; }
+    size_t size2() const { return _ncols; }
+    matrix() : _nrows(0), _ncols(0), _data(0) {}
+    matrix(size_t nrows, size_t ncols)
+        : _nrows(nrows), _ncols(ncols), _data(new T[nrows * ncols]) {}
+    matrix(const matrix &m) {
+        size_t i;
 
-typedef matrix<double> MatrixD:
+        _nrows = m._nrows;
+        _ncols = m._ncols;
+        _data = new T[_nrows * _ncols];
+        for (i = 0; i < _nrows * _ncols; i++)
+            _data[i] = m._data[i];
+    }
+    matrix &operator=(matrix m) {
+        std::swap(_nrows, m._nrows);
+        std::swap(_ncols, m._ncols);
+        std::swap(_data, m._data);
+        return *this;
+    }
+    ~matrix() { if (_data) delete[] _data; }
+    T &operator()(size_t row, size_t col) {
+        if (_nrows <= row)
+            throw std::range_error("row out of range");
+        if (_ncols <= col)
+            throw std::range_error("column out of range");
+        return _data[row*_ncols + col];
+    }
+    const T &operator()(size_t row, size_t col) const {
+        if (_nrows <= row)
+            throw std::range_error("row out of range");
+        if (_ncols <= col)
+            throw std::range_error("column out of range");
+        return _data[row*_ncols + col];
+    }
+private:
+    size_t _nrows;
+    size_t _ncols;
+    T *_data;
+};
 
-#endif	// GUARD_CrossCat_Matrix_h
+typedef matrix<double> MatrixD;
+
+#endif // GUARD_CrossCat_Matrix_h
