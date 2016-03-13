@@ -18,7 +18,6 @@
 *   limitations under the License.
 */
 #include "ContinuousComponentModel.h"
-#include <boost/math/distributions/students_t.hpp>
 using namespace std;
 
 ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
@@ -228,6 +227,9 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
 // For simple predictive probability
 double ContinuousComponentModel::get_predictive_cdf(double element,
         const vector<double>& constraints) const {
+#if 1
+    return -HUGE_VAL;
+#else
     // get modified suffstats
     double r, nu, s, mu;
     int count;
@@ -252,6 +254,7 @@ double ContinuousComponentModel::get_predictive_cdf(double element,
     double cdfval = boost::math::cdf(dist, rev_draw);
 
     return cdfval;
+#endif
 }
 
 map<string, double> ContinuousComponentModel::_get_suffstats() const {
