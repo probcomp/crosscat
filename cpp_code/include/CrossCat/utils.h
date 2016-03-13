@@ -307,7 +307,7 @@ void
 random_shuffle(T begin, T end, RandomNumberGenerator& rng) {
   typename std::iterator_traits<T>::difference_type n = end - begin;
   for (int i = 0; i < n; i++)
-    std::swap(begin[i], begin[rng.nexti(i)]);
+    std::swap(begin[i], begin[rng.nexti(i + 1)]);
 }
 
 #endif // GUARD_utils_H
