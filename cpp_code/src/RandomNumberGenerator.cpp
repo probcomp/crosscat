@@ -100,6 +100,58 @@ int RandomNumberGenerator::nexti(int bound) {
 }
 
 /////////////////////////////
+// standard normal samples
+// via Box-Muller transform
+double RandomNumberGenerator::stdnormal() {
+    double u, v;
+
+    u = next();
+    v = next();
+
+    return sqrt(-2*log(u)) * sin(2*M_PI*v);
+}
+
+/////////////////////////////
+// standard Gamma samples
+//
+//       George Marsaglia & Wai Wan Tsang, `A simple method for
+//       generating gamma variables', ACM Transactions on Mathematical
+//       Software 26(3), September 2000.  DOI: 10.1145/358407.358414
+//       URI: https://dl.acm.org/citation.cfm?doid=358407.358414
+double RandomNumberGenerator::stdgamma(double alpha) {
+    const double d = alpha - (double)1/3;
+    double x, u, v;
+
+    assert(1 <= alpha);
+
+    for (;;) {
+        x = stdnormal();
+        v = 1 + x/sqrt(9*d);
+        v = v*v*v;
+
+        u = next();
+        if (u < 1 - 0.0331*((x*x)*(x*x)) ||
+            log(u) < x*x/2 + d - d*v + d*log(v))
+            return d*v;
+    }
+}
+
+/////////////////////////////
+// chi^2 samples
+double RandomNumberGenerator::chisquare(double nu) {
+    double shape = nu/2;
+    double scale = 2;
+
+    return scale*stdgamma(shape);
+}
+
+/////////////////////////////
+// Student's t-distribution samples
+double RandomNumberGenerator::student_t(double nu) {
+    return stdnormal() * sqrt(nu/chisquare(nu));
+}
+
+/////////////////////////////
 // control the seed
 void RandomNumberGenerator::set_seed(std::time_t seed) {
     uint8_t seedbuf[crypto_weakprng_SEEDBYTES] = {0};

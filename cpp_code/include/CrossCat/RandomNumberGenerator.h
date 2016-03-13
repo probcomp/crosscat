@@ -31,6 +31,10 @@ public:
     RandomNumberGenerator(int seed = 0) { set_seed(seed); }
     double next();
     int nexti(int bound = MAX_INT);
+    double stdnormal();
+    double stdgamma(double alpha);
+    double chisquare(double nu);
+    double student_t(double nu);
     void set_seed(std::time_t seed);
 protected:
     struct crypto_weakprng _weakprng;
