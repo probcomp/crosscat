@@ -137,11 +137,11 @@ include_dirs = ['cpp_code/include/CrossCat'] \
 # specify sources
 ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
 ContinuousComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'ContinuousComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
 ]
 ContinuousComponentModel_sources = generate_sources([
     (pyx_src_dir, ContinuousComponentModel_pyx_sources),
@@ -150,11 +150,11 @@ ContinuousComponentModel_sources = generate_sources([
 #
 MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'MultinomialComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
 ]
 MultinomialComponentModel_sources = generate_sources([
     (pyx_src_dir, MultinomialComponentModel_pyx_sources),
@@ -163,11 +163,11 @@ MultinomialComponentModel_sources = generate_sources([
 #
 CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
 CyclicComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'CyclicComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
 ]
 CyclicComponentModel_sources = generate_sources([
     (pyx_src_dir, CyclicComponentModel_pyx_sources),
@@ -176,17 +176,17 @@ CyclicComponentModel_sources = generate_sources([
 #
 State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
-    'DateTime.cpp',
-    'View.cpp',
     'Cluster.cpp',
     'ComponentModel.cpp',
-    'CyclicComponentModel.cpp',
-    'MultinomialComponentModel.cpp',
     'ContinuousComponentModel.cpp',
+    'CyclicComponentModel.cpp',
+    'DateTime.cpp',
+    'MultinomialComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
     'State.cpp',
+    'View.cpp',
+    'numerics.cpp',
+    'utils.cpp',
 ]
 State_sources = generate_sources([
     (pyx_src_dir, State_pyx_sources),
