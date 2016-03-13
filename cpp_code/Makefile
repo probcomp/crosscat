@@ -1,9 +1,9 @@
 CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++03
 OPTIMIZED = True
 ifdef OPTIMIZED
-CXXOPTS := -pg -O2 $(CXXOPTS)
+CXXOPTS := -O2 $(CXXOPTS)
 else
-CXXOPTS := -pg -O0 -g $(CXXOPTS)
+CXXOPTS := -O0 -g $(CXXOPTS)
 endif
 
 CC = gcc
