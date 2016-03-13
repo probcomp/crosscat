@@ -56,13 +56,12 @@ cdef vector[string] convert_string_vector_to_cpp(python_vector):
           ret_vec.push_back(s)
      return ret_vec
 
-cdef extern from "<boost/numeric/ublas/matrix.hpp>" namespace "boost::numeric::ublas":
+cdef extern from "Matrix.h":
     cdef cppclass matrix[double]:
-        void clear()
-        int size1()
-        int size2()
-        double& operator()(int i, int j)
-    matrix[double] *new_matrix "new boost::numeric::ublas::matrix<double>" (int i, int j)
+        size_t size1()
+        size_t size2()
+        double& operator()(size_t i, size_t j)
+    matrix[double] *new_matrix "new matrix<double>" (size_t i, size_t j)
     void del_matrix "delete" (matrix *m)
 
 cdef matrix[double]* convert_data_to_cpp(np.ndarray[np.float64_t, ndim=2] data):
