@@ -10,16 +10,10 @@ CC = gcc
 CXX = g++
 CXXOPTS := $(CXXOPTS)
 
-ifdef BOOST_ROOT
-CXXOPTS := $(CXXOPTS) -L$(BOOST_ROOT)/lib -I$(BOOST_ROOT)/include
-endif
-
 INC=include/CrossCat
 SRC=src
 OBJ=obj
 TEST=tests
-BIN = main
-MAIN = main.cpp
 NAMES = \
 	Cluster \
 	ComponentModel \
@@ -51,7 +45,7 @@ SOURCES = $(foreach name, $(NAMES), $(SRC)/$(name).cpp)
 OBJECTS = $(foreach name, $(NAMES), $(OBJ)/$(name).o)
 TESTS = $(foreach test, $(TEST_NAMES), $(TEST)/$(test))
 
-all: obj # bin
+all: obj
 
 tests: obj $(TESTS)
 
@@ -60,17 +54,12 @@ runtests: obj $(TESTS)
 	@echo tests are: $(TESTS) $(foreach test, $(TESTS), && ./$(test))
 
 clean:
-	rm -f $(BIN) $(OBJECTS) core *.stackdump *.gch $(TESTS)
-
-bin: $(OBJECTS) $(BIN) $(MAIN) $(HEADERS)
+	rm -f $(OBJECTS) core *.stackdump *.gch $(TESTS)
 
 obj: $(OBJECTS)
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(INC)/%.h $(HEADERS)
 	$(CXX) -c $< -o $@ $(CXXOPTS) -I$(INC)
-
-$(BIN): $(OBJECTS) $(MAIN) $(HEADERS)
-	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -lm -lboost_program_options -I$(INC)
 
 $(TEST)/%: $(TEST)/%.cpp $(HEADERS) $(OBJECTS)
 	$(CXX) $< -o $@ $(CXXOPTS) -I$(INC) $(OBJECTS)
