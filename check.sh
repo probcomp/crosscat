@@ -2,6 +2,7 @@
 
 set -Ceu
 
+: ${MAKE:=make}
 : ${PYTHON:=python}
 : ${PY_TEST:=py.test}
 case $PY_TEST in */*);; *) PY_TEST=`which "$PY_TEST"` || PY_TEST=;; esac
@@ -34,5 +35,5 @@ build_log=/tmp/crosscat-build-$$.log
 runtests_log=/tmp/crosscat-runtests-$$.log
 rm -f $runtests_log
 echo "Running make runtests in cpp_code/ with log at $runtests_log ..."
-(cd cpp_code && make runtests > $runtests_log 2>&1 && \
+(cd cpp_code && "${MAKE}" runtests > $runtests_log 2>&1 && \
      echo "Passed!" || cat $build_log $runtests_log)
