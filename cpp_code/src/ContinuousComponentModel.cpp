@@ -19,7 +19,6 @@
 */
 #include "ContinuousComponentModel.h"
 #include <boost/math/distributions/students_t.hpp>
-#include <boost/random/student_t_distribution.hpp>
 using namespace std;
 
 ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
@@ -220,10 +219,7 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
     // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
     // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
     //
-    boost::mt19937  _engine(random_seed);
-    boost::uniform_01<boost::mt19937> _dist(_engine);
-    boost::random::student_t_distribution<double> student_t(nu);
-    double student_t_draw = student_t(_dist);
+    double student_t_draw = RandomNumberGenerator(random_seed).student_t(nu);
     double coeff = sqrt((s * (r + 1)) / (nu * r));
     double draw = student_t_draw * coeff + mu;
     return draw;
