@@ -17,7 +17,6 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
-#include <boost/variant.hpp>
 #include <iostream>
 #include <vector>
 #include "ComponentModel.h"
@@ -37,14 +36,6 @@ int main() {
     map<string, double> multinomial_hypers;
     multinomial_hypers["K"] = 10;
     multinomial_hypers["dirichlet_alpha"] = 10;
-
-    // boost variant based operations
-    // typedef boost::variant<ContinuousComponentModel, MultinomialComponentModel> component_model_variant;
-    // vector<component_model_variant> cm_v;
-    // component_model_variant ccm = ContinuousComponentModel(continuous_hypers);
-    // component_model_variant mcm = MultinomialComponentModel(multinomial_hypers);
-    // cm_v.push_back(ccm);
-    // cm_v.push_back(mcm);
 
     // container of pointers with memory management
     ContinuousComponentModel *p_ccm = new ContinuousComponentModel(
