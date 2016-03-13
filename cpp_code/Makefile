@@ -1,4 +1,4 @@
-CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++03
+CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++98
 OPTIMIZED = True
 ifdef OPTIMIZED
 CXXOPTS := -O2 $(CXXOPTS)
