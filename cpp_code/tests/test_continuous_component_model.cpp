@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
     hypers["r"] = 9;
     hypers["nu"] = 17;
     hypers["s"] = 15;
-    hypers["m"] = 13;
+    hypers["mu"] = 1.35560277961194515e+01;
     CCM ccm2(hypers);
     values_to_test.clear();
     values_to_test.push_back(7);
