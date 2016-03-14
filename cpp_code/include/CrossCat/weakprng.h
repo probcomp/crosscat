@@ -44,4 +44,6 @@ uint64_t	crypto_weakprng_64(struct crypto_weakprng *);
 void		crypto_weakprng_buf(struct crypto_weakprng *, void *, size_t);
 uintmax_t	crypto_weakprng_below(struct crypto_weakprng *, uintmax_t);
 
+int		crypto_weakprng_selftest(void);
+
 #endif	/* WEAKPRNG_H */
