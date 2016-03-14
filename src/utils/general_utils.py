@@ -169,6 +169,6 @@ def logmeanexp(array):
     # probs = map(exp, logprobs)
     # log(mean(probs)) = log(sum(probs) / len(probs))
     #   = log(sum(probs)) - log(len(probs))
-    #   = log(sum(map(exp, probs))) - log(len(probs))
+    #   = log(sum(map(exp, logprobs))) - log(len(logprobs))
     #   = logsumexp(logprobs) - log(len(logprobs))
     return logsumexp(array) - math.log(len(array))
