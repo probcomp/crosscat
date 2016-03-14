@@ -227,34 +227,10 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
 // For simple predictive probability
 double ContinuousComponentModel::get_predictive_cdf(double element,
         const vector<double>& constraints) const {
-#if 1
+    // XXX Requires computing the Student's t-distribution CDF, which
+    // involves incomplete beta integrals, which are a pain.  But
+    // nothing uses this right now, so it's not really an issue.
     return -HUGE_VAL;
-#else
-    // get modified suffstats
-    double r, nu, s, mu;
-    int count;
-    double sum_x, sum_x_squared;
-    get_hyper_doubles(r, nu, s, mu);
-    get_suffstats(count, sum_x, sum_x_squared);
-    int num_constraints = (int) constraints.size();
-    for (int constraint_idx = 0; constraint_idx < num_constraints;
-            constraint_idx++) {
-        double constraint = constraints[constraint_idx];
-        numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
-                constraint);
-    }
-    numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
-    boost::math::students_t dist(nu);
-    double coeff = sqrt((s * (r + 1)) / (nu * r));
-
-    // manipulate the number so it will fit in the standard t (reverse of the draw proceedure)
-    double rev_draw = (element - mu) / coeff ;
-
-    double cdfval = boost::math::cdf(dist, rev_draw);
-
-    return cdfval;
-#endif
 }
 
 map<string, double> ContinuousComponentModel::_get_suffstats() const {
