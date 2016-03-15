@@ -84,6 +84,15 @@ import multiprocessing.pool
 def parallelCCompile(self, sources, output_dir=None, macros=None,
         include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None,
         depends=None):
+    # XXX Kludge to work around distutils bug that passes all
+    # CPython's C compiler flags to the C++ compiler, even ones that
+    # don't make sense like -Wstrict-prototypes.
+    nocxxflags = [
+        '-Wstrict-prototypes',
+    ]
+    for flag in nocxxflags:
+        if flag in self.compiler_so:
+            self.compiler_so.remove(flag)
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = \
             self._setup_compile(output_dir, macros, include_dirs, sources,
