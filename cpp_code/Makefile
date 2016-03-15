@@ -32,6 +32,7 @@ TEST_NAMES = \
 	test_cluster \
 	test_component_model \
 	test_continuous_component_model \
+	test_matrix \
 	test_multinomial_component_model \
 	test_numerics \
 	test_random_number_generator \
