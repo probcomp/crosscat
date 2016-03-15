@@ -21,6 +21,7 @@
 #define GUARD_CrossCat_Matrix_h
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 
 template<typename T>
@@ -30,7 +31,18 @@ public:
     size_t size2() const { return _ncols; }
     matrix() : _nrows(0), _ncols(0), _data(0) {}
     matrix(size_t nrows, size_t ncols)
-        : _nrows(nrows), _ncols(ncols), _data(new T[nrows * ncols]) {}
+        : _nrows(nrows), _ncols(ncols), _data(new T[nrows * ncols]) {
+        if (nrows > std::numeric_limits<size_t>::max()/ncols) {
+            T *d = _data;
+
+            _nrows = 0;
+            _ncols = 0;
+            _data = 0;
+
+            delete[] d;
+            throw std::bad_alloc();
+	}
+    }
     matrix(const matrix &m) {
         size_t i;
 

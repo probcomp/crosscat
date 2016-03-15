@@ -76,5 +76,11 @@ int main(int argc, char **argv) {
     MatrixD &MD1 = MD0;
     assert(&MD1 == &MD0);
 
+    // Confirm overflow detection.
+    try {
+	const size_t size_max = std::numeric_limits<size_t>::max();
+	MatrixD MD2(size_max, size_max);
+    } catch (std::bad_alloc &ba) {
+    }
     return 0;
 }
