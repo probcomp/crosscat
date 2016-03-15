@@ -227,8 +227,21 @@ CTASSERT(crypto_core_INPUTBYTES ==
 int
 crypto_weakprng_selftest(void)
 {
+	static const uint8_t seed[crypto_weakprng_SEEDBYTES] = {0};
+	struct crypto_weakprng P;
+	uint64_t v;
+	int status;
 
-	return crypto_core_selftest();
+	status = crypto_core_selftest();
+	if (status != 0)
+		return status;
+
+	crypto_weakprng_seed(&P, seed);
+	v = crypto_weakprng_64(&P);
+	if (v != UINT64_C(0x42fe0c0eb8fd7b38))
+		return -1;
+
+	return 0;
 }
 
 void
@@ -268,10 +281,10 @@ crypto_weakprng_64(struct crypto_weakprng *P)
 {
 	uint32_t lo, hi;
 
-	lo = crypto_weakprng_32(P);
 	hi = crypto_weakprng_32(P);
+	lo = crypto_weakprng_32(P);
 
-	return (uint64_t)lo | ((uint64_t)hi << 32);
+	return ((uint64_t)hi << 32) | (uint64_t)lo;
 }
 
 void
