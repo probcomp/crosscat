@@ -165,6 +165,11 @@ crypto_core(uint8_t *out, const uint8_t *in, const uint8_t *k,
 
 /* ChaCha self-test */
 
+/*
+ * ChaCha20 test vector from RFC 7539, Appendix A.1, p. 29.  ChaCha8
+ * and ChaCha12 test vectors derived by rerunning the same code with
+ * the number of rounds changed.
+ */
 static const uint8_t crypto_core_selftest_vector[64] = {
 #if crypto_core_ROUNDS == 8
 	0x3e,0x00,0xef,0x2f,0x89,0x5f,0x40,0xd6,
