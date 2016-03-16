@@ -180,7 +180,7 @@ double i_1(double x) {
     }
 
     if (x < 0)
-        v *= -v;
+        v = -v;
     return v;
 }
 
