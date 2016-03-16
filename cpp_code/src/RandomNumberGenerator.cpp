@@ -120,13 +120,16 @@ double RandomNumberGenerator::stdnormal() {
 //       URI: https://dl.acm.org/citation.cfm?doid=358407.358414
 double RandomNumberGenerator::stdgamma(double alpha) {
     const double d = alpha - (double)1/3;
+    const double c = 1/sqrt(9*d);
     double x, u, v;
 
     assert(1 <= alpha);
 
     for (;;) {
         x = stdnormal();
-        v = 1 + x/sqrt(9*d);
+        v = 1 + x*c;
+        if (v <= 0)
+            continue;
         v = v*v*v;
 
         u = next();
