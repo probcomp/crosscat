@@ -61,8 +61,8 @@ static void normal_suffstats(const vector<double> &v,
 //      psi = 2 \sum O_i log -----
 //                i           E_i
 //
-// where o[i] is the observed count for the ith bin and e[i] is the
-// expected count for the ith bin.
+// where O_i is the observed count for the ith bin and E_i is the
+// expected count for the ith bin, equal to N*Pr[Bin = i].
 //
 // Psi is scaled so that under the null hypothesis that the two are
 // equal, the distribution of the test statistic psi converges to the
@@ -87,8 +87,21 @@ static bool psi_test(const vector<size_t> &counts,
     assert(PSI_DF == counts.size());
     assert(PSI_DF == probabilities.size());
 
-    for (i = 0; i < PSI_DF; i++)
+    for (i = 0; i < PSI_DF; i++) {
+        // We treat empty bins as zero because we are evaluating
+        //
+        //      psi = 2 \sum_i O_i log O_i/E_i
+        //          = 2 \sum_i N*(O_i/N) log (N*(O_i)/N / N Pr[Bin = i])
+        //          = 2 N \sum_i (O_i/N) log (O_i/N)/Pr[Bin = i]
+        //          = 2 N \sum_i f_i log f_i/p_i
+        //          = 2 N \sum_i f_i log f_i + f_i log p_i.
+        //
+        // where f_i = O_i/N and p_i = Pr[Bin = i].  As f_i ---> 0, so
+        // does f_i log f_i.
+        if (counts[i] == 0)
+            continue;
         psi += counts[i] * log(counts[i] / (nsamples*probabilities[i]));
+    }
     psi *= 2;
 
     return psi <= PSI_CRITICAL;
