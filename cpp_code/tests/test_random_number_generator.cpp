@@ -111,6 +111,14 @@ static double normalized_upper_gamma(unsigned n, double x) {
     return exp(-x)*e;
 }
 
+// stdgamma11_cdf(x)
+//
+//      CDF for Gamma(alpha = 11).
+//
+static double stdgamma11_cdf(double x) {
+    return 1 - normalized_upper_gamma(11, x);
+}
+
 // chisquare8_cdf(x)
 //
 //      CDF for chi^2_8.
@@ -293,6 +301,16 @@ public:
     }
 };
 
+class stdgamma_sampler : public sampler {
+public:
+    explicit stdgamma_sampler(double alpha) : _alpha(alpha) {}
+    virtual double operator()(RandomNumberGenerator &rng) const {
+        return rng.stdgamma(_alpha);
+    }
+private:
+    double _alpha;
+};
+
 class chisquare_sampler : public sampler {
 public:
     explicit chisquare_sampler(double nu) : _nu(nu) {}
@@ -371,6 +389,17 @@ static void test_stdnormal_psi(RandomNumberGenerator &rng) {
     assert(!psi_test(counts, probabilities, NSAMPLES));
 }
 
+static void test_stdgamma_psi(RandomNumberGenerator &rng) {
+    vector<size_t> counts(PSI_DF);
+    vector<double> probabilities(PSI_DF);
+    const double lo = 0.1;
+    const double hi = 20;
+
+    cdf_bins(stdgamma11_cdf, lo, hi, probabilities);
+    sample_bins(stdgamma_sampler(11), lo, hi, rng, counts);
+    assert(psi_test(counts, probabilities, NSAMPLES));
+}
+
 static void test_chisquare_psi(RandomNumberGenerator &rng) {
     vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
@@ -409,6 +438,7 @@ int main(int argc, char **argv) {
     test_uniform01(rng);
     test_stdnormal_sw(rng);
     test_stdnormal_psi(rng);
+    test_stdgamma_psi(rng);
     test_chisquare_psi(rng);
     test_student_t_psi(rng);
 
