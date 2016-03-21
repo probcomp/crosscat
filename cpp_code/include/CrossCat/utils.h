@@ -35,8 +35,6 @@
 typedef std::map<std::string, double> ComponentModelHypers;
 typedef ComponentModelHypers CM_Hypers;
 
-void LoadData(const std::string& file, MatrixD& M);
-
 template <class K, class V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& in_map) {
     os << "{";

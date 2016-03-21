@@ -20,60 +20,10 @@
 #include "RandomNumberGenerator.h"
 #include "utils.h"
 //
-#include <fstream>      // fstream
 #include <numeric>
 #include <algorithm>
 
 using namespace std;
-
-// FROM runModel_v2.cpp
-/////////////////////////////////////////////////////////////////////
-// expect a csv file of data
-void LoadData(const string& file, matrix<double>& M) {
-  ifstream in(file.c_str());
-  if (!in.is_open()) return;
-
-  string line;
-  size_t nrows = 0;
-  size_t ncols = 0;
-
-  // get the size first
-  while (std::getline(in, line)) {
-    size_t ncol = 0, start = 0, end;
-    for (;;) {
-      end = line.find(',', start);
-      ncol++;
-      if (end == string::npos)
-        break;
-      start = end + 1;
-    }
-    ncols = ncol;
-    nrows++;
-  }
-  cout << "num rows = "<< nrows << "  num cols = " << ncols << endl;
-
-  // create a matrix to hold data
-  matrix<double> Data(nrows, ncols);
-
-  // make second pass
-  in.clear();
-  in.seekg(0);
-  int r = 0;
-  while (std::getline(in, line)) {
-    size_t c = 0, start = 0, end;
-    for (;;) {
-      end = line.find(',', start);
-      string column = line.substr(start,
-          end == string::npos ? string::npos : end - start);
-      Data(r, c++) = ::strtod(column.c_str(), 0);
-      if (end == string::npos)
-        break;
-      start = end + 1;
-    }
-    r++;
-  }
-  M = Data;
-}
 
 bool is_almost(double val1, double val2, double precision) {
   return abs(val1-val2) < precision;
