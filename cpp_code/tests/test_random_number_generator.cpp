@@ -63,6 +63,71 @@ static double stdnormal_cdf(double x) {
     return (1 + erf(x/sqrt(2)))/2;
 }
 
+// chisquare2_cdf(x)
+//
+//      Cumulative distribution function of chi-squared distribution
+//      with two degrees of freedom.
+//
+static double chisquare2_cdf(double x) {
+    return 1 - exp(-x/2);
+}
+
+// normalized_upper_gamma(n, x)
+//
+//      Normalized incomplete upper gamma integral Q(n, x), for
+//      positive integer n:
+//
+//              Q(n, x) = Gamma(n, x)/Gamma(n)
+//              Gamma(n, x) = \int_x^\infty t^{n - 1} e^{-t} dt
+//              Gamma(n) = (n - 1)!
+//
+//      We use identity (8.4.10) from NIST DLMF 8.4 (Incomplete Gamma
+//      and Related Functions, Incomplete Gamma Functions, Special
+//      Values) <http://dlmf.nist.gov/8.4.E10>:
+//
+//              Q(n + 1, x) = e^{-x} \sum_{k = 0}^n x^k/k!
+//
+//      [1] NIST Digital Library of Mathematical Functions,
+//      <http://dlmf.nist.gov/>, Release 1.0.10 of 2015-08-07.
+//
+static double normalized_upper_gamma(unsigned n, double x) {
+    double e;
+    unsigned k;
+
+    // Q(n + 1, x) = e^{-x} \sum_{k = 0}^n x^k/k!
+    // Q((n - 1) + 1, x) = e^{-x} \sum_{k = 0}^{n - 1} x^k/k!
+    // Q(n, x) = e^{-x} \sum_{k = 0}^{n - 1} x^k/k!
+    e = 0;
+    for (k = 0; k < n; k++) {
+        double f = 1;
+        unsigned i;
+
+        // f := x^k/k!
+        for (i = 0; i < k; i++)
+            f *= x/(i + 1);
+        e += f;
+    }
+
+    return exp(-x)*e;
+}
+
+// chisquare8_cdf(x)
+//
+//      CDF for chi^2_8.
+//
+static double chisquare8_cdf(double x) {
+    return 1 - normalized_upper_gamma(8/2, x/2);
+}
+
+// t2_cdf(x)
+//
+//      Cumulative distribution function of Student t distribution
+//      with two degrees of freedom.
+//
+static double t2_cdf(double x) {
+    return 0.5 + x/(2*sqrt(2 + x*x));
+}
+
 // Psi-test for goodness of fit -- scaled KL divergence of the
 // theoretical distribution from the empirical distribution:
 //
@@ -216,53 +281,121 @@ static void test_stdnormal_sw(RandomNumberGenerator &rng) {
     assert(shapiro_wilk_test(samples));
 }
 
-static void test_stdnormal_psi(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
-    vector<double> probabilities(PSI_DF);
-    const double w = 0.1, nbins = static_cast<double>(PSI_DF);
-    double x0, x1, x, x_;
+class sampler {
+public:
+    virtual double operator()(RandomNumberGenerator &rng) const = 0;
+};
+
+class stdnormal_sampler : public sampler {
+public:
+    virtual double operator()(RandomNumberGenerator &rng) const {
+        return rng.stdnormal();
+    }
+};
+
+class chisquare_sampler : public sampler {
+public:
+    explicit chisquare_sampler(double nu) : _nu(nu) {}
+    virtual double operator()(RandomNumberGenerator &rng) const {
+        return rng.chisquare(_nu);
+    }
+private:
+    double _nu;
+};
+
+class t_sampler : public sampler {
+public:
+    explicit t_sampler(double nu) : _nu(nu) {}
+    virtual double operator()(RandomNumberGenerator &rng) const {
+        return rng.student_t(_nu);
+    }
+private:
+    double _nu;
+};
+
+static void cdf_bins(double (*F)(double), double lo, double hi,
+        vector<double> &probabilities) {
+    const double nbins = static_cast<double>(probabilities.size() - 2);
+    const double w = (hi - lo)/nbins;
+    double x0, x1;
     size_t i;
 
     x0 = -HUGE_VAL;
-    x1 = -w*nbins/2;
-    probabilities[0] = stdnormal_cdf(x1) - 0;
+    x1 = lo;
+    probabilities[0] = F(x1) - 0;
 
     for (i = 1; i < probabilities.size() - 1; i++) {
-        x0 = -w*nbins/2 + i*w;
-        x1 = -w*nbins/2 + (i + 1)*w;
-        probabilities[i] = stdnormal_cdf(x1) - stdnormal_cdf(x0);
+        x0 = lo + (i - 1)*w;
+        x1 = lo + i*w;
+        probabilities[i] = F(x1) - F(x0);
     }
 
-    x0 = w*nbins/2;
+    x0 = hi;
     x1 = HUGE_VAL;
-    probabilities[probabilities.size() - 1] = 1 - stdnormal_cdf(x0);
+    probabilities[probabilities.size() - 1] = 1 - F(x0);
+}
+
+static void sample_bins(const sampler &sample, double lo, double hi,
+        RandomNumberGenerator &rng, vector<size_t> &counts) {
+    const double nbins = static_cast<double>(counts.size() - 2);
+    const double w = (hi - lo)/nbins;
+    double x;
+    size_t i;
 
     for (i = 0; i < NSAMPLES; i++) {
-        x = rng.stdnormal();
-        x_ = x/w + static_cast<double>(PSI_DF)/2;
-        if (x_ < 1)
+        x = sample(rng);
+        if (x < lo)
             counts[0]++;
-        else if (static_cast<double>(counts.size() - 1) <= x_)
+        else if (hi <= x)
             counts[counts.size() - 1]++;
         else
-            counts[static_cast<size_t>(floor(x_))]++;
+            counts.at(1 + static_cast<size_t>(floor((x - lo)/w)))++;
     }
+}
+
+static void test_stdnormal_psi(RandomNumberGenerator &rng) {
+    vector<size_t> counts(PSI_DF);
+    vector<double> probabilities(PSI_DF);
+    const double lo = -5;
+    const double hi = +5;
+
+    cdf_bins(stdnormal_cdf, lo, hi, probabilities);
+
+    sample_bins(stdnormal_sampler(), lo, hi, rng, counts);
     assert(psi_test(counts, probabilities, NSAMPLES));
 
     // Check that the psi test has sufficient statistical power to
     // distinguish a normal from a low-degree Student t.
     std::fill(counts.begin(), counts.end(), 0);
-    for (i = 0; i < NSAMPLES; i++) {
-        x = rng.student_t(10);
-        x_ = x/w + static_cast<double>(PSI_DF)/2;
-        if (x_ < 1)
-            counts[0]++;
-        else if (static_cast<double>(counts.size() - 1) <= x_)
-            counts[counts.size() - 1]++;
-        else
-            counts[static_cast<size_t>(floor(x_))]++;
-    }
+    sample_bins(t_sampler(10), lo, hi, rng, counts);
     assert(!psi_test(counts, probabilities, NSAMPLES));
+}
+
+static void test_chisquare_psi(RandomNumberGenerator &rng) {
+    vector<size_t> counts(PSI_DF);
+    vector<double> probabilities(PSI_DF);
+    const double lo = 0.1;
+    const double hi = 10;
+
+    cdf_bins(chisquare2_cdf, lo, hi, probabilities);
+    sample_bins(chisquare_sampler(2), lo, hi, rng, counts);
+    assert(psi_test(counts, probabilities, NSAMPLES));
+
+    std::fill(counts.begin(), counts.end(), 0);
+    cdf_bins(chisquare8_cdf, lo, hi, probabilities);
+    sample_bins(chisquare_sampler(8), lo, hi, rng, counts);
+    assert(psi_test(counts, probabilities, NSAMPLES));
+}
+
+static void test_student_t_psi(RandomNumberGenerator &rng) {
+    vector<size_t> counts(PSI_DF);
+    vector<double> probabilities(PSI_DF);
+    const double lo = -10;
+    const double hi = +10;
+
+    cdf_bins(t2_cdf, lo, hi, probabilities);
+    sample_bins(t_sampler(2), lo, hi, rng, counts);
+    assert(psi_test(counts, probabilities, NSAMPLES));
 }
 
 int main(int argc, char **argv) {
@@ -276,6 +409,8 @@ int main(int argc, char **argv) {
     test_uniform01(rng);
     test_stdnormal_sw(rng);
     test_stdnormal_psi(rng);
+    test_chisquare_psi(rng);
+    test_student_t_psi(rng);
 
     std::cout << __FILE__ << " passed" << std::endl;
 }
