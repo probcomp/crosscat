@@ -248,6 +248,21 @@ static void test_stdnormal_psi(RandomNumberGenerator &rng) {
             counts[static_cast<size_t>(floor(x_))]++;
     }
     assert(psi_test(counts, probabilities, NSAMPLES));
+
+    // Check that the psi test has sufficient statistical power to
+    // distinguish a normal from a low-degree Student t.
+    std::fill(counts.begin(), counts.end(), 0);
+    for (i = 0; i < NSAMPLES; i++) {
+        x = rng.student_t(10);
+        x_ = x/w + static_cast<double>(PSI_DF)/2;
+        if (x_ < 1)
+            counts[0]++;
+        else if (static_cast<double>(counts.size() - 1) <= x_)
+            counts[counts.size() - 1]++;
+        else
+            counts[static_cast<size_t>(floor(x_))]++;
+    }
+    assert(!psi_test(counts, probabilities, NSAMPLES));
 }
 
 int main(int argc, char **argv) {
