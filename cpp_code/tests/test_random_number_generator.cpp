@@ -54,6 +54,15 @@ static void normal_suffstats(const vector<double> &v,
     sumsqdev = s;
 }
 
+// stdnormal_cdf(x)
+//
+//      Cumulative distribution function of standard normal
+//      distribution.
+//
+static double stdnormal_cdf(double x) {
+    return (1 + erf(x/sqrt(2)))/2;
+}
+
 // Psi-test for goodness of fit -- scaled KL divergence of the
 // theoretical distribution from the empirical distribution:
 //
@@ -198,13 +207,47 @@ static void test_uniform01(RandomNumberGenerator &rng) {
     assert(psi_test(counts, probabilities, NSAMPLES));
 }
 
-static void test_stdnormal(RandomNumberGenerator &rng) {
+static void test_stdnormal_sw(RandomNumberGenerator &rng) {
     vector<double> samples(SHAPIRO_WILK_DF);
     size_t i;
 
     for (i = 0; i < samples.size(); i++)
 	samples[i] = rng.stdnormal();
     assert(shapiro_wilk_test(samples));
+}
+
+static void test_stdnormal_psi(RandomNumberGenerator &rng) {
+    vector<size_t> counts(PSI_DF);
+    vector<double> probabilities(PSI_DF);
+    const double w = 0.1, nbins = static_cast<double>(PSI_DF);
+    double x0, x1, x, x_;
+    size_t i;
+
+    x0 = -HUGE_VAL;
+    x1 = -w*nbins/2;
+    probabilities[0] = stdnormal_cdf(x1) - 0;
+
+    for (i = 1; i < probabilities.size() - 1; i++) {
+        x0 = -w*nbins/2 + i*w;
+        x1 = -w*nbins/2 + (i + 1)*w;
+        probabilities[i] = stdnormal_cdf(x1) - stdnormal_cdf(x0);
+    }
+
+    x0 = w*nbins/2;
+    x1 = HUGE_VAL;
+    probabilities[probabilities.size() - 1] = 1 - stdnormal_cdf(x0);
+
+    for (i = 0; i < NSAMPLES; i++) {
+        x = rng.stdnormal();
+        x_ = x/w + static_cast<double>(PSI_DF)/2;
+        if (x_ < 1)
+            counts[0]++;
+        else if (static_cast<double>(counts.size() - 1) <= x_)
+            counts[counts.size() - 1]++;
+        else
+            counts[static_cast<size_t>(floor(x_))]++;
+    }
+    assert(psi_test(counts, probabilities, NSAMPLES));
 }
 
 int main(int argc, char **argv) {
@@ -216,7 +259,8 @@ int main(int argc, char **argv) {
     RandomNumberGenerator rng(random_seed());
     test_uniform_integer(rng);
     test_uniform01(rng);
-    test_stdnormal(rng);
+    test_stdnormal_sw(rng);
+    test_stdnormal_psi(rng);
 
     std::cout << __FILE__ << " passed" << std::endl;
 }
