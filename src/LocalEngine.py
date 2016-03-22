@@ -423,7 +423,9 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: list of list, where each sublist is a set of MIs and Linfoots from each crosscat
         sample.
         """
-        return iu.mutual_information(M_c, X_L_list, X_D_list, Q, n_samples)
+        get_next_seed = self.get_next_seed
+        return iu.mutual_information(M_c, X_L_list, X_D_list, Q,
+                                     get_next_seed, n_samples)
 
     def row_structural_typicality(self, X_L_list, X_D_list, row_id):
         """

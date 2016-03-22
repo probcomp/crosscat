@@ -18,7 +18,6 @@
 #   limitations under the License.
 #
 import numpy
-import random
 import math
 
 from crosscat.utils.general_utils import logsumexp
@@ -41,7 +40,7 @@ def mutual_information_to_linfoot(MI):
 # each crosscat posterior sample.
 # See tests/test_mutual_information.py and
 # tests/test_mutual_information_vs_correlation.py for useage examples
-def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
+def mutual_information(M_c, X_Ls, X_Ds, Q, get_next_seed, n_samples=1000):
     #
     assert len(X_Ds) == len(X_Ls)
     n_postertior_samples = len(X_Ds)
@@ -50,8 +49,6 @@ def mutual_information(M_c, X_Ls, X_Ds, Q, n_samples=1000):
 
     MI = []
     Linfoot = []
-
-    get_next_seed = lambda: random.randrange(32767)
 
     for query in Q:
         assert len(query) == 2
