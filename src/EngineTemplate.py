@@ -23,16 +23,14 @@ import crosscat.utils.general_utils as gu
 class EngineTemplate(object):
 
     def __init__(self, seed=None):
-        self.seed_generator = gu.int_generator(seed)
+        pass
 
-    def get_next_seed(self):
-        return self.seed_generator.next()
-
-    def initialize(self, M_c, M_r, T, initialization='from_the_prior'):
+    def initialize(self, M_c, M_r, T, seed, initialization='from_the_prior'):
         M_c, M_r, X_L, X_D = dict(), dict(), dict(), []
         return X_L, X_D
 
-    def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
+    def analyze(self, M_c, T, X_L, X_D, seed, kernel_list=(), n_steps=1, c=(),
+                r=(),
                 max_iterations=-1, max_time=-1, do_diagnostics=False,
                 diagnostics_every_N=1,
                 ROW_CRP_ALPHA_GRID=(), COLUMN_CRP_ALPHA_GRID=(),
@@ -42,7 +40,7 @@ class EngineTemplate(object):
         X_L_prime, X_D_prime = dict(), []
         return X_L_prime, X_D_prime
 
-    def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
+    def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, seed, n=1):
         samples = []
         return samples
 
@@ -54,7 +52,8 @@ class EngineTemplate(object):
         p = None
         return p
 
-    def mutual_information(self, M_c, X_L_list, X_D_list, Q, n_samples=1000):
+    def mutual_information(self, M_c, X_L_list, X_D_list, Q, seed,
+                           n_samples=1000):
         return None
 
     def row_structural_typicality(self, X_L_list, X_D_list, row_id):
@@ -72,11 +71,11 @@ class EngineTemplate(object):
     def similarity(self, M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns=None):
         return None
 
-    def impute(self, M_c, X_L, X_D, Y, Q, n):
+    def impute(self, M_c, X_L, X_D, Y, Q, seed, n):
         e = None
         return e
 
-    def impute_and_confidence(self, M_c, X_L, X_D, Y, Q, n):
+    def impute_and_confidence(self, M_c, X_L, X_D, Y, Q, seed, n):
         e, confidence = None, None
         return e, confidence
 

@@ -39,18 +39,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
     """A simple interface to the Cython-wrapped C++ engine
 
-    LocalEngine holds no state other than a seed generator.
+    LocalEngine holds no state.
     Methods use resources on the local machine.
-
     """
 
     def __init__(self, seed=None):
-        """Initialize a LocalEngine
-
-        This is really just setting the initial seed to be used for
-        initializing CrossCat states.  Seeds are generated sequentially
-
-        """
+        """Initialize a LocalEngine."""
         super(LocalEngine, self).__init__(seed=seed)
         self.mapper = lambda *args: list(six.moves.map(*args))
         self.do_initialize = _do_initialize_tuple
@@ -64,8 +58,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                   COLUMN_CRP_ALPHA_GRID,
                                   S_GRID, MU_GRID,
                                   N_GRID,
-                                  ):
-        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+                                  get_next_seed):
+        seeds = [get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = six.moves.zip(
             seeds,
             itertools.cycle([M_c]),
@@ -81,7 +75,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         )
         return arg_tuples
 
-    def initialize(self, M_c, M_r, T, initialization=b'from_the_prior',
+    def initialize(self, M_c, M_r, T, seed, initialization=b'from_the_prior',
                    row_initialization=-1, n_chains=1,
                    ROW_CRP_ALPHA_GRID=(),
                    COLUMN_CRP_ALPHA_GRID=(),
@@ -93,6 +87,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                    ):
         """Sample a latent state from prior
 
+        :param seed: The random seed
+        :type seed: int
         :param M_c: The column metadata
         :type M_c: dict
         :param M_r: The row metadata
@@ -111,6 +107,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
             S_GRID, MU_GRID,
             N_GRID,
+            make_get_next_seed(seed),
         )
         chain_tuples = self.mapper(self.do_initialize, arg_tuples)
 
@@ -164,9 +161,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
     def get_analyze_arg_tuples(self, M_c, T, X_L_list, X_D_list, kernel_list,
                                n_steps, c, r, max_iterations, max_time, diagnostic_func_dict,
                                every_N, ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
-                               S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL):
+                               S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL,
+                               get_next_seed):
         n_chains = len(X_L_list)
-        seeds = [self.get_next_seed() for seed_idx in range(n_chains)]
+        seeds = [get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = six.moves.zip(
             seeds,
             X_L_list, X_D_list,
@@ -190,7 +188,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         )
         return arg_tuples
 
-    def analyze(self, M_c, T, X_L, X_D, kernel_list=(), n_steps=1, c=(), r=(),
+    def analyze(self, M_c, T, X_L, X_D, seed, kernel_list=(), n_steps=1, c=(),
+                r=(),
                 max_iterations=-1, max_time=-1, do_diagnostics=False,
                 diagnostics_every_N=1,
                 ROW_CRP_ALPHA_GRID=(),
@@ -202,6 +201,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
+        :param seed: The random seed
+        :type seed: int
         :param M_c: The column metadata
         :type M_c: dict
         :param T: The data table in mapped representation (all floats, generated
@@ -251,7 +252,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                                  N_GRID,
                                                  do_timing,
                                                  CT_KERNEL,
-                                                 )
+                                                 make_get_next_seed(seed))
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
         if do_timing:
@@ -269,11 +270,12 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             ret_tuple = ret_tuple + (timing_list, )
         return ret_tuple
 
-    def _sample_and_insert(self, M_c, T, X_L, X_D, matching_row_indices):
+    def _sample_and_insert(self, M_c, T, X_L, X_D, matching_row_indices,
+                           get_next_seed):
         p_State = State.p_State(M_c, T, X_L, X_D)
         draws = []
         for matching_row_idx in matching_row_indices:
-            random_seed = self.get_next_seed()
+            random_seed = get_next_seed()
             draw = p_State.get_draw(matching_row_idx, random_seed)
             p_State.insert_row(draw, matching_row_idx)
             draws.append(draw)
@@ -281,19 +283,22 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L, X_D = p_State.get_X_L(), p_State.get_X_D()
         return draws, T, X_L, X_D
 
-    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx):
+    def sample_and_insert(self, M_c, T, X_L, X_D, matching_row_idx,
+                          get_next_seed):
         matching_row_indices = gu.ensure_listlike(matching_row_idx)
         if len(matching_row_indices) == 0:
             matching_row_indices = list(range(len(T)))
         was_single_row = len(matching_row_indices) == 1
-        draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D, matching_row_indices)
+        draws, T, X_L, X_D = self._sample_and_insert(M_c, T, X_L, X_D, matching_row_indices, get_next_seed)
         if was_single_row:
             draws = draws[0]
         return draws, T, X_L, X_D
 
-    def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, n=1):
+    def simple_predictive_sample(self, M_c, X_L, X_D, Y, Q, seed, n=1):
         """Sample values from the predictive distribution of the given latent state
 
+        :param seed: The random seed
+        :type seed: int
         :param M_c: The column metadata
         :type M_c: dict
         :param X_L: the latent variables associated with the latent state
@@ -312,7 +317,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: list of floats -- samples in the same order specified by Q
 
         """
-        get_next_seed = self.get_next_seed
+        get_next_seed = make_get_next_seed(seed)
         samples = _do_simple_predictive_sample(
             M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return samples
@@ -405,7 +410,8 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         return su.predictive_probability_multistate(M_c, X_L_list, X_D_list, Y, Q)
 
-    def mutual_information(self, M_c, X_L_list, X_D_list, Q, n_samples=1000):
+    def mutual_information(self, M_c, X_L_list, X_D_list, Q, seed,
+                           n_samples=1000):
         """
         Return the estimated mutual information for each pair of columns on Q given
         the set of samples.
@@ -423,7 +429,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :returns: list of list, where each sublist is a set of MIs and Linfoots from each crosscat
         sample.
         """
-        get_next_seed = self.get_next_seed
+        get_next_seed = make_get_next_seed(seed)
         return iu.mutual_information(M_c, X_L_list, X_D_list, Q,
                                      get_next_seed, n_samples)
 
@@ -474,9 +480,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         """
         return su.similarity(M_c, X_L_list, X_D_list, given_row_id, target_row_id, target_columns)
 
-    def impute(self, M_c, X_L, X_D, Y, Q, n):
+    def impute(self, M_c, X_L, X_D, Y, Q, seed, n):
         """Impute values from the predictive distribution of the given latent state
 
+        :param seed: The random seed
+        :type seed: int
         :param M_c: The column metadata
         :type M_c: dict
         :param X_L: the latent variables associated with the latent state
@@ -496,13 +504,16 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   specified by Q
 
         """
-        e = su.impute(M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+        get_next_seed = make_get_next_seed(seed)
+        e = su.impute(M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return e
 
-    def impute_and_confidence(self, M_c, X_L, X_D, Y, Q, n):
+    def impute_and_confidence(self, M_c, X_L, X_D, Y, Q, seed, n):
         """Impute values and confidence of the value from the predictive
         distribution of the given latent state
 
+        :param seed: The random seed
+        :type seed: int
         :param M_c: The column metadata
         :type M_c: dict
         :param X_L: the latent variables associated with the latent state
@@ -522,20 +533,21 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                   same order as specified by Q
 
         """
+        get_next_seed = make_get_next_seed(seed)
         if isinstance(X_L, (list, tuple)):
             assert isinstance(X_D, (list, tuple))
             # TODO: multistate impute doesn't exist yet
             # e,confidence = su.impute_and_confidence_multistate(M_c, X_L, X_D, Y, Q, n,
             #                                                    self.get_next_seed)
             e, confidence = su.impute_and_confidence(
-                M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+                M_c, X_L, X_D, Y, Q, n, get_next_seed)
         else:
             e, confidence = su.impute_and_confidence(
-                M_c, X_L, X_D, Y, Q, n, self.get_next_seed)
+                M_c, X_L, X_D, Y, Q, n, get_next_seed)
         return (e, confidence)
 
-    def ensure_col_dep_constraints(self, M_c, M_r, T, X_L, X_D, dep_constraints,
-            max_rejections=100):
+    def ensure_col_dep_constraints(self, M_c, M_r, T, X_L, X_D,
+            dep_constraints, seed, max_rejections=100):
         """Ensures dependencey or indepdendency between columns.
 
         dep_constraints is a list of where each entry is an (int, int, bool) tuple
@@ -606,15 +618,16 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         X_L_out = []
         X_D_out = []
+        get_next_seed = make_get_next_seed(seed)
         for _ in range(num_states):
             counter = 0
-            X_L_i, X_D_i = self.initialize(M_c, M_r, T)
+            X_L_i, X_D_i = self.initialize(M_c, M_r, T, get_next_seed())
             while not assert_dep_constraints(X_L_i, X_D_i, dep_constraints):
                 if counter > max_rejections:
                     raise RuntimeError("Could not ranomly generate a partition"\
                         " that satisfies the constraints in dep_constraints.")
                 counter += 1
-                X_L_i, X_D_i = self.initialize(M_c, M_r, T)
+                X_L_i, X_D_i = self.initialize(M_c, M_r, T, get_next_seed())
 
             X_L_i['col_ensure'] = dict()
             X_L_i['col_ensure']['dependent'] = col_ensure_md[True]
@@ -888,6 +901,11 @@ default_diagnostic_func_dict = dict(
     column_partition_assignments=crosscat.utils.diagnostic_utils.get_column_partition_assignments,
     reprocess_diagnostics_func=crosscat.utils.diagnostic_utils.default_reprocess_diagnostics_func,
 )
+
+
+def make_get_next_seed(seed):
+    generator = gu.int_generator(seed)
+    return lambda: generator.next()
 
 
 if __name__ == '__main__':

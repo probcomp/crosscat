@@ -27,19 +27,14 @@ import crosscat.utils.sample_utils as su
 class MultiprocessingEngine(LE.LocalEngine):
     """A simple interface to the Cython-wrapped C++ engine
 
-    MultiprocessingEngine holds no state other than a seed generator.
+    MultiprocessingEngine holds no state.
     Methods use resources on the local machine.
-
     """
 
     def __init__(self, seed=None, cpu_count=None):
         """Initialize a MultiprocessingEngine
-
-        This is really just setting the initial seed to be used for
-        initializing CrossCat states.  Seeds are generated sequentially
-
         """
-        super(MultiprocessingEngine, self).__init__(seed=seed)
+        super(MultiprocessingEngine, self).__init__(seed=None)
         self.pool = multiprocessing.Pool(cpu_count)
         self.mapper = self.pool.map
         return
