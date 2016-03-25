@@ -321,6 +321,21 @@ crypto_weakprng_below(struct crypto_weakprng *P, uintmax_t bound)
 {
 	uintmax_t rle, r, minimum;
 
+	/*
+	 * Let k be the number of bits in uintmax_t and m = bound.  If
+	 * we chose an integer uniformly at random from [0, 2^k), and
+	 * reduced it modulo m, values in [0, 2^k mod m) would have
+	 * one more representative than values in [2^k mod m, 2^k).
+	 * So we first reject values in [0, 2^k mod m) before reducing
+	 * modulo m, to avoid this `modulo bias'.  Note that
+	 *
+	 *	2^k mod m = 2^k mod m - 0
+	 *	  = 2^k mod m - m mod m
+	 *	  = (2^k - m) mod m,
+	 *
+	 * which is what (-bound) % bound computes, in k-bit uintmax_t
+	 * arithmetic.
+	 */
 	minimum = (-bound) % bound;
 
 	do {
