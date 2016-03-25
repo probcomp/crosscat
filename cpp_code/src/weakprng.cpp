@@ -222,6 +222,23 @@ crypto_core_selftest(void)
 
 /* PRNG */
 
+/*
+ * PRNG output is ChaCha8_seed(0) || ChaCha8_seed(1) || ..., buffered
+ * one 64-byte block at a time and yielded one 32-bit word at a time.
+ * Unused parts of partial words are discarded by crypto_weakprng_buf.
+ *
+ * Under the conjecture that ChaCha8 is a PRF, the distribution on
+ * PRNG outputs induced by a uniform distribution on seeds is
+ * computationally indistinguishable from uniform random.  These PRNG
+ * outputs are designed to be fit to serve as one-time pads against an
+ * adversary, so they are surely fit for Monte Carlo simulation.
+ *
+ * This PRNG does not provide what is variously called backtracking
+ * resistance, forward secrecy, or key erasure -- don't use it to
+ * generate ephemeral key material that you expect to want to erase
+ * after a session.  Hence the name `weakprng'.
+ */
+
 CTASSERT(crypto_core_OUTPUTBYTES ==
     sizeof(((struct crypto_weakprng *)0)->buffer));
 CTASSERT(crypto_core_KEYBYTES ==
@@ -264,17 +281,30 @@ crypto_weakprng_32(struct crypto_weakprng *P)
 	const unsigned ii = arraycount(P->buffer) - 1;
 	uint32_t v;
 
+	/* If there are any 32-bit words left in the buffer, get one.  */
 	if (P->buffer[ii]) {
 		assert(P->buffer[ii] < 16);
 		v = le32dec(&P->buffer[--P->buffer[ii]]);
 		goto out;
 	}
 
+	/* Otherwise, generate a new block of output.  */
 	crypto_core((uint8_t *)P->buffer, (const uint8_t *)P->nonce,
 	    (const uint8_t *)P->key, crypto_core_constant32);
+
+	/*
+	 * Increment the 64-bit nonce.  Overflow is not a concern: if
+	 * we generated a block every nanosecond, it would take >584
+	 * years to reach 2^64.
+	 */
 	le32enc(&P->nonce[0], 1 + le32dec(&P->nonce[0]));
 	if (le32dec(&P->nonce[0]) == 0)
 		le32enc(&P->nonce[1], 1 + le32dec(&P->nonce[1]));
+
+	/*
+	 * Extract the last 32-bit word and use its place to count the
+	 * remaining 32-bit words.
+	 */
 	v = le32dec(&P->buffer[ii]);
 	P->buffer[ii] = ii;
 
@@ -299,6 +329,7 @@ crypto_weakprng_buf(struct crypto_weakprng *P, void *buf, size_t len)
 	uint32_t u32;
 	unsigned n32, n8;
 
+	/* Fill as many full 32-bit words as we can.  */
 	n32 = len / 4;
 	while (n32--) {
 		u32 = crypto_weakprng_32(P);
@@ -306,6 +337,7 @@ crypto_weakprng_buf(struct crypto_weakprng *P, void *buf, size_t len)
 		p += 4;
 	}
 
+	/* Fill a partial 32-bit word if necessary.  */
 	n8 = len % 4;
 	if (n8) {
 		u32 = crypto_weakprng_32(P);
