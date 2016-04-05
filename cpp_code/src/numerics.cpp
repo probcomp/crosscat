@@ -42,7 +42,7 @@ double polyeval(const double a[], size_t n, double x) {
     return y;
 }
 
-// Modified Bessel functions of the first and second kinds, derived
+// Modified Bessel function of the first kind, at 0 and 1, derived
 // from
 //
 //      J.M. Blair and C.A. Edwards, `Stable rational minimax
