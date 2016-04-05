@@ -376,6 +376,9 @@ crypto_weakprng_below(struct crypto_weakprng *P, uintmax_t bound)
 	 *
 	 * which is what (-bound) % bound computes, in k-bit uintmax_t
 	 * arithmetic.
+	 *
+	 * The probability of rejection is never more than 50%, which is
+	 * approached only when bound approaches 2^(k-1) from above.
 	 */
 	minimum = (-bound) % bound;
 
