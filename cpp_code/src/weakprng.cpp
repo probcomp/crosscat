@@ -237,6 +237,15 @@ crypto_core_selftest(void)
  * resistance, forward secrecy, or key erasure -- don't use it to
  * generate ephemeral key material that you expect to want to erase
  * after a session.  Hence the name `weakprng'.
+ *
+ * The state consists of a key, a 64-bit counter, and a 64-byte buffer
+ * of output, from which 32-bit words are disbursed one by one on
+ * request and which is refilled as necessary.  Since the buffer is
+ * only ever filled when there is demand for at least a single word,
+ * the last word would be unused outside the internal computations.
+ * Rather than leave it unused and expand the size of the state to
+ * count the number of buffered words remaining, we use the unused
+ * word in the buffer to count that.
  */
 
 CTASSERT(crypto_core_OUTPUTBYTES ==
