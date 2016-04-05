@@ -11,7 +11,7 @@ from crosscat.utils.general_utils import logmeanexp
 # FIXME: Using this instead of randrange because randrange is different before
 # and after Python 3.2, and we hardcoded some likelihoods that depend on the
 # RNG.
-next_seed = lambda : int(random.random() * 2147483647)
+next_seed = lambda rng: int(rng.random() * 2147483647)
 
 LOG_2 = math.log(2.0)
 default_hyperparameters = dict(nu=1.0, mu=0.0, s=1.0, r=1.0)
@@ -121,13 +121,13 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         data_mean = data_params['mu']
         data_std = (1.0/data_rho)**.5
 
-        random.seed(gen_seed)
-        X = [ [random.normalvariate(data_mean, data_std)] for i in range(N)]
+        rng = random.Random(gen_seed)
+        X = [ [rng.normalvariate(data_mean, data_std)] for i in range(N)]
         X = numpy.array(X)
         check_data_type_column_data(X)
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed(rng))[0]
 
         check_hyperparams_dict(hypers)
 
@@ -156,10 +156,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed(rng))[0]
 
         check_hyperparams_dict(hypers)
 
@@ -181,7 +181,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
 
         hypers = self.get_hypers()
         s = hypers[b's']
@@ -189,8 +189,8 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         nu = hypers[b'nu']
         m = hypers[b'mu']
 
-        rho = random.gammavariate(nu/2.0, s)
-        mu = random.normalvariate(m, (r/rho)**.5)
+        rho = rng.gammavariate(nu/2.0, s)
+        mu = rng.normalvariate(m, (r/rho)**.5)
 
         assert(rho > 0)
 
@@ -309,10 +309,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
         log_likelihoods = [0]*n_samples
         for i in range(n_samples):
-            params = self.sample_parameters_given_hyper(gen_seed=next_seed())
+            params = self.sample_parameters_given_hyper(gen_seed=next_seed(rng))
             log_likelihoods[i] = self.log_likelihood(X, params)
 
         log_marginal_likelihood = logmeanexp(log_likelihoods)
@@ -377,7 +377,7 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
 
         samples = []
 
@@ -391,10 +391,10 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         s_draw_range = (sum_sq_deviation/100.0, sum_sq_deviation)
 
         for i in range(n_draws):
-            nu = math.exp(random.uniform(nu_r_draw_range[0], nu_r_draw_range[1]))
-            r = math.exp(random.uniform(nu_r_draw_range[0], nu_r_draw_range[1]))
-            mu = random.uniform(mu_draw_range[0], mu_draw_range[1])
-            s = random.uniform(s_draw_range[0], s_draw_range[1])
+            nu = math.exp(rng.uniform(nu_r_draw_range[0], nu_r_draw_range[1]))
+            r = math.exp(rng.uniform(nu_r_draw_range[0], nu_r_draw_range[1]))
+            mu = rng.uniform(mu_draw_range[0], mu_draw_range[1])
+            s = rng.uniform(s_draw_range[0], s_draw_range[1])
 
             this_draw = dict(nu=nu, r=r, mu=mu, s=s)
 
@@ -423,7 +423,8 @@ class p_ContinuousComponentModel(ccm.p_ContinuousComponentModel):
         mu = params['mu']
         sigma = (1.0/params['rho'])**.5
 
-        X = numpy.array([[random.normalvariate(mu, sigma)] for i in range(N)])
+        rng = random.Random(gen_seed)
+        X = numpy.array([[rng.normalvariate(mu, sigma)] for i in range(N)])
 
         assert len(X) == N
 
