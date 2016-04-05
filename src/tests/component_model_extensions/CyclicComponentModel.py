@@ -343,13 +343,11 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
 
         assert(mu >= 0 and mu <= 2*math.pi)
 
-        interval = vonmises.interval(support, kappa)
-
-        a = interval[0]+mu
-        b = interval[1]+mu
-
-        if a < 0.0 or b > 2.*math.pi:
-            pdb.set_trace()
+        a, b = vonmises.interval(support, kappa)
+        a += mu
+        b += mu
+        assert -math.pi <= a < b <= 3*math.pi
+        assert b - a <= 2*math.pi
 
         support_range = b - a;
         support_bin_size = support_range/(nbins-1.0)
