@@ -123,6 +123,10 @@ double RandomNumberGenerator::stdgamma(double alpha) {
     const double c = 1/sqrt(9*d);
     double x, u, v;
 
+    // The clients currently do not need alpha < 1.  Should they, the
+    // reference contains a note (at the end of Section 6) on how to
+    // boost the alpha parameter:
+    //   stdgamma(alpha) = stdgamma(alpha+1) * (uniform() ** (1/alpha))
     assert(1 <= alpha);
 
     for (;;) {
