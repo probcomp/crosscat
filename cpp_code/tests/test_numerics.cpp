@@ -14,7 +14,6 @@
 *   limitations under the License.
 */
 
-#include <boost/math/special_functions/bessel.hpp>
 #include <cmath>
 #include <limits>
 
