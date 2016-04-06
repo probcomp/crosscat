@@ -60,14 +60,6 @@ def get_CrossCatClient(client_type, **kwargs):
         import crosscat.LocalEngine as LocalEngine
         le = LocalEngine.LocalEngine(**kwargs)
         client = CrossCatClient(le)
-    elif client_type == 'hadoop':
-        import crosscat.HadoopEngine as HadoopEngine
-        he = HadoopEngine.HadoopEngine(**kwargs)
-        client = CrossCatClient(he)
-    elif client_type == 'jsonrpc':
-        import crosscat.JSONRPCEngine as JSONRPCEngine
-        je = JSONRPCEngine.JSONRPCEngine(**kwargs)
-        client = CrossCatClient(je)
     elif client_type == 'multiprocessing':
         import crosscat.MultiprocessingEngine as MultiprocessingEngine
         me =  MultiprocessingEngine.MultiprocessingEngine(**kwargs)
@@ -98,8 +90,3 @@ if __name__ == '__main__':
     X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L, X_D)
     X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L_prime, X_D_prime)
     #
-    ccc = get_CrossCatClient('jsonrpc', seed=0, URI='http://localhost:8007')
-    X_L, X_D, = ccc.initialize(M_c, M_r, T)
-    X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L, X_D)
-    X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L_prime, X_D_prime)
-    

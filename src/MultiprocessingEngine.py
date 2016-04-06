@@ -55,7 +55,6 @@ class MultiprocessingEngine(LE.LocalEngine):
 
 
 if __name__ == '__main__':
-    import crosscat.tests.timing_test_utils as ttu
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
 
@@ -79,7 +78,7 @@ if __name__ == '__main__':
             max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
             data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
-    X_L_gen, X_D_gen = ttu.get_generative_clustering(M_c, M_r, T,
+    X_L_gen, X_D_gen = du.get_generative_clustering(M_c, M_r, T,
             data_inverse_permutation_indices, num_clusters, num_views)
     T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
     #
