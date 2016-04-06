@@ -33,8 +33,7 @@ import crosscat.utils.data_utils as du
 
 import crosscat.cython_code.State as State
 
-random.seed(None)
-inf_seed = random.randrange(32767)
+inf_seed = random.Random(None).randrange(32767)
 # THIS CODE ONLY TESTS CONTINUOUS DATA
 
 # FIXME: getting weird error on conversion to int: too large from inside pyx
