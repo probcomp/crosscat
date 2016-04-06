@@ -85,10 +85,8 @@ for i in range(n):
     Qs.append(Qtmp)
 
 Ps = su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs)
-Ps2 = su.simple_predictive_probability_density(M_c, X_L, X_D, Y, Qs)
 
 Ps = (numpy.exp(Ps)/max(numpy.exp(Ps)))*pdf_max
-Ps2 = (numpy.exp(Ps2)/max(numpy.exp(Ps2)))*pdf_max
 
 # make a scatterplot
 pylab.scatter(X,Ps, c='red',label="p from cdf")
@@ -100,15 +98,3 @@ pylab.title('TEST: probability and frequencies are not normalized')
 pylab.show()
 
 raw_input("Press Enter when finished with probabilty...")
-
-pylab.clf()
-pdf, bins, patches = pylab.hist(X,50,normed=True, histtype='bar',label='samples',edgecolor='none')
-pylab.scatter(X,Ps2, c='green',label="pdf")
-
-pylab.legend(loc='upper left')
-pylab.xlabel('value') 
-pylab.ylabel('frequency/density')
-pylab.title('TEST: probability and frequencies are not normalized')
-pylab.show()
-
-raw_input("Press Enter when finished with density...")
