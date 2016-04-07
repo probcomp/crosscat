@@ -245,7 +245,6 @@ ext_modules = [
 packages = [
     'crosscat',
     'crosscat.utils',
-    'crosscat.convergence_analysis',
     'crosscat.cython_code',
     'crosscat.tests',
     'crosscat.tests.component_model_extensions',
