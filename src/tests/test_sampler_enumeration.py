@@ -64,6 +64,10 @@ n_states = 10;
 
 print("Testing the sampler against enumerated answer for data generated from \n%i random states." % n_states)
 
+def get_next_seed(rng):
+	return rng.randint(1, 2**31 - 1)
+
+rng = np.random.RandomState()
 for state in random.sample(state_partitions.states, n_states):
 # for state in state_partitions.states:
 
@@ -71,7 +75,7 @@ for state in random.sample(state_partitions.states, n_states):
 	sys.stdout.write(progress)
 
 	# Generate data from this state partition
-	T, M_r, M_c = eu.GenDataFromPartitions(state['col_parts'], state['row_parts'], 0, 10, .5)
+	T, M_r, M_c = eu.GenDataFromPartitions(state['col_parts'], state['row_parts'], 0, 10, .5, get_next_seed(rng))
 	# calculate the probability of the data under each state
 	P = np.exp(eu.CCML(state_partitions, T, mu, r, nu, s, alpha, alpha))
 	# print "done."
@@ -82,10 +86,10 @@ for state in random.sample(state_partitions.states, n_states):
 	# print "Sampling..."
 	# start collecting samples
 	# initalize the sampler
-	p_State = State.p_State(M_c, T, N_GRID=100)
+	p_State = State.p_State(M_c, T, N_GRID=100, SEED=get_next_seed(rng))
 	X_L = eu.FixPriors(p_State.get_X_L(), alpha, mu, s, r, nu)
 	X_D = p_State.get_X_D()
-	p_State = State.p_State(M_c, T, N_GRID=100, X_L=X_L, X_D=X_D)
+	p_State = State.p_State(M_c, T, N_GRID=100, X_L=X_L, X_D=X_D, SEED=get_next_seed(rng))
 
 
 	for b in range(200):

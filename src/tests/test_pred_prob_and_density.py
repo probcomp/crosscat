@@ -18,9 +18,10 @@
 #   limitations under the License.
 #
 from __future__ import print_function
-import random
 import argparse
+import random
 import tempfile
+import time
 import sys
 from collections import Counter
 
@@ -34,25 +35,24 @@ import crosscat.utils.data_utils as du
 
 import crosscat.cython_code.State as State
 
-def get_next_seed(max_val=32767):
-    return random_state.randint(max_val)
+def get_next_seed(rng, max_val=32767):
+    return rng.randint(max_val)
 
 
-def run_test(n=1000, d_type='continuous', observed=False):
+def run_test(seed, n=1000, d_type='continuous', observed=False):
     if d_type == 'continuous':
-        run_test_continuous(n, observed)
+        run_test_continuous(n, observed, seed)
     elif d_type == 'multinomial':
-        run_test_multinomial(n, observed)
+        run_test_multinomial(n, observed, seed)
 
-def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
-    # generate the partitions
-    random.seed(next_seed)
-    
+def generate_multinomial_data(seed, n_cols, n_rows, n_views):
+    rng = numpy.random.RandomState(seed)
+
     cols_to_views = [0 for _ in range(n_cols)]
     rows_in_views_to_cols = []
     for view in range(n_views):
-        partition = eu.CRP(n_rows,2.0)
-        random.shuffle(partition)
+        partition = eu.CRP(n_rows, 2.0, get_next_seed(rng))
+        random.shuffle(partition, rng.uniform)
         rows_in_views_to_cols.append(partition)
 
     # generate the data
@@ -71,7 +71,9 @@ def generate_multinomial_data(next_seed,n_cols,n_rows,n_views):
 
     return T, M_r, M_c
 
-def run_test_continuous(n, observed):
+def run_test_continuous(n, observed, seed):
+    rng = numpy.random.RandomState(seed)
+
     n_rows = 40
     n_cols = 40
 
@@ -85,7 +87,7 @@ def run_test_continuous(n, observed):
     Q = [(query_row, query_column)]
 
     # do the test with multinomial data
-    T, M_r, M_c= du.gen_factorial_data_objects(get_next_seed(),2,2,n_rows,1)
+    T, M_r, M_c= du.gen_factorial_data_objects(get_next_seed(rng),2,2,n_rows,1)
 
     state = State.p_State(M_c, T)
 
@@ -97,7 +99,8 @@ def run_test_continuous(n, observed):
     Y = [] # no constraints
 
     # pull n samples
-    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
+    gns = lambda: get_next_seed(rng)
+    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, gns, n=n)
 
     X_array = numpy.sort(numpy.array(samples))
 
@@ -151,7 +154,9 @@ def run_test_continuous(n, observed):
     pylab.savefig(fig_filename)
 
 
-def run_test_multinomial(n, observed):
+def run_test_multinomial(n, observed, seed):
+    rng = numpy.random.RandomState(seed)
+
     n_rows = 40
     n_cols = 40
 
@@ -165,8 +170,8 @@ def run_test_multinomial(n, observed):
     Q = [(query_row, query_column)]
 
     # do the test with multinomial data
-    T, M_r, M_c = generate_multinomial_data(get_next_seed(),2,n_rows,1)
-    
+    T, M_r, M_c = generate_multinomial_data(get_next_seed(rng),2,n_rows,1)
+
     state = State.p_State(M_c, T)
 
     X_L = state.get_X_L()
@@ -175,7 +180,8 @@ def run_test_multinomial(n, observed):
     Y = []
 
     # pull n samples
-    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, get_next_seed,n=n)
+    gns = lambda: get_next_seed(rng)
+    samples = su.simple_predictive_sample(M_c, X_L, X_D, Y, Q, gns, n=n)
     X_array = numpy.sort(numpy.array(samples))
     X = numpy.unique(X_array)
     X = X.tolist()
@@ -217,12 +223,10 @@ def run_test_multinomial(n, observed):
             suffix='.png', dir='.')
     pylab.savefig(fig_filename)
 
-random.seed(None) # seed with system time
-inf_seed = random.randrange(32767)
-random_state = numpy.random.RandomState(inf_seed)
+rng = numpy.random.RandomState()
 
 
-run_test(n=5000, d_type='continuous', observed=False)
-run_test(n=5000, d_type='continuous', observed=True)
-run_test(n=5000, d_type='multinomial', observed=False)
-run_test(n=5000, d_type='multinomial', observed=True)
+run_test(seed=get_next_seed(rng), n=5000, d_type='continuous', observed=False)
+run_test(seed=get_next_seed(rng), n=5000, d_type='continuous', observed=True)
+run_test(seed=get_next_seed(rng), n=5000, d_type='multinomial', observed=False)
+run_test(seed=get_next_seed(rng), n=5000, d_type='multinomial', observed=True)

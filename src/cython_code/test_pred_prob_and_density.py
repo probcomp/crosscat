@@ -46,7 +46,7 @@ random_state = numpy.random.RandomState(inf_seed)
 col = numpy.array([0,0])
 row = numpy.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]])
 
-p_State, T, M_c, M_r, X_L, X_D = eu.GenerateStateFromPartitions(col,row,std_gen=10000.0, std_data=0.01)
+p_State, T, M_c, M_r, X_L, X_D = eu.GenerateStateFromPartitions(col,row,seed=get_next_seed(),std_gen=10000.0, std_data=0.01)
 
 X_L = p_State.get_X_L()
 X_D = p_State.get_X_D()

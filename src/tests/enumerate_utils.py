@@ -40,7 +40,6 @@ from time import time
 
 import math
 
-import random as rand
 import numpy as np
 import scipy as sp
 import itertools
@@ -49,6 +48,10 @@ from scipy.special import binom
 
 import crosscat.cython_code.State as State
 import crosscat.utils.data_utils as du
+
+
+def get_next_seed(rng):
+	return rng.randint(1, 2**31 - 1)
 
 
 # generates from a state with the columns to views partition col_parts, and 
@@ -62,10 +65,10 @@ import crosscat.utils.data_utils as du
 #	mean_gen  : the mean of the means of data clusters
 #	std_gen   : the standard deviation of cluster means
 #	std_data  : the standard deviation of the individual clusters
-def GenerateStateFromPartitions(col_parts, row_parts, mean_gen=0.0, std_gen=1.0, std_data=0.1):
-	
-	T, M_r, M_c = GenDataFromPartitions(col_parts, row_parts, mean_gen=mean_gen, std_gen=std_gen, std_data=std_data)
-	state = State.p_State(M_c, T, N_GRID=100)
+def GenerateStateFromPartitions(col_parts, row_parts, seed, mean_gen=0.0, std_gen=1.0, std_data=0.1):
+	rng = np.random.RandomState(seed)
+	T, M_r, M_c = GenDataFromPartitions(col_parts, row_parts, seed=get_next_seed(rng), mean_gen=mean_gen, std_gen=std_gen, std_data=std_data)
+	state = State.p_State(M_c, T, N_GRID=100, SEED=get_next_seed(rng))
 
 	X_L = state.get_X_L()
 	X_D = state.get_X_D()
@@ -77,7 +80,7 @@ def GenerateStateFromPartitions(col_parts, row_parts, mean_gen=0.0, std_gen=1.0,
 		X_D = row_parts.tolist()
 
 	# create a new state with the updated X_D and X_L
-	state = State.p_State(M_c, T, X_L=X_L, X_D=X_D, N_GRID=100)
+	state = State.p_State(M_c, T, X_L=X_L, X_D=X_D, N_GRID=100, SEED=get_next_seed(rng))
 
 	return state, T, M_c, M_r, X_L, X_D
 
@@ -92,7 +95,7 @@ def GenerateStateFromPartitions(col_parts, row_parts, mean_gen=0.0, std_gen=1.0,
 #	std_data  : the standard deviation of the individual clusters
 #	alpha_col : the CRP parameter for columns to views
 # 	alpha_rows: the CRP parameter for rows into categories
-def GenerateRandomState(n_rows, n_cols, mean_gen=0.0, std_gen=1.0, std_data=0.1, alpha_col=1.0, alpha_rows=1.0):
+def GenerateRandomState(n_rows, n_cols, seed, mean_gen=0.0, std_gen=1.0, std_data=0.1, alpha_col=1.0, alpha_rows=1.0):
 
 	# check the inputs 
 	assert(type(n_rows) is int)
@@ -109,8 +112,10 @@ def GenerateRandomState(n_rows, n_cols, mean_gen=0.0, std_gen=1.0, std_data=0.1,
 	assert(alpha_col > 0.0)
 	assert(alpha_rows > 0.0)
 
+	rng = np.random.RandomState(seed)
+
 	# generate the partitioning
-	part = GenerateRandomPartition(n_rows, n_cols, alpha_col, alpha_rows)
+	part = GenerateRandomPartition(n_rows, n_cols, alpha_col, alpha_rows, seed=seed)
 
 	# fill it with data
 	T, M_r, M_c = GenDataFromPartitions(part['col_parts'], part['row_parts'], mean_gen, std_gen, std_data)
@@ -144,7 +149,7 @@ def GenerateRandomState(n_rows, n_cols, mean_gen=0.0, std_gen=1.0, std_data=0.1,
 # generates a random partitioning of n_rows rows and n_cols columns based on the
 # CRP. The resulting partition is a dict with two entries: ['col_parts'] and
 # ['row_parts']. See CrossCatPartitions for details on these.
-def GenerateRandomPartition(n_rows, n_cols, alpha_col=1.0, alpha_rows=1.0):
+def GenerateRandomPartition(n_rows, n_cols, seed, alpha_col=1.0, alpha_rows=1.0):
 	assert(type(n_rows) is int)
 	assert(type(n_cols) is int)
 	assert(type(alpha_col) is float)
@@ -154,13 +159,15 @@ def GenerateRandomPartition(n_rows, n_cols, alpha_col=1.0, alpha_rows=1.0):
 	assert(alpha_col > 0.0)
 	assert(alpha_rows > 0.0)
 
-	column_partition = CRP(n_cols, alpha_col)
-	n_views = max(column_partition)+1;	
+	rng = np.random.RandomState(seed)
+
+	column_partition = CRP(n_cols, alpha_col, get_next_seed(rng))
+	n_views = max(column_partition)+1
 
 	row_partition = np.zeros(shape=(n_views,n_rows),dtype=int)
 
 	for i in range(n_views):
-		row_partition_tmp = CRP(n_rows, alpha_rows)
+		row_partition_tmp = CRP(n_rows, alpha_rows, get_next_seed(rng))
 		row_partition[i] = row_partition_tmp
 
 	partition = dict();
@@ -175,11 +182,13 @@ def GenerateRandomPartition(n_rows, n_cols, alpha_col=1.0, alpha_rows=1.0):
 
 # Generates an N-length partitioning through the Chinese Restauraunt Process 
 # with discount parameter alpha
-def CRP(N,alpha):
+def CRP(N, alpha, seed):
 	assert(type(N) is int)
 	assert(type(alpha) is float)
 	assert(N > 0)
 	assert(alpha > 0.0)
+
+	rng = np.random.RandomState(seed)
 
 	partition = np.zeros(N,dtype=int);
 
@@ -193,7 +202,7 @@ def CRP(N,alpha):
 		
 		ps[K] = alpha/(i+alpha)
 
-		assignment = pflip(ps)
+		assignment = pflip(ps, get_next_seed(rng))
 
 		partition[i] = assignment
 
@@ -202,19 +211,18 @@ def CRP(N,alpha):
 	return partition
 
 # flips an n-sided hypercoin
-def pflip(P):
-	# seed the RNG with system time
-	rand.seed(None)
+def pflip(P, seed):
+	rng = np.random.RandomState(seed)
 	if type(P) is float:
 		if P > 1 or P < 0:
 			print("Error: pflip: P is a single value not in [0,1]. P=" + str(P))
 		else:
-			return 1 if rand.random() > .5 else 0
+			return 1 if rng.uniform() > .5 else 0
 	elif type(P) is np.ndarray:
 		# normalize the list
 		P = P/sum(P)
 		P = np.cumsum(P)
-		rdex = rand.random()
+		rdex = rng.uniform()
 		# return the first entry greater than rdex	
 		return np.nonzero(P>rdex)[0][0]
 	else:
@@ -222,12 +230,11 @@ def pflip(P):
 
 # Generates T, M_c, and M_r fitting the state defined by col_part and row_part.
 # Generates only continuous data.
-def GenDataFromPartitions(col_part,row_parts,mean_gen,std_gen,std_data):
+def GenDataFromPartitions(col_part,row_parts,mean_gen,std_gen,std_data,seed):
 	n_cols = len(col_part)
 	n_rows = row_parts.shape[1]
 
-	seed = int(time()*100)
-	np.random.seed(seed)
+	rng = np.random.RandomState(seed)
 
 	T = np.zeros((n_rows,n_cols))
 
@@ -238,8 +245,8 @@ def GenDataFromPartitions(col_part,row_parts,mean_gen,std_gen,std_data):
 		for cat in range(cats):
 			row_dex = np.nonzero(row_part==cat)[0]
 			n_rows_cat = len(row_dex)
-			mean = np.random.normal(mean_gen,std_gen)
-			X = np.random.normal(mean,std_data,(n_rows_cat,1))
+			mean = rng.normal(mean_gen,std_gen)
+			X = rng.normal(mean,std_data,(n_rows_cat,1))
 			i = 0
 			for row in row_dex:
 				T[row,col] = X[i]
