@@ -168,7 +168,10 @@ crypto_core(uint8_t *out, const uint8_t *in, const uint8_t *k,
 /*
  * ChaCha20 test vector from RFC 7539, Appendix A.1, p. 29.  ChaCha8
  * and ChaCha12 test vectors derived by rerunning the same code with
- * the number of rounds changed.
+ * the number of rounds changed.  Output blocks match test vectors in
+ * J. Strombergson, `Test Vectors for the Stream Cipher ChaCha',
+ * Internet-Draft, December 2013,
+ * <https://tools.ietf.org/html/draft-strombergson-chacha-test-vectors-01>.
  */
 static const uint8_t crypto_core_selftest_vector[64] = {
 #if crypto_core_ROUNDS == 8
