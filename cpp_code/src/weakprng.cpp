@@ -35,11 +35,20 @@
  * This renders it unfit for generating crypto keys, but has no
  * consequences for non-adversarial Monte Carlo simulation.
  *
+ * Like any unbroken (as of April 2016) stream cipher, ChaCha8 will
+ * pass any statistical test you throw at it, e.g. anything in the
+ * dieharder suite -- if you knew a test that could distinguish it
+ * from uniform random, your paper would be gladly accepted at a
+ * prestigious crypto conference.  In contrast, for example, there is
+ * a well-known trivial test with high statistical power to
+ * distinguish a Mersenne twister from uniform random given 624
+ * consecutive outputs.
+ *
  * We use the ChaCha family because among cryptographic stream
  * ciphers, it is uniformly fast on all CPUs with tiny cache
  * footprint, it is quick and easy to implement, and it is generally
  * safe to have floating around even if you copy & paste it and use it
- * for crypto purposes.  This is on contrast to, e.g., AES, which has
+ * for crypto purposes.  This is in contrast to, e.g., AES, which has
  * a lower security margin than ChaCha and is practically guaranteed
  * to be much slower and vulnerable to cache-timing attacks if
  * implemented in software.
