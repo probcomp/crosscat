@@ -24,6 +24,36 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * weakprng: A pseudorandom number generator with 256-bit key and
+ * 112-byte state made by a trivial application of the ChaCha8 stream
+ * cipher[1].  See below for a full description of the PRNG.
+ *
+ * `Weak' because it does not provide the property variously known as
+ * backtracking resistance, forward secrecy, or key erasure -- knowing
+ * the current state enables an adversary to predict past outputs.
+ * This renders it unfit for generating crypto keys, but has no
+ * consequences for non-adversarial Monte Carlo simulation.
+ *
+ * We use the ChaCha family because among cryptographic stream
+ * ciphers, it is uniformly fast on all CPUs with tiny cache
+ * footprint, it is quick and easy to implement, and it is generally
+ * safe to have floating around even if you copy & paste it and use it
+ * for crypto purposes.  This is on contrast to, e.g., AES, which has
+ * a lower security margin than ChaCha and is practically guaranteed
+ * to be much slower and vulnerable to cache-timing attacks if
+ * implemented in software.
+ *
+ * We use a local implementation of ChaCha8 because it is easier to fit
+ * that in a single page of code than it is to pull in and use an
+ * external library, most of which are designed for encrypting
+ * messages, not for evaluating the ChaCha8 PRF directly as we want.
+ *
+ * [1] Daniel J. Bernstein, `ChaCha, a variant of Salsa20,' Workshop
+ * Record of SASC 2008: The State of the Art of Stream Ciphers, 2008.
+ * <https://cr.yp.to/papers.html#chacha>
+ */
+
 #define	_POSIX_C_SOURCE	200809L
 
 #include <assert.h>
