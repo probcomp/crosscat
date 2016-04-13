@@ -84,7 +84,7 @@ def test_kl_divergence_as_a_function_of_N_and_transitions():
 	KLD /= float(n_chains*do_times)
 
 	pylab.subplot(1,3,1)
-	pylab.contourf(list(range(0,max_transitions+1,transition_interval), N_list, KLD))
+	pylab.contourf(list(range(0,max_transitions+1,transition_interval)), N_list, KLD)
 	pylab.title('KL divergence')
 	pylab.ylabel('N')
 	pylab.xlabel('# transitions')
@@ -101,7 +101,7 @@ def test_kl_divergence_as_a_function_of_N_and_transitions():
 	pylab.subplot(1,3,3)
 	m_t = numpy.mean(KLD,axis=0)
 	e_t = numpy.std(KLD,axis=0)/float(KLD.shape[0])**-.5
-	pylab.errorbar(list(range(0,max_transitions+1,transition_interval), m_t, yerr=e_t))
+	pylab.errorbar(list(range(0,max_transitions+1,transition_interval)), m_t, yerr=e_t)
 	pylab.title('KL divergence by transitions')
 	pylab.xlabel('trasition')
 	pylab.ylabel('KL divergence')

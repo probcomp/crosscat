@@ -8,7 +8,7 @@ from scipy.special import gammaln as gammaln
 
 from crosscat.utils.general_utils import logmeanexp
 
-next_seed = lambda : random.randrange(2147483647)
+next_seed = lambda rng: int(rng.uniform() * 2147483647)
 
 ###############################################################################
 #   Input-checking and exception-handling functions
@@ -25,7 +25,7 @@ def check_type_force_float(x, name):
     else:
         return x
 
-def counts_to_data(counts):
+def counts_to_data(counts, rng):
     """
     Converts a vector of counts to data.
     """
@@ -43,7 +43,7 @@ def counts_to_data(counts):
 
     assert len(X) == N
 
-    random.shuffle(X)
+    random.shuffle(X, rng.uniform)
     X = numpy.array(X, dtype=float)
 
     return X
@@ -155,8 +155,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         if hypers is not None:
             check_hyperparameters_dict(hypers)
 
-        random.seed(gen_seed)
-        numpy.random.seed(gen_seed)
+        rng = numpy.random.RandomState(gen_seed)
 
         # get the number of categories
         if params is None:
@@ -164,7 +163,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
                 K = int(N/2.0)
             else:
                 K = int(hypers['K'])
-            weights = numpy.random.random((1,K))
+            weights = rng.uniform(size=(1,K))
             weights = weights/numpy.sum(weights)
             weights = weights.tolist()[0]
             assert len(weights) == K
@@ -178,9 +177,9 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
                     raise ValueError("K in params does not match K in hypers")
 
         # generate synthetic data
-        counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=int)
+        counts = numpy.array(rng.multinomial(N, params['weights']), dtype=int)
 
-        X = counts_to_data(counts)
+        X = counts_to_data(counts, rng)
 
         check_data_type_column_data(X)
 
@@ -190,7 +189,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
             suffstats[str(k)] = counts[k]
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed(rng))[0]
             check_hyperparameters_dict(hypers)
 
         # hypers['K'] = check_type_force_float(hypers['K'], "hypers['K']")
@@ -221,11 +220,10 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
-        numpy.random.seed(gen_seed)
+        rng = numpy.random.RandomState(gen_seed)
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed(rng))[0]
             check_hyperparameters_dict(hypers)
         else:
             check_hyperparameters_dict(hypers)
@@ -264,8 +262,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
-        numpy.random.seed(gen_seed)
+        rng = numpy.random.RandomState(gen_seed)
 
         hypers = self.get_hypers()
         dirichlet_alpha = hypers[b'dirichlet_alpha']
@@ -273,7 +270,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 
         alpha = numpy.array([dirichlet_alpha]*int(K))
 
-        weights = numpy.random.dirichlet(alpha)
+        weights = rng.dirichlet(alpha)
         weights = weights.tolist()
 
         params = {'weights': weights}
@@ -388,10 +385,10 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         K = hypers[b'K']
         check_data_vs_k(X,K)
 
-        random.seed(gen_seed)
+        rng = numpy.random.RandomState(gen_seed)
         log_likelihoods = [0]*n_samples
         for i in range(n_samples):
-            params = self.sample_parameters_given_hyper(gen_seed=next_seed())
+            params = self.sample_parameters_given_hyper(gen_seed=next_seed(rng))
             log_likelihoods[i] = self.log_likelihood(X, params)
 
         log_marginal_likelihood = logmeanexp(log_likelihoods)
@@ -440,7 +437,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = numpy.random.RandomState(gen_seed)
 
         samples = []
 
@@ -449,7 +446,7 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
 
 
         for i in range(n_draws):
-            alpha = math.exp(random.uniform(alpha_draw_range[0], alpha_draw_range[1]))
+            alpha = math.exp(rng.uniform(alpha_draw_range[0], alpha_draw_range[1]))
 
             this_draw = dict(dirichlet_alpha=alpha, K=K)
 
@@ -477,12 +474,14 @@ class p_MultinomialComponentModel(mcm.p_MultinomialComponentModel):
         if type(params) is not dict:
             raise TypeError("params should be a dict")
 
+        rng = numpy.random.RandomState(gen_seed)
+
         check_model_parameters_dict(params)
 
         # multinomial draw
-        counts = numpy.array(numpy.random.multinomial(N, params['weights']), dtype=int)
+        counts = numpy.array(rng.multinomial(N, params['weights']), dtype=int)
 
-        X = counts_to_data(counts)
+        X = counts_to_data(counts, rng)
 
         assert len(X) == N
 

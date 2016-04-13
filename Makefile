@@ -2,7 +2,6 @@ CPP_DIR=cpp_code
 CYT=crosscat/cython_code
 DOCS=docs
 TEST=$(CPP_DIR)/tests
-XNET=crosscat/binary_creation
 
 
 all: cython docs
@@ -10,7 +9,6 @@ all: cython docs
 clean:
 	cd $(CPP_DIR) && $(MAKE) clean
 	cd $(CYT) && $(MAKE) clean
-	cd $(XNET) && $(MAKE) clean
 	cd $(DOCS)/sphinx && rm -rf _build
 	cd $(DOCS)/latex && $(MAKE) clean
 	cd $(DOCS)/doxygen && rm -rf html latex
@@ -31,6 +29,3 @@ runtests:
 
 tests:
 	cd $(CPP_DIR) && $(MAKE) tests
-
-xnet:
-	cd $(XNET) && $(MAKE)

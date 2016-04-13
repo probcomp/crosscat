@@ -33,8 +33,7 @@ import crosscat.utils.data_utils as du
 
 import crosscat.cython_code.State as State
 
-random.seed(None)
-inf_seed = random.randrange(32767)
+inf_seed = random.Random(None).randrange(32767)
 # THIS CODE ONLY TESTS CONTINUOUS DATA
 
 # FIXME: getting weird error on conversion to int: too large from inside pyx
@@ -47,7 +46,7 @@ random_state = numpy.random.RandomState(inf_seed)
 col = numpy.array([0,0])
 row = numpy.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]])
 
-p_State, T, M_c, M_r, X_L, X_D = eu.GenerateStateFromPartitions(col,row,std_gen=10000.0, std_data=0.01)
+p_State, T, M_c, M_r, X_L, X_D = eu.GenerateStateFromPartitions(col,row,seed=get_next_seed(),std_gen=10000.0, std_data=0.01)
 
 X_L = p_State.get_X_L()
 X_D = p_State.get_X_D()
@@ -85,10 +84,8 @@ for i in range(n):
     Qs.append(Qtmp)
 
 Ps = su.simple_predictive_probability(M_c, X_L, X_D, Y, Qs)
-Ps2 = su.simple_predictive_probability_density(M_c, X_L, X_D, Y, Qs)
 
 Ps = (numpy.exp(Ps)/max(numpy.exp(Ps)))*pdf_max
-Ps2 = (numpy.exp(Ps2)/max(numpy.exp(Ps2)))*pdf_max
 
 # make a scatterplot
 pylab.scatter(X,Ps, c='red',label="p from cdf")
@@ -100,15 +97,3 @@ pylab.title('TEST: probability and frequencies are not normalized')
 pylab.show()
 
 raw_input("Press Enter when finished with probabilty...")
-
-pylab.clf()
-pdf, bins, patches = pylab.hist(X,50,normed=True, histtype='bar',label='samples',edgecolor='none')
-pylab.scatter(X,Ps2, c='green',label="pdf")
-
-pylab.legend(loc='upper left')
-pylab.xlabel('value') 
-pylab.ylabel('frequency/density')
-pylab.title('TEST: probability and frequencies are not normalized')
-pylab.show()
-
-raw_input("Press Enter when finished with density...")

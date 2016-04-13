@@ -1,13 +1,11 @@
 CrossCat Engines
 ================
 
-A CrossCat engine can be a LocalEngine or one of several remote engines.  The CrossCatClient class can be used to dispatch importing and constructing the desired engine type.
+A CrossCat engine can be a LocalEngine or a MultiprocessingEngine.  The CrossCatClient class can be used to dispatch importing and constructing the desired engine type.
 
 .. warning::
 
    LocalEngine can only be used after the compilation of Cython wrapped C++ engine.
-
-A remote engine may be a JSONRPC engine or a Hadoop engine.  JSONRPC engines fully replicate LocalEngine functionality.  HadoopEngines only implement the initialize and analyze methods and require significant configuration.  HadoopEngine arguments default to values appopriate for users of the XDATA XNET Hadoop cluster.
 
 .. warning::
 
@@ -38,17 +36,9 @@ LocalEngine
    :private-members:
    :show-inheritance:
 
-JSONRPCEngine
-~~~~~~~~~~~~~
-.. automodule:: crosscat.JSONRPCEngine
-   :members:
-   :undoc-members:
-   :private-members:
-   :show-inheritance:
-
-HadoopEngine
-~~~~~~~~~~~~
-.. automodule:: crosscat.HadoopEngine
+MultiprocessingEngine
+~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: crosscat.MultiprocessingEngine
    :members:
    :undoc-members:
    :private-members:

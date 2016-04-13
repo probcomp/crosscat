@@ -98,7 +98,7 @@ def check_one_feature_sampler(component_model_type, show_plot=False):
     
     X = component_model_type.generate_data_from_parameters(data_params, N, gen_seed=get_next_seed())
     
-    hyperparameters = component_model_type.draw_hyperparameters(X)[0]
+    hyperparameters = component_model_type.draw_hyperparameters(X, gen_seed=get_next_seed())[0]
     
     component_model = component_model_type.from_data(X, hyperparameters)
     

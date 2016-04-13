@@ -4,13 +4,7 @@
    :private-members:
    :show-inheritance:
 
-.. automodule:: crosscat.JSONRPCEngine
-   :members:
-   :undoc-members:
-   :private-members:
-   :show-inheritance:
-
-.. automodule:: crosscat.HadoopEngine
+.. automodule:: crosscat.MultiprocessingEngine
    :members:
    :undoc-members:
    :private-members:

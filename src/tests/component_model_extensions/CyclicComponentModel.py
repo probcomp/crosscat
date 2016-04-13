@@ -12,7 +12,7 @@ import pdb
 
 pi = math.pi
 
-next_seed = lambda : random.randrange(2147483647)
+next_seed = lambda rng: rng.randrange(2147483647)
 
 default_hyperparameters = dict(a=1.0, b=pi, kappa=4.0)
 default_data_parameters = dict(mu=pi, kappa=4.0)
@@ -125,13 +125,13 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         data_kappa = data_params['kappa']
         data_mean = data_params['mu']
 
-        random.seed(gen_seed)
-        X = [ [random.vonmisesvariate(data_mean-math.pi, data_kappa)+math.pi] for i in range(N)]
+        rng = random.Random(gen_seed)
+        X = [ [rng.vonmisesvariate(data_mean-math.pi, data_kappa)+math.pi] for i in range(N)]
         X = numpy.array(X)
         check_data_type_column_data(X)
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, n_draws=1, gen_seed=next_seed(rng))[0]
 
         check_hyperparams_dict(hypers)
 
@@ -159,10 +159,10 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
 
         if hypers is None:
-            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed())[0]
+            hypers = cls.draw_hyperparameters(X, gen_seed=next_seed(rng))[0]
 
         check_hyperparams_dict(hypers)
 
@@ -184,14 +184,14 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        nprng = numpy.random.RandomState(gen_seed)
 
         hypers = self.get_hypers()
         a = hypers['a']
         b = hypers['b']
         kappa = hypers['kappa']
 
-        mu = numpy.random.vonmises(b-math.pi, a)+math.pi
+        mu = nprng.vonmises(b-math.pi, a)+math.pi
         kappa = hypers['kappa']
 
         assert(kappa > 0)
@@ -304,10 +304,10 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
             raise TypeError("gen_seed should be an int")
 
         N = float(len(X))
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
         log_likelihoods = [0]*n_samples
         for i in range(n_samples):
-            params = self.sample_parameters_given_hyper(gen_seed=next_seed())
+            params = self.sample_parameters_given_hyper(gen_seed=next_seed(rng))
             log_likelihoods[i] = self.log_likelihood(X, params)
 
         log_marginal_likelihood = logmeanexp(log_likelihoods)
@@ -343,13 +343,11 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
 
         assert(mu >= 0 and mu <= 2*math.pi)
 
-        interval = vonmises.interval(support, kappa)
-
-        a = interval[0]+mu
-        b = interval[1]+mu
-
-        if a < 0.0 or b > 2.*math.pi:
-            pdb.set_trace()
+        a, b = vonmises.interval(support, kappa)
+        a += mu
+        b += mu
+        assert -math.pi <= a < b <= 3*math.pi
+        assert b - a <= 2*math.pi
 
         support_range = b - a;
         support_bin_size = support_range/(nbins-1.0)
@@ -376,7 +374,7 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         if type(gen_seed) is not int:
             raise TypeError("gen_seed should be an int")
 
-        random.seed(gen_seed)
+        rng = random.Random(gen_seed)
 
         samples = []
 
@@ -388,9 +386,9 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         mu_draw_range = (0, 2*pi)
 
         for i in range(n_draws):
-            a = math.exp(random.uniform(a_kappa_draw_range[0], a_kappa_draw_range[1]))
-            kappa = math.exp(random.uniform(a_kappa_draw_range[0], a_kappa_draw_range[1]))
-            b = random.uniform(mu_draw_range[0], mu_draw_range[1])
+            a = math.exp(rng.uniform(a_kappa_draw_range[0], a_kappa_draw_range[1]))
+            kappa = math.exp(rng.uniform(a_kappa_draw_range[0], a_kappa_draw_range[1]))
+            b = rng.uniform(mu_draw_range[0], mu_draw_range[1])
 
             this_draw = dict(a=a, b=b, kappa=kappa)
 
@@ -414,12 +412,14 @@ class p_CyclicComponentModel(ccm.p_CyclicComponentModel):
         if N <= 0:
             raise ValueError("N should be greater than 0")
 
+        nprng = numpy.random.RandomState(gen_seed)
+
         check_model_params_dict(params)
 
         mu = params['mu']
         kappa = params['kappa']
 
-        X = numpy.array([[numpy.random.vonmises(mu-math.pi, kappa)+math.pi] for i in range(N)])
+        X = numpy.array([[nprng.vonmises(mu-math.pi, kappa)+math.pi] for i in range(N)])
 
         for x in X:
             if x < 0. or x > 2.*math.pi:
