@@ -81,12 +81,6 @@ else:
     numpy_includes = [numpy.get_include()]
 
 
-boost_includes = []
-if 'BOOST_ROOT' in os.environ:
-    BOOST_ROOT = os.environ['BOOST_ROOT']
-    boost_includes.append(os.path.join(BOOST_ROOT, 'include'))
-
-
 # http://stackoverflow.com/a/18992595
 ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
@@ -101,6 +95,15 @@ import multiprocessing.pool
 def parallelCCompile(self, sources, output_dir=None, macros=None,
         include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None,
         depends=None):
+    # XXX Kludge to work around distutils bug that passes all
+    # CPython's C compiler flags to the C++ compiler, even ones that
+    # don't make sense like -Wstrict-prototypes.
+    nocxxflags = [
+        '-Wstrict-prototypes',
+    ]
+    for flag in nocxxflags:
+        if flag in self.compiler_so:
+            self.compiler_so.remove(flag)
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = \
             self._setup_compile(output_dir, macros, include_dirs, sources,
@@ -140,7 +143,6 @@ os.chdir(this_dir)
 pyx_src_dir = 'src/cython_code'
 cpp_src_dir = 'cpp_code/src'
 include_dirs = ['cpp_code/include/CrossCat'] \
-    + boost_includes \
     + numpy_includes \
     + []
 
@@ -148,11 +150,12 @@ include_dirs = ['cpp_code/include/CrossCat'] \
 # specify sources
 ContinuousComponentModel_pyx_sources = ['ContinuousComponentModel.pyx']
 ContinuousComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'ContinuousComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
+    'weakprng.cpp',
 ]
 ContinuousComponentModel_sources = generate_sources([
     (pyx_src_dir, ContinuousComponentModel_pyx_sources),
@@ -161,11 +164,12 @@ ContinuousComponentModel_sources = generate_sources([
 #
 MultinomialComponentModel_pyx_sources = ['MultinomialComponentModel.pyx']
 MultinomialComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'MultinomialComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
+    'weakprng.cpp',
 ]
 MultinomialComponentModel_sources = generate_sources([
     (pyx_src_dir, MultinomialComponentModel_pyx_sources),
@@ -174,11 +178,12 @@ MultinomialComponentModel_sources = generate_sources([
 #
 CyclicComponentModel_pyx_sources = ['CyclicComponentModel.pyx']
 CyclicComponentModel_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
     'ComponentModel.cpp',
     'CyclicComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
+    'numerics.cpp',
+    'utils.cpp',
+    'weakprng.cpp',
 ]
 CyclicComponentModel_sources = generate_sources([
     (pyx_src_dir, CyclicComponentModel_pyx_sources),
@@ -187,17 +192,18 @@ CyclicComponentModel_sources = generate_sources([
 #
 State_pyx_sources = ['State.pyx']
 State_cpp_sources = [
-    'utils.cpp',
-    'numerics.cpp',
-    'RandomNumberGenerator.cpp',
-    'DateTime.cpp',
-    'View.cpp',
     'Cluster.cpp',
     'ComponentModel.cpp',
-    'CyclicComponentModel.cpp',
-    'MultinomialComponentModel.cpp',
     'ContinuousComponentModel.cpp',
+    'CyclicComponentModel.cpp',
+    'DateTime.cpp',
+    'MultinomialComponentModel.cpp',
+    'RandomNumberGenerator.cpp',
     'State.cpp',
+    'View.cpp',
+    'numerics.cpp',
+    'utils.cpp',
+    'weakprng.cpp',
 ]
 State_sources = generate_sources([
     (pyx_src_dir, State_pyx_sources),

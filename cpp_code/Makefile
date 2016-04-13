@@ -1,25 +1,19 @@
-CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++03
+CXXOPTS := $(CXXOPTS) -Wall -Werror -std=c++98
 OPTIMIZED = True
 ifdef OPTIMIZED
-CXXOPTS := -pg -O2 $(CXXOPTS)
+CXXOPTS := -O2 $(CXXOPTS)
 else
-CXXOPTS := -pg -O0 -g $(CXXOPTS)
+CXXOPTS := -O0 -g $(CXXOPTS)
 endif
 
 CC = gcc
 CXX = g++
 CXXOPTS := $(CXXOPTS)
 
-ifdef BOOST_ROOT
-CXXOPTS := $(CXXOPTS) -L$(BOOST_ROOT)/lib -I$(BOOST_ROOT)/include
-endif
-
 INC=include/CrossCat
 SRC=src
 OBJ=obj
 TEST=tests
-BIN = main
-MAIN = main.cpp
 NAMES = \
 	Cluster \
 	ComponentModel \
@@ -32,13 +26,16 @@ NAMES = \
 	View \
 	numerics \
 	utils \
+	weakprng \
 	# end of NAMES
 TEST_NAMES = \
 	test_cluster \
 	test_component_model \
 	test_continuous_component_model \
+	test_matrix \
 	test_multinomial_component_model \
 	test_numerics \
+	test_random_number_generator \
 	# end of TEST_NAMES
 BROKEN_TEST_NAMES = \
 	test_state \
@@ -50,7 +47,7 @@ SOURCES = $(foreach name, $(NAMES), $(SRC)/$(name).cpp)
 OBJECTS = $(foreach name, $(NAMES), $(OBJ)/$(name).o)
 TESTS = $(foreach test, $(TEST_NAMES), $(TEST)/$(test))
 
-all: obj # bin
+all: obj
 
 tests: obj $(TESTS)
 
@@ -59,17 +56,12 @@ runtests: obj $(TESTS)
 	@echo tests are: $(TESTS) $(foreach test, $(TESTS), && ./$(test))
 
 clean:
-	rm -f $(BIN) $(OBJECTS) core *.stackdump *.gch $(TESTS)
-
-bin: $(OBJECTS) $(BIN) $(MAIN) $(HEADERS)
+	rm -f $(OBJECTS) core *.stackdump *.gch $(TESTS)
 
 obj: $(OBJECTS)
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(INC)/%.h $(HEADERS)
 	$(CXX) -c $< -o $@ $(CXXOPTS) -I$(INC)
-
-$(BIN): $(OBJECTS) $(MAIN) $(HEADERS)
-	$(CXX) -o $(BIN) $(MAIN) $(OBJECTS) $(HEADERS) $(CXXOPTS) -lm -lboost_program_options -I$(INC)
 
 $(TEST)/%: $(TEST)/%.cpp $(HEADERS) $(OBJECTS)
 	$(CXX) $< -o $@ $(CXXOPTS) -I$(INC) $(OBJECTS)

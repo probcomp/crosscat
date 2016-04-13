@@ -20,60 +20,10 @@
 #include "RandomNumberGenerator.h"
 #include "utils.h"
 //
-#include <fstream>      // fstream
-#include <boost/tokenizer.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <numeric>
 #include <algorithm>
 
 using namespace std;
-using namespace boost;
-
-using boost::numeric::ublas::project;
-using boost::numeric::ublas::matrix;
-
-// FROM runModel_v2.cpp
-/////////////////////////////////////////////////////////////////////
-// expect a csv file of data
-void LoadData(const string& file, matrix<double>& M) {
-  ifstream in(file.c_str());
-  if (!in.is_open()) return;
-  typedef tokenizer< char_separator<char> > Tokenizer;
-  char_separator<char> sep(",");
-
-  string line;
-  int nrows = 0; 
-  int ncols = 0;
-  vector<string> vec;
-
-  // get the size first
-  while (std::getline(in,line)) {
-    Tokenizer tok(line, sep);
-    vec.assign(tok.begin(), tok.end());
-    ncols = vec.end() - vec.begin();
-    nrows++;
-  }
-  cout << "num rows = "<< nrows << "  num cols = " << ncols << endl;
-
-  // create a matrix to hold data
-  matrix<double> Data(nrows, ncols);
-  
-  // make second pass 
-  in.clear();
-  in.seekg(0);
-  int r = 0;
-  while (std::getline(in,line)) {
-    Tokenizer tok(line, sep);
-    vec.assign(tok.begin(), tok.end());
-    unsigned int i = 0;
-    for(i=0; i < vec.size() ; i++) {
-      Data(r, i) = ::strtod(vec[i].c_str(), 0);
-    }
-    r++;
-  }
-  M = Data;
-}
 
 bool is_almost(double val1, double val2, double precision) {
   return abs(val1-val2) < precision;
@@ -374,10 +324,12 @@ vector<vector<vector<int> > > draw_crp_init(const vector<int>& global_row_indice
 
 
 void copy_column(const MatrixD& fromM, int from_col, MatrixD &toM, int to_col) {
-  assert(fromM.size1()==toM.size1());
-  int num_rows = fromM.size1();
-  project(toM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(to_col, to_col+1)) = \
-    project(fromM, boost::numeric::ublas::range(0, num_rows), boost::numeric::ublas::range(from_col, from_col+1));
+  size_t row, nrows;
+
+  nrows = fromM.size1();
+  assert(nrows == toM.size1());
+  for (row = 0; row < nrows; row++)
+    toM(row, to_col) = fromM(row, from_col);
 }
 
 MatrixD extract_columns(const MatrixD& fromM, const vector<int>& from_cols) {

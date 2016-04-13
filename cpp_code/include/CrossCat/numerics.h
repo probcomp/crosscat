@@ -43,6 +43,9 @@ template <typename T> int sgn(T val);
 
 double estimate_vonmises_kappa(const std::vector<double>& X);
 
+double i_0(double x);
+double i_1(double x);
+
 double log_bessel_0(double x); // log I_0(x)
 
 double logaddexp(const std::vector<double>& logs);

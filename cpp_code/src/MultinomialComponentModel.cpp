@@ -17,8 +17,10 @@
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
 */
+
+#include "RandomNumberGenerator.h"
+
 #include "MultinomialComponentModel.h"
-#include <boost/random/uniform_01.hpp>
 
 using namespace std;
 
@@ -189,9 +191,7 @@ double MultinomialComponentModel::get_draw(int random_seed) const {
     // get modified suffstats
     const vector<int>& counts = suffstats;
     // get a random draw
-    boost::mt19937  _engine(random_seed);
-    boost::uniform_01<boost::mt19937> _dist(_engine);
-    double uniform_draw = _dist();
+    double uniform_draw = RandomNumberGenerator(random_seed).next();
     //
     vector<int> keys;
     vector<double> log_counts_for_draw;
@@ -208,9 +208,7 @@ double MultinomialComponentModel::get_draw_constrained(int random_seed,
     // get modified suffstats
     const vector<int>& counts = suffstats;
     // get a random draw
-    boost::mt19937  _engine(random_seed);
-    boost::uniform_01<boost::mt19937> _dist(_engine);
-    double uniform_draw = _dist();
+    double uniform_draw = RandomNumberGenerator(random_seed).next();
     //
     vector<int> keys;
     vector<double> log_counts_for_draw;

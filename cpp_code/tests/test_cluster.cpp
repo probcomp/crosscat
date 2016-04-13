@@ -23,9 +23,6 @@
 #include "numerics.h"
 #include "RandomNumberGenerator.h"
 
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
 using namespace std;
 
 const static double r0_0 = 1.0;

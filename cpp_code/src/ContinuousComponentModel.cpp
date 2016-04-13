@@ -18,8 +18,6 @@
 *   limitations under the License.
 */
 #include "ContinuousComponentModel.h"
-#include <boost/math/distributions/students_t.hpp>
-#include <boost/random/student_t_distribution.hpp>
 using namespace std;
 
 ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
@@ -220,10 +218,7 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
     // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
     // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
     //
-    boost::mt19937  _engine(random_seed);
-    boost::uniform_01<boost::mt19937> _dist(_engine);
-    boost::random::student_t_distribution<double> student_t(nu);
-    double student_t_draw = student_t(_dist);
+    double student_t_draw = RandomNumberGenerator(random_seed).student_t(nu);
     double coeff = sqrt((s * (r + 1)) / (nu * r));
     double draw = student_t_draw * coeff + mu;
     return draw;
@@ -232,30 +227,10 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
 // For simple predictive probability
 double ContinuousComponentModel::get_predictive_cdf(double element,
         const vector<double>& constraints) const {
-    // get modified suffstats
-    double r, nu, s, mu;
-    int count;
-    double sum_x, sum_x_squared;
-    get_hyper_doubles(r, nu, s, mu);
-    get_suffstats(count, sum_x, sum_x_squared);
-    int num_constraints = (int) constraints.size();
-    for (int constraint_idx = 0; constraint_idx < num_constraints;
-            constraint_idx++) {
-        double constraint = constraints[constraint_idx];
-        numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
-                constraint);
-    }
-    numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
-    boost::math::students_t dist(nu);
-    double coeff = sqrt((s * (r + 1)) / (nu * r));
-
-    // manipulate the number so it will fit in the standard t (reverse of the draw proceedure)
-    double rev_draw = (element - mu) / coeff ;
-
-    double cdfval = boost::math::cdf(dist, rev_draw);
-
-    return cdfval;
+    // XXX Requires computing the Student's t-distribution CDF, which
+    // involves incomplete beta integrals, which are a pain.  But
+    // nothing uses this right now, so it's not really an issue.
+    return -HUGE_VAL;
 }
 
 map<string, double> ContinuousComponentModel::_get_suffstats() const {
