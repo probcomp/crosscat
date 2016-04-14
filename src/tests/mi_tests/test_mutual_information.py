@@ -195,9 +195,11 @@ def do_test(which_plot, max_plots, n, burn_in, cc_samples, which_test, correlati
 	return M_c, X_Ls, X_Ds
 
 def MI_test(n, burn_in, cc_samples, which_test, n_MI_samples=500, correlation=0):
+        get_next_seed = lambda : random.randrange(32000)
 	M_c, X_Ls, X_Ds = do_test(0, 0, n, burn_in, cc_samples, "correlated", correlation=correlation, do_plot=False)
 	# query column 0 and 1
-	MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)], n_samples=n_MI_samples)
+	MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)],
+		get_next_seed, n_samples=n_MI_samples)
 
 	MI = numpy.mean(MI)
 	Linfoot = numpy.mean(Linfoot)

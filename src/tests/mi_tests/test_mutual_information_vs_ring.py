@@ -87,7 +87,8 @@ for w in widths:
 		X_Ds.append(state.get_X_D())
 		X_Ls.append(state.get_X_L())
 	
-	MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)], n_samples=5000)
+	MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)],
+            get_next_seed, n_samples=5000)
 
 	data_d = numpy.transpose(MI)
 
