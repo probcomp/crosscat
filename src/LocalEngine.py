@@ -925,24 +925,28 @@ if __name__ == '__main__':
     n_test = 100
     CT_KERNEL = 1
 
+    get_next_seed = make_get_next_seed(gen_seed)
+
     # generate some data
     T, M_r, M_c, data_inverse_permutation_indices = du.gen_factorial_data_objects(
-        gen_seed, num_clusters, num_cols, num_rows, num_views,
+        get_next_seed(), num_clusters, num_cols, num_rows, num_views,
         max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
         data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
 
     # run some tests
-    engine = LocalEngine(seed=inf_seed)
+    engine = LocalEngine()
     multi_state_ARIs = []
     multi_state_mean_test_lls = []
-    X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
+    X_L_list, X_D_list = engine.initialize(M_c, M_r, T, get_next_seed(),
+        n_chains=n_chains)
     multi_state_ARIs.append(
         ctu.get_column_ARIs(X_L_list, view_assignment_truth))
 
     for time_i in range(n_times):
         X_L_list, X_D_list = engine.analyze(
-            M_c, T, X_L_list, X_D_list, n_steps=n_steps, CT_KERNEL=CT_KERNEL)
+            M_c, T, X_L_list, X_D_list, get_next_seed(), n_steps=n_steps,
+            CT_KERNEL=CT_KERNEL)
         multi_state_ARIs.append(
             ctu.get_column_ARIs(X_L_list, view_assignment_truth))
         # multi_state_mean_test_lls.append(
@@ -950,7 +954,7 @@ if __name__ == '__main__':
         #                                        X_L_list, X_D_list, T_test))
 
     X_L_list, X_D_list, diagnostics_dict = engine.analyze(
-        M_c, T, X_L_list, X_D_list,
+        M_c, T, X_L_list, X_D_list, get_next_seed(),
         n_steps=n_steps, do_diagnostics=True)
 
     # print results

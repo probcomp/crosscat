@@ -52,6 +52,7 @@ class MultiprocessingEngine(LE.LocalEngine):
 if __name__ == '__main__':
     import crosscat.utils.data_utils as du
     import crosscat.utils.convergence_test_utils as ctu
+    import random
 
 
     # settings
@@ -66,14 +67,17 @@ if __name__ == '__main__':
     n_chains = 3
     n_test = 100
 
+    rng = random.Random(gen_seed)
+    get_next_seed = lambda: rng.randint(1, 2**31 - 1)
 
     # generate some data
     T, M_r, M_c, data_inverse_permutation_indices = du.gen_factorial_data_objects(
-            gen_seed, num_clusters, num_cols, num_rows, num_views,
+            get_next_seed(), num_clusters, num_cols, num_rows, num_views,
             max_mean=100, max_std=1, send_data_inverse_permutation_indices=True)
     view_assignment_truth, X_D_truth = ctu.truth_from_permute_indices(
             data_inverse_permutation_indices, num_rows, num_cols, num_views, num_clusters)
-    X_L_gen, X_D_gen = du.get_generative_clustering(M_c, M_r, T,
+    X_L_gen, X_D_gen = du.get_generative_clustering(get_next_seed(),
+            M_c, M_r, T,
             data_inverse_permutation_indices, num_clusters, num_views)
     T_test = ctu.create_test_set(M_c, T, X_L_gen, X_D_gen, n_test, seed_seed=0)
     #
@@ -82,17 +86,18 @@ if __name__ == '__main__':
 
 
     # run some tests
-    engine = MultiprocessingEngine(seed=inf_seed)
+    engine = MultiprocessingEngine()
     # single state test
     single_state_ARIs = []
     single_state_mean_test_lls = []
-    X_L, X_D = engine.initialize(M_c, M_r, T, n_chains=1)
+    X_L, X_D = engine.initialize(M_c, M_r, T, get_next_seed(), n_chains=1)
     single_state_ARIs.append(ctu.get_column_ARI(X_L, view_assignment_truth))
     single_state_mean_test_lls.append(
             ctu.calc_mean_test_log_likelihood(M_c, T, X_L, X_D, T_test)
             )
     for time_i in range(n_times):
-        X_L, X_D = engine.analyze(M_c, T, X_L, X_D, n_steps=n_steps)
+        X_L, X_D = engine.analyze(M_c, T, X_L, X_D, get_next_seed(),
+            n_steps=n_steps)
         single_state_ARIs.append(ctu.get_column_ARI(X_L, view_assignment_truth))
         single_state_mean_test_lls.append(
             ctu.calc_mean_test_log_likelihood(M_c, T, X_L, X_D, T_test)
@@ -100,12 +105,14 @@ if __name__ == '__main__':
     # multistate test
     multi_state_ARIs = []
     multi_state_mean_test_lls = []
-    X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=n_chains)
+    X_L_list, X_D_list = engine.initialize(M_c, M_r, T, get_next_seed(),
+        n_chains=n_chains)
     multi_state_ARIs.append(ctu.get_column_ARIs(X_L_list, view_assignment_truth))
     multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
         X_L_list, X_D_list, T_test))
     for time_i in range(n_times):
-        X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=n_steps)
+        X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list,
+            get_next_seed(), n_steps=n_steps)
         multi_state_ARIs.append(ctu.get_column_ARIs(X_L_list, view_assignment_truth))
         multi_state_mean_test_lls.append(ctu.calc_mean_test_log_likelihoods(M_c, T,
             X_L_list, X_D_list, T_test))

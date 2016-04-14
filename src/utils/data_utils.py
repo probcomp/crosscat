@@ -21,15 +21,18 @@ from six.moves import range
 import sys
 import csv
 import copy
+import random
 #
 import numpy
 
 
-def get_generative_clustering(M_c, M_r, T,
+def get_generative_clustering(seed, M_c, M_r, T,
                               data_inverse_permutation_indices,
                               num_clusters, num_views):
     from crosscat.LocalEngine import LocalEngine
     import crosscat.cython_code.State as State
+    rng = random.Random(seed)
+    get_next_seed = lambda: rng.randint(1, 2**31 - 1)
     # NOTE: this function only works because State.p_State doesn't use
     #       column_component_suffstats
     num_rows = len(T)
@@ -42,7 +45,7 @@ def get_generative_clustering(M_c, M_r, T,
     gen_X_L_assignments = numpy.repeat(range(num_views), (num_cols / num_views))
     # initialize to generate an X_L to manipulate
     local_engine = LocalEngine()
-    bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T,
+    bad_X_L, bad_X_D = local_engine.initialize(M_c, M_r, T, get_next_seed(),
                                                          initialization='apart')
     bad_X_L['column_partition']['assignments'] = gen_X_L_assignments
     # manually constrcut state in in generative configuration
@@ -55,8 +58,8 @@ def get_generative_clustering(M_c, M_r, T,
         'column_hyperparameters',
         'column_partition_hyperparameter',
         )
-    gen_X_L, gen_X_D = local_engine.analyze(M_c, T, gen_X_L, gen_X_D, n_steps=1,
-                                            kernel_list=kernel_list)
+    gen_X_L, gen_X_D = local_engine.analyze(M_c, T, gen_X_L, gen_X_D,
+            get_next_seed(), n_steps=1, kernel_list=kernel_list)
     #
     return gen_X_L, gen_X_D
 
@@ -64,14 +67,16 @@ def generate_clean_state(gen_seed, num_clusters,
                          num_cols, num_rows, num_splits,
                          max_mean=10, max_std=1,
                          plot=False):
+    rng = random.Random(gen_seed)
+    get_next_seed = lambda: rng.randint(1, 2**31 - 1)
     # generate the data
     T, M_r, M_c, data_inverse_permutation_indices = \
-        gen_factorial_data_objects(gen_seed, num_clusters,
+        gen_factorial_data_objects(get_next_seed(), num_clusters,
                                       num_cols, num_rows, num_splits,
                                       max_mean=10, max_std=1,
                                       send_data_inverse_permutation_indices=True)
     # recover generative clustering
-    X_L, X_D = get_generative_clustering(M_c, M_r, T,
+    X_L, X_D = get_generative_clustering(get_next_seed(), M_c, M_r, T,
                                          data_inverse_permutation_indices,
                                          num_clusters, num_splits)
     return T, M_c, M_r, X_L, X_D
