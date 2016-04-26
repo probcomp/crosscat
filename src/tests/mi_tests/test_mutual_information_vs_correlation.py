@@ -45,15 +45,15 @@ def get_correlations(T, Q):
 	return corr
 
 def gen_correlated_data( n, r, SEED=0 ):
-	numpy.random.seed(SEED)
-	T = numpy.random.multivariate_normal([0,0],[[1,r],[r,1]],n)
+	rng = numpy.random.RandomState(SEED)
+	T = rng.multivariate_normal([0,0],[[1,r],[r,1]],n)
 
 	return T
 
 def gen_correlated_data_discrete( n, r, SEED=0):
 	K = 8
-	numpy.random.seed(SEED)
-	T = numpy.random.multivariate_normal([0,0],[[1,r],[r,1]],n)
+	rng = numpy.random.RandomState(SEED)
+	T = rng.multivariate_normal([0,0],[[1,r],[r,1]],n)
 
 	min_x = numpy.min(T[:,0])
 	min_y = numpy.min(T[:,1])
@@ -121,7 +121,8 @@ for r in correlations:
 			X_Ds.append(state.get_X_D())
 			X_Ls.append(state.get_X_L())
 		
-		MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)], n_samples=5000)
+		MI, Linfoot = iu.mutual_information(M_c, X_Ls, X_Ds, [(0,1)],
+                    get_next_seed, n_samples=5000)
 
 		if d == 0:
 			data_d = numpy.transpose(Linfoot)

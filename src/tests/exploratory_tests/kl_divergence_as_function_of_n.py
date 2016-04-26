@@ -53,7 +53,8 @@ def test_kl_divergence_as_a_function_of_N_and_transitions():
 
 			# intialize a multiprocessing engine
 			mstate = mpe.MultiprocessingEngine(cpu_count=8)
-			X_L_list, X_D_list = mstate.initialize(M_c, M_r, T, n_chains=n_chains)
+			X_L_list, X_D_list = mstate.initialize(get_next_seed(), M_c, M_r, T,
+				n_chains=n_chains)
 
 			# kl_divergences
 			klds = numpy.zeros(len(X_L_list))
@@ -69,8 +70,8 @@ def test_kl_divergence_as_a_function_of_N_and_transitions():
 
 			# run transition_interval then take a reading. Rinse and repeat.
 			for t in range( t_iterations ):
-				X_L_list, X_D_list = mstate.analyze(M_c, T, X_L_list, X_D_list,
-							n_steps=transition_interval)
+				X_L_list, X_D_list = mstate.analyze(get_next_seed(), M_c, T,
+							X_L_list, X_D_list, n_steps=transition_interval)
 
 				for i in range(len(X_L_list)):
 					X_L = X_L_list[i]

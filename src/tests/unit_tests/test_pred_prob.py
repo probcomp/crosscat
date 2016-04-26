@@ -75,8 +75,8 @@ def quick_le(seed, n_chains=1):
         separation, seed=seed, distargs=distargs, return_structure=True)
 
     # Create, initialize, and analyze the engine.
-    engine = LocalEngine(seed=seed)
-    X_L, X_D = engine.initialize(M_c, M_r, T, n_chains=n_chains)
+    engine = LocalEngine()
+    X_L, X_D = engine.initialize(M_c, M_r, T, seed, n_chains=n_chains)
 
     return T, M_r, M_c, X_L, X_D, engine
 

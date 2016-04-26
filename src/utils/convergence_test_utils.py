@@ -25,6 +25,7 @@ import crosscat.utils.sample_utils as su
 
 
 def calc_ari(group_idx_list_1, group_idx_list_2):
+    from collections import defaultdict
     def make_set_dict(list):
         set_dict = defaultdict(set)
         add_element = lambda idx_group: set_dict[idx_group[1]].add(idx_group[0])

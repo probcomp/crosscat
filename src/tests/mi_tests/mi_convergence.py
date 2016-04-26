@@ -139,6 +139,8 @@ def run_test(args):
 
     data_subs = []
 
+    get_next_seed = lambda: random.randint(1, 2**31 - 1)
+
     n_index = 0
     for n in num_samples:
         T_sub = numpy.copy(T[0:n-1,:])
@@ -155,7 +157,8 @@ def run_test(args):
             X_D = state.get_X_D()
             X_L = state.get_X_L()
 
-            MI, Linfoot = iu.mutual_information(M_c, [X_L], [X_D], [(0,1)], n_samples=5000)
+            MI, Linfoot = iu.mutual_information(M_c, [X_L], [X_D], [(0,1)],
+                    get_next_seed, n_samples=5000)
 
             mi_diff[n_index,t] = true_mi-MI[0][0]
 
