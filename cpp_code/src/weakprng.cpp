@@ -64,6 +64,7 @@
  */
 
 #define	_POSIX_C_SOURCE	200809L
+#define	__STDC_CONSTANT_MACROS
 
 #include <assert.h>
 #include <limits.h>
