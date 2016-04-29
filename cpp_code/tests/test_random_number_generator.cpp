@@ -26,7 +26,6 @@
 
 using std::vector;
 
-static const double ALPHA = 0.01;	        // null failure rate
 static const size_t NSAMPLES = 100000;
 
 // normal_suffstats(v, mean, sumsqdev)
@@ -199,7 +198,7 @@ static bool psi_test(const vector<size_t> &counts,
 //      `Summary of operational information' on p. 602.
 
 static const size_t SHAPIRO_WILK_DF = 50;
-static const double SHAPIRO_WILK_CRITICAL = .930;
+static const double SHAPIRO_WILK_CRITICAL = .930;  // At alpha=0.001.
 static const double SHAPIRO_WILK_A[SHAPIRO_WILK_DF/2] = {
     .3751, .2574, .2260, .2032, .1847,
     .1691, .1554, .1430, .1317, .1212,
