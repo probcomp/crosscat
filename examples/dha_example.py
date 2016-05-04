@@ -70,10 +70,9 @@ num_cols = len(T[0])
 col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(num_cols)])
 
 # initialze and transition chains
-seeds = range(num_chains)
 engine = LE.LocalEngine(inf_seed)
-X_L_list, X_D_list = engine.initialize(M_c, M_r, T, 'from_the_prior', n_chains=num_chains)
-X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, n_steps=num_transitions)
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, gen_seed, initialization='from_the_prior', n_chains=num_chains)
+X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, gen_seed, n_steps=num_transitions)
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
@@ -113,7 +112,7 @@ for impute_row in [10, 20, 30, 40, 50, 60, 70, 80]:
         impute_names = [col_names[impute_col]]
         Q = determine_Q(M_c, impute_names, num_rows, impute_row=impute_row)
         #
-        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, 1000)
+        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, gen_seed, 1000)
         imputed_list.append(imputed)
     print
     print actual_values
