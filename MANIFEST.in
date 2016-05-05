@@ -6,6 +6,20 @@ include VERSION
 include check.sh
 include cpp_code/Makefile
 include cpp_code/obj/.gitkeep
+include cpp_code/include/CrossCat/Cluster.h
+include cpp_code/include/CrossCat/ComponentModel.h
+include cpp_code/include/CrossCat/ContinuousComponentModel.h
+include cpp_code/include/CrossCat/CyclicComponentModel.h
+include cpp_code/include/CrossCat/DateTime.h
+include cpp_code/include/CrossCat/Matrix.h
+include cpp_code/include/CrossCat/MultinomialComponentModel.h
+include cpp_code/include/CrossCat/RandomNumberGenerator.h
+include cpp_code/include/CrossCat/State.h
+include cpp_code/include/CrossCat/View.h
+include cpp_code/include/CrossCat/constants.h
+include cpp_code/include/CrossCat/numerics.h
+include cpp_code/include/CrossCat/utils.h
+include cpp_code/include/CrossCat/weakprng.h
 include cpp_code/tests/bessamp.cpp
 include cpp_code/tests/bessel.cpp
 include cpp_code/tests/test_cluster.cpp
@@ -29,5 +43,3 @@ include src/tests/unit_tests/test_multinomial_component_model.py
 include src/tests/unit_tests/test_pred_prob.py
 include src/tests/unit_tests/test_quality_test_utils.py
 include src/tests/unit_tests/test_synthetic_data_generator.py
-recursive-include cpp_code *.h
-recursive-include src/cython_code *.pyx
