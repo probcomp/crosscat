@@ -19,6 +19,7 @@
 #
 import argparse
 import os
+import random
 #
 import numpy
 #
@@ -41,6 +42,9 @@ inf_seed = args.inf_seed
 gen_seed = args.gen_seed
 num_chains = args.num_chains
 num_transitions = args.num_transitions
+#
+rng = random.Random(gen_seed)
+get_next_seed = lambda: rng.randint(1, 2**31 - 1)
 #
 pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
 
@@ -71,8 +75,8 @@ col_names = numpy.array([M_c['idx_to_name'][str(col_idx)] for col_idx in range(n
 
 # initialze and transition chains
 engine = LE.LocalEngine(inf_seed)
-X_L_list, X_D_list = engine.initialize(M_c, M_r, T, gen_seed, initialization='from_the_prior', n_chains=num_chains)
-X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, gen_seed, n_steps=num_transitions)
+X_L_list, X_D_list = engine.initialize(M_c, M_r, T, get_next_seed(), initialization='from_the_prior', n_chains=num_chains)
+X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list, get_next_seed(), n_steps=num_transitions)
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
@@ -112,7 +116,7 @@ for impute_row in [10, 20, 30, 40, 50, 60, 70, 80]:
         impute_names = [col_names[impute_col]]
         Q = determine_Q(M_c, impute_names, num_rows, impute_row=impute_row)
         #
-        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, gen_seed, 1000)
+        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, get_next_seed(), 1000)
         imputed_list.append(imputed)
     print
     print actual_values
