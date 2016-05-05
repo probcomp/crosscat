@@ -7,4 +7,4 @@ include check.sh
 include setup.py
 include requirements.txt
 recursive-include cpp_code *.h
-recursive-include src/cython_code *.pyx *.cpp
+recursive-include src/cython_code *.pyx
