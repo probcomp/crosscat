@@ -4,7 +4,8 @@ include NOTICE
 include README.rst
 include VERSION
 include check.sh
-include setup.py
+include pythenv.sh
 include requirements.txt
+include setup.py
 recursive-include cpp_code *.h
 recursive-include src/cython_code *.pyx
