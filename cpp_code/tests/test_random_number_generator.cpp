@@ -532,7 +532,10 @@ int main(int argc, char **argv) {
 
     test_weakprng();
 
-    RandomNumberGenerator rng(random_seed());
+    int seed = (argc == 2? atoi(argv[1]) : random_seed());
+    std::cout << "seed " << seed << std::endl;
+
+    RandomNumberGenerator rng(seed);
     test_uniform_integer(rng);
     test_uniform01(rng);
     test_stdnormal_sw(rng);
