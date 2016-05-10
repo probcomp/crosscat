@@ -28,6 +28,36 @@ using std::vector;
 
 static const size_t NSAMPLES = 100000;
 
+// The tests are calibrated to have significance level alpha = 0.01,
+// i.e. the rejection rate under the null hypothesis, or false
+// rejection rate.  If there are n tests, then the false rejection
+// rate of the entire suite is 1 - Binom(0; n, alpha).  For n = 10,
+// this is about 10%, i.e. about one in ten runs of the test suite
+// would fail even if the code is correct.
+//
+// To reduce the false rejection rate, we could change alpha, but that
+// requires changing all the critical values in all the tests.
+// Critical values for smaller values of alpha are not always easy to
+// find and audit, e.g. the critical value for the smallest alpha
+// reported in the Shapiro-Wilk paper is 0.01.
+//
+// An easy alternative way to reduce the false rejection rate, at the
+// expense of statistical power, is to repeat each test in k
+// independent trials and reject only if it failed all k.  It is then
+// as if the significance level were Binom(k; k, alpha).  For k = 2,
+// this is approximately alpha^2.  For alpha = 0.01, the resulting
+// false rejection rate of the entire suite for n = 10 tests is then
+// approximately 1 - Binom(0; 10, alpha^2) or about 0.1%.  If we wrote
+// 90 more tests, then the false rejection rate would still be only
+// about 1% for the whole test suite.
+//
+// We could also stop early as soon as we cross the threshold of
+// required passes, without changing the false rejection rate, but
+// that requires writing more code.
+
+static const unsigned NPASSES_MIN = 1;
+static const unsigned NTRIALS = 2;
+
 // normal_suffstats(v, mean, sumsqdev)
 //
 //      Compute sufficient statistics for a normal distribution of n =
@@ -158,7 +188,7 @@ static double t2_cdf(double x) {
 //      retrieved 2016-03-14.
 
 static const size_t PSI_DF = 100;               // degrees of freedom
-static const double PSI_CRITICAL = 135.807;     // critical value
+static const double PSI_CRITICAL = 135.807;     // critical value, alpha = .01
 
 static bool psi_test(const vector<size_t> &counts,
         const vector<double> &probabilities, size_t nsamples) {
@@ -198,7 +228,7 @@ static bool psi_test(const vector<size_t> &counts,
 //      `Summary of operational information' on p. 602.
 
 static const size_t SHAPIRO_WILK_DF = 50;
-static const double SHAPIRO_WILK_CRITICAL = .930;  // At alpha=0.001.
+static const double SHAPIRO_WILK_CRITICAL = .930;  // alpha = .01
 static const double SHAPIRO_WILK_A[SHAPIRO_WILK_DF/2] = {
     .3751, .2574, .2260, .2032, .1847,
     .1691, .1554, .1430, .1317, .1212,
@@ -249,43 +279,69 @@ static int random_seed(void) {
 }
 
 static void test_uniform_integer(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     size_t i;
+    unsigned trial, passes;
 
     for (i = 0; i < probabilities.size(); i++)
         probabilities[i] = 1/static_cast<double>(PSI_DF);
-    for (i = 0; i < NSAMPLES; i++)
-        counts[rng.nexti(PSI_DF)]++;
-    assert(psi_test(counts, probabilities, NSAMPLES));
+
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        for (i = 0; i < NSAMPLES; i++)
+            counts[rng.nexti(PSI_DF)]++;
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 
     // Check that the psi test has sufficient statistical power to
     // detect the modulo bias.
-    std::fill(counts.begin(), counts.end(), 0);
+    vector<size_t> counts(PSI_DF);
     for (i = 0; i < NSAMPLES; i++)
-        counts[rng.nexti(2*PSI_DF + 1) % PSI_DF]++;
+      counts[rng.nexti(2*PSI_DF + 1) % PSI_DF]++;
     assert(!psi_test(counts, probabilities, NSAMPLES));
 }
 
 static void test_uniform01(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     size_t i;
+    unsigned trial, passes;
 
     for (i = 0; i < probabilities.size(); i++)
         probabilities[i] = 1/static_cast<double>(PSI_DF);
-    for (i = 0; i < NSAMPLES; i++)
-        counts[static_cast<size_t>(floor(rng.next()*PSI_DF))]++;
-    assert(psi_test(counts, probabilities, NSAMPLES));
+
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        for (i = 0; i < NSAMPLES; i++)
+            counts[static_cast<size_t>(floor(rng.next()*PSI_DF))]++;
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_stdnormal_sw(RandomNumberGenerator &rng) {
-    vector<double> samples(SHAPIRO_WILK_DF);
-    size_t i;
+    unsigned trial, passes;
 
-    for (i = 0; i < samples.size(); i++)
-	samples[i] = rng.stdnormal();
-    assert(shapiro_wilk_test(samples));
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<double> samples(SHAPIRO_WILK_DF);
+        size_t i;
+
+        for (i = 0; i < samples.size(); i++)
+            samples[i] = rng.stdnormal();
+        passes += shapiro_wilk_test(samples);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 }
 
 class sampler {
@@ -371,59 +427,99 @@ static void sample_bins(const sampler &sample, double lo, double hi,
 }
 
 static void test_stdnormal_psi(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     const double lo = -5;
     const double hi = +5;
+    unsigned trial, passes;
 
     cdf_bins(stdnormal_cdf, lo, hi, probabilities);
 
-    sample_bins(stdnormal_sampler(), lo, hi, rng, counts);
-    assert(psi_test(counts, probabilities, NSAMPLES));
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        sample_bins(stdnormal_sampler(), lo, hi, rng, counts);
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 
     // Check that the psi test has sufficient statistical power to
     // distinguish a normal from a low-degree Student t.
-    std::fill(counts.begin(), counts.end(), 0);
+    vector<size_t> counts(PSI_DF);
     sample_bins(t_sampler(10), lo, hi, rng, counts);
     assert(!psi_test(counts, probabilities, NSAMPLES));
 }
 
 static void test_stdgamma_psi(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     const double lo = 0.1;
     const double hi = 20;
+    unsigned trial, passes;
 
     cdf_bins(stdgamma11_cdf, lo, hi, probabilities);
-    sample_bins(stdgamma_sampler(11), lo, hi, rng, counts);
-    assert(psi_test(counts, probabilities, NSAMPLES));
+
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        sample_bins(stdgamma_sampler(11), lo, hi, rng, counts);
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_chisquare_psi(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     const double lo = 0.1;
     const double hi = 10;
+    unsigned trial, passes;
 
     cdf_bins(chisquare2_cdf, lo, hi, probabilities);
-    sample_bins(chisquare_sampler(2), lo, hi, rng, counts);
-    assert(psi_test(counts, probabilities, NSAMPLES));
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
 
-    std::fill(counts.begin(), counts.end(), 0);
+        sample_bins(chisquare_sampler(2), lo, hi, rng, counts);
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
+
     cdf_bins(chisquare8_cdf, lo, hi, probabilities);
-    sample_bins(chisquare_sampler(8), lo, hi, rng, counts);
-    assert(psi_test(counts, probabilities, NSAMPLES));
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        sample_bins(chisquare_sampler(8), lo, hi, rng, counts);
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_student_t_psi(RandomNumberGenerator &rng) {
-    vector<size_t> counts(PSI_DF);
     vector<double> probabilities(PSI_DF);
     const double lo = -10;
     const double hi = +10;
+    unsigned trial, passes;
 
     cdf_bins(t2_cdf, lo, hi, probabilities);
-    sample_bins(t_sampler(2), lo, hi, rng, counts);
-    assert(psi_test(counts, probabilities, NSAMPLES));
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
+        vector<size_t> counts(PSI_DF);
+
+        sample_bins(t_sampler(2), lo, hi, rng, counts);
+        passes += psi_test(counts, probabilities, NSAMPLES);
+        if (passes >= NPASSES_MIN)
+            break;
+    }
+    assert(passes >= NPASSES_MIN);
 }
 
 static uint32_t le32dec(const uint8_t *p) {
