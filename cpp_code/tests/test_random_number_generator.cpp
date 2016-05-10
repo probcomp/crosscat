@@ -281,12 +281,13 @@ static int random_seed(void) {
 static void test_uniform_integer(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     size_t i;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     for (i = 0; i < probabilities.size(); i++)
         probabilities[i] = 1/static_cast<double>(PSI_DF);
 
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         for (i = 0; i < NSAMPLES; i++)
@@ -308,12 +309,13 @@ static void test_uniform_integer(RandomNumberGenerator &rng) {
 static void test_uniform01(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     size_t i;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     for (i = 0; i < probabilities.size(); i++)
         probabilities[i] = 1/static_cast<double>(PSI_DF);
 
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         for (i = 0; i < NSAMPLES; i++)
@@ -326,9 +328,10 @@ static void test_uniform01(RandomNumberGenerator &rng) {
 }
 
 static void test_stdnormal_sw(RandomNumberGenerator &rng) {
-    unsigned passes, trials;
+    unsigned trial, passes;
 
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<double> samples(SHAPIRO_WILK_DF);
         size_t i;
 
@@ -427,11 +430,12 @@ static void test_stdnormal_psi(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     const double lo = -5;
     const double hi = +5;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     cdf_bins(stdnormal_cdf, lo, hi, probabilities);
 
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         sample_bins(stdnormal_sampler(), lo, hi, rng, counts);
@@ -452,11 +456,12 @@ static void test_stdgamma_psi(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     const double lo = 0.1;
     const double hi = 20;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     cdf_bins(stdgamma11_cdf, lo, hi, probabilities);
 
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         sample_bins(stdgamma_sampler(11), lo, hi, rng, counts);
@@ -471,10 +476,11 @@ static void test_chisquare_psi(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     const double lo = 0.1;
     const double hi = 10;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     cdf_bins(chisquare2_cdf, lo, hi, probabilities);
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         sample_bins(chisquare_sampler(2), lo, hi, rng, counts);
@@ -485,7 +491,8 @@ static void test_chisquare_psi(RandomNumberGenerator &rng) {
     assert(passes >= NPASSES_MIN);
 
     cdf_bins(chisquare8_cdf, lo, hi, probabilities);
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         sample_bins(chisquare_sampler(8), lo, hi, rng, counts);
@@ -500,10 +507,11 @@ static void test_student_t_psi(RandomNumberGenerator &rng) {
     vector<double> probabilities(PSI_DF);
     const double lo = -10;
     const double hi = +10;
-    unsigned passes, trials;
+    unsigned trial, passes;
 
     cdf_bins(t2_cdf, lo, hi, probabilities);
-    for (passes = 0, trials = NTRIALS; trials --> 0;) {
+    passes = 0;
+    for (trial = 0; trial < NTRIALS; trial++) {
         vector<size_t> counts(PSI_DF);
 
         sample_bins(t_sampler(2), lo, hi, rng, counts);
