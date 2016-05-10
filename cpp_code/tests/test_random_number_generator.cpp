@@ -158,7 +158,7 @@ static double t2_cdf(double x) {
 //      retrieved 2016-03-14.
 
 static const size_t PSI_DF = 100;               // degrees of freedom
-static const double PSI_CRITICAL = 135.807;     // critical value
+static const double PSI_CRITICAL = 135.807;     // critical value, alpha = .01
 
 static bool psi_test(const vector<size_t> &counts,
         const vector<double> &probabilities, size_t nsamples) {
@@ -198,7 +198,7 @@ static bool psi_test(const vector<size_t> &counts,
 //      `Summary of operational information' on p. 602.
 
 static const size_t SHAPIRO_WILK_DF = 50;
-static const double SHAPIRO_WILK_CRITICAL = .930;  // At alpha=0.001.
+static const double SHAPIRO_WILK_CRITICAL = .930;  // alpha = .01
 static const double SHAPIRO_WILK_A[SHAPIRO_WILK_DF/2] = {
     .3751, .2574, .2260, .2032, .1847,
     .1691, .1554, .1430, .1317, .1212,
