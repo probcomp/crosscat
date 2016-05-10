@@ -55,7 +55,7 @@ static const size_t NSAMPLES = 100000;
 // required passes, without changing the false rejection rate, but
 // that requires writing more code.
 
-static const unsigned NPASSES = 1;
+static const unsigned NPASSES_MIN = 1;
 static const unsigned NTRIALS = 2;
 
 // normal_suffstats(v, mean, sumsqdev)
@@ -292,10 +292,10 @@ static void test_uniform_integer(RandomNumberGenerator &rng) {
         for (i = 0; i < NSAMPLES; i++)
             counts[rng.nexti(PSI_DF)]++;
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 
     // Check that the psi test has sufficient statistical power to
     // detect the modulo bias.
@@ -319,10 +319,10 @@ static void test_uniform01(RandomNumberGenerator &rng) {
         for (i = 0; i < NSAMPLES; i++)
             counts[static_cast<size_t>(floor(rng.next()*PSI_DF))]++;
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_stdnormal_sw(RandomNumberGenerator &rng) {
@@ -335,10 +335,10 @@ static void test_stdnormal_sw(RandomNumberGenerator &rng) {
         for (i = 0; i < samples.size(); i++)
             samples[i] = rng.stdnormal();
         passes += shapiro_wilk_test(samples);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 }
 
 class sampler {
@@ -436,10 +436,10 @@ static void test_stdnormal_psi(RandomNumberGenerator &rng) {
 
         sample_bins(stdnormal_sampler(), lo, hi, rng, counts);
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 
     // Check that the psi test has sufficient statistical power to
     // distinguish a normal from a low-degree Student t.
@@ -461,10 +461,10 @@ static void test_stdgamma_psi(RandomNumberGenerator &rng) {
 
         sample_bins(stdgamma_sampler(11), lo, hi, rng, counts);
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_chisquare_psi(RandomNumberGenerator &rng) {
@@ -479,10 +479,10 @@ static void test_chisquare_psi(RandomNumberGenerator &rng) {
 
         sample_bins(chisquare_sampler(2), lo, hi, rng, counts);
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 
     cdf_bins(chisquare8_cdf, lo, hi, probabilities);
     for (passes = 0, trials = NTRIALS; trials --> 0;) {
@@ -490,10 +490,10 @@ static void test_chisquare_psi(RandomNumberGenerator &rng) {
 
         sample_bins(chisquare_sampler(8), lo, hi, rng, counts);
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 }
 
 static void test_student_t_psi(RandomNumberGenerator &rng) {
@@ -508,10 +508,10 @@ static void test_student_t_psi(RandomNumberGenerator &rng) {
 
         sample_bins(t_sampler(2), lo, hi, rng, counts);
         passes += psi_test(counts, probabilities, NSAMPLES);
-        if (passes >= NPASSES)
+        if (passes >= NPASSES_MIN)
             break;
     }
-    assert(passes >= NPASSES);
+    assert(passes >= NPASSES_MIN);
 }
 
 static uint32_t le32dec(const uint8_t *p) {
