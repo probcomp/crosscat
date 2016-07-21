@@ -20,6 +20,7 @@
 import argparse
 from multiprocessing import Pool
 import os
+import random
 #
 import numpy
 #
@@ -43,6 +44,9 @@ inf_seed = args.inf_seed
 gen_seed = args.gen_seed
 num_chains = args.num_chains
 num_transitions = args.num_transitions
+#
+rng = random.Random(gen_seed)
+get_next_seed = lambda: rng.randint(1, 2**31 - 1)
 #
 pkl_filename = 'dha_example_num_transitions_%s.pkl.gz' % num_transitions
 
@@ -75,8 +79,10 @@ engine = LE.LocalEngine(inf_seed)
 
 # run the chains
 engine = MultiprocessingEngine.MultiprocessingEngine()
-X_L_list, X_D_list = engine.initialize(M_c, M_r, T, n_chains=num_chains)
-X_L_list, X_D_list = engine.analyze(M_c, T, X_L_list, X_D_list)
+X_L_list, X_D_list = engine.initialize(
+    M_c, M_r, T, n_chains=num_chains, seed=get_next_seed())
+X_L_list, X_D_list = engine.analyze(
+    M_c, T, X_L_list, X_D_list, seed=get_next_seed())
 
 # save the progress
 to_pickle = dict(X_L_list=X_L_list, X_D_list=X_D_list)
@@ -115,7 +121,8 @@ for impute_row in [10, 20, 30, 40, 50, 60, 70, 80]:
         impute_names = [col_names[impute_col]]
         Q = determine_Q(M_c, impute_names, num_rows, impute_row=impute_row)
         #
-        imputed = engine.impute(M_c, X_L_list, X_D_list, Y, Q, 1000)
+        imputed = engine.impute(
+            M_c, X_L_list, X_D_list, Y, Q, seed=get_next_seed(), n=1000)
         imputed_list.append(imputed)
     print
     print actual_values
