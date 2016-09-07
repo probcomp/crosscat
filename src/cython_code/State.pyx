@@ -372,18 +372,34 @@ cdef class p_State:
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
     def transition(self, which_transitions=(), n_steps=1,
-                   c=(), r=(), max_iterations=-1, max_time=-1):
+                   c=(), r=(), max_iterations=-1, max_time=-1, progress=None):
+         def _progress(percentage):
+              import sys
+              progress = ' ' * 30
+              fill = int(percentage * len(progress))
+              progress = '[' + '=' * fill + progress[fill:] + ']'
+              print('\r{} {:1.2f}%'.format(progress, 100 * percentage), end="")
+              sys.stdout.flush()
+         def _proportion_done(N, S, iters, elapsed):
+              p_seconds = elapsed / S if S != -1 else 0
+              p_iters = float(iters) / N
+              return max(p_iters, p_seconds)
          seed = None
          score_delta = 0
          if len(which_transitions) == 0:
               seed = self.thisptr.draw_rand_i()
               which_transitions = get_all_transitions_permuted(seed)
          with gu.Timer('transition', verbose=False) as timer:
-              for step_idx in range(n_steps):
+              step_idx = 0
+              while True:
                    for which_transition in which_transitions:
                         elapsed_secs = timer.get_elapsed_secs()
-                        if (max_time != -1) and (max_time < elapsed_secs):
-                             break
+                        p = _proportion_done(
+                          n_steps, max_time, step_idx, elapsed_secs)
+                        if progress:
+                          _progress(p)
+                        if 1 <= p:
+                            break
                         method_name_and_args = transition_name_to_method_name_and_args.get(which_transition)
                         if method_name_and_args is not None:
                              method_name, args_list = method_name_and_args
@@ -394,6 +410,14 @@ cdef class p_State:
                              print_str = 'INVALID TRANSITION TYPE TO ' \
                                  'State.transition: %s' % which_transition
                              print(print_str)
+                   else:
+                        step_idx += 1
+                        continue
+                   if progress:
+                     print(
+                       '\rCompleted: %d iterations in %f seconds.' %
+                       (step_idx, elapsed_secs))
+                   break
          return score_delta
     def transition_column_crp_alpha(self):
          return self.thisptr.transition_column_crp_alpha()
