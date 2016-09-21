@@ -81,7 +81,7 @@ class EngineTemplate(object):
         return e, confidence
 
     def conditional_entropy(
-            M_c, X_L, X_D, d_given, d_target, n=None, max_time=None):
+            self, M_c, X_L, X_D, d_given, d_target, n=None, max_time=None):
         e = None
         return e
 
