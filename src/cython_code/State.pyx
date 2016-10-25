@@ -394,6 +394,9 @@ cdef class p_State:
                              print_str = 'INVALID TRANSITION TYPE TO ' \
                                  'State.transition: %s' % which_transition
                              print(print_str)
+                   else:
+                       continue
+                   break
          return score_delta
     def transition_column_crp_alpha(self):
          return self.thisptr.transition_column_crp_alpha()
