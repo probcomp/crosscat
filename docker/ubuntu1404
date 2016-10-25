@@ -14,3 +14,5 @@ RUN             apt-get install -qq python-six
 ADD             . /crosscat
 WORKDIR         /crosscat
 RUN             ./check.sh
+RUN             python setup.py sdist
+RUN             python setup.py bdist
