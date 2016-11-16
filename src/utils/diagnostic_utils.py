@@ -52,5 +52,5 @@ def default_reprocess_diagnostics_func(diagnostics_arr_dict):
     # removed it.  But until someone ascertains that it is safe to
     # leave the column partition assignments in, we'll continue
     # deleting it for now.
-    del diagnostics_arr_dict['column_partition_assignments']
+    # del diagnostics_arr_dict['column_partition_assignments']
     return diagnostics_arr_dict
