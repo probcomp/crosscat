@@ -26,6 +26,7 @@ from libcpp.set cimport set as c_set
 from cython.operator import dereference
 cimport numpy as np
 #
+import collections
 import numpy
 import six
 #
@@ -371,8 +372,11 @@ cdef class p_State:
     # mutators
     def insert_row(self, row_data, matching_row_idx, row_idx=-1):
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
-    def transition(self, which_transitions=(), n_steps=1,
-                   c=(), r=(), max_iterations=-1, max_time=-1, progress=None):
+    def transition(
+            self, which_transitions=(), n_steps=1, c=(), r=(),
+            max_iterations=-1, max_time=-1, progress=None,
+            diagnostic_func_dict=None, diagnostics_dict=None,
+            diagnostics_every_N=None,):
          def _progress(percentage):
               import sys
               progress = ' ' * 30
@@ -384,6 +388,10 @@ cdef class p_State:
               p_seconds = elapsed / S if S != -1 else 0
               p_iters = float(iters) / N
               return max(p_iters, p_seconds)
+         if diagnostics_dict is None:
+            diagnostics_dict = collections.defaultdict(list)
+         if diagnostic_func_dict is None:
+            diagnostic_func_dict = dict()
          seed = None
          score_delta = 0
          if len(which_transitions) == 0:
@@ -412,6 +420,13 @@ cdef class p_State:
                              print(print_str)
                    else:
                         step_idx += 1
+                        if (diagnostics_every_N) and \
+                            (step_idx % diagnostics_every_N == 0):
+                          for diagnostic_name, diagnostic_func in\
+                                  six.iteritems(diagnostic_func_dict):
+                              diagnostic_value = diagnostic_func(self)
+                              diagnostics_dict[diagnostic_name].append(
+                                diagnostic_value)
                         continue
                    if progress:
                      print(

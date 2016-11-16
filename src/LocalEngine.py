@@ -825,25 +825,16 @@ def _do_analyze_with_diagnostic(
         diagnostic_func_dict = dict()
         every_N = None
 
-    child_n_steps_list = get_child_n_steps_list(n_steps, every_N)
-
     p_State = State.p_State(
         M_c, T, X_L, X_D, SEED=SEED, ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
         COLUMN_CRP_ALPHA_GRID=COLUMN_CRP_ALPHA_GRID, S_GRID=S_GRID,
         MU_GRID=MU_GRID, N_GRID=N_GRID, CT_KERNEL=CT_KERNEL)
 
     with gu.Timer('all transitions', verbose=False) as timer:
-        # XXX If doing diagnostics (i.e. invoking from bayeslite) skip the
-        # progress bar.
-        progress = len(child_n_steps_list) == 1
-        for child_n_steps in child_n_steps_list:
-            p_State.transition(
-                kernel_list, child_n_steps, c, r, max_iterations,
-                max_time, progress=progress)
-            for diagnostic_name, diagnostic_func in\
-                    six.iteritems(diagnostic_func_dict):
-                diagnostic_value = diagnostic_func(p_State)
-                diagnostics_dict[diagnostic_name].append(diagnostic_value)
+        p_State.transition(
+            kernel_list, n_steps, c, r, max_iterations,
+            max_time, progress=True, diagnostic_func_dict=diagnostic_func_dict,
+            diagnostics_dict=diagnostics_dict, diagnostics_every_N=every_N)
 
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
