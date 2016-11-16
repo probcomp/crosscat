@@ -52,7 +52,7 @@ class EngineTemplate(object):
         return p
 
     def mutual_information(
-        self, M_c, X_L_list, X_D_list, Q, seed, n_samples=1000):
+            self, M_c, X_L_list, X_D_list, Q, seed, n_samples=1000):
         return None
 
     def row_structural_typicality(self, X_L_list, X_D_list, row_id):
@@ -64,7 +64,8 @@ class EngineTemplate(object):
     def predictive_probability(self, M_c, X_L, X_D, T, Q, n=1):
         return None
 
-    def predictive_probability_multistate(self, M_c, X_L_list, X_D_list, T, Q, n=1):
+    def predictive_probability_multistate(
+            self, M_c, X_L_list, X_D_list, T, Q, n=1):
         return None
 
     def similarity(
