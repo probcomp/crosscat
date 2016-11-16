@@ -373,13 +373,6 @@ cdef class p_State:
         return self.thisptr.insert_row(row_data, matching_row_idx, row_idx)
     def transition(self, which_transitions=(), n_steps=1,
                    c=(), r=(), max_iterations=-1, max_time=-1, progress=None):
-         def _progress(percentage):
-              import sys
-              progress = ' ' * 30
-              fill = int(percentage * len(progress))
-              progress = '[' + '=' * fill + progress[fill:] + ']'
-              print('\r{} {:1.2f}%'.format(progress, 100 * percentage), end="")
-              sys.stdout.flush()
          def _proportion_done(N, S, iters, elapsed):
               p_seconds = elapsed / S if S != -1 else 0
               p_iters = float(iters) / N
@@ -397,7 +390,7 @@ cdef class p_State:
                         p = _proportion_done(
                           n_steps, max_time, step_idx, elapsed_secs)
                         if progress:
-                          _progress(p)
+                          progress(p)
                         if 1 <= p:
                             break
                         method_name_and_args = transition_name_to_method_name_and_args.get(which_transition)

@@ -162,7 +162,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                n_steps, c, r, max_iterations, max_time, diagnostic_func_dict,
                                every_N, ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
                                S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL,
-                               get_next_seed):
+                               progress, get_next_seed):
         n_chains = len(X_L_list)
         seeds = [get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = six.moves.zip(
@@ -185,6 +185,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([N_GRID]),
             itertools.cycle([do_timing]),
             itertools.cycle([CT_KERNEL]),
+            itertools.cycle([progress]),
         )
         return arg_tuples
 
@@ -198,6 +199,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 N_GRID=31,
                 do_timing=False,
                 CT_KERNEL=0,
+                progress=None,
                 ):
         """Evolve the latent state by running MCMC transition kernels
 
@@ -227,6 +229,10 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                          transition kernels for before stopping to return
                          progress
         :type max_time: float
+        :param progress: a function accepting a real number between 0 and 1
+            (the proportion of inference completed). For example, might print
+            a progress bar to standard out.
+        :type progress: function pointer.
         :returns: X_L, X_D -- the evolved latent state
 
         """
@@ -252,6 +258,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                                                  N_GRID,
                                                  do_timing,
                                                  CT_KERNEL,
+                                                 progress,
                                                  make_get_next_seed(seed))
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
         X_L_list, X_D_list, diagnostics_dict_list = zip(*chain_tuples)
@@ -802,6 +809,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                 S_GRID, MU_GRID,
                 N_GRID,
                 CT_KERNEL,
+                progress,
                 ):
     p_State = State.p_State(M_c, T, X_L, X_D, SEED=SEED,
                             ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
@@ -812,7 +820,7 @@ def _do_analyze(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
                             CT_KERNEL=CT_KERNEL
                             )
     p_State.transition(kernel_list, n_steps, c, r,
-                       max_iterations, max_time)
+                       max_iterations, max_time, progress)
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
     return X_L_prime, X_D_prime
@@ -844,6 +852,7 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
                                 N_GRID,
                                 do_timing,
                                 CT_KERNEL,
+                                progress,
                                 ):
     diagnostics_dict = collections.defaultdict(list)
     if diagnostic_func_dict is None:
@@ -862,7 +871,8 @@ def _do_analyze_with_diagnostic(SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c,
     with gu.Timer('all transitions', verbose=False) as timer:
         # XXX If doing diagnostics (i.e. invoking from bayeslite) skip the
         # progress bar.
-        progress = len(child_n_steps_list) == 1
+        if len(child_n_steps_list) != 1:
+            progress = None
         for child_n_steps in child_n_steps_list:
             p_State.transition(kernel_list, child_n_steps, c, r,
                                max_iterations, max_time, progress=progress)
