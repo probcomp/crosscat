@@ -17,28 +17,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+
 import os
 import inspect
-#
 
 
 class CrossCatClient(object):
-    """ A client interface that gives a singular interface to all the different
-    engines
+    """A client interface that gives a singue interface to the various engines.
 
-    Depending on the client_type, dispatch to the appropriate engine constructor
-
+    Depending on the client_type, dispatch to appropriate engine constructor.
     """
 
     def __init__(self, engine):
-        """Initialize client with given engine
-
-        Not to be called directly!
-
-        """
-
+        """Initialize client with given engine. Not to be called directly!"""
         self.engine = engine
-        return
 
     def __getattribute__(self, name):
         engine = object.__getattribute__(self, 'engine')
@@ -49,48 +41,23 @@ class CrossCatClient(object):
             attr = object.__getattribute__(self, name)
         return attr
 
+
 # Maybe this should be in CrossCatClient.__init__
 def get_CrossCatClient(client_type, **kwargs):
-    """Helper which instantiates the appropriate Engine and returns a Client
-
-    """
-
+    """Helper which instantiates the appropriate Engine and returns a Client"""
     client = None
+
     if client_type == 'local':
         import crosscat.LocalEngine as LocalEngine
         le = LocalEngine.LocalEngine(**kwargs)
         client = CrossCatClient(le)
+
     elif client_type == 'multiprocessing':
         import crosscat.MultiprocessingEngine as MultiprocessingEngine
         me =  MultiprocessingEngine.MultiprocessingEngine(**kwargs)
         client = CrossCatClient(me)
+
     else:
         raise Exception('unknown client_type: %s' % client_type)
+
     return client
-
-
-if __name__ == '__main__':
-    import crosscat.utils.data_utils as du
-    import random
-    ccc = get_CrossCatClient('local', seed=0)
-    #
-    gen_seed = 0
-    num_clusters = 4
-    num_cols = 8
-    num_rows = 16
-    num_splits = 1
-    max_mean = 10
-    max_std = 0.1
-    rng = random.Random(gen_seed)
-    get_next_seed = lambda: rng.randint(1, 2**31 - 1)
-    T, M_r, M_c = du.gen_factorial_data_objects(
-        get_next_seed(), num_clusters,
-        num_cols, num_rows, num_splits,
-        max_mean=max_mean, max_std=max_std,
-        )
-    #
-    X_L, X_D, = ccc.initialize(M_c, M_r, T, get_next_seed())
-    X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L, X_D, get_next_seed())
-    X_L_prime, X_D_prime = ccc.analyze(M_c, T, X_L_prime, X_D_prime,
-        get_next_seed())
-    #
