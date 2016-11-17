@@ -377,13 +377,6 @@ cdef class p_State:
             max_iterations=-1, max_time=-1, progress=None,
             diagnostic_func_dict=None, diagnostics_dict=None,
             diagnostics_every_N=None,):
-         def _progress(percentage):
-              import sys
-              progress = ' ' * 30
-              fill = int(percentage * len(progress))
-              progress = '[' + '=' * fill + progress[fill:] + ']'
-              print('\r{} {:1.2f}%'.format(progress, 100 * percentage), end="")
-              sys.stdout.flush()
          def _proportion_done(N, S, iters, elapsed):
               p_seconds = elapsed / S if S != -1 else 0
               p_iters = float(iters) / N
@@ -405,7 +398,7 @@ cdef class p_State:
                         p = _proportion_done(
                           n_steps, max_time, step_idx, elapsed_secs)
                         if progress:
-                          _progress(p)
+                          progress(n_steps, max_time, step_idx, elapsed_secs)
                         if 1 <= p:
                             break
                         method_name_and_args = transition_name_to_method_name_and_args.get(which_transition)
@@ -429,9 +422,8 @@ cdef class p_State:
                                 diagnostic_value)
                         continue
                    if progress:
-                     print(
-                       '\rCompleted: %d iterations in %f seconds.' %
-                       (step_idx, elapsed_secs))
+                     progress(
+                      n_steps, max_time, step_idx, elapsed_secs, end=True)
                    break
          return score_delta
     def transition_column_crp_alpha(self):

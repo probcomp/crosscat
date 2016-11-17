@@ -143,12 +143,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         ret_tuple = X_L_list, X_D_list, T
         return ret_tuple
 
-
     def get_analyze_arg_tuples(
             self, M_c, T, X_L_list, X_D_list, kernel_list, n_steps, c, r,
             max_iterations, max_time, diagnostic_func_dict, every_N,
             ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID, S_GRID, MU_GRID, N_GRID,
-            do_timing, CT_KERNEL, get_next_seed):
+            do_timing, CT_KERNEL, progress, get_next_seed):
         n_chains = len(X_L_list)
         seeds = [get_next_seed() for seed_idx in range(n_chains)]
         arg_tuples = six.moves.zip(
@@ -171,6 +170,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
             itertools.cycle([N_GRID]),
             itertools.cycle([do_timing]),
             itertools.cycle([CT_KERNEL]),
+            itertools.cycle([progress]),
         )
         return arg_tuples
 
@@ -184,6 +184,7 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                 N_GRID=31,
                 do_timing=False,
                 CT_KERNEL=0,
+                progress=None,
                 ):
         """Evolve the latent state by running MCMC transition kernels.
 
@@ -211,6 +212,15 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         :param max_time: the maximum amount of time (seconds) to run MCMC
             transition kernels for before stopping to return progress
         :type max_time: float
+        :param progress: a function accepting
+            (n_steps, max_time, step_idx, elapsed_secs, end=None) where
+            `n_steps` is the total number of transition steps, `max_time` is the
+            timeout in secods, `step_idx` is number of transitions so far,
+            `elapsed_secs` is the amount of time so far, and `end=None` is an
+            optional kwarg for indicating the analysis has been completed.
+            For example, `progress` may be used to print a progress bar
+            to standard out.
+        :type progress: function pointer.
         :returns: X_L, X_D -- the evolved latent state
         """
         if n_steps <= 0:
@@ -229,10 +239,27 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         X_L_list, X_D_list, was_multistate = su.ensure_multistate(X_L, X_D)
 
         arg_tuples = self.get_analyze_arg_tuples(
-            M_c, T, X_L_list, X_D_list, kernel_list, n_steps, c, r,
-            max_iterations, max_time, diagnostic_func_dict, diagnostics_every_N,
-            ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID, S_GRID, MU_GRID, N_GRID,
-            do_timing, CT_KERNEL, make_get_next_seed(seed))
+            M_c,
+            T,
+            X_L_list,
+            X_D_list,
+            kernel_list,
+            n_steps,
+            c,
+            r,
+            max_iterations,
+            max_time,
+            diagnostic_func_dict,
+            diagnostics_every_N,
+            ROW_CRP_ALPHA_GRID,
+            COLUMN_CRP_ALPHA_GRID,
+            S_GRID,
+            MU_GRID,
+            N_GRID,
+            do_timing,
+            CT_KERNEL,
+            progress,
+            make_get_next_seed(seed))
 
         chain_tuples = self.mapper(self.do_analyze, arg_tuples)
 
@@ -778,7 +805,7 @@ def _do_insert(M_c, T, X_L, X_D, new_rows, N_GRID, CT_KERNEL):
 def _do_analyze(
         SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r,
         max_iterations, max_time, ROW_CRP_ALPHA_GRID, COLUMN_CRP_ALPHA_GRID,
-        S_GRID, MU_GRID, N_GRID, CT_KERNEL):
+        S_GRID, MU_GRID, N_GRID, CT_KERNEL, progress):
 
     p_State = State.p_State(
         M_c, T, X_L, X_D, SEED=SEED, ROW_CRP_ALPHA_GRID=ROW_CRP_ALPHA_GRID,
@@ -786,7 +813,7 @@ def _do_analyze(
         MU_GRID=MU_GRID, N_GRID=N_GRID, CT_KERNEL=CT_KERNEL)
 
     p_State.transition(
-        kernel_list, n_steps, c, r, max_iterations, max_time)
+        kernel_list, n_steps, c, r, max_iterations, max_time, progress)
 
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
@@ -817,7 +844,8 @@ none_summary = lambda p_State: None
 def _do_analyze_with_diagnostic(
         SEED, X_L, X_D, M_c, T, kernel_list, n_steps, c, r, max_iterations,
         max_time, diagnostic_func_dict, every_N, ROW_CRP_ALPHA_GRID,
-        COLUMN_CRP_ALPHA_GRID, S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL,):
+        COLUMN_CRP_ALPHA_GRID, S_GRID, MU_GRID, N_GRID, do_timing, CT_KERNEL,
+        progress,):
 
     diagnostics_dict = collections.defaultdict(list)
 
@@ -832,9 +860,11 @@ def _do_analyze_with_diagnostic(
 
     with gu.Timer('all transitions', verbose=False) as timer:
         p_State.transition(
-            kernel_list, n_steps, c, r, max_iterations,
-            max_time, progress=True, diagnostic_func_dict=diagnostic_func_dict,
-            diagnostics_dict=diagnostics_dict, diagnostics_every_N=every_N)
+            kernel_list, n_steps, c, r, max_iterations, max_time,
+            progress=progress,
+            diagnostic_func_dict=diagnostic_func_dict,
+            diagnostics_dict=diagnostics_dict,
+            diagnostics_every_N=every_N)
 
     X_L_prime = p_State.get_X_L()
     X_D_prime = p_State.get_X_D()
