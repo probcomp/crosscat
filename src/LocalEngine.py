@@ -229,9 +229,14 @@ class LocalEngine(EngineTemplate.EngineTemplate):
                          transition kernels for before stopping to return
                          progress
         :type max_time: float
-        :param progress: a function accepting a real number between 0 and 1
-            (the proportion of inference completed). For example, might print
-            a progress bar to standard out.
+        :param progress: a function accepting
+            (n_steps, max_time, step_idx, elapsed_secs, end=None) where
+            `n_steps` is the total number of transition steps, `max_time` is the
+            timeout in secods, `step_idx` is number of transitions so far,
+            `elapsed_secs` is the amount of time so far, and `end=None` is an
+            optional kwarg for indicating the analysis has been completed.
+            For example, `progress` may be used to print a progress bar
+            to standard out.
         :type progress: function pointer.
         :returns: X_L, X_D -- the evolved latent state
 

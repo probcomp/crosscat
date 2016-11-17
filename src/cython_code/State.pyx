@@ -390,7 +390,7 @@ cdef class p_State:
                         p = _proportion_done(
                           n_steps, max_time, step_idx, elapsed_secs)
                         if progress:
-                          progress(p)
+                          progress(n_steps, max_time, step_idx, elapsed_secs)
                         if 1 <= p:
                             break
                         method_name_and_args = transition_name_to_method_name_and_args.get(which_transition)
@@ -407,9 +407,8 @@ cdef class p_State:
                         step_idx += 1
                         continue
                    if progress:
-                     print(
-                       '\rCompleted: %d iterations in %f seconds.' %
-                       (step_idx, elapsed_secs))
+                     progress(
+                      n_steps, max_time, step_idx, elapsed_secs, end=True)
                    break
          return score_delta
     def transition_column_crp_alpha(self):
