@@ -36,10 +36,3 @@ include cpp_code/tests/test_view_speed.cpp
 include pythenv.sh
 include requirements.txt
 include setup.py
-include src/tests/unit_tests/test_col_ensure.py
-include src/tests/unit_tests/test_continuous_component_model.py
-include src/tests/unit_tests/test_general_utils.py
-include src/tests/unit_tests/test_multinomial_component_model.py
-include src/tests/unit_tests/test_pred_prob.py
-include src/tests/unit_tests/test_quality_test_utils.py
-include src/tests/unit_tests/test_synthetic_data_generator.py

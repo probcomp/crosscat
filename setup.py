@@ -254,6 +254,7 @@ packages = [
     'crosscat.cython_code',
     'crosscat.tests',
     'crosscat.tests.component_model_extensions',
+    'crosscat.tests.unit_tests',
 ]
 
 
@@ -319,6 +320,7 @@ setup(
         'crosscat.tests': 'src/tests',
         'crosscat.tests.component_model_extensions':
             'src/tests/component_model_extensions',
+        'crosscat.tests.unit_tests': 'src/tests/unit_tests',
         'crosscat.utils': 'src/utils',
     },
     ext_modules=ext_modules,
