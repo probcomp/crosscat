@@ -13,9 +13,7 @@ root=`cd -- "$(dirname -- "$0")" && pwd`
     rm -rf build
     ./pythenv.sh "$PYTHON" setup.py build
     if [ $# -eq 0 ]; then
-        ./pythenv.sh "$PYTHON" -m pytest \
-            src/tests/unit_tests \
-            # end of tests
+        ./pythenv.sh "$PYTHON" -m pytest --pyargs crosscat
     else
         ./pythenv.sh "$PYTHON" -m pytest "$@"
     fi
