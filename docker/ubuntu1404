@@ -1,7 +1,7 @@
 FROM            ubuntu:14.04
 MAINTAINER      MIT Probabilistic Computing Project
 
-RUN             apt-get update -qq && apt-get install -qq
+RUN             apt-get update -qq && apt-get install -qq \
                         build-essential \
                         cython \
                         git \
