@@ -350,26 +350,47 @@ double State::transition_feature_mh(int feature_idx,
 double State::transition_features(const MatrixD &data,
     vector<int> which_features)
 {
+
     double score_delta = 0;
+
+    // Determine which features to transition.
     int num_features = which_features.size();
     if (num_features == 0) {
         which_features = create_sequence(data.size2());
         random_shuffle(which_features.begin(), which_features.end(), rng);
     }
+
     vector<int>::const_iterator it;
     for (it = which_features.begin(); it != which_features.end(); ++it) {
+
+        // Get the feature_idx to be transitioned.
         int feature_idx = *it;
+
+        // Get the feature_idx which are dependent on this feature_idx.
+        vector<int> feature_idxs = get_column_dependencies(feature_idx);
+
+        // Get the data for all the feauture_idxs.
+        vector<vector<double> > feature_datas =
+            extract_cols(data, feature_idxs);
+
+        // XXX TODO: Delete me!
         vector<double> feature_data = extract_col(data, feature_idx);
-        // kernel selection
+
+        // Select the transition kernel.
         if (ct_kernel == 0) {
+            // XXX For Gibbs transition, transition the feature and all of its
+            // dependent features.
             score_delta += transition_feature_gibbs(feature_idx, feature_data);
         } else if (ct_kernel == 1) {
+            // For MH transition, transition the feature alone and not its
+            // dependent features.
             score_delta += transition_feature_mh(feature_idx, feature_data);
         } else {
             printf("Invalid CT_KERNEL");
             assert(0 == 1);
         }
     }
+
     return score_delta;
 }
 
@@ -516,6 +537,23 @@ std::map<int, std::set<int> > State::get_column_dependencies() const
 std::map<int, std::set<int> > State::get_column_independencies() const
 {
     return column_independencies;
+}
+
+vector<int> State::get_column_dependencies(int feature_idx) const
+{
+    map<int, set<int> >::const_iterator deps =
+        column_dependencies.find(feature_idx);
+    vector<int> result(deps->second.begin(), deps->second.end());
+    result.push_back(feature_idx);
+    return result;
+}
+
+vector<int> State::get_column_independencies(int feature_idx) const
+{
+    map<int, set<int> >::const_iterator indeps =
+        column_independencies.find(feature_idx);
+    vector<int> result(indeps->second.begin(), indeps->second.end());
+    return result;
 }
 
 vector<vector<int> > State::get_X_D() const

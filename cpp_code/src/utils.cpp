@@ -167,6 +167,18 @@ vector<double> extract_col(const matrix<double> &data, int col_idx)
     return col;
 }
 
+vector<vector<double> > extract_cols(
+    const matrix<double> &data, vector<int> &col_idxs)
+{
+    vector<vector<double> > cols;
+    vector<int>::const_iterator it;
+    for (it = col_idxs.begin(); it != col_idxs.end(); it++) {
+        vector<double> col = extract_col(data, *it);
+        cols.push_back(col);
+    }
+    return cols;
+}
+
 vector<int> extract_global_ordering(const map<int, int> &global_to_local)
 {
     vector<int> global_indices(global_to_local.size(), -1);

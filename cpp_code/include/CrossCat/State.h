@@ -123,6 +123,8 @@ public:
     //
     std::map<int, std::set<int> > get_column_dependencies() const;
     std::map<int, std::set<int> > get_column_independencies() const;
+    std::vector<int> get_column_dependencies(int feature_idx) const;
+    std::vector<int> get_column_independencies(int feature_idx) const;
     /**
      * \return The number of columns in the state
      */
