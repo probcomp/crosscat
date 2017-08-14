@@ -26,9 +26,13 @@
 #include "constants.h"
 #include "weakprng.h"
 
-class RandomNumberGenerator {
+class RandomNumberGenerator
+{
 public:
-    RandomNumberGenerator(int seed = 0) { set_seed(seed); }
+    RandomNumberGenerator(int seed = 0)
+    {
+        set_seed(seed);
+    }
     double next();
     int nexti(int bound = MAX_INT);
     double stdnormal();

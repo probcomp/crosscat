@@ -14,7 +14,8 @@
 
 //  need to move Timer to its own
 //   files
-class Timer {
+class Timer
+{
 public:
     /////////////////////////////////////////////////////////////
     // contructor - specify if reset to occur during contruction
@@ -33,7 +34,7 @@ public:
     // t - pointer to running variable accumulating
     //     passing time
     // period - the change in time we are watching for
-    static bool Period(Timer& T, double* t, double period);
+    static bool Period(Timer &T, double *t, double period);
 protected:
 
     time_t get_time();

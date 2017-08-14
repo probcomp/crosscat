@@ -26,32 +26,33 @@
 #include "utils.h"
 
 
-class CyclicComponentModel : public ComponentModel {
+class CyclicComponentModel : public ComponentModel
+{
 public:
-    CyclicComponentModel(const CM_Hypers& in_hyper_hash);
-    CyclicComponentModel(const CM_Hypers& in_hyper_hash,
-                             int COUNT, double SUM_SIN_X, double SUM_COS_X);
+    CyclicComponentModel(const CM_Hypers &in_hyper_hash);
+    CyclicComponentModel(const CM_Hypers &in_hyper_hash,
+        int COUNT, double SUM_SIN_X, double SUM_COS_X);
     virtual ~CyclicComponentModel() {};
     //
     // getters
-    void get_suffstats(int& count_out, double& sum_sin_x, double& sum_cos_x_) const;
-    void get_hyper_doubles(double& kappa, double& a, double& b) const;
+    void get_suffstats(int &count_out, double &sum_sin_x, double &sum_cos_x_) const;
+    void get_hyper_doubles(double &kappa, double &a, double &b) const;
     CM_Hypers get_hypers() const;
     std::map<std::string, double> get_suffstats() const;
     std::map<std::string, double> _get_suffstats() const;
     double get_draw(int random_seed) const;
     double get_draw_constrained(int random_seed,
-				const std::vector<double>& constraints) const;
+        const std::vector<double> &constraints) const;
     double get_predictive_cdf(double element,
-			      const std::vector<double>& constraints) const;
+        const std::vector<double> &constraints) const;
     //
     // calculators
     double calc_marginal_logp() const;
     double calc_element_predictive_logp(double element) const;
     double calc_element_predictive_logp_constrained(double element,
-            const std::vector<double>& constraints) const;
-    std::vector<double> calc_hyper_conditionals(const std::string& which_hyper,
-            const std::vector<double>& hyper_grid) const;
+        const std::vector<double> &constraints) const;
+    std::vector<double> calc_hyper_conditionals(const std::string &which_hyper,
+        const std::vector<double> &hyper_grid) const;
     //
     // mutators
     double insert_element(double element);

@@ -24,33 +24,34 @@
 #include "numerics.h"
 #include "utils.h"
 
-class MultinomialComponentModel : public ComponentModel {
+class MultinomialComponentModel : public ComponentModel
+{
 public:
-    MultinomialComponentModel(const CM_Hypers& in_hypers);
-    MultinomialComponentModel(const CM_Hypers& in_hypers,
-                              int count,
-                              const std::map<std::string, double>& counts);
+    MultinomialComponentModel(const CM_Hypers &in_hypers);
+    MultinomialComponentModel(const CM_Hypers &in_hypers,
+        int count,
+        const std::map<std::string, double> &counts);
     virtual ~MultinomialComponentModel() {};
     //
     // getters
-    void get_suffstats(int& count_out,
-                       std::map<std::string, double>& counts) const;
+    void get_suffstats(int &count_out,
+        std::map<std::string, double> &counts) const;
     std::map<std::string, double> _get_suffstats() const;
     std::map<std::string, double> get_hypers() const;
-    void get_keys_counts_for_draw(std::vector<int>& keys,
-                                  std::vector<double>& log_counts_for_draw,
-                                  const std::vector<int>& counts) const;
+    void get_keys_counts_for_draw(std::vector<int> &keys,
+        std::vector<double> &log_counts_for_draw,
+        const std::vector<int> &counts) const;
     double get_draw(int random_seed) const;
     double get_draw_constrained(int random_seed,
-                                const std::vector<double>& constraints) const;
+        const std::vector<double> &constraints) const;
     //
     // calculators
     double calc_marginal_logp() const;
     double calc_element_predictive_logp(double element) const;
     double calc_element_predictive_logp_constrained(double element,
-            const std::vector<double>& constraints) const;
-    std::vector<double> calc_hyper_conditionals(const std::string& which_hyper,
-            const std::vector<double>& hyper_grid) const;
+        const std::vector<double> &constraints) const;
+    std::vector<double> calc_hyper_conditionals(const std::string &which_hyper,
+        const std::vector<double> &hyper_grid) const;
     //
     // mutators
     double insert_element(double element);

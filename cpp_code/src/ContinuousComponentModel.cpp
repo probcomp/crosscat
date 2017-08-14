@@ -20,7 +20,8 @@
 #include "ContinuousComponentModel.h"
 using namespace std;
 
-ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
+ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers &in_hypers)
+{
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
@@ -32,8 +33,9 @@ ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers) {
     set_log_Z_0();
 }
 
-ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers,
-        int COUNT, double SUM_X, double SUM_X_SQ) {
+ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers &in_hypers,
+    int COUNT, double SUM_X, double SUM_X_SQ)
+{
     count = COUNT;
     sum_x = SUM_X;
     sum_x_squared = SUM_X_SQ;
@@ -46,15 +48,17 @@ ContinuousComponentModel::ContinuousComponentModel(const CM_Hypers& in_hypers,
     score = calc_marginal_logp();
 }
 
-void ContinuousComponentModel::get_hyper_doubles(double& r, double& nu,
-        double& s, double& mu) const {
+void ContinuousComponentModel::get_hyper_doubles(double &r, double &nu,
+    double &s, double &mu) const
+{
     r = hyper_r;
     nu = hyper_nu;
     s = hyper_s;
     mu = hyper_mu;
 }
 
-double ContinuousComponentModel::calc_marginal_logp() const {
+double ContinuousComponentModel::calc_marginal_logp() const
+{
     double r, nu, s, mu;
     int count;
     double sum_x, sum_x_squared;
@@ -65,7 +69,8 @@ double ContinuousComponentModel::calc_marginal_logp() const {
 }
 
 double ContinuousComponentModel::calc_element_predictive_logp(
-    double element) const {
+    double element) const
+{
     if (isnan(element)) {
         return 0;
     }
@@ -77,14 +82,13 @@ double ContinuousComponentModel::calc_element_predictive_logp(
     //
     numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared, element);
     numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
-
     double logp_prime = numerics::calc_continuous_logp(count, r, nu, s, log_Z_0);
     return logp_prime - score;
 }
 
 double ContinuousComponentModel::calc_element_predictive_logp_constrained(
-    double element, const vector<double>& constraints) const {
+    double element, const vector<double> &constraints) const
+{
     if (isnan(element)) {
         return 0;
     }
@@ -96,10 +100,10 @@ double ContinuousComponentModel::calc_element_predictive_logp_constrained(
     //
     int num_constraints = (int) constraints.size();
     for (int constraint_idx = 0; constraint_idx < num_constraints;
-            constraint_idx++) {
+        constraint_idx++) {
         double constraint = constraints[constraint_idx];
         numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
-                constraint);
+            constraint);
     }
     numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
     double baseline = numerics::calc_continuous_logp(count, r, nu, s, log_Z_0);
@@ -113,13 +117,13 @@ double ContinuousComponentModel::calc_element_predictive_logp_constrained(
 }
 
 vector<double> ContinuousComponentModel::calc_hyper_conditionals(
-    const string& which_hyper, const vector<double>& hyper_grid) const {
+    const string &which_hyper, const vector<double> &hyper_grid) const
+{
     double r, nu, s, mu;
     int count;
     double sum_x, sum_x_squared;
     get_hyper_doubles(r, nu, s, mu);
     get_suffstats(count, sum_x, sum_x_squared);
-
     if (which_hyper == "r") {
         return numerics::calc_continuous_r_conditionals(hyper_grid, count, sum_x,
                 sum_x_squared, nu, s, mu);
@@ -139,7 +143,8 @@ vector<double> ContinuousComponentModel::calc_hyper_conditionals(
     }
 }
 
-double ContinuousComponentModel::insert_element(double element) {
+double ContinuousComponentModel::insert_element(double element)
+{
     if (isnan(element)) {
         return 0;
     }
@@ -150,19 +155,21 @@ double ContinuousComponentModel::insert_element(double element) {
     return delta_score;
 }
 
-double ContinuousComponentModel::remove_element(double element) {
+double ContinuousComponentModel::remove_element(double element)
+{
     if (isnan(element)) {
         return 0;
     }
     double score_0 = score;
     numerics::remove_from_continuous_suffstats(count, sum_x, sum_x_squared,
-            element);
+        element);
     score = calc_marginal_logp();
     double delta_score = score - score_0;
     return delta_score;
 }
 
-double ContinuousComponentModel::incorporate_hyper_update() {
+double ContinuousComponentModel::incorporate_hyper_update()
+{
     hyper_r = get(*p_hypers, (string) "r");
     hyper_nu = get(*p_hypers, (string) "nu");
     hyper_s = get(*p_hypers, (string) "s");
@@ -175,31 +182,36 @@ double ContinuousComponentModel::incorporate_hyper_update() {
     return score_delta;
 }
 
-void ContinuousComponentModel::set_log_Z_0() {
+void ContinuousComponentModel::set_log_Z_0()
+{
     double r, nu, s, mu;
     get_hyper_doubles(r, nu, s, mu);
     log_Z_0 = numerics::calc_continuous_logp(0, r, nu, s, 0);
 }
 
-void ContinuousComponentModel::init_suffstats() {
+void ContinuousComponentModel::init_suffstats()
+{
     sum_x = 0.;
     sum_x_squared = 0.;
 }
 
-void ContinuousComponentModel::get_suffstats(int& count_out, double& sum_x_out,
-        double& sum_x_squared_out) const {
+void ContinuousComponentModel::get_suffstats(int &count_out, double &sum_x_out,
+    double &sum_x_squared_out) const
+{
     count_out = count;
     sum_x_out = sum_x;
     sum_x_squared_out = sum_x_squared;
 }
 
-double ContinuousComponentModel::get_draw(int random_seed) const {
+double ContinuousComponentModel::get_draw(int random_seed) const
+{
     vector<double> constraints;
     return get_draw_constrained(random_seed, constraints);
 }
 
 double ContinuousComponentModel::get_draw_constrained(int random_seed,
-        const vector<double>& constraints) const {
+    const vector<double> &constraints) const
+{
     // get modified suffstats
     double r, nu, s, mu;
     int count;
@@ -208,13 +220,12 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
     get_suffstats(count, sum_x, sum_x_squared);
     int num_constraints = (int) constraints.size();
     for (int constraint_idx = 0; constraint_idx < num_constraints;
-            constraint_idx++) {
+        constraint_idx++) {
         double constraint = constraints[constraint_idx];
         numerics::insert_to_continuous_suffstats(count, sum_x, sum_x_squared,
-                constraint);
+            constraint);
     }
     numerics::update_continuous_hypers(count, sum_x, sum_x_squared, r, nu, s, mu);
-
     // http://www.cs.ubc.ca/~murphyk/Teaching/CS340-Fall07/reading/NG.pdf
     // http://www.stats.ox.ac.uk/~teh/research/notes/GaussianInverseGamma.pdf
     //
@@ -226,21 +237,24 @@ double ContinuousComponentModel::get_draw_constrained(int random_seed,
 
 // For simple predictive probability
 double ContinuousComponentModel::get_predictive_cdf(double element,
-        const vector<double>& constraints) const {
+    const vector<double> &constraints) const
+{
     // XXX Requires computing the Student's t-distribution CDF, which
     // involves incomplete beta integrals, which are a pain.  But
     // nothing uses this right now, so it's not really an issue.
     return -HUGE_VAL;
 }
 
-map<string, double> ContinuousComponentModel::_get_suffstats() const {
+map<string, double> ContinuousComponentModel::_get_suffstats() const
+{
     map<string, double> suffstats;
     suffstats["sum_x"] = sum_x;
     suffstats["sum_x_squared"] = sum_x_squared;
     return suffstats;
 }
 
-map<string, double> ContinuousComponentModel::get_hypers() const {
+map<string, double> ContinuousComponentModel::get_hypers() const
+{
     map<string, double> hypers;
     hypers["r"] = hyper_r;
     hypers["s"] = hyper_s;
