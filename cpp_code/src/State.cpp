@@ -282,24 +282,23 @@ double State::transition_feature_gibbs(int feature_idx,
 
 double State::transition_features_gibbs(
     const vector<int> &feature_idxs,
-    const vector<vector<double> > &feature_data)
+    const vector<vector<double> > &feature_datas)
 {
     double score_delta = 0;
     View *p_singleton_view;
     // XXX Stub. Just transition the first feature_idx.
     // return transition_feature_gibbs(feature_idxs[0], feature_data[0]);
-    vector<int>::const_iterator it0 = feature_idxs.begin();
-    vector<vector<double> >::const_iterator it1 = feature_data.begin();
-    for (; it0 != feature_idxs.end() && it1 != feature_data.end();
-            ++it0, ++it1) {
-        // Remove the feature.
-        score_delta += remove_feature(*it0, *it1, p_singleton_view);
+
+    for (size_t i = 0; i < feature_idxs.size(); ++i) {
+        score_delta += remove_feature(
+            feature_idxs[i], feature_datas[i], p_singleton_view);
     }
 
     View &singleton_view = *p_singleton_view;
 
     score_delta += sample_insert_features(
-        feature_idxs, feature_data, singleton_view);
+        feature_idxs, feature_datas, singleton_view);
+
 
     return score_delta;
 }
