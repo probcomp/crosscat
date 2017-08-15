@@ -207,6 +207,35 @@ double State::sample_insert_feature(int feature_idx,
     return score_delta;
 }
 
+double State::sample_insert_features(
+    const vector<int> &feature_idx,
+    const vector<vector<double> > &feature_data,
+    View &singleton_view)
+{
+    vector<vector<double> > unorm_logps_all;
+
+    for (size_t i = 0; i < feature_idx.size(); ++i) {
+        string col_datatype = global_col_datatypes[feature_idx[i]];
+        vector<double> unorm_logps = calc_feature_view_predictive_logps(
+            feature_data[i], feature_idx[i]);
+        unorm_logps_all.push_back(unorm_logps);
+    }
+
+    vector<double> unorm_logps_sum = std_vector_add(unorm_logps_all);
+    double rand_u = draw_rand_u();
+    int draw = numerics::draw_sample_unnormalized(unorm_logps_sum, rand_u);
+    View &which_view = get_view(draw);
+
+    double score_delta = 0;
+    for (size_t i = 0; i < feature_idx.size(); ++i){
+        score_delta += insert_feature(
+            feature_idx[i], feature_data[i], which_view);
+    }
+
+    remove_if_empty(singleton_view);
+    return score_delta;
+}
+
 
 double State::remove_feature(int feature_idx,
     const vector<double> &feature_data,
@@ -255,8 +284,24 @@ double State::transition_features_gibbs(
     const vector<int> &feature_idxs,
     const vector<vector<double> > &feature_data)
 {
+    double score_delta = 0;
+    View *p_singleton_view;
     // XXX Stub. Just transition the first feature_idx.
-    return transition_feature_gibbs(feature_idxs[0], feature_data[0]);
+    // return transition_feature_gibbs(feature_idxs[0], feature_data[0]);
+    vector<int>::const_iterator it0 = feature_idxs.begin();
+    vector<vector<double> >::const_iterator it1 = feature_data.begin();
+    for (; it0 != feature_idxs.end() && it1 != feature_data.end();
+            ++it0, ++it1) {
+        // Remove the feature.
+        score_delta += remove_feature(*it0, *it1, p_singleton_view);
+    }
+
+    View &singleton_view = *p_singleton_view;
+
+    score_delta += sample_insert_features(
+        feature_idxs, feature_data, singleton_view);
+
+    return score_delta;
 }
 
 double propose_singleton_p = .5;
@@ -388,8 +433,15 @@ double State::transition_features(const MatrixD &data,
         if (ct_kernel == 0) {
             // XXX For Gibbs transition, transition the feature and all of its
             // dependent features.
+
+            // XXX HACK. Pass in a singleton list of now, not all dependencies.
+            vector<int> feature_idxs_tmp;
+            feature_idxs_tmp.push_back(feature_idxs[0]);
+            vector<vector<double> > feature_data_tmp;
+            feature_data_tmp.push_back(feature_datas[0]);
+
             score_delta += transition_features_gibbs(
-                feature_idxs, feature_datas);
+                feature_idxs_tmp, feature_data_tmp);
         } else if (ct_kernel == 1) {
             // For MH transition, transition the feature alone and not its
             // dependent features.

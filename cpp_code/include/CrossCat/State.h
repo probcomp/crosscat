@@ -240,6 +240,10 @@ public:
     double sample_insert_feature(int feature_idx,
         const std::vector<double> &feature_data,
         View &singleton_view);
+    double sample_insert_features(
+        const std::vector<int> &feature_idx,
+        const std::vector<std::vector<double> > &feature_data,
+        View &singleton_view);
     /**
      * Remove a feature from the state.
      * \param feature_idx The column index that the view should associaate with the data
