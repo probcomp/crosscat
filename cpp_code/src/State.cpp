@@ -426,8 +426,8 @@ double State::transition_feature_mh(int feature_idx,
     return score_delta;
 }
 
-double State::transition_features(const MatrixD &data,
-    vector<int> which_features)
+double State::transition_features(
+    const MatrixD &data, vector<int> which_features)
 {
 
     double score_delta = 0;
@@ -445,32 +445,17 @@ double State::transition_features(const MatrixD &data,
         // Get the feature_idx to be transitioned.
         int feature_idx = *it;
 
-        // Get the feature_idx which are dependent on this feature_idx.
-        vector<int> feature_idxs = get_column_dependencies(feature_idx);
-
-        // Get the data for all the feauture_idxs.
-        vector<vector<double> > feature_datas =
-            extract_cols(data, feature_idxs);
-
-        // XXX TODO: Delete me!
-        vector<double> feature_data = extract_col(data, feature_idx);
-
         // Select the transition kernel.
         if (ct_kernel == 0) {
-            // XXX For Gibbs transition, transition the feature and all of its
-            // dependent features.
-
-            // XXX HACK. Pass in a singleton list of now, not all dependencies.
-            vector<int> feature_idxs_tmp;
-            feature_idxs_tmp.push_back(feature_idxs[0]);
-            vector<vector<double> > feature_data_tmp;
-            feature_data_tmp.push_back(feature_datas[0]);
-
+            // For Gibbs, transition feature and all its dependent features.
+            vector<int> feature_idxs = get_column_dependencies(feature_idx);
+            vector<vector<double> > feature_datas = extract_cols(data,
+                feature_idxs);
             score_delta += transition_features_gibbs(
-                feature_idxs_tmp, feature_data_tmp);
+                feature_idxs, feature_datas);
         } else if (ct_kernel == 1) {
-            // For MH transition, transition the feature alone and not its
-            // dependent features.
+            // For MH, transition the feature alone without dependent features.
+            vector<double> feature_data = extract_col(data, feature_idx);
             score_delta += transition_feature_mh(feature_idx, feature_data);
         } else {
             printf("Invalid CT_KERNEL");
