@@ -620,18 +620,34 @@ std::map<int, std::set<int> > State::get_column_independencies() const
 
 vector<int> State::get_column_dependencies(int feature_idx) const
 {
+    // Prepare the result, and add feature_idx as dependent with itself.
+    vector<int> result;
+    result.push_back(feature_idx);
+    // Add other dependencies, if they exist.
     map<int, set<int> >::const_iterator deps =
         column_dependencies.find(feature_idx);
-    vector<int> result(deps->second.begin(), deps->second.end());
-    result.push_back(feature_idx);
+    if (deps != column_dependencies.end()) {
+        std::set<int>::const_iterator itt;
+        for (itt = deps->second.begin(); itt != deps->second.end(); ++itt) {
+            result.push_back(*itt);
+        }
+    }
     return result;
 }
 
 vector<int> State::get_column_independencies(int feature_idx) const
 {
-    map<int, set<int> >::const_iterator indeps =
+    // Prepare the result.
+    vector<int> result;
+    // Add independencies, if they exist.
+    map<int, set<int> >::const_iterator deps =
         column_independencies.find(feature_idx);
-    vector<int> result(indeps->second.begin(), indeps->second.end());
+    if (deps != column_dependencies.end()) {
+        std::set<int>::const_iterator itt;
+        for (itt = deps->second.begin(); itt != deps->second.end(); ++itt) {
+            result.push_back(*itt);
+        }
+    }
     return result;
 }
 
