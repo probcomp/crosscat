@@ -200,3 +200,25 @@ def logmeanexp(array):
     #   = log(sum(map(exp, logprobs))) - log(len(logprobs))
     #   = logsumexp(logprobs) - log(len(logprobs))
     return logsumexp(noninfs) - math.log(len(array))
+
+def get_scc_from_tuples(constraints):
+    """Return strongly connected components from pairs of nodes.
+
+    >> constraints = [(1,2), (2,3)]
+    >> get_scc_from_tuples(constraints)
+    {
+        1: (1, 2, 3),
+        2: (1, 2, 3),
+        3: (1, 2, 3),
+    }
+    """
+    digraph = {}
+    for node0, node1 in constraints:
+        if node0 not in digraph:
+            digraph[node0] = []
+        if node1 not in digraph:
+            digraph[node1] = []
+        digraph[node0].append(node1)
+        digraph[node1].append(node0)
+    import tarjan.tc
+    return tarjan.tc.tc(digraph)

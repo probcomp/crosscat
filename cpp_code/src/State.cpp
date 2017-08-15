@@ -622,7 +622,9 @@ vector<int> State::get_column_dependencies(int feature_idx) const
     if (deps != column_dependencies.end()) {
         std::set<int>::const_iterator itt;
         for (itt = deps->second.begin(); itt != deps->second.end(); ++itt) {
-            result.push_back(*itt);
+            if (*itt != feature_idx) {
+                result.push_back(*itt);
+            }
         }
     }
     return result;

@@ -556,17 +556,17 @@ class LocalEngine(EngineTemplate.EngineTemplate):
 
         The returned metadata looks like this:
         >>> dep_constraints
-        [(1, 2, True), (2, 5, True), (1, 5, True), (1, 3, False)]
+        [(1, 2, True), (2, 5, True), (1, 3, False)]
         >>> X_L['col_ensure']
         {
             "dependent" : {
-                1 : [2, 5],
-                2 : [1, 5],
-                5 : [1, 2]
+                1 : (1, 2, 5),
+                2 : (1, 2, 5),
+                5 : (1, 5, 2),
             },
             "independent" : {
                 1 : [3],
-                3 : [1]
+                3 : [1],
             }
         }
         """
@@ -577,23 +577,18 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         else:
             num_states = 1
 
-        col_ensure_md = dict()
-        col_ensure_md[True] = dict()
-        col_ensure_md[False] = dict()
+        dependencies = [(c[0], c[1]) for c in dep_constraints if c[2]]
+        independencies = [(c[0], c[1]) for c in dep_constraints if not c[2]]
 
-        for col1, col2, dependent in dep_constraints:
-            if col1 == col2:
-                raise ValueError(
-                    'Cannot specify same columns in dependence '
-                    'constraints.')
-            if str(col1) in col_ensure_md[dependent]:
-                col_ensure_md[dependent][str(col1)].append(col2)
-            else:
-                col_ensure_md[dependent][str(col1)] = [col2]
-            if col2 in col_ensure_md[dependent]:
-                col_ensure_md[dependent][str(col2)].append(col1)
-            else:
-                col_ensure_md[dependent][str(col2)] = [col1]
+        col_ensure_md = dict()
+        col_ensure_md[True] = {
+            str(key) : list(val) for
+            key, val in gu.get_scc_from_tuples(dependencies).iteritems()
+        }
+        col_ensure_md[False] = {
+            str(key) : list(val) for
+            key, val in gu.get_scc_from_tuples(independencies).iteritems()
+        }
 
         def assert_dep_constraints(X_L, X_D, dep_constraints):
             for col1, col2, dep in dep_constraints:
