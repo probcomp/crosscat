@@ -868,56 +868,7 @@ double State::calc_feature_view_predictive_logp(const vector<double> &col_data,
     data_log_delta = v.calc_column_predictive_logp(col_data, col_datatype,
             data_global_row_indices,
             hypers);
-    bool view_violates_dep = false;
-    bool view_violates_ind = false;
-    bool dependencies_for_col = (column_dependencies.find(global_col_idx)
-            != column_dependencies.end());
-    bool independencies_for_col = (column_independencies.find(global_col_idx)
-            != column_independencies.end());
-    if (dependencies_for_col or independencies_for_col) {
-        // Check whether the feature can or cannot belong to this view. If it
-        // violates either column_dependencies or column_independencies, then
-        // delta is log(0).
-        // Get the columns in this view
-        vector<int> cols_in_view;
-        for (map<int, int>::const_iterator it = v.global_to_local.begin();
-            it != v.global_to_local.end(); it++) {
-            cols_in_view.push_back(it->first);
-        }
-        if (dependencies_for_col) {
-            std::set<int>::const_iterator its;
-            // make sure that all the dependencies are satisfied
-            map<int, set<int> >::const_iterator deps = column_dependencies.find(
-                    global_col_idx);
-            for (its = deps->second.begin(); its != deps->second.end(); its++) {
-                if (find(cols_in_view.begin(), cols_in_view.end(), *its) ==
-                    cols_in_view.end()) {
-                    view_violates_dep = true;
-                }
-            }
-        }
-        if (independencies_for_col) {
-            // Make sure that none of the columns in this view are supposed to
-            // be dependent of the column at global_col_idx
-            for (size_t i = 0; i < cols_in_view.size(); ++i) {
-                int col = cols_in_view[i];
-                map<int, set<int> >::const_iterator inds = column_independencies.find(
-                        global_col_idx);
-                if (inds->second.find(col) != inds->second.end()) {
-                    view_violates_ind = true;
-                }
-            }
-        }
-        // Either dependence or independence can be violated but not both, if
-        // the state was initalized properly.
-        assert(!(view_violates_dep and view_violates_ind));
-    }
     double score_delta = data_log_delta + crp_log_delta;
-    if (view_violates_ind or view_violates_dep) {
-        // XXX: I have a feeling that this is going to wreck multinomial draws
-        // due to terrible floating point error.
-        score_delta = -INFINITY;
-    }
     return score_delta;
 }
 
