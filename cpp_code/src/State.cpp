@@ -212,8 +212,12 @@ double State::sample_insert_features(
     const vector<vector<double> > &feature_data,
     View &singleton_view)
 {
+    // Prepare of predictive logp for each feature_idx.
     vector<vector<double> > unorm_logps_all;
 
+    // Compute the predictive_logp for each feature_idx.
+    // XXX We are double counting the CRP probabilities; in fact, all the
+    // feature_idx should be associated with one customer in the CRP.
     for (size_t i = 0; i < feature_idx.size(); ++i) {
         string col_datatype = global_col_datatypes[feature_idx[i]];
         vector<double> unorm_logps = calc_feature_view_predictive_logps(
@@ -221,18 +225,22 @@ double State::sample_insert_features(
         unorm_logps_all.push_back(unorm_logps);
     }
 
+    // Sum the predictive_logps across the features, and draw a view.
     vector<double> unorm_logps_sum = std_vector_add(unorm_logps_all);
     double rand_u = draw_rand_u();
     int draw = numerics::draw_sample_unnormalized(unorm_logps_sum, rand_u);
     View &which_view = get_view(draw);
 
+    // Insert the features in the and aggregate the score_delta.
     double score_delta = 0;
     for (size_t i = 0; i < feature_idx.size(); ++i){
         score_delta += insert_feature(
             feature_idx[i], feature_data[i], which_view);
     }
 
+    // Clear out the singleton view if necessary.
     remove_if_empty(singleton_view);
+
     return score_delta;
 }
 
