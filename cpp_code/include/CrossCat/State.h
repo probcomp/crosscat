@@ -396,6 +396,11 @@ public:
     //
     // helpers
     /**
+     * \return true if view contains a column which is independent of global_col_idx.
+     */
+    bool view_violates_independency(
+        const View &view, const int &global_col_idx) const;
+    /**
      * \return The log likelihood of the column CRP hyperparmeter value
      * given the state's column partitioning and the hyperprior on alpha
      * defined in numerics::calc_crp_alpha_hyperprior

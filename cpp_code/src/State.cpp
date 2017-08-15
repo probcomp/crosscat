@@ -855,24 +855,57 @@ double State::transition_views_col_hypers()
 
 double State::calc_feature_view_predictive_logp(
     const vector<double> &col_data,
-    const string &col_datatype, const View &v,
+    const string &col_datatype,
+    const View &v,
     double &crp_log_delta,
     double &data_log_delta,
     const CM_Hypers &hypers,
     const int &global_col_idx) const
 {
+    // First check whether the view violates independence constraints.
+    // XXX Independence constraints result in non-ergodic chains.
+    if (view_violates_independency(v, global_col_idx)) {
+        return -INFINITY;
+    }
+
     int view_column_count = v.get_num_cols();
     int num_columns = get_num_cols();
 
+    // Compute CRP log probability.
     crp_log_delta = numerics::calc_cluster_crp_logp(
         view_column_count, num_columns, column_crp_alpha);
 
+    // Compute data log probability.
     vector<int> data_global_row_indices = create_sequence(col_data.size());
     data_log_delta = v.calc_column_predictive_logp(
         col_data, col_datatype, data_global_row_indices, hypers);
 
+    // Return log score delta as sum of data and CRP prior.
     double score_delta = data_log_delta + crp_log_delta;
     return score_delta;
+}
+
+bool State::view_violates_independency(
+    const View &view, const int &global_col_idx) const
+{
+    // Return false if global_col_idx has no independence constraints.
+    if (column_independencies.count(global_col_idx) == 0){
+        return false;
+    }
+    // Find the independence constraints for global_col_idx.
+    set<int> indeps = column_independencies.find(global_col_idx)->second;
+    // Check whether any columns in the view is a violator.
+    map<int, int>::const_iterator it;
+    for (it = view.global_to_local.begin();
+        it != view.global_to_local.end();
+        ++it) {
+        // Violator found.
+        if (indeps.count(it->first) > 0){
+            return true;
+        }
+    }
+    // No violators found.
+    return false;
 }
 
 vector<double> State::calc_feature_view_predictive_logps(
