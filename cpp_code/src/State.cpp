@@ -251,6 +251,14 @@ double State::transition_feature_gibbs(int feature_idx,
     return score_delta;
 }
 
+double State::transition_features_gibbs(
+    const vector<int> &feature_idxs,
+    const vector<vector<double> > &feature_data)
+{
+    // XXX Stub. Just transition the first feature_idx.
+    return transition_feature_gibbs(feature_idxs[0], feature_data[0]);
+}
+
 double propose_singleton_p = .5;
 
 double State::get_proposal_logp(View &proposed_view)
@@ -380,7 +388,8 @@ double State::transition_features(const MatrixD &data,
         if (ct_kernel == 0) {
             // XXX For Gibbs transition, transition the feature and all of its
             // dependent features.
-            score_delta += transition_feature_gibbs(feature_idx, feature_data);
+            score_delta += transition_features_gibbs(
+                feature_idxs, feature_datas);
         } else if (ct_kernel == 1) {
             // For MH transition, transition the feature alone and not its
             // dependent features.

@@ -259,6 +259,14 @@ public:
     double transition_feature_gibbs(int feature_idx,
         const std::vector<double> &feature_data);
     /**
+     * Gibbs sample a collection of features among the views, possibly creating a new view
+     * \param feature_idxs The column indexes that the view should associate with the data
+     * \param feature_data The vector of data that comprises the features
+     */
+    double transition_features_gibbs(
+        const std::vector<int> &feature_idx,
+        const std::vector<std::vector<double> > &feature_data);
+    /**
      * Helper for transition_feature_mh
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
