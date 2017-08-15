@@ -236,10 +236,8 @@ double State::sample_insert_features(
     return score_delta;
 }
 
-
-double State::remove_feature(int feature_idx,
-    const vector<double> &feature_data,
-    View *&p_singleton_view)
+double State::remove_feature(
+    int feature_idx, const vector<double> &feature_data)
 {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers &hypers = hypers_m[feature_idx];
@@ -247,25 +245,41 @@ double State::remove_feature(int feature_idx,
     assert(it != view_lookup.end());
     View &which_view = *(it->second);
     view_lookup.erase(it);
-    int view_num_cols = which_view.get_num_cols();
     double data_logp_delta = which_view.remove_col(feature_idx);
     double crp_logp_delta, other_data_logp_delta;
-    double score_delta = calc_feature_view_predictive_logp(feature_data,
-            col_datatype,
-            which_view,
-            crp_logp_delta,
-            other_data_logp_delta,
-            hypers,
-            feature_idx);
-    //
-    if (view_num_cols == 1) {
+    double score_delta = calc_feature_view_predictive_logp(
+        feature_data,
+        col_datatype,
+        which_view,
+        crp_logp_delta,
+        other_data_logp_delta,
+        hypers,
+        feature_idx);
+    column_crp_score -= crp_logp_delta;
+    data_score -= data_logp_delta;
+    assert(abs(other_data_logp_delta - data_logp_delta) < 1E-6);
+    return score_delta;
+}
+
+double State::remove_feature(
+    int feature_idx,
+    const vector<double> &feature_data,
+    View *&p_singleton_view)
+{
+    // Retrieve current view of feature_idx.
+    map<int, View *>::iterator it = view_lookup.find(feature_idx);
+    assert(it != view_lookup.end());
+    View &which_view = *(it->second);
+
+    // If current view is already a singleton then reuse it.
+    if (which_view.get_num_cols() == 1) {
         p_singleton_view = &which_view;
     } else {
         p_singleton_view = &get_new_view();
     }
-    column_crp_score -= crp_logp_delta;
-    data_score -= data_logp_delta;
-    assert(abs(other_data_logp_delta - data_logp_delta) < 1E-6);
+
+    // Remove the feature.
+    double score_delta = remove_feature(feature_idx, feature_data);
     return score_delta;
 }
 
@@ -285,20 +299,25 @@ double State::transition_features_gibbs(
     const vector<vector<double> > &feature_datas)
 {
     double score_delta = 0;
-    View *p_singleton_view;
-    // XXX Stub. Just transition the first feature_idx.
-    // return transition_feature_gibbs(feature_idxs[0], feature_data[0]);
 
+    // Retrieve the current view of feature_idxs[0]. They should all be in
+    // the same view, since we are transitioning features which are dependent.
+    map<int, View *>::iterator it = view_lookup.find(feature_idxs[0]);
+    View &current_view = *(it->second);
+
+    // If current view only contains feature_idxs, then reuse it.
+    // Otherwise create a new singleton view as the proposal.
+    View &singleton_view =
+        (current_view.get_num_cols() == feature_idxs.size())
+        ? current_view : get_new_view();
+
+    // Remove the other dependent feature_idxs.
     for (size_t i = 0; i < feature_idxs.size(); ++i) {
-        score_delta += remove_feature(
-            feature_idxs[i], feature_datas[i], p_singleton_view);
+        score_delta += remove_feature(feature_idxs[i], feature_datas[i]);
     }
-
-    View &singleton_view = *p_singleton_view;
 
     score_delta += sample_insert_features(
         feature_idxs, feature_datas, singleton_view);
-
 
     return score_delta;
 }

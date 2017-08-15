@@ -256,6 +256,14 @@ public:
         const std::vector<double> &feature_data,
         View *&p_singleton_view);
     /**
+     * Remove a feature from the state.
+     * \param feature_idx The column index that the view should associaate with the data
+     * \param feature_data The data that comprises the feature
+     */
+    double remove_feature(
+        int feature_idx,
+        const std::vector<double> &feature_data);
+    /**
      * Gibbs sample a feature among the views, possibly creating a new view
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
