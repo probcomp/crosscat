@@ -851,7 +851,8 @@ double State::transition_views_col_hypers()
     return score_delta;
 }
 
-double State::calc_feature_view_predictive_logp(const vector<double> &col_data,
+double State::calc_feature_view_predictive_logp(
+    const vector<double> &col_data,
     const string &col_datatype, const View &v,
     double &crp_log_delta,
     double &data_log_delta,
@@ -860,14 +861,14 @@ double State::calc_feature_view_predictive_logp(const vector<double> &col_data,
 {
     int view_column_count = v.get_num_cols();
     int num_columns = get_num_cols();
-    crp_log_delta = numerics::calc_cluster_crp_logp(view_column_count, num_columns,
-            column_crp_alpha);
-    //
+
+    crp_log_delta = numerics::calc_cluster_crp_logp(
+        view_column_count, num_columns, column_crp_alpha);
+
     vector<int> data_global_row_indices = create_sequence(col_data.size());
-    // pass singleton_view down to here, or at least hypers
-    data_log_delta = v.calc_column_predictive_logp(col_data, col_datatype,
-            data_global_row_indices,
-            hypers);
+    data_log_delta = v.calc_column_predictive_logp(
+        col_data, col_datatype, data_global_row_indices, hypers);
+
     double score_delta = data_log_delta + crp_log_delta;
     return score_delta;
 }
