@@ -241,8 +241,8 @@ public:
         const std::vector<double> &feature_data,
         View &singleton_view);
     double sample_insert_features(
-        const std::vector<int> &feature_idx,
-        const std::vector<std::vector<double> > &feature_data,
+        const std::vector<int> &feature_idxs,
+        const std::vector<std::vector<double> > &feature_datas,
         View &singleton_view);
     /**
      * Remove a feature from the state.
