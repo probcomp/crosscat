@@ -380,6 +380,11 @@ public:
         const View &v,
         const int &global_col_idx) const;
     /**
+     * \return The crp probabilities of a feature belonging to each view.
+     */
+    std::vector<double> calc_feature_view_crp_logps(
+        const int &global_col_idx) const;
+    /**
      * \return The probability of feature data under row partition of a particular view
      */
     double calc_feature_view_data_logp(
@@ -387,6 +392,12 @@ public:
         const std::string &col_datatype,
         const View &v,
         const CM_Hypers &hypers,
+        const int &global_col_idx) const;
+    /**
+     * \return The probability of feature data under row partition of each view.
+     */
+    std::vector<double> calc_feature_view_data_logps(
+        const std::vector<double> &col_data,
         const int &global_col_idx) const;
     /**
      * \return The predictive log likelihood of a feature belonging to a particular view

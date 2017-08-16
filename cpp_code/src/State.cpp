@@ -947,6 +947,37 @@ vector<double> State::calc_feature_view_predictive_logps(
     return logps;
 }
 
+vector<double> State::calc_feature_view_crp_logps(
+    const int &global_col_idx) const
+{
+    vector<double> crp_logps;
+    vector<View *>::const_iterator it;
+    for (it = views.begin(); it != views.end(); ++it) {
+        View &v = **it;
+        double crp_log_delta = calc_feature_view_crp_logp(
+            v, global_col_idx);
+        crp_logps.push_back(crp_log_delta);
+    }
+    return crp_logps;
+}
+
+vector<double> State::calc_feature_view_data_logps(
+    const vector<double> &col_data,
+    const int &global_col_idx) const
+{
+    vector<double> data_logps;
+    CM_Hypers hypers = get(hypers_m, global_col_idx);
+    vector<View *>::const_iterator it;
+    string col_datatype = get(global_col_datatypes, global_col_idx);
+    for (it = views.begin(); it != views.end(); ++it) {
+        View &v = **it;
+        double data_log_delta= calc_feature_view_data_logp(
+            col_data, col_datatype, v, hypers, global_col_idx);
+        data_logps.push_back(data_log_delta);
+    }
+    return data_logps;
+}
+
 double State::calc_column_crp_marginal() const
 {
     vector<int> view_counts = get_view_counts();
