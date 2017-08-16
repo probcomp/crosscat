@@ -61,3 +61,47 @@ def test_logmeanexp():
     assert math.isnan(gu.logmeanexp([nan, inf]))
     assert math.isnan(gu.logmeanexp([nan, -3]))
     assert math.isnan(gu.logmeanexp([nan]))
+
+def test_get_scc_from_tuples():
+    constraints = [(1,2), (2,3)]
+    assert gu.get_scc_from_tuples(constraints) == {
+        1: (1, 2, 3),
+        2: (1, 2, 3),
+        3: (1, 2, 3),
+    }
+
+    constraints = [(1,2), (3,4), (5,7), (7,3)]
+    assert gu.get_scc_from_tuples(constraints) == {
+        1: (1, 2),
+        2: (1, 2),
+        3: (3, 4, 5, 7),
+        4: (3, 4, 5, 7),
+        5: (3, 4, 5, 7),
+        7: (3, 4, 5, 7),
+    }
+
+    constraints = [(1,2), (3,4), (5,7), (7,3)]
+    assert gu.get_scc_from_tuples(constraints) == {
+        1: (1, 2),
+        2: (1, 2),
+        3: (3, 4, 5, 7),
+        4: (3, 4, 5, 7),
+        5: (3, 4, 5, 7),
+        7: (3, 4, 5, 7),
+    }
+
+    constraints = [(1,1), (2,2), (3,3), (4,4)]
+    assert gu.get_scc_from_tuples(constraints) == {
+        1: (1,),
+        2: (2,),
+        3: (3,),
+        4: (4,),
+    }
+
+    constraints = [(1,2), (3,4), (4,1)]
+    assert gu.get_scc_from_tuples(constraints) == {
+        1: (1,2,3,4),
+        2: (1,2,3,4),
+        3: (1,2,3,4),
+        4: (1,2,3,4),
+    }
