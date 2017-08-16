@@ -90,6 +90,17 @@ vector<double> log_linspace(double a, double b, size_t n)
     return v;
 }
 
+vector<double> std_vector_divide_elemwise(
+    const vector<double> &vec,
+    const double &val)
+{
+    vector<double> result;
+    for (size_t i = 0; i < vec.size(); i++) {
+        result.push_back(vec[i]/val);
+    }
+    return result;
+}
+
 vector<double> std_vector_add(const vector<double> &vec1,
     const vector<double> &vec2)
 {
