@@ -121,3 +121,33 @@ def test_multiple_col_ensure(seed, dependent, analyze):
 
         for col1, col2, dep in dep_constraints:
             assert engine.assert_col_dep_constraints(X_L, X_D, col1, col2, dep, True)
+
+def test_two_dependent_one_dependent():
+    rng = random.Random(PASS_SEED)
+    T, M_r, M_c = du.gen_factorial_data_objects(get_next_seed(rng), 2, 3, 10, 1)
+    engine = LE.LocalEngine(seed=get_next_seed(rng))
+
+    # These dependency constraints target the computation of unorm_crp_logps_avg
+    # in the case that one variable (1) is independent of another variable (2)
+    # which should ensure the CRP probability of the view of (2) is -INFINITY
+    # when doing a block proposal of (0,1) into the view of (2). Refer to the
+    # comment about compute the CRP probabilities in
+    # State::sample_insert_features.
+    dep_constraints = [(0, 1, True), (1, 2, False)]
+
+    X_L, X_D = engine.initialize(
+        M_c, M_r, T, seed=get_next_seed(rng), n_chains=1)
+
+    X_L, X_D = engine.ensure_col_dep_constraints(
+        M_c, M_r, T, X_L, X_D, dep_constraints, get_next_seed(rng))
+
+    for col1, col2, dep in dep_constraints:
+        assert engine.assert_col_dep_constraints(
+            X_L, X_D, col1, col2, dep, True)
+
+    X_L, X_D = engine.analyze(
+        M_c, T, X_L, X_D, get_next_seed(rng), n_steps=1000)
+
+    for col1, col2, dep in dep_constraints:
+        assert engine.assert_col_dep_constraints(
+            X_L, X_D, col1, col2, dep, True)
