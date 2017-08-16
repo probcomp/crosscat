@@ -213,45 +213,9 @@ double State::sample_insert_features(
     View &singleton_view)
 {
 
-    // Prepare vector of crp_logp and data_logp for each feature_idx.
-    vector<vector<double> > unorm_crp_logps_all;
-    vector<vector<double> > unorm_data_logps_all;
-
-    // Compute crp_logp and data_logp for each feature.
-    for (size_t i = 0; i < feature_idxs.size(); ++i) {
-        string col_datatype = global_col_datatypes[feature_idxs[i]];
-        vector<double> crp_logps = calc_feature_view_crp_logps(feature_idxs[i]);
-        vector<double> data_logps = calc_feature_view_data_logps(
-            feature_datas[i], feature_idxs[i]);
-        unorm_crp_logps_all.push_back(crp_logps);
-        unorm_data_logps_all.push_back(data_logps);
-    }
-
-    // Sum the data_logps across the features.
-    vector<double> unorm_data_logps_sum = std_vector_add(unorm_data_logps_all);
-
-    // Sum and then average the crp_logps across the features.
-    // 1. We expect that uncorm_crp_logps_all[i] == unorm_crp_logps_all[j] for
-    //    all i,j, since the crp probability of a view is a function of only the
-    //    number of columns in that view. However, when there are independence
-    //    constraints, the crp probability may be set to zero for a particular
-    //    feature_idx.
-    // 2. We can take the simple average in direct space (instead of logspace)
-    //    since all the values being summed are expected to be the same, or in
-    //    the case of an independence constraint the entry with -INFINITY will
-    //    satisfy -INFINITY/x = -INFINITY.
-    // Example with feature_idxs.size() == 2 and three views.
-    //      unorm_crp_logps_all = [[-.5, -.2, -.1], [-.5, -INFINITY, -.1]]
-    //      unorm_crp_logps_sum = [-1., -INFINITY, -.2]
-    //      unorm_crp_logps_avg = [-.5, -INFINITY, -.1]
-    // as desired.
-    vector<double> unorm_crp_logps_sum = std_vector_add(unorm_crp_logps_all);
-    vector<double> unorm_crp_logps_avg = std_vector_divide_elemwise(
-        unorm_crp_logps_sum, unorm_crp_logps_all.size());
-
-    // Compute the predictive_logp as sum of crp_logp and data_logp.
-    vector<double> unorm_predictive_logps = std_vector_add(
-        unorm_data_logps_sum, unorm_crp_logps_avg);
+    // Get the predictive logps of the block under each view.
+    vector<double> unorm_predictive_logps =
+        calc_feature_view_predictive_logps_block(feature_idxs, feature_datas);
 
     double rand_u = draw_rand_u();
     int draw = numerics::draw_sample_unnormalized(
@@ -974,6 +938,53 @@ vector<double> State::calc_feature_view_predictive_logps(
         logps.push_back(score_delta);
     }
     return logps;
+}
+
+vector<double> State::calc_feature_view_predictive_logps_block(
+    const vector<int> &feature_idxs,
+    const vector<vector<double> > &feature_datas) const
+{
+    // Prepare vector of crp_logp and data_logp for each feature_idx.
+    vector<vector<double> > unorm_crp_logps_all;
+    vector<vector<double> > unorm_data_logps_all;
+
+    // Compute crp_logp and data_logp for each feature.
+    for (size_t i = 0; i < feature_idxs.size(); ++i) {
+        string col_datatype = get(global_col_datatypes, feature_idxs[i]);
+        vector<double> crp_logps = calc_feature_view_crp_logps(feature_idxs[i]);
+        vector<double> data_logps = calc_feature_view_data_logps(
+            feature_datas[i], feature_idxs[i]);
+        unorm_crp_logps_all.push_back(crp_logps);
+        unorm_data_logps_all.push_back(data_logps);
+    }
+
+    // Sum the data_logps across the features.
+    vector<double> unorm_data_logps_sum = std_vector_add(unorm_data_logps_all);
+
+    // Sum and then average the crp_logps across the features.
+    // 1. We expect that uncorm_crp_logps_all[i] == unorm_crp_logps_all[j] for
+    //    all i,j, since the crp probability of a view is a function of only the
+    //    number of columns in that view. However, when there are independence
+    //    constraints, the crp probability may be set to zero for a particular
+    //    feature_idx.
+    // 2. We can take the simple average in direct space (instead of logspace)
+    //    since all the values being summed are expected to be the same, or in
+    //    the case of an independence constraint the entry with -INFINITY will
+    //    satisfy -INFINITY/x = -INFINITY.
+    // Example with feature_idxs.size() == 2 and three views.
+    //      unorm_crp_logps_all = [[-.5, -.2, -.1], [-.5, -INFINITY, -.1]]
+    //      unorm_crp_logps_sum = [-1., -INFINITY, -.2]
+    //      unorm_crp_logps_avg = [-.5, -INFINITY, -.1]
+    // as desired.
+    vector<double> unorm_crp_logps_sum = std_vector_add(unorm_crp_logps_all);
+    vector<double> unorm_crp_logps_avg = std_vector_divide_elemwise(
+        unorm_crp_logps_sum, unorm_crp_logps_all.size());
+
+    // Compute the predictive_logp as sum of crp_logp and data_logp.
+    vector<double> unorm_predictive_logps = std_vector_add(
+        unorm_data_logps_sum, unorm_crp_logps_avg);
+
+    return unorm_predictive_logps;
 }
 
 vector<double> State::calc_feature_view_crp_logps(
