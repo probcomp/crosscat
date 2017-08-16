@@ -374,9 +374,25 @@ public:
     //
     // calculators
     /**
+     * \return The crp probability of a feature belonging to a particular view
+     */
+    double calc_feature_view_crp_logp(
+        const View &v,
+        const int &global_col_idx) const;
+    /**
+     * \return The probability of feature data under row partition of a particular view
+     */
+    double calc_feature_view_data_logp(
+        const std::vector<double> &col_data,
+        const std::string &col_datatype,
+        const View &v,
+        const CM_Hypers &hypers,
+        const int &global_col_idx) const;
+    /**
      * \return The predictive log likelihood of a feature belonging to a particular view
      */
-    double calc_feature_view_predictive_logp(const std::vector<double> &col_data,
+    double calc_feature_view_predictive_logp(
+        const std::vector<double> &col_data,
         const std::string &col_datatype,
         const View &v,
         double &crp_log_delta,
