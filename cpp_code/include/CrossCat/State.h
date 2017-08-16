@@ -240,7 +240,14 @@ public:
     double sample_insert_feature(int feature_idx,
         const std::vector<double> &feature_data,
         View &singleton_view);
-    double sample_insert_features(
+    /**
+     * Gibbs sample which view to insert the feature block into.
+     * \param feature_idxs The column indexes that the view should associate with the data.
+     * \param feature_datas The vector of data that comprises the features.
+     * \param singleton_view A reference to an empty view to allow for creation of new views.
+     *        Deleted internally if not used.
+     */
+    double sample_insert_feature_block(
         const std::vector<int> &feature_idxs,
         const std::vector<std::vector<double> > &feature_datas,
         View &singleton_view);
@@ -271,13 +278,13 @@ public:
     double transition_feature_gibbs(int feature_idx,
         const std::vector<double> &feature_data);
     /**
-     * Gibbs sample a collection of features among the views, possibly creating a new view
+     * Gibbs sample a block of dependent features among the views, possibly creating a new view
      * \param feature_idxs The column indexes that the view should associate with the data
-     * \param feature_data The vector of data that comprises the features
+     * \param feature_datas The vector of data that comprises the features
      */
-    double transition_features_gibbs(
-        const std::vector<int> &feature_idx,
-        const std::vector<std::vector<double> > &feature_data);
+    double transition_feature_block_gibbs(
+        const std::vector<int> &feature_idxs,
+        const std::vector<std::vector<double> > &feature_datas);
     /**
      * Helper for transition_feature_mh
      * \param feature_idx The column index that the view should associaate with the data

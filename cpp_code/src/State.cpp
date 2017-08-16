@@ -207,7 +207,7 @@ double State::sample_insert_feature(int feature_idx,
     return score_delta;
 }
 
-double State::sample_insert_features(
+double State::sample_insert_feature_block(
     const vector<int> &feature_idxs,
     const vector<vector<double> > &feature_datas,
     View &singleton_view)
@@ -293,7 +293,7 @@ double State::transition_feature_gibbs(int feature_idx,
     return score_delta;
 }
 
-double State::transition_features_gibbs(
+double State::transition_feature_block_gibbs(
     const vector<int> &feature_idxs,
     const vector<vector<double> > &feature_datas)
 {
@@ -315,7 +315,7 @@ double State::transition_features_gibbs(
         score_delta += remove_feature(feature_idxs[i], feature_datas[i]);
     }
 
-    score_delta += sample_insert_features(
+    score_delta += sample_insert_feature_block(
         feature_idxs, feature_datas, singleton_view);
 
     return score_delta;
@@ -442,7 +442,7 @@ double State::transition_features(
             vector<int> feature_idxs = get_column_dependencies(feature_idx);
             vector<vector<double> > feature_datas = extract_cols(data,
                 feature_idxs);
-            score_delta += transition_features_gibbs(
+            score_delta += transition_feature_block_gibbs(
                 feature_idxs, feature_datas);
         } else if (ct_kernel == 1) {
             // For MH, transition the feature alone without dependent features.
