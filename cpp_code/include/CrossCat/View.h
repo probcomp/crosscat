@@ -105,7 +105,7 @@ public:
         int global_col_idx) const;
     std::vector<std::vector<std::map<std::string, double> > > \
     get_column_component_suffstats() const;
-    std::vector<int> get_global_col_indices() const;
+    std::vector<int> get_global_col_indices();
     std::vector<double> get_draw(int row_idx, int random_seed) const;
     //
     // getters (internal use)

@@ -130,16 +130,6 @@ public:
      */
     int get_num_cols() const;
     /**
-     * \return The effective number of columns in the state, accounting for
-     * column dependencies.
-     */
-    int get_num_cols_effective() const;
-    /**
-     * \return The effective number of columns in the view, accounting for
-     * column dependencies.
-     */
-    int get_num_cols_effective(const View &view) const;
-    /**
      * \return The number of views (column partitions)
      */
     int get_num_views() const;
