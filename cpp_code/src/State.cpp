@@ -315,6 +315,7 @@ double State::transition_feature_block_gibbs(
         score_delta += remove_feature(feature_idxs[i], feature_datas[i]);
     }
 
+    // Sample a new view for the feature block.
     score_delta += sample_insert_feature_block(
         feature_idxs, feature_datas, singleton_view);
 
