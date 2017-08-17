@@ -867,18 +867,24 @@ double State::calc_feature_view_crp_logp(
     const View &v,
     const int &global_col_idx) const
 {
+    int num_cols_state = get_num_cols_effective();
+    int num_cols_view = get_num_cols_effective(v);
+    return calc_feature_view_crp_logp(
+        v, num_cols_state, num_cols_view, global_col_idx);
+}
+
+double State::calc_feature_view_crp_logp(
+    const View &v,
+    const int &num_cols_state,
+    const int &num_cols_view,
+    const int &global_col_idx) const
+{
     // First check whether the view violates independence constraints.
-    // XXX Independence constraints result in non-ergodic chains.
+    // Kindly note that independence constraints result in non-ergodic chains.
     if (view_violates_independency(v, global_col_idx)) {
         return -INFINITY;
     }
     // Compute CRP log probability.
-    // XXX We need to compute the "effective" number of columns, which is the
-    // number of column cliques (including cliques of size one). This number
-    // should be passed in as an argument to avoid having to recompute it
-    // over and over when proposing a column block.
-    int num_cols_state = get_num_cols_effective();
-    int num_cols_view = get_num_cols_effective(v);
     double crp_log_delta = numerics::calc_cluster_crp_logp(
         num_cols_view, num_cols_state, column_crp_alpha);
     return crp_log_delta;
@@ -969,10 +975,17 @@ vector<double> State::calc_feature_view_predictive_logps_block(
     vector<vector<double> > unorm_crp_logps_all;
     vector<vector<double> > unorm_data_logps_all;
 
+    // Compute the effective number of columns and view counts.
+    // These are pre-computed to avoid having to compute them inside the
+    // inner loop.
+    const int num_cols_state = get_num_cols_effective();
+    const vector<int> num_cols_views = get_view_counts();
+
     // Compute crp_logp and data_logp for each feature.
     for (size_t i = 0; i < feature_idxs.size(); ++i) {
         string col_datatype = get(global_col_datatypes, feature_idxs[i]);
-        vector<double> crp_logps = calc_feature_view_crp_logps(feature_idxs[i]);
+        vector<double> crp_logps = calc_feature_view_crp_logps(
+            num_cols_state, num_cols_views, feature_idxs[i]);
         vector<double> data_logps = calc_feature_view_data_logps(
             feature_datas[i], feature_idxs[i]);
         unorm_crp_logps_all.push_back(crp_logps);
@@ -1011,12 +1024,22 @@ vector<double> State::calc_feature_view_predictive_logps_block(
 vector<double> State::calc_feature_view_crp_logps(
     const int &global_col_idx) const
 {
+    int num_cols_state = get_num_cols_effective();
+    vector<int> num_cols_views = get_view_counts();
+    return calc_feature_view_crp_logps(
+        num_cols_state, num_cols_views, global_col_idx);
+}
+
+vector<double> State::calc_feature_view_crp_logps(
+    const int &num_cols_state,
+    const vector<int> &num_cols_views,
+    const int &global_col_idx) const
+{
     vector<double> crp_logps;
-    vector<View *>::const_iterator it;
-    for (it = views.begin(); it != views.end(); ++it) {
-        View &v = **it;
+    for (size_t i = 0; i < views.size(); ++i) {
+        View &view = *(views[i]);
         double crp_log_delta = calc_feature_view_crp_logp(
-            v, global_col_idx);
+            view, num_cols_state, num_cols_views[i], global_col_idx);
         crp_logps.push_back(crp_log_delta);
     }
     return crp_logps;
