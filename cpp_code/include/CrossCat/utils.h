@@ -228,6 +228,18 @@ std::map<T, int> set_to_map(const std::set<T> &in_set)
 }
 
 template <class T>
+std::set<T> array_to_set(size_t num_items, T *arr) {
+    std::set<T> out_set;
+    for (size_t i = 0; i < num_items; i++){
+        T next_item = *arr;
+        out_set.insert(next_item);
+        arr++;
+    }
+    return out_set;
+}
+
+
+template <class T>
 std::map<T, int> vector_to_map(const std::vector<T> &in_vector)
 {
     std::map<T, int> out_map;
