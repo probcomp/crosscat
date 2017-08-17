@@ -213,6 +213,16 @@ std::vector<T> set_to_vector(const std::set<T> &in_set)
     return out_vector;
 }
 
+template <class K, class V>
+std::vector<K> map_to_vector(const std::map<K,V> &in_map)
+{
+    std::vector<K> out_vector;
+    typename std::map<K,V>::const_iterator it;
+    for (it = in_map.begin(); it != in_map.end(); ++it) {
+        out_vector.push_back(it->first);
+    }
+    return out_vector;
+}
 
 template <class T>
 std::map<T, int> set_to_map(const std::set<T> &in_set)
@@ -237,7 +247,6 @@ std::set<T> array_to_set(size_t num_items, T *arr) {
     }
     return out_set;
 }
-
 
 template <class T>
 std::map<T, int> vector_to_map(const std::vector<T> &in_vector)

@@ -119,6 +119,24 @@ State::~State()
     remove_all();
 }
 
+int State::get_num_cols_effective() const
+{
+    if (column_dependencies.size() == 0)
+        return get_num_cols();
+
+    vector<int> state_col_indices = map_to_vector(view_lookup);
+    return get_vector_num_blocks(state_col_indices, column_dependencies);
+}
+
+int State::get_num_cols_effective(const View &view) const
+{
+    if (column_dependencies.size() == 0)
+        return view.get_num_cols();
+
+    vector<int> view_col_indices = view.get_global_col_indices();
+    return get_vector_num_blocks(view_col_indices, column_dependencies);
+}
+
 int State::get_num_cols() const
 {
     return view_lookup.size();
@@ -135,7 +153,7 @@ vector<int> State::get_view_counts() const
     vector<View *>::const_iterator it;
     for (it = views.begin(); it != views.end(); ++it) {
         View &v = (**it);
-        int view_num_cols = v.get_num_cols();
+        int view_num_cols = get_num_cols_effective(v);
         view_counts.push_back(view_num_cols);
     }
     return view_counts;
@@ -856,9 +874,11 @@ double State::calc_feature_view_crp_logp(
     }
     // Compute CRP log probability.
     // XXX We need to compute the "effective" number of columns, which is the
-    // number of column cliques (including cliques of size one).
-    int view_column_count = v.get_num_cols();
-    int num_columns = get_num_cols();
+    // number of column cliques (including cliques of size one). This number
+    // should be passed in as an argument to avoid having to recompute it
+    // over and over when proposing a column block.
+    int view_column_count = get_num_cols_effective(v);
+    int num_columns = get_num_cols_effective();
     double crp_log_delta = numerics::calc_cluster_crp_logp(
         view_column_count, num_columns, column_crp_alpha);
     return crp_log_delta;
@@ -1022,7 +1042,7 @@ vector<double> State::calc_feature_view_data_logps(
 double State::calc_column_crp_marginal() const
 {
     vector<int> view_counts = get_view_counts();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     return numerics::calc_crp_alpha_conditional(view_counts, column_crp_alpha,
             num_cols, true);
 }
@@ -1034,7 +1054,7 @@ const
     vector<int> view_counts = get_view_counts();
     vector<double> crp_scores;
     vector<double>::const_iterator it = alphas_to_score.begin();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
         double this_crp_score = numerics::calc_crp_alpha_conditional(view_counts,

@@ -284,7 +284,7 @@ const
     return column_component_suffstats;
 }
 
-vector<int> View::get_global_col_indices()
+vector<int> View::get_global_col_indices() const
 {
     int num_cols = get_num_cols();
     vector<int> global_col_indices;
