@@ -877,10 +877,10 @@ double State::calc_feature_view_crp_logp(
     // number of column cliques (including cliques of size one). This number
     // should be passed in as an argument to avoid having to recompute it
     // over and over when proposing a column block.
-    int view_column_count = get_num_cols_effective(v);
-    int num_columns = get_num_cols_effective();
+    int num_cols_state = get_num_cols_effective();
+    int num_cols_view = get_num_cols_effective(v);
     double crp_log_delta = numerics::calc_cluster_crp_logp(
-        view_column_count, num_columns, column_crp_alpha);
+        num_cols_view, num_cols_state, column_crp_alpha);
     return crp_log_delta;
 }
 
@@ -1041,28 +1041,28 @@ vector<double> State::calc_feature_view_data_logps(
 
 double State::calc_column_crp_marginal() const
 {
-    vector<int> view_counts = get_view_counts();
-    int num_cols = get_num_cols_effective();
-    return numerics::calc_crp_alpha_conditional(view_counts, column_crp_alpha,
-            num_cols, true);
+    int num_cols_state = get_num_cols_effective();
+    vector<int> num_cols_views = get_view_counts();
+    return numerics::calc_crp_alpha_conditional(
+        num_cols_views, column_crp_alpha, num_cols_state, true);
 }
 
 vector<double> State::calc_column_crp_marginals(const vector<double>
     &alphas_to_score)
 const
 {
-    vector<int> view_counts = get_view_counts();
+    int num_cols_state = get_num_cols_effective();
+    vector<int> num_cols_views = get_view_counts();
     vector<double> crp_scores;
+
     vector<double>::const_iterator it = alphas_to_score.begin();
-    int num_cols = get_num_cols_effective();
     for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
-        double this_crp_score = numerics::calc_crp_alpha_conditional(view_counts,
-                alpha_to_score,
-                num_cols,
-                true);
+        double this_crp_score = numerics::calc_crp_alpha_conditional(
+            num_cols_views, alpha_to_score, num_cols_state, true);
         crp_scores.push_back(this_crp_score);
     }
+
     return crp_scores;
 }
 
