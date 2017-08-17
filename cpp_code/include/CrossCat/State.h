@@ -397,28 +397,9 @@ public:
         const View &v,
         const int &global_col_idx) const;
     /**
-     * \return The crp probability of a feature belonging to a particular view.
-     * The effective column counts are passed in to avoid computing them inside
-     * inner loops.
-     */
-    double calc_feature_view_crp_logp(
-        const View &v,
-        const int &num_cols_view,
-        const int &num_cols_state,
-        const int &global_col_idx) const;
-    /**
      * \return The crp probabilities of a feature belonging to each view.
      */
     std::vector<double> calc_feature_view_crp_logps(
-        const int &global_col_idx) const;
-    /**
-     * \return The crp probabilities of a feature belonging to each view. The
-     * effective column counts are passed in to avoid computing them inside
-     * inner loops.
-     */
-    std::vector<double> calc_feature_view_crp_logps(
-        const int &num_cols_state,
-        const std::vector<int> &num_cols_views,
         const int &global_col_idx) const;
     /**
      * \return The probability of feature data under row partition of a particular view
