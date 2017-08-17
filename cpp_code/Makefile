@@ -36,6 +36,7 @@ TEST_NAMES = \
 	test_multinomial_component_model \
 	test_numerics \
 	test_random_number_generator \
+	test_utils \
 	# end of TEST_NAMES
 BROKEN_TEST_NAMES = \
 	test_state \

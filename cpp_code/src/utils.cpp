@@ -480,3 +480,43 @@ void construct_multinomial_base_hyper_grids(int n_grid,
 {
     multinomial_alpha_grid = log_linspace(1., data_num_vectors, n_grid);
 }
+
+int get_vector_num_blocks(
+    const vector<int> &vec,
+    const map<int, set<int> > &block_lookup)
+{
+
+    // Each item is in its own singleton block.
+    if (block_lookup.size() == 0) {
+        return vec.size();
+    }
+
+    int num_items_raw = vec.size();
+    int num_items_effective = num_items_raw;
+
+    set<int> seen_items;
+
+    vector<int>::const_iterator it;
+    for (it = vec.begin(); it != vec.end(); ++it) {
+        int item = *it;
+        // Column is not member of a block, continue.
+        if (block_lookup.count(item) == 0)
+            continue;
+        // Column already seen as part of another block, continue.
+        if (seen_items.count(item) == 1)
+            continue;
+        // Item is a member of a block. Find all other members, add them to
+        // seen_items, and decrement the effective number of items. Each item is
+        // expected to be in its own block, decrement by number of other items
+        // (items_in_block.size() - 1).
+        set<int> items_in_block = get(block_lookup, item);
+        seen_items.insert(items_in_block.begin(), items_in_block.end());
+        num_items_effective = num_items_effective - (items_in_block.size() - 1);
+    }
+
+    assert(num_items_effective >= 0);
+    if (num_items_raw > 0)
+        assert(num_items_effective > 0);
+
+    return num_items_effective;
+}

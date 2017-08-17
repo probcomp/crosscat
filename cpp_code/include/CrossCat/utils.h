@@ -301,6 +301,11 @@ void construct_multinomial_base_hyper_grids(int n_grid,
     int data_num_vectors,
     std::vector<double> &multinomial_alpha_grid);
 
+// See test_utils.test_get_vector_num_blocks for explanation.
+int get_vector_num_blocks(
+    const std::vector<int> &vec,
+    const std::map<int, std::set<int> > &block_lookup);
+
 template <class T>
 matrix<T> vector_to_matrix(const std::vector<T> &vT)
 {
