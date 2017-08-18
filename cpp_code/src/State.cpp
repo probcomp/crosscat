@@ -437,7 +437,7 @@ double State::transition_features(
         // Get the feature_idx to be transitioned.
         int feature_idx = *it;
 
-        // Select the transition kernel.
+        // Kernel selection Gibbs.
         if (ct_kernel == 0) {
             // Retrieve other features in this block.
             vector<int> feature_idxs = get_column_dependencies(feature_idx);
@@ -453,6 +453,10 @@ double State::transition_features(
                 score_delta += transition_feature_gibbs(
                     feature_idx, feature_data);
             }
+        // Kernel selection MH.
+        // XXX TODO: Rewrite the control flow to check if doing a block
+        // transition, and raise an error if trying to use MH on a blocked
+        // variable.
         } else if (ct_kernel == 1) {
             // For MH, transition the feature alone without dependent features.
             vector<double> feature_data = extract_col(data, feature_idx);
