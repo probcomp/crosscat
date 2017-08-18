@@ -439,20 +439,12 @@ double State::transition_features(
 
         // Select the transition kernel.
         if (ct_kernel == 0) {
-            // Retrieve other features in this block.
+            // For Gibbs, transition feature and all its dependent features.
             vector<int> feature_idxs = get_column_dependencies(feature_idx);
-            // Do a block transition.
-            if (feature_idxs.size() > 1) {
-                vector<vector<double> > feature_datas = extract_cols(
-                    data, feature_idxs);
-                score_delta += transition_feature_block_gibbs(
-                    feature_idxs, feature_datas);
-            // Do a single column transition.
-            } else {
-                vector<double> feature_data = extract_col(data, feature_idx);
-                score_delta += transition_feature_gibbs(
-                    feature_idx, feature_data);
-            }
+            vector<vector<double> > feature_datas = extract_cols(data,
+                feature_idxs);
+            score_delta += transition_feature_block_gibbs(
+                feature_idxs, feature_datas);
         } else if (ct_kernel == 1) {
             // For MH, transition the feature alone without dependent features.
             vector<double> feature_data = extract_col(data, feature_idx);
