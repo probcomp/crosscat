@@ -222,7 +222,7 @@ double State::sample_insert_feature_block(
         unorm_predictive_logps, rand_u);
     View &which_view = get_view(draw);
 
-    // Insert the features in the and aggregate the score_delta.
+    // Insert features in the block and aggregate the score_delta.
     double score_delta = 0;
     for (size_t i = 0; i < feature_idxs.size(); ++i){
         score_delta += insert_feature(
