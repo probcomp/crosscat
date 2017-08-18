@@ -44,6 +44,7 @@ public:
         const std::vector<std::vector<int> > &row_partitioning,
         const std::vector<int> &global_row_indices,
         const std::vector<int> &global_col_indices,
+        const int &num_cols_effective,
         std::map<int, CM_Hypers> &hypers_m,
         const std::vector<double> &ROW_CRP_ALPHA_GRID,
         const std::vector<double> &MULTINOMIAL_ALPHA_GRID,
@@ -87,6 +88,7 @@ public:
     // getters (external use)
     double get_num_vectors() const;
     double get_num_cols() const;
+    int get_num_cols_effective() const;
     int get_num_clusters() const;
     double get_crp_score() const;
     double get_data_score() const;
@@ -162,6 +164,8 @@ public:
     double transition_hypers_i(int which_col);
     double transition_hypers();
     double transition(const std::map<int, std::vector<double> > &row_data_map);
+    void increment_num_cols_effective();
+    void decrement_num_cols_effective();
     //
     // data structures
     std::vector<Cluster *> clusters;
@@ -190,6 +194,7 @@ private:
     double crp_alpha;
     double crp_score;
     double data_score;
+    int num_cols_effective;
     std::map<int, std::string> global_col_datatypes;
     //  grids
     std::vector<double> crp_alpha_grid;

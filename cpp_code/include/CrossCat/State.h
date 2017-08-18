@@ -130,6 +130,11 @@ public:
      */
     int get_num_cols() const;
     /**
+     * \return The number of effective columns in the state, treating each block
+     * of dependent columns as a single column
+     */
+    int get_num_cols_effective() const;
+    /**
      * \return The number of views (column partitions)
      */
     int get_num_views() const;
@@ -469,6 +474,7 @@ private:
     // column structure ensure
     std::map<int, std::set<int> > column_dependencies;
     std::map<int, std::set<int> > column_independencies;
+    int num_cols_effective;
     // grids
     std::vector<double> column_crp_alpha_grid;
     std::vector<double> row_crp_alpha_grid;
@@ -486,6 +492,8 @@ private:
     // sub-objects
     RandomNumberGenerator rng;
     // resources
+    void increment_num_cols_effective();
+    void decrement_num_cols_effective();
     void construct_base_hyper_grids(const matrix<double> &
         data, int N_GRID,
         std::vector<double> ROW_CRP_ALPHA_GRID,

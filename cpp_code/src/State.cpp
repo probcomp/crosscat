@@ -50,6 +50,8 @@ State::State(const MatrixD &data,
     data_score = 0;
     column_dependencies = col_ensure_dep;
     column_independencies = col_ensure_ind;
+    num_cols_effective = get_vector_num_blocks(
+        global_col_indices, column_dependencies);
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -88,6 +90,7 @@ State::State(const MatrixD &data,
     if (row_initialization == "") {
         row_initialization = col_initialization;
     }
+    num_cols_effective = global_col_indices.size();
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -122,6 +125,11 @@ State::~State()
 int State::get_num_cols() const
 {
     return view_lookup.size();
+}
+
+int State::get_num_cols_effective() const
+{
+    return num_cols_effective;
 }
 
 int State::get_num_views() const
@@ -310,6 +318,10 @@ double State::transition_feature_block_gibbs(
         (current_view.get_num_cols() == feature_idxs.size())
         ? current_view : get_new_view();
 
+    // Decrement the effective num cols.
+    decrement_num_cols_effective();
+    current_view.decrement_num_cols_effective();
+
     // Remove the other dependent feature_idxs.
     for (size_t i = 0; i < feature_idxs.size(); ++i) {
         score_delta += remove_feature(feature_idxs[i], feature_datas[i]);
@@ -318,6 +330,10 @@ double State::transition_feature_block_gibbs(
     // Sample a new view for the feature block.
     score_delta += sample_insert_feature_block(
         feature_idxs, feature_datas, singleton_view);
+
+    // Increment the effective num cols.
+    increment_num_cols_effective();
+    view_lookup.find(feature_idxs[0])->second->increment_num_cols_effective();
 
     return score_delta;
 }
@@ -358,8 +374,11 @@ double State::mh_choose(int feature_idx,
         // short circuit: no impact
         return 0;
     }
-    // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
+    // Decrement the effective number of columns.
+    decrement_num_cols_effective();
+    original_view.decrement_num_cols_effective();
+    // remove feature from model; get score delta to choose current view
     double original_view_score_delta = remove_feature(feature_idx, feature_data,
             p_singleton_view);
     score_delta = original_view_score_delta;
@@ -387,6 +406,9 @@ double State::mh_choose(int feature_idx,
         p_insert_into = &original_view;
     }
     score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
+    // Increment the effective number of columns.
+    increment_num_cols_effective();
+    p_insert_into->decrement_num_cols_effective();
     // clean up
     bool original_was_not_singleton = &original_view != &singleton_view;
     remove_if_empty(original_view);
@@ -857,8 +879,8 @@ double State::calc_feature_view_crp_logp(
     // Compute CRP log probability.
     // XXX We need to compute the "effective" number of columns, which is the
     // number of column cliques (including cliques of size one).
-    int view_column_count = v.get_num_cols();
-    int num_columns = get_num_cols();
+    int view_column_count = v.get_num_cols_effective();
+    int num_columns = get_num_cols_effective();
     double crp_log_delta = numerics::calc_cluster_crp_logp(
         view_column_count, num_columns, column_crp_alpha);
     return crp_log_delta;
@@ -1022,7 +1044,7 @@ vector<double> State::calc_feature_view_data_logps(
 double State::calc_column_crp_marginal() const
 {
     vector<int> view_counts = get_view_counts();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     return numerics::calc_crp_alpha_conditional(view_counts, column_crp_alpha,
             num_cols, true);
 }
@@ -1034,7 +1056,7 @@ const
     vector<int> view_counts = get_view_counts();
     vector<double> crp_scores;
     vector<double>::const_iterator it = alphas_to_score.begin();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
         double this_crp_score = numerics::calc_crp_alpha_conditional(view_counts,
@@ -1099,6 +1121,16 @@ double State::transition(const MatrixD &data)
         }
     }
     return score_delta;
+}
+
+void State::increment_num_cols_effective()
+{
+    num_cols_effective++;
+}
+
+void State::decrement_num_cols_effective()
+{
+    num_cols_effective--;
 }
 
 void State::construct_base_hyper_grids(const MatrixD &data, int N_GRID,
@@ -1263,6 +1295,8 @@ void State::init_views(const MatrixD &data,
     int num_views = column_partition.size();
     for (int view_idx = 0; view_idx < num_views; view_idx++) {
         vector<int> column_indices = column_partition[view_idx];
+        int num_cols_effective = get_vector_num_blocks(
+            column_indices, get_column_dependencies());
         vector<vector<int> > row_partition = row_partition_v[view_idx];
         double row_crp_alpha = row_crp_alpha_v[view_idx];
         const MatrixD data_subset = extract_columns(data, column_indices);
@@ -1270,6 +1304,7 @@ void State::init_views(const MatrixD &data,
             global_col_datatypes,
             row_partition,
             global_row_indices, column_indices,
+            num_cols_effective,
             hypers_m,
             row_crp_alpha_grid,
             multinomial_alpha_grid, r_grid, nu_grid,
