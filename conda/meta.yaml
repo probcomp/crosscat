@@ -1,0 +1,34 @@
+package:
+  name: crosscat
+  version: {{ CONDA_PACKAGE_VERSION }}
+
+source:
+  path: ../
+
+build:
+  script: python setup.py install
+
+requirements:
+  build:
+    - git
+    - python 2.7.*
+    - cython >=0.20.1
+    - matplotlib
+    - numpy 1.8.*
+  run:
+    - matplotlib
+    - numpy 1.8.*
+    - scipy >=0.13.3
+    - six
+
+test:
+  requires:
+    - python 2.7.*
+    - pytest 2.5.1.*
+  commands:
+    - python -m pytest --pyargs crosscat
+
+about:
+  home: https://github.com/probcomp/crosscat
+  license: Apache
+  license_file: LICENSE
