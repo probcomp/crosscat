@@ -1,0 +1,14 @@
+language: python
+sudo: required
+dist: trusty
+branches:
+  only:
+  - travis
+
+python:
+  - 2.7
+before_install:
+  - pip install -r requirements.txt
+  - python setup.py build
+  - python setup.py install
+script: ./check.sh
