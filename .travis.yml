@@ -1,5 +1,4 @@
 language: python
-sudo: required
 dist: trusty
 branches:
   only:
@@ -7,11 +6,7 @@ branches:
 
 python:
   - 2.7
-virtualenv:
-    system_site_package: true
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install -qq python-matplotlib python-numpy python-pandas python-pytest python-scipy python-sklearn python-statsmodels
   - pip install -r requirements.txt
 install:
   - python setup.py build
