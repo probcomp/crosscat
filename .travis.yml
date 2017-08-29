@@ -13,6 +13,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -qq python-matplotlib python-numpy python-pandas python-pytest python-scipy python-sklearn python-statsmodels
   - pip install -r requirements.txt
+install:
   - python setup.py build
   - python setup.py install
 script: ./check.sh
