@@ -838,20 +838,38 @@ double State::transition_row_partition_hyperparameters(const vector<int> &
 double State::transition_column_hyperparameters(vector<int> which_cols)
 {
     double score_delta = 0;
-    //
+
+    // Use all columns by default.
     int num_cols = which_cols.size();
     if (num_cols == 0) {
         num_cols = view_lookup.size();
         which_cols = create_sequence(num_cols);
         random_shuffle(which_cols.begin(), which_cols.end(), rng);
     }
+
+    // Run the transitions.
     vector<int>::const_iterator it;
     for (it = which_cols.begin(); it != which_cols.end(); ++it) {
-        View &which_view = *view_lookup[*it];
-        // FIXME: this is a hack, global_to_local should be private and a getter should be used instead
-        int local_col_idx = which_view.global_to_local[*it];
-        score_delta += which_view.transition_hypers_i(local_col_idx);
+
+        // Retrieve the target column.
+        int target_col = *it;
+        View &which_view = *(view_lookup[target_col]);
+
+        // Get the dependent columns.
+        vector<int> dependent_cols = get_column_dependencies(target_col);
+
+        // XXX FIXME Run transitions for column and all its dependent columns.
+        // There will be duplication here if which_cols contains all columns.
+        // The current usage pattern in panelcat is only specifying one column
+        // in the block to transition, so this will suffice as a hack for now.
+        vector<int>::const_iterator itt;
+        for (itt = dependent_cols.begin(); itt != dependent_cols.end(); ++itt){
+            int col_idx = *itt;
+            int local_col_idx = which_view.global_to_local[col_idx];
+            score_delta += which_view.transition_hypers_i(local_col_idx);
+        }
     }
+
     data_score += score_delta;
     return score_delta;
 }
