@@ -309,8 +309,6 @@ setup(
     url='https://github.com/probcomp/crosscat',
     long_description=long_description,
     packages=packages,
-    install_requires=[
-    ],
     package_dir={
         'crosscat': 'src',
         'crosscat.cython_code': 'src/cython_code',
