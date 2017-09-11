@@ -16,6 +16,7 @@ requirements:
   run:
     - numpy >=1.7.0
     - six
+    - cgpm
 
 test:
   requires:
@@ -24,7 +25,7 @@ test:
   imports:
     - cgpm
   commands:
-    - python -m pytest --pyargs cgpm -k "not __ci_"
+    - python -m pytest --pyargs crosscat
 
 about:
   home: https://github.com/probcomp/crosscat
