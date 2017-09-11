@@ -310,9 +310,6 @@ setup(
     long_description=long_description,
     packages=packages,
     install_requires=[
-        'cython>=0.20.1',
-        'numpy>=1.7.0',
-        'six',
     ],
     package_dir={
         'crosscat': 'src',
