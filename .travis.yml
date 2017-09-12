@@ -15,7 +15,7 @@ install:
   - conda update -q conda
   - conda install conda-build
   - conda install -c probcomp 'cgpm'
-script: conda build --numpy 1.8.1 .
+script: conda build .
 after_success:
   - conda install anaconda-client
   - anaconda -t $CONDA_UPLOAD_TOKEN upload -u $CONDA_USER ~/miniconda/conda-bld/linux-64/crosscat-*.tar.bz2 --force
