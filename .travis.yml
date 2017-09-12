@@ -14,7 +14,6 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda install conda-build
-  - conda install -c probcomp 'cgpm'
   - conda install 'numpy=1.8.1'
 script: conda build .
 after_success:
