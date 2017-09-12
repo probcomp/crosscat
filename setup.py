@@ -318,10 +318,14 @@ setup(
         'crosscat.tests.unit_tests': 'src/tests/unit_tests',
         'crosscat.utils': 'src/utils',
     },
+    tests_require=[
+        'pytest',
+    ],
     ext_modules=ext_modules,
     cmdclass={
         'build_ext': build_ext,
         'build_py': local_build_py,
         'sdist': local_sdist,
     },
+    zip_safe=False,
 )
