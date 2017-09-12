@@ -309,11 +309,6 @@ setup(
     url='https://github.com/probcomp/crosscat',
     long_description=long_description,
     packages=packages,
-    install_requires=[
-        'cython>=0.20.1',
-        'numpy>=1.7.0',
-        'six',
-    ],
     package_dir={
         'crosscat': 'src',
         'crosscat.cython_code': 'src/cython_code',
@@ -323,10 +318,14 @@ setup(
         'crosscat.tests.unit_tests': 'src/tests/unit_tests',
         'crosscat.utils': 'src/utils',
     },
+    tests_require=[
+        'pytest',
+    ],
     ext_modules=ext_modules,
     cmdclass={
         'build_ext': build_ext,
         'build_py': local_build_py,
         'sdist': local_sdist,
     },
+    zip_safe=False,
 )
