@@ -13,11 +13,11 @@ requirements:
     - git
     - python 2.7.*
     - cython >=0.20.1
+    - cgpm
   run:
     - numpy >=1.7.0
     - scipy >=0.11.0
     - six
-    - cgpm
 
 test:
   requires:
