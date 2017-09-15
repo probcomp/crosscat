@@ -14,7 +14,11 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda install conda-build
-script: conda build .
+script:
+  - export CONDA_PACKAGE_VERSION="$(git describe --exact match 2> /dev/null || git describe | sed 's/^v\([^-]*\).*/\1_dev/')"
+  - conda build . -c probcomp
+  - conda install crosscat --use-local
+
 after_success:
   - conda install anaconda-client
   - anaconda -t $CONDA_UPLOAD_TOKEN upload -u $CONDA_USER ~/miniconda/conda-bld/linux-64/crosscat-*.tar.bz2 --force

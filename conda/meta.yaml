@@ -1,6 +1,7 @@
 package:
   name: crosscat
-  version: "0.1"
+  version: {{ CONDA_PACKAGE_VERSION }}
+
 
 source:
   path: ../
