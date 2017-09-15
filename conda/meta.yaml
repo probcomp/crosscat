@@ -2,7 +2,6 @@ package:
   name: crosscat
   version: {{ CONDA_PACKAGE_VERSION }}
 
-
 source:
   path: ../
 
