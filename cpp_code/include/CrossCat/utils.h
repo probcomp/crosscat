@@ -89,6 +89,9 @@ std::vector<double> linspace(double a, double b, size_t n);
 std::vector<double> log_linspace(double a, double b, size_t n);
 std::vector<int> create_sequence(size_t len, int start = 0);
 
+std::vector<double> std_vector_divide_elemwise(
+    const std::vector<double> &vec, const double &val);
+
 std::vector<double> std_vector_add(const std::vector<double> &vec1,
     const std::vector<double> &vec2);
 std::vector<double> std_vector_add(const std::vector<std::vector<double> >
@@ -99,6 +102,8 @@ double std_vector_mean(const std::vector<double> &vec);
 double calc_sum_sq_deviation(const std::vector<double> &values);
 std::vector<double> extract_row(const MatrixD &data, int row_idx);
 std::vector<double> extract_col(const MatrixD &data, int col_idx);
+std::vector<std::vector<double> > extract_cols(
+    const MatrixD &data, std::vector<int> &col_idxs);
 
 template <class T>
 std::vector<T> append(const std::vector<T> &vec1, const std::vector<T> &vec2)
@@ -223,6 +228,18 @@ std::map<T, int> set_to_map(const std::set<T> &in_set)
 }
 
 template <class T>
+std::set<T> array_to_set(size_t num_items, T *arr) {
+    std::set<T> out_set;
+    for (size_t i = 0; i < num_items; i++){
+        T next_item = *arr;
+        out_set.insert(next_item);
+        arr++;
+    }
+    return out_set;
+}
+
+
+template <class T>
 std::map<T, int> vector_to_map(const std::vector<T> &in_vector)
 {
     std::map<T, int> out_map;
@@ -295,6 +312,11 @@ void construct_cyclic_specific_hyper_grid(int n_grid,
 void construct_multinomial_base_hyper_grids(int n_grid,
     int data_num_vectors,
     std::vector<double> &multinomial_alpha_grid);
+
+// See test_utils.test_get_vector_num_blocks for explanation.
+int get_vector_num_blocks(
+    const std::vector<int> &vec,
+    const std::map<int, std::set<int> > &block_lookup);
 
 template <class T>
 matrix<T> vector_to_matrix(const std::vector<T> &vT)

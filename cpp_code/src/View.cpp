@@ -30,6 +30,7 @@ View::View(const MatrixD &data,
     const vector<vector<int> > &row_partitioning,
     const vector<int> &global_row_indices,
     const vector<int> &global_col_indices,
+    const int &NUM_COLS_EFFECTIVE,
     map<int, CM_Hypers> &hypers_m,
     const vector<double> &ROW_CRP_ALPHA_GRID,
     const vector<double> &MULTINOMIAL_ALPHA_GRID,
@@ -46,6 +47,7 @@ View::View(const MatrixD &data,
     crp_score = 0;
     data_score = 0;
     global_col_datatypes = GLOBAL_COL_DATATYPES;
+    num_cols_effective = NUM_COLS_EFFECTIVE;
     //
     crp_alpha_grid = ROW_CRP_ALPHA_GRID;
     multinomial_alpha_grid = MULTINOMIAL_ALPHA_GRID;
@@ -117,6 +119,7 @@ View::View(const map<int, string> &GLOBAL_COL_DATATYPES,
     crp_score = 0;
     data_score = 0;
     global_col_datatypes = GLOBAL_COL_DATATYPES;
+    num_cols_effective = 0;
     //
     crp_alpha_grid = ROW_CRP_ALPHA_GRID;
     multinomial_alpha_grid = MULTINOMIAL_ALPHA_GRID;
@@ -142,6 +145,11 @@ double View::get_num_vectors() const
 double View::get_num_cols() const
 {
     return global_to_local.size();
+}
+
+int View::get_num_cols_effective() const
+{
+    return num_cols_effective;
 }
 
 int View::get_num_clusters() const
@@ -487,6 +495,16 @@ double View::transition(const map<int, vector<double> > &row_data_map)
         }
     }
     return score_delta;
+}
+
+void View::increment_num_cols_effective()
+{
+    num_cols_effective++;
+}
+
+void View::decrement_num_cols_effective()
+{
+    num_cols_effective--;
 }
 
 double View::calc_column_predictive_logp(const vector<double> &column_data,

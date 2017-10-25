@@ -123,10 +123,17 @@ public:
     //
     std::map<int, std::set<int> > get_column_dependencies() const;
     std::map<int, std::set<int> > get_column_independencies() const;
+    std::vector<int> get_column_dependencies(int feature_idx) const;
+    std::vector<int> get_column_independencies(int feature_idx) const;
     /**
      * \return The number of columns in the state
      */
     int get_num_cols() const;
+    /**
+     * \return The number of effective columns in the state, treating each block
+     * of dependent columns as a single column
+     */
+    int get_num_cols_effective() const;
     /**
      * \return The number of views (column partitions)
      */
@@ -239,6 +246,17 @@ public:
         const std::vector<double> &feature_data,
         View &singleton_view);
     /**
+     * Gibbs sample which view to insert the feature block into.
+     * \param feature_idxs The column indexes that the view should associate with the data.
+     * \param feature_datas The vector of data that comprises the features.
+     * \param singleton_view A reference to an empty view to allow for creation of new views.
+     *        Deleted internally if not used.
+     */
+    double sample_insert_feature_block(
+        const std::vector<int> &feature_idxs,
+        const std::vector<std::vector<double> > &feature_datas,
+        View &singleton_view);
+    /**
      * Remove a feature from the state.
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
@@ -250,12 +268,28 @@ public:
         const std::vector<double> &feature_data,
         View *&p_singleton_view);
     /**
+     * Remove a feature from the state.
+     * \param feature_idx The column index that the view should associaate with the data
+     * \param feature_data The data that comprises the feature
+     */
+    double remove_feature(
+        int feature_idx,
+        const std::vector<double> &feature_data);
+    /**
      * Gibbs sample a feature among the views, possibly creating a new view
      * \param feature_idx The column index that the view should associaate with the data
      * \param feature_data The data that comprises the feature
      */
     double transition_feature_gibbs(int feature_idx,
         const std::vector<double> &feature_data);
+    /**
+     * Gibbs sample a block of dependent features among the views, possibly creating a new view
+     * \param feature_idxs The column indexes that the view should associate with the data
+     * \param feature_datas The vector of data that comprises the features
+     */
+    double transition_feature_block_gibbs(
+        const std::vector<int> &feature_idxs,
+        const std::vector<std::vector<double> > &feature_datas);
     /**
      * Helper for transition_feature_mh
      * \param feature_idx The column index that the view should associaate with the data
@@ -352,9 +386,36 @@ public:
     //
     // calculators
     /**
+     * \return The crp probability of a feature belonging to a particular view
+     */
+    double calc_feature_view_crp_logp(
+        const View &v,
+        const int &global_col_idx) const;
+    /**
+     * \return The crp probabilities of a feature belonging to each view.
+     */
+    std::vector<double> calc_feature_view_crp_logps(
+        const int &global_col_idx) const;
+    /**
+     * \return The probability of feature data under row partition of a particular view
+     */
+    double calc_feature_view_data_logp(
+        const std::vector<double> &col_data,
+        const std::string &col_datatype,
+        const View &v,
+        const CM_Hypers &hypers,
+        const int &global_col_idx) const;
+    /**
+     * \return The probability of feature data under row partition of each view.
+     */
+    std::vector<double> calc_feature_view_data_logps(
+        const std::vector<double> &col_data,
+        const int &global_col_idx) const;
+    /**
      * \return The predictive log likelihood of a feature belonging to a particular view
      */
-    double calc_feature_view_predictive_logp(const std::vector<double> &col_data,
+    double calc_feature_view_predictive_logp(
+        const std::vector<double> &col_data,
         const std::string &col_datatype,
         const View &v,
         double &crp_log_delta,
@@ -364,15 +425,26 @@ public:
     /**
      * \return The predictive log likelihoods of a feature belonging to each view
      */
-    std::vector<double> calc_feature_view_predictive_logps(const
-        std::vector<double> &
-        col_data, int global_col_idx) const;
+    std::vector<double> calc_feature_view_predictive_logps(
+        const std::vector<double> &col_data,
+        int global_col_idx) const;
+    /**
+     * \return The predictive log likelihoods of a feature block belonging to each view.
+     */
+    std::vector<double> calc_feature_view_predictive_logps_block(
+        const std::vector<int> &feature_idxs,
+        const std::vector<std::vector<double> > &feature_datas) const;
     /**
      * \return The predictive log likelihood of a row having been generated by this state
      */
     double calc_row_predictive_logp(const std::vector<double> &in_vd);
     //
     // helpers
+    /**
+     * \return true if view contains a column which is independent of global_col_idx.
+     */
+    bool view_violates_independency(
+        const View &view, const int &global_col_idx) const;
     /**
      * \return The log likelihood of the column CRP hyperparmeter value
      * given the state's column partitioning and the hyperprior on alpha
@@ -402,6 +474,7 @@ private:
     // column structure ensure
     std::map<int, std::set<int> > column_dependencies;
     std::map<int, std::set<int> > column_independencies;
+    int num_cols_effective;
     // grids
     std::vector<double> column_crp_alpha_grid;
     std::vector<double> row_crp_alpha_grid;
@@ -419,6 +492,8 @@ private:
     // sub-objects
     RandomNumberGenerator rng;
     // resources
+    void increment_num_cols_effective();
+    void decrement_num_cols_effective();
     void construct_base_hyper_grids(const matrix<double> &
         data, int N_GRID,
         std::vector<double> ROW_CRP_ALPHA_GRID,

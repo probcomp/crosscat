@@ -89,7 +89,7 @@ def bincount(X, bins=None):
                 raise ValueError('X should be a vector')
 
     Y = numpy.array(X, dtype=int)
-    if bins == None:
+    if bins is None:
         minval = numpy.min(Y)
         maxval = numpy.max(Y)
 

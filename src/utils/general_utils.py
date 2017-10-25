@@ -30,6 +30,8 @@ import threading
 import math
 import six
 
+from . import unionfind
+
 #http://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
@@ -200,3 +202,17 @@ def logmeanexp(array):
     #   = log(sum(map(exp, logprobs))) - log(len(logprobs))
     #   = logsumexp(logprobs) - log(len(logprobs))
     return logsumexp(noninfs) - math.log(len(array))
+
+def get_scc_from_tuples(constraints):
+    """Given set of equivalences, return map of transitive equivalence classes.
+
+    >> constraints = [(1,2), (2,3)]
+    >> get_scc_from_tuples(constraints)
+    {
+        1: (1, 2, 3),
+        2: (1, 2, 3),
+        3: (1, 2, 3),
+    }
+    """
+    classes = unionfind.classes(constraints)
+    return dict((x, tuple(c)) for x, c in classes.iteritems())

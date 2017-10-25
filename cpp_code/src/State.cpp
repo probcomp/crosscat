@@ -50,6 +50,8 @@ State::State(const MatrixD &data,
     data_score = 0;
     column_dependencies = col_ensure_dep;
     column_independencies = col_ensure_ind;
+    num_cols_effective = get_vector_num_blocks(
+        global_col_indices, column_dependencies);
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -88,6 +90,7 @@ State::State(const MatrixD &data,
     if (row_initialization == "") {
         row_initialization = col_initialization;
     }
+    num_cols_effective = global_col_indices.size();
     global_col_datatypes = construct_lookup_map(global_col_indices,
             GLOBAL_COL_DATATYPES);
     global_col_multinomial_counts = construct_lookup_map(global_col_indices,
@@ -122,6 +125,11 @@ State::~State()
 int State::get_num_cols() const
 {
     return view_lookup.size();
+}
+
+int State::get_num_cols_effective() const
+{
+    return num_cols_effective;
 }
 
 int State::get_num_views() const
@@ -207,10 +215,36 @@ double State::sample_insert_feature(int feature_idx,
     return score_delta;
 }
 
+double State::sample_insert_feature_block(
+    const vector<int> &feature_idxs,
+    const vector<vector<double> > &feature_datas,
+    View &singleton_view)
+{
 
-double State::remove_feature(int feature_idx,
-    const vector<double> &feature_data,
-    View *&p_singleton_view)
+    // Get the predictive logps of the block under each view.
+    vector<double> unorm_predictive_logps =
+        calc_feature_view_predictive_logps_block(feature_idxs, feature_datas);
+
+    double rand_u = draw_rand_u();
+    int draw = numerics::draw_sample_unnormalized(
+        unorm_predictive_logps, rand_u);
+    View &which_view = get_view(draw);
+
+    // Insert features in the block and aggregate the score_delta.
+    double score_delta = 0;
+    for (size_t i = 0; i < feature_idxs.size(); ++i){
+        score_delta += insert_feature(
+            feature_idxs[i], feature_datas[i], which_view);
+    }
+
+    // Clear out the singleton view if necessary.
+    remove_if_empty(singleton_view);
+
+    return score_delta;
+}
+
+double State::remove_feature(
+    int feature_idx, const vector<double> &feature_data)
 {
     string col_datatype = global_col_datatypes[feature_idx];
     CM_Hypers &hypers = hypers_m[feature_idx];
@@ -218,25 +252,41 @@ double State::remove_feature(int feature_idx,
     assert(it != view_lookup.end());
     View &which_view = *(it->second);
     view_lookup.erase(it);
-    int view_num_cols = which_view.get_num_cols();
     double data_logp_delta = which_view.remove_col(feature_idx);
     double crp_logp_delta, other_data_logp_delta;
-    double score_delta = calc_feature_view_predictive_logp(feature_data,
-            col_datatype,
-            which_view,
-            crp_logp_delta,
-            other_data_logp_delta,
-            hypers,
-            feature_idx);
-    //
-    if (view_num_cols == 1) {
+    double score_delta = calc_feature_view_predictive_logp(
+        feature_data,
+        col_datatype,
+        which_view,
+        crp_logp_delta,
+        other_data_logp_delta,
+        hypers,
+        feature_idx);
+    column_crp_score -= crp_logp_delta;
+    data_score -= data_logp_delta;
+    assert(abs(other_data_logp_delta - data_logp_delta) < 1E-6);
+    return score_delta;
+}
+
+double State::remove_feature(
+    int feature_idx,
+    const vector<double> &feature_data,
+    View *&p_singleton_view)
+{
+    // Retrieve current view of feature_idx.
+    map<int, View *>::iterator it = view_lookup.find(feature_idx);
+    assert(it != view_lookup.end());
+    View &which_view = *(it->second);
+
+    // If current view is already a singleton then reuse it.
+    if (which_view.get_num_cols() == 1) {
         p_singleton_view = &which_view;
     } else {
         p_singleton_view = &get_new_view();
     }
-    column_crp_score -= crp_logp_delta;
-    data_score -= data_logp_delta;
-    assert(abs(other_data_logp_delta - data_logp_delta) < 1E-6);
+
+    // Remove the feature.
+    double score_delta = remove_feature(feature_idx, feature_data);
     return score_delta;
 }
 
@@ -248,6 +298,43 @@ double State::transition_feature_gibbs(int feature_idx,
     score_delta += remove_feature(feature_idx, feature_data, p_singleton_view);
     View &singleton_view = *p_singleton_view;
     score_delta += sample_insert_feature(feature_idx, feature_data, singleton_view);
+    return score_delta;
+}
+
+double State::transition_feature_block_gibbs(
+    const vector<int> &feature_idxs,
+    const vector<vector<double> > &feature_datas)
+{
+    double score_delta = 0;
+
+    // Retrieve the current view of feature_idxs[0]. They should all be in
+    // the same view, since we are transitioning features which are dependent.
+    map<int, View *>::iterator it = view_lookup.find(feature_idxs[0]);
+    View &current_view = *(it->second);
+
+    // If current view only contains feature_idxs, then reuse it.
+    // Otherwise create a new singleton view as the proposal.
+    View &singleton_view =
+        (current_view.get_num_cols() == feature_idxs.size())
+        ? current_view : get_new_view();
+
+    // Decrement the effective num cols.
+    decrement_num_cols_effective();
+    current_view.decrement_num_cols_effective();
+
+    // Remove the other dependent feature_idxs.
+    for (size_t i = 0; i < feature_idxs.size(); ++i) {
+        score_delta += remove_feature(feature_idxs[i], feature_datas[i]);
+    }
+
+    // Sample a new view for the feature block.
+    score_delta += sample_insert_feature_block(
+        feature_idxs, feature_datas, singleton_view);
+
+    // Increment the effective num cols.
+    increment_num_cols_effective();
+    view_lookup.find(feature_idxs[0])->second->increment_num_cols_effective();
+
     return score_delta;
 }
 
@@ -287,8 +374,11 @@ double State::mh_choose(int feature_idx,
         // short circuit: no impact
         return 0;
     }
-    // remove feature from model; get score delta to choose current view
     View *p_singleton_view;
+    // Decrement the effective number of columns.
+    decrement_num_cols_effective();
+    original_view.decrement_num_cols_effective();
+    // remove feature from model; get score delta to choose current view
     double original_view_score_delta = remove_feature(feature_idx, feature_data,
             p_singleton_view);
     score_delta = original_view_score_delta;
@@ -316,6 +406,9 @@ double State::mh_choose(int feature_idx,
         p_insert_into = &original_view;
     }
     score_delta += insert_feature(feature_idx, feature_data, *p_insert_into);
+    // Increment the effective number of columns.
+    increment_num_cols_effective();
+    p_insert_into->decrement_num_cols_effective();
     // clean up
     bool original_was_not_singleton = &original_view != &singleton_view;
     remove_if_empty(original_view);
@@ -347,29 +440,43 @@ double State::transition_feature_mh(int feature_idx,
     return score_delta;
 }
 
-double State::transition_features(const MatrixD &data,
-    vector<int> which_features)
+double State::transition_features(
+    const MatrixD &data, vector<int> which_features)
 {
+
     double score_delta = 0;
+
+    // Determine which features to transition.
     int num_features = which_features.size();
     if (num_features == 0) {
         which_features = create_sequence(data.size2());
         random_shuffle(which_features.begin(), which_features.end(), rng);
     }
+
     vector<int>::const_iterator it;
     for (it = which_features.begin(); it != which_features.end(); ++it) {
+
+        // Get the feature_idx to be transitioned.
         int feature_idx = *it;
-        vector<double> feature_data = extract_col(data, feature_idx);
-        // kernel selection
+
+        // Select the transition kernel.
         if (ct_kernel == 0) {
-            score_delta += transition_feature_gibbs(feature_idx, feature_data);
+            // For Gibbs, transition feature and all its dependent features.
+            vector<int> feature_idxs = get_column_dependencies(feature_idx);
+            vector<vector<double> > feature_datas = extract_cols(data,
+                feature_idxs);
+            score_delta += transition_feature_block_gibbs(
+                feature_idxs, feature_datas);
         } else if (ct_kernel == 1) {
+            // For MH, transition the feature alone without dependent features.
+            vector<double> feature_data = extract_col(data, feature_idx);
             score_delta += transition_feature_mh(feature_idx, feature_data);
         } else {
             printf("Invalid CT_KERNEL");
             assert(0 == 1);
         }
     }
+
     return score_delta;
 }
 
@@ -516,6 +623,41 @@ std::map<int, std::set<int> > State::get_column_dependencies() const
 std::map<int, std::set<int> > State::get_column_independencies() const
 {
     return column_independencies;
+}
+
+vector<int> State::get_column_dependencies(int feature_idx) const
+{
+    // Prepare the result, and add feature_idx as dependent with itself.
+    vector<int> result;
+    result.push_back(feature_idx);
+    // Add other dependencies, if they exist.
+    map<int, set<int> >::const_iterator deps =
+        column_dependencies.find(feature_idx);
+    if (deps != column_dependencies.end()) {
+        std::set<int>::const_iterator itt;
+        for (itt = deps->second.begin(); itt != deps->second.end(); ++itt) {
+            if (*itt != feature_idx) {
+                result.push_back(*itt);
+            }
+        }
+    }
+    return result;
+}
+
+vector<int> State::get_column_independencies(int feature_idx) const
+{
+    // Prepare the result.
+    vector<int> result;
+    // Add independencies, if they exist.
+    map<int, set<int> >::const_iterator deps =
+        column_independencies.find(feature_idx);
+    if (deps != column_dependencies.end()) {
+        std::set<int>::const_iterator itt;
+        for (itt = deps->second.begin(); itt != deps->second.end(); ++itt) {
+            result.push_back(*itt);
+        }
+    }
+    return result;
 }
 
 vector<vector<int> > State::get_X_D() const
@@ -696,20 +838,41 @@ double State::transition_row_partition_hyperparameters(const vector<int> &
 double State::transition_column_hyperparameters(vector<int> which_cols)
 {
     double score_delta = 0;
-    //
+
+    // Use all columns by default.
     int num_cols = which_cols.size();
     if (num_cols == 0) {
         num_cols = view_lookup.size();
         which_cols = create_sequence(num_cols);
         random_shuffle(which_cols.begin(), which_cols.end(), rng);
     }
+
+    // Run the transitions.
     vector<int>::const_iterator it;
     for (it = which_cols.begin(); it != which_cols.end(); ++it) {
-        View &which_view = *view_lookup[*it];
-        // FIXME: this is a hack, global_to_local should be private and a getter should be used instead
-        int local_col_idx = which_view.global_to_local[*it];
-        score_delta += which_view.transition_hypers_i(local_col_idx);
+
+        // Retrieve the target column.
+        int target_col = *it;
+        View &which_view = *(view_lookup[target_col]);
+
+        // Get the dependent columns.
+        vector<int> dependent_cols = get_column_dependencies(target_col);
+
+        // XXX FIXME Do not transition hypers for all dependent columns.
+        // There will be duplication here if which_cols contains all columns
+        // and there are user-specified dependencies.
+        // The current usage pattern in panelcat, the main user of block
+        // transition, is only specifying one column in each block when cycling
+        // through all kernels. The code below ensures that hyperparameters for
+        // all dependent columns are also being transitioned.
+        vector<int>::const_iterator itt;
+        for (itt = dependent_cols.begin(); itt != dependent_cols.end(); ++itt){
+            int col_idx = *itt;
+            int local_col_idx = which_view.global_to_local[col_idx];
+            score_delta += which_view.transition_hypers_i(local_col_idx);
+        }
     }
+
     data_score += score_delta;
     return score_delta;
 }
@@ -725,74 +888,77 @@ double State::transition_views_col_hypers()
     return score_delta;
 }
 
-double State::calc_feature_view_predictive_logp(const vector<double> &col_data,
-    const string &col_datatype, const View &v,
+double State::calc_feature_view_crp_logp(
+    const View &v,
+    const int &global_col_idx) const
+{
+    // First check whether the view violates independence constraints.
+    // XXX Independence constraints result in non-ergodic chains.
+    if (view_violates_independency(v, global_col_idx)) {
+        return -INFINITY;
+    }
+    // Compute CRP log probability.
+    // XXX We need to compute the "effective" number of columns, which is the
+    // number of column cliques (including cliques of size one).
+    int view_column_count = v.get_num_cols_effective();
+    int num_columns = get_num_cols_effective();
+    double crp_log_delta = numerics::calc_cluster_crp_logp(
+        view_column_count, num_columns, column_crp_alpha);
+    return crp_log_delta;
+}
+
+double State::calc_feature_view_data_logp(
+    const vector<double> &col_data,
+    const string &col_datatype,
+    const View &v,
+    const CM_Hypers &hypers,
+    const int &global_col_idx) const
+{
+    // Compute data log probability.
+    vector<int> data_global_row_indices = create_sequence(col_data.size());
+    double data_log_delta = v.calc_column_predictive_logp(
+        col_data, col_datatype, data_global_row_indices, hypers);
+    return data_log_delta;
+}
+
+double State::calc_feature_view_predictive_logp(
+    const vector<double> &col_data,
+    const string &col_datatype,
+    const View &v,
     double &crp_log_delta,
     double &data_log_delta,
     const CM_Hypers &hypers,
     const int &global_col_idx) const
 {
-    int view_column_count = v.get_num_cols();
-    int num_columns = get_num_cols();
-    crp_log_delta = numerics::calc_cluster_crp_logp(view_column_count, num_columns,
-            column_crp_alpha);
-    //
-    vector<int> data_global_row_indices = create_sequence(col_data.size());
-    // pass singleton_view down to here, or at least hypers
-    data_log_delta = v.calc_column_predictive_logp(col_data, col_datatype,
-            data_global_row_indices,
-            hypers);
-    bool view_violates_dep = false;
-    bool view_violates_ind = false;
-    bool dependencies_for_col = (column_dependencies.find(global_col_idx)
-            != column_dependencies.end());
-    bool independencies_for_col = (column_independencies.find(global_col_idx)
-            != column_independencies.end());
-    if (dependencies_for_col or independencies_for_col) {
-        // Check whether the feature can or cannot belong to this view. If it
-        // violates either column_dependencies or column_independencies, then
-        // delta is log(0).
-        // Get the columns in this view
-        vector<int> cols_in_view;
-        for (map<int, int>::const_iterator it = v.global_to_local.begin();
-            it != v.global_to_local.end(); it++) {
-            cols_in_view.push_back(it->first);
-        }
-        if (dependencies_for_col) {
-            std::set<int>::const_iterator its;
-            // make sure that all the dependencies are satisfied
-            map<int, set<int> >::const_iterator deps = column_dependencies.find(
-                    global_col_idx);
-            for (its = deps->second.begin(); its != deps->second.end(); its++) {
-                if (find(cols_in_view.begin(), cols_in_view.end(), *its) ==
-                    cols_in_view.end()) {
-                    view_violates_dep = true;
-                }
-            }
-        }
-        if (independencies_for_col) {
-            // Make sure that none of the columns in this view are supposed to
-            // be dependent of the column at global_col_idx
-            for (size_t i = 0; i < cols_in_view.size(); ++i) {
-                int col = cols_in_view[i];
-                map<int, set<int> >::const_iterator inds = column_independencies.find(
-                        global_col_idx);
-                if (inds->second.find(col) != inds->second.end()) {
-                    view_violates_ind = true;
-                }
-            }
-        }
-        // Either dependence or independence can be violated but not both, if
-        // the state was initalized properly.
-        assert(!(view_violates_dep and view_violates_ind));
-    }
+    // Return log score delta as sum of data and CRP prior.
+    crp_log_delta = calc_feature_view_crp_logp(v, global_col_idx);
+    data_log_delta = calc_feature_view_data_logp(
+        col_data, col_datatype, v, hypers, global_col_idx);
     double score_delta = data_log_delta + crp_log_delta;
-    if (view_violates_ind or view_violates_dep) {
-        // XXX: I have a feeling that this is going to wreck multinomial draws
-        // due to terrible floating point error.
-        score_delta = -INFINITY;
-    }
     return score_delta;
+}
+
+bool State::view_violates_independency(
+    const View &view, const int &global_col_idx) const
+{
+    // Return false if global_col_idx has no independence constraints.
+    if (column_independencies.count(global_col_idx) == 0){
+        return false;
+    }
+    // Find the independence constraints for global_col_idx.
+    set<int> indeps = column_independencies.find(global_col_idx)->second;
+    // Check whether any columns in the view is a violator.
+    map<int, int>::const_iterator it;
+    for (it = view.global_to_local.begin();
+        it != view.global_to_local.end();
+        ++it) {
+        // Violator found.
+        if (indeps.count(it->first) > 0){
+            return true;
+        }
+    }
+    // No violators found.
+    return false;
 }
 
 vector<double> State::calc_feature_view_predictive_logps(
@@ -818,10 +984,88 @@ vector<double> State::calc_feature_view_predictive_logps(
     return logps;
 }
 
+vector<double> State::calc_feature_view_predictive_logps_block(
+    const vector<int> &feature_idxs,
+    const vector<vector<double> > &feature_datas) const
+{
+    // Prepare vector of crp_logp and data_logp for each feature_idx.
+    vector<vector<double> > unorm_crp_logps_all;
+    vector<vector<double> > unorm_data_logps_all;
+
+    // Compute crp_logp and data_logp for each feature.
+    for (size_t i = 0; i < feature_idxs.size(); ++i) {
+        string col_datatype = get(global_col_datatypes, feature_idxs[i]);
+        vector<double> crp_logps = calc_feature_view_crp_logps(feature_idxs[i]);
+        vector<double> data_logps = calc_feature_view_data_logps(
+            feature_datas[i], feature_idxs[i]);
+        unorm_crp_logps_all.push_back(crp_logps);
+        unorm_data_logps_all.push_back(data_logps);
+    }
+
+    // Sum the data_logps across the features.
+    vector<double> unorm_data_logps_sum = std_vector_add(unorm_data_logps_all);
+
+    // Sum and then average the crp_logps across the features.
+    // 1. We expect that uncorm_crp_logps_all[i] == unorm_crp_logps_all[j] for
+    //    all i,j, since the crp probability of a view is a function of only the
+    //    number of columns in that view. However, when there are independence
+    //    constraints, the crp probability may be set to zero for a particular
+    //    feature_idx.
+    // 2. We can take the simple average in direct space (instead of logspace)
+    //    since all the values being summed are expected to be the same, or in
+    //    the case of an independence constraint the entry with -INFINITY will
+    //    satisfy -INFINITY/x = -INFINITY.
+    // Example with feature_idxs.size() == 2 and three views.
+    //      unorm_crp_logps_all = [[-.5, -.2, -.1], [-.5, -INFINITY, -.1]]
+    //      unorm_crp_logps_sum = [-1., -INFINITY, -.2]
+    //      unorm_crp_logps_avg = [-.5, -INFINITY, -.1]
+    // as desired.
+    vector<double> unorm_crp_logps_sum = std_vector_add(unorm_crp_logps_all);
+    vector<double> unorm_crp_logps_avg = std_vector_divide_elemwise(
+        unorm_crp_logps_sum, unorm_crp_logps_all.size());
+
+    // Compute the predictive_logp as sum of crp_logp and data_logp.
+    vector<double> unorm_predictive_logps = std_vector_add(
+        unorm_data_logps_sum, unorm_crp_logps_avg);
+
+    return unorm_predictive_logps;
+}
+
+vector<double> State::calc_feature_view_crp_logps(
+    const int &global_col_idx) const
+{
+    vector<double> crp_logps;
+    vector<View *>::const_iterator it;
+    for (it = views.begin(); it != views.end(); ++it) {
+        View &v = **it;
+        double crp_log_delta = calc_feature_view_crp_logp(
+            v, global_col_idx);
+        crp_logps.push_back(crp_log_delta);
+    }
+    return crp_logps;
+}
+
+vector<double> State::calc_feature_view_data_logps(
+    const vector<double> &col_data,
+    const int &global_col_idx) const
+{
+    vector<double> data_logps;
+    CM_Hypers hypers = get(hypers_m, global_col_idx);
+    vector<View *>::const_iterator it;
+    string col_datatype = get(global_col_datatypes, global_col_idx);
+    for (it = views.begin(); it != views.end(); ++it) {
+        View &v = **it;
+        double data_log_delta= calc_feature_view_data_logp(
+            col_data, col_datatype, v, hypers, global_col_idx);
+        data_logps.push_back(data_log_delta);
+    }
+    return data_logps;
+}
+
 double State::calc_column_crp_marginal() const
 {
     vector<int> view_counts = get_view_counts();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     return numerics::calc_crp_alpha_conditional(view_counts, column_crp_alpha,
             num_cols, true);
 }
@@ -833,7 +1077,7 @@ const
     vector<int> view_counts = get_view_counts();
     vector<double> crp_scores;
     vector<double>::const_iterator it = alphas_to_score.begin();
-    int num_cols = get_num_cols();
+    int num_cols = get_num_cols_effective();
     for (; it != alphas_to_score.end(); ++it) {
         double alpha_to_score = *it;
         double this_crp_score = numerics::calc_crp_alpha_conditional(view_counts,
@@ -898,6 +1142,16 @@ double State::transition(const MatrixD &data)
         }
     }
     return score_delta;
+}
+
+void State::increment_num_cols_effective()
+{
+    num_cols_effective++;
+}
+
+void State::decrement_num_cols_effective()
+{
+    num_cols_effective--;
 }
 
 void State::construct_base_hyper_grids(const MatrixD &data, int N_GRID,
@@ -1062,6 +1316,8 @@ void State::init_views(const MatrixD &data,
     int num_views = column_partition.size();
     for (int view_idx = 0; view_idx < num_views; view_idx++) {
         vector<int> column_indices = column_partition[view_idx];
+        int num_cols_effective = get_vector_num_blocks(
+            column_indices, get_column_dependencies());
         vector<vector<int> > row_partition = row_partition_v[view_idx];
         double row_crp_alpha = row_crp_alpha_v[view_idx];
         const MatrixD data_subset = extract_columns(data, column_indices);
@@ -1069,6 +1325,7 @@ void State::init_views(const MatrixD &data,
             global_col_datatypes,
             row_partition,
             global_row_indices, column_indices,
+            num_cols_effective,
             hypers_m,
             row_crp_alpha_grid,
             multinomial_alpha_grid, r_grid, nu_grid,

@@ -7,3 +7,4 @@ test_matrix
 test_multinomial_component_model
 test_numerics
 test_random_number_generator
+test_utils
