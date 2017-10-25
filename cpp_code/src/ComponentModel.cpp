@@ -21,26 +21,31 @@
 
 using namespace std;
 
-CM_Hypers ComponentModel::get_hypers() const {
+CM_Hypers ComponentModel::get_hypers() const
+{
     return *p_hypers;
 }
 
-int ComponentModel::get_count() const {
+int ComponentModel::get_count() const
+{
     return count;
 }
 
-map<string, double> ComponentModel::get_suffstats() const {
+map<string, double> ComponentModel::get_suffstats() const
+{
     map<string, double> suffstats_out = _get_suffstats();
     suffstats_out["N"] = count;
     return suffstats_out;
 }
 
-std::ostream& operator<<(std::ostream& os, const ComponentModel& cm) {
+std::ostream &operator<<(std::ostream &os, const ComponentModel &cm)
+{
     os << cm.to_string() << endl;
     return os;
 }
 
-string ComponentModel::to_string(const string& join_str) const {
+string ComponentModel::to_string(const string &join_str) const
+{
     stringstream ss;
     ss << "count: " << count << join_str;
     ss << "suffstats: " << get_suffstats() << join_str;

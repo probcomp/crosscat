@@ -20,7 +20,8 @@
 #include "CyclicComponentModel.h"
 using namespace std;
 
-CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers) {
+CyclicComponentModel::CyclicComponentModel(const CM_Hypers &in_hypers)
+{
     count = 0;
     score = 0;
     p_hypers = &in_hypers;
@@ -31,8 +32,9 @@ CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers) {
     set_log_Z_0();
 }
 
-CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers,
-        int COUNT, double SUM_SIN_X, double SUM_COS_X) {
+CyclicComponentModel::CyclicComponentModel(const CM_Hypers &in_hypers,
+    int COUNT, double SUM_SIN_X, double SUM_COS_X)
+{
     count = COUNT;
     sum_sin_x = SUM_SIN_X;
     sum_cos_x = SUM_COS_X;
@@ -45,13 +47,16 @@ CyclicComponentModel::CyclicComponentModel(const CM_Hypers& in_hypers,
 }
 
 
-void CyclicComponentModel::get_hyper_doubles(double& kappa, double& a, double& b) const {
+void CyclicComponentModel::get_hyper_doubles(double &kappa, double &a,
+    double &b) const
+{
     kappa = hyper_kappa;
     a = hyper_a;
     b = hyper_b;
 }
 
-double CyclicComponentModel::calc_marginal_logp() const {
+double CyclicComponentModel::calc_marginal_logp() const
+{
     double kappa, a, b;
     int count;
     double sum_sin_x, sum_cos_x;
@@ -64,7 +69,8 @@ double CyclicComponentModel::calc_marginal_logp() const {
 }
 
 double CyclicComponentModel::calc_element_predictive_logp(
-    double element) const {
+    double element) const
+{
     if (isnan(element)) {
         return 0;
     }
@@ -76,15 +82,14 @@ double CyclicComponentModel::calc_element_predictive_logp(
     //
     // numerics::insert_to_cyclic_suffstats(count, sum_sin_x, sum_cos_x, element);
     // numerics::update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa, a, b);
-
     double logp_prime = numerics::calc_cyclic_data_logp(count, sum_sin_x, sum_cos_x,
-                        kappa, a, b, element);
-
+            kappa, a, b, element);
     return logp_prime;
 }
 
 double CyclicComponentModel::calc_element_predictive_logp_constrained(
-    double element, const vector<double>& constraints) const {
+    double element, const vector<double> &constraints) const
+{
     if (isnan(element)) {
         return 0;
     }
@@ -96,7 +101,7 @@ double CyclicComponentModel::calc_element_predictive_logp_constrained(
     //
     int num_constraints = (int) constraints.size();
     for (int constraint_idx = 0; constraint_idx < num_constraints;
-            constraint_idx++) {
+        constraint_idx++) {
         double constraint = constraints[constraint_idx];
         numerics::insert_to_cyclic_suffstats(count, sum_sin_x, sum_cos_x, constraint);
     }
@@ -107,19 +112,20 @@ double CyclicComponentModel::calc_element_predictive_logp_constrained(
     // numerics::insert_to_cyclic_suffstats(count, sum_sin_x, sum_cos_x, element);
     // numerics::update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa, a, b);
     // double updated = numerics::calc_cyclic_data_logp(count, kappa, a, log_Z_0);
-    double predictive_logp = numerics::calc_cyclic_data_logp(count, sum_sin_x, sum_cos_x,
-                        kappa, a, b, element);
+    double predictive_logp = numerics::calc_cyclic_data_logp(count, sum_sin_x,
+            sum_cos_x,
+            kappa, a, b, element);
     return predictive_logp;
 }
 
 vector<double> CyclicComponentModel::calc_hyper_conditionals(
-    const string& which_hyper, const vector<double>& hyper_grid) const {
+    const string &which_hyper, const vector<double> &hyper_grid) const
+{
     double kappa, a, b;
     int count;
     double sum_sin_x, sum_cos_x;
     get_hyper_doubles(kappa, a, b);
     get_suffstats(count, sum_sin_x, sum_cos_x);
-
     if (which_hyper == "a") {
         return numerics::calc_cyclic_a_conditionals(hyper_grid, count, sum_sin_x,
                 sum_cos_x, kappa, b);
@@ -136,7 +142,8 @@ vector<double> CyclicComponentModel::calc_hyper_conditionals(
     }
 }
 
-double CyclicComponentModel::insert_element(double element) {
+double CyclicComponentModel::insert_element(double element)
+{
     if (isnan(element)) {
         return 0;
     }
@@ -147,7 +154,8 @@ double CyclicComponentModel::insert_element(double element) {
     return delta_score;
 }
 
-double CyclicComponentModel::remove_element(double element) {
+double CyclicComponentModel::remove_element(double element)
+{
     if (isnan(element)) {
         return 0;
     }
@@ -158,7 +166,8 @@ double CyclicComponentModel::remove_element(double element) {
     return delta_score;
 }
 
-double CyclicComponentModel::incorporate_hyper_update() {
+double CyclicComponentModel::incorporate_hyper_update()
+{
     hyper_kappa = get(*p_hypers, (string) "kappa");
     hyper_a = get(*p_hypers, (string) "a");
     hyper_b = get(*p_hypers, (string) "b");
@@ -170,85 +179,89 @@ double CyclicComponentModel::incorporate_hyper_update() {
     return score_delta;
 }
 
-void CyclicComponentModel::set_log_Z_0() {
+void CyclicComponentModel::set_log_Z_0()
+{
     double kappa, a, b;
     get_hyper_doubles(kappa, a, b);
     log_Z_0 = numerics::calc_cyclic_log_Z(a);
 }
 
-void CyclicComponentModel::init_suffstats() {
+void CyclicComponentModel::init_suffstats()
+{
     sum_sin_x = 0.;
     sum_cos_x = 0.;
 }
 
-void CyclicComponentModel::get_suffstats(int& count_out, double& sum_sin_x_out,
-        double& sum_cos_x_out) const {
+void CyclicComponentModel::get_suffstats(int &count_out, double &sum_sin_x_out,
+    double &sum_cos_x_out) const
+{
     count_out = count;
     sum_sin_x_out = sum_sin_x;
     sum_cos_x_out = sum_cos_x;
 }
 
-double CyclicComponentModel::get_draw(int random_seed) const {
+double CyclicComponentModel::get_draw(int random_seed) const
+{
     vector<double> constraints;
     return get_draw_constrained(random_seed, constraints);
 }
 
 double CyclicComponentModel::get_draw_constrained(int random_seed,
-        const vector<double>& constraints) const {
-  // get modified suffstats
-  double kappa, a, b;
-  int count;
-  double sum_sin_x, sum_cos_x;
-  get_hyper_doubles(kappa, a, b);
-  get_suffstats(count, sum_sin_x, sum_cos_x);
-  int num_constraints = (int) constraints.size();
-  for(int constraint_idx=0; constraint_idx<num_constraints; constraint_idx++) {
-    double constraint = constraints[constraint_idx];
-    numerics::insert_to_cyclic_suffstats(count, sum_sin_x, sum_cos_x, constraint);
-  }
-  numerics::update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa, a, b);
-
-  // Rejection sampling.
-  // we need to get a good estimate of a constant M to containthe etire pdf
-  // but not to reject too many samples. We derive it from the posterior update
-  // parameters
-  // Proposal distribution is uniform scaled to the the max value of the 
-  // predictive pdf
-  // FIXME: This will lead to a lot of rejections especially for high kappa
-  RandomNumberGenerator gen(random_seed);
-
-  bool rejected = true;
-  double x; // random number
-  double l_p;   // log proposal value
-  double pdf_t; // log predictive probability
-  double log_M = calc_element_predictive_logp_constrained(b, constraints);
-  unsigned short int itr = 0;
-  while(rejected && itr < 1000){
-    // generate random number in domain from proposal distribution
-    x = gen.next()*2*M_PI;
-    l_p = log(gen.next()) + log_M;
-
-    // get pdf at target
-    pdf_t = calc_element_predictive_logp_constrained(x, constraints);
-
-    if( l_p < pdf_t){
-      rejected = false;
-      return x;
+    const vector<double> &constraints) const
+{
+    // get modified suffstats
+    double kappa, a, b;
+    int count;
+    double sum_sin_x, sum_cos_x;
+    get_hyper_doubles(kappa, a, b);
+    get_suffstats(count, sum_sin_x, sum_cos_x);
+    int num_constraints = (int) constraints.size();
+    for (int constraint_idx = 0; constraint_idx < num_constraints;
+        constraint_idx++) {
+        double constraint = constraints[constraint_idx];
+        numerics::insert_to_cyclic_suffstats(count, sum_sin_x, sum_cos_x, constraint);
     }
-    ++itr;
-  }
-  assert(false);
-  return 0;			// XXXGCC
+    numerics::update_cyclic_hypers(count, sum_sin_x, sum_cos_x, kappa, a, b);
+    // Rejection sampling.
+    // we need to get a good estimate of a constant M to containthe etire pdf
+    // but not to reject too many samples. We derive it from the posterior update
+    // parameters
+    // Proposal distribution is uniform scaled to the the max value of the
+    // predictive pdf
+    // FIXME: This will lead to a lot of rejections especially for high kappa
+    RandomNumberGenerator gen(random_seed);
+    bool rejected = true;
+    double x; // random number
+    double l_p;   // log proposal value
+    double pdf_t; // log predictive probability
+    double log_M = calc_element_predictive_logp_constrained(b, constraints);
+    unsigned short int itr = 0;
+    while (rejected && itr < 1000) {
+        // generate random number in domain from proposal distribution
+        x = gen.next() * 2 * M_PI;
+        l_p = log(gen.next()) + log_M;
+        // get pdf at target
+        pdf_t = calc_element_predictive_logp_constrained(x, constraints);
+        if (l_p < pdf_t) {
+            rejected = false;
+            return x;
+        }
+        ++itr;
+    }
+    assert(false);
+    return 0;         // XXXGCC
 }
 
-map<string, double> CyclicComponentModel::_get_suffstats() const {
+map<string, double> CyclicComponentModel::_get_suffstats() const
+{
     map<string, double> suffstats;
     suffstats["sum_sin_x"] = sum_sin_x;
     suffstats["sum_cos_x"] = sum_cos_x;
     return suffstats;
 }
 
-map<string, double> CyclicComponentModel::get_hypers() const {
+map<string, double> CyclicComponentModel::get_hypers() const
+{
     map<string, double> hypers;
     hypers["kappa"] = hyper_kappa;
     hypers["a"] = hyper_a;

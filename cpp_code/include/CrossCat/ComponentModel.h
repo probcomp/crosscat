@@ -30,7 +30,8 @@
 #include "utils.h"
 #include "constants.h"
 
-class ComponentModel {
+class ComponentModel
+{
 public:
     virtual ~ComponentModel() {};
     //
@@ -41,17 +42,17 @@ public:
     virtual std::map<std::string, double> _get_suffstats() const = 0;
     virtual double get_draw(int random_seed) const = 0;
     virtual double get_draw_constrained(
-        int random_seed, const std::vector<double>& constraints) const = 0;
+        int random_seed, const std::vector<double> &constraints) const = 0;
     //
     //
     // calculators
     virtual double calc_marginal_logp() const = 0;
     virtual double calc_element_predictive_logp(double element) const = 0;
     virtual double calc_element_predictive_logp_constrained(double element,
-            const std::vector<double>& constraints) const = 0;
+        const std::vector<double> &constraints) const = 0;
     virtual std::vector<double> calc_hyper_conditionals(
-            const std::string& which_hyper,
-            const std::vector<double>& hyper_grid) const = 0;
+        const std::string &which_hyper,
+        const std::vector<double> &hyper_grid) const = 0;
     //
     // mutators
     virtual double insert_element(double element) = 0;
@@ -59,10 +60,10 @@ public:
     virtual double incorporate_hyper_update() = 0;
     //
     // helpers
-    friend std::ostream& operator<<(std::ostream& os, const ComponentModel& cm);
+    friend std::ostream &operator<<(std::ostream &os, const ComponentModel &cm);
     // make protected later
     const CM_Hypers *p_hypers;
-    std::string to_string(const std::string& join_str = "\n") const;
+    std::string to_string(const std::string &join_str = "\n") const;
 protected:
     int count;
     double log_Z_0;

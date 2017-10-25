@@ -25,53 +25,72 @@
 #include <stdexcept>
 
 template<typename T>
-class matrix {
+class matrix
+{
 public:
-    size_t size1() const { return _nrows; }
-    size_t size2() const { return _ncols; }
+    size_t size1() const
+    {
+        return _nrows;
+    }
+    size_t size2() const
+    {
+        return _ncols;
+    }
     matrix() : _nrows(0), _ncols(0), _data(0) {}
     matrix(size_t nrows, size_t ncols)
-        : _nrows(nrows), _ncols(ncols), _data(new T[nrows * ncols]) {
-        if (nrows > std::numeric_limits<size_t>::max()/ncols) {
+        : _nrows(nrows), _ncols(ncols), _data(new T[nrows * ncols])
+    {
+        if (nrows > std::numeric_limits<size_t>::max() / ncols) {
             T *d = _data;
-
             _nrows = 0;
             _ncols = 0;
             _data = 0;
-
             delete[] d;
             throw std::bad_alloc();
-	}
+        }
     }
-    matrix(const matrix &m) {
+    matrix(const matrix &m)
+    {
         size_t i;
-
         _nrows = m._nrows;
         _ncols = m._ncols;
         _data = new T[_nrows * _ncols];
-        for (i = 0; i < _nrows * _ncols; i++)
+        for (i = 0; i < _nrows * _ncols; i++) {
             _data[i] = m._data[i];
+        }
     }
-    matrix &operator=(matrix m) {
+    matrix &operator=(matrix m)
+    {
         std::swap(_nrows, m._nrows);
         std::swap(_ncols, m._ncols);
         std::swap(_data, m._data);
         return *this;
     }
-    ~matrix() { if (_data) delete[] _data; }
-    T &operator()(size_t row, size_t col) {
-        if (_nrows <= row)
-            throw std::range_error("row out of range");
-        if (_ncols <= col)
-            throw std::range_error("column out of range");
-        return _data[row*_ncols + col];
+    ~matrix()
+    {
+        if (_data) {
+            delete[] _data;
+        }
     }
-    const T &operator()(size_t row, size_t col) const {
-        if (_nrows <= row)
+    T &operator()(size_t row, size_t col)
+    {
+        if (_nrows <= row) {
             throw std::range_error("row out of range");
-        if (_ncols <= col)
+        }
+        if (_ncols <= col) {
             throw std::range_error("column out of range");
-        return _data[row*_ncols + col];
+        }
+        return _data[row * _ncols + col];
+    }
+    const T &operator()(size_t row, size_t col) const
+    {
+        if (_nrows <= row) {
+            throw std::range_error("row out of range");
+        }
+        if (_ncols <= col) {
+            throw std::range_error("column out of range");
+        }
+        return _data[row * _ncols + col];
     }
 private:
     size_t _nrows;

@@ -25,32 +25,33 @@
 #include "utils.h"
 
 
-class ContinuousComponentModel : public ComponentModel {
+class ContinuousComponentModel : public ComponentModel
+{
 public:
-    ContinuousComponentModel(const CM_Hypers& in_hyper_hash);
-    ContinuousComponentModel(const CM_Hypers& in_hyper_hash,
-                             int COUNT, double SUM_X, double SUM_X_SQ);
+    ContinuousComponentModel(const CM_Hypers &in_hyper_hash);
+    ContinuousComponentModel(const CM_Hypers &in_hyper_hash,
+        int COUNT, double SUM_X, double SUM_X_SQ);
     virtual ~ContinuousComponentModel() {};
     //
     // getters
-    void get_suffstats(int& count_out, double& sum_x, double& sum_x_sq) const;
-    void get_hyper_doubles(double& r, double& nu, double& s, double& mu) const;
+    void get_suffstats(int &count_out, double &sum_x, double &sum_x_sq) const;
+    void get_hyper_doubles(double &r, double &nu, double &s, double &mu) const;
     std::map<std::string, double> get_hypers() const;
     std::map<std::string, double> get_suffstats() const;
     std::map<std::string, double> _get_suffstats() const;
     double get_draw(int random_seed) const;
     double get_draw_constrained(int random_seed,
-                                const std::vector<double>& constraints) const;
+        const std::vector<double> &constraints) const;
     double get_predictive_cdf(double element,
-                              const std::vector<double>& constraints) const;
+        const std::vector<double> &constraints) const;
     //
     // calculators
     double calc_marginal_logp() const;
     double calc_element_predictive_logp(double element) const;
     double calc_element_predictive_logp_constrained(double element,
-            const std::vector<double>& constraints) const;
-    std::vector<double> calc_hyper_conditionals(const std::string& which_hyper,
-            const std::vector<double>& hyper_grid) const;
+        const std::vector<double> &constraints) const;
+    std::vector<double> calc_hyper_conditionals(const std::string &which_hyper,
+        const std::vector<double> &hyper_grid) const;
     //
     // mutators
     double insert_element(double element);

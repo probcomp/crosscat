@@ -22,16 +22,19 @@
 
 using namespace std;
 
-Cluster::Cluster(const vector<CM_Hypers*>& hypers_v) {
+Cluster::Cluster(const vector<CM_Hypers *> &hypers_v)
+{
     init_columns(hypers_v);
 }
 
-Cluster::Cluster() {
-    vector<CM_Hypers*> hypers_v;
+Cluster::Cluster()
+{
+    vector<CM_Hypers *> hypers_v;
     init_columns(hypers_v);
 }
 
-void Cluster::delete_component_models(bool check_empty) {
+void Cluster::delete_component_models(bool check_empty)
+{
     if (check_empty) {
         assert(row_indices.size() == 0);
     }
@@ -42,39 +45,47 @@ void Cluster::delete_component_models(bool check_empty) {
     }
 }
 
-int Cluster::get_num_cols() const {
+int Cluster::get_num_cols() const
+{
     return p_model_v.size();
 }
 
-int Cluster::get_count() const {
+int Cluster::get_count() const
+{
     return row_indices.size();
 }
 
-double Cluster::get_marginal_logp() const {
+double Cluster::get_marginal_logp() const
+{
     return score;
 }
 
-map<string, double> Cluster::get_suffstats_i(int idx) const {
+map<string, double> Cluster::get_suffstats_i(int idx) const
+{
     return p_model_v[idx]->get_suffstats();
 }
 
-CM_Hypers Cluster::get_hypers_i(int idx) const {
+CM_Hypers Cluster::get_hypers_i(int idx) const
+{
     return p_model_v[idx]->get_hypers();
 }
 
-set<int> Cluster::get_row_indices_set() const {
+set<int> Cluster::get_row_indices_set() const
+{
     return row_indices;
 }
 
-vector<int> Cluster::get_row_indices_vector() const {
+vector<int> Cluster::get_row_indices_vector() const
+{
     return set_to_vector(row_indices);
 }
 
-vector<double> Cluster::get_draw(int random_seed) const {
+vector<double> Cluster::get_draw(int random_seed) const
+{
     RandomNumberGenerator rng(random_seed);
     std::vector<double> draws;
-    std::vector<ComponentModel*>::const_iterator it;
-    for(it=p_model_v.begin(); it!=p_model_v.end(); ++it) {
+    std::vector<ComponentModel *>::const_iterator it;
+    for (it = p_model_v.begin(); it != p_model_v.end(); ++it) {
         int randi = rng.nexti(MAX_INT);
         double draw = (**it).get_draw(randi);
         draws.push_back(draw);
@@ -82,9 +93,10 @@ vector<double> Cluster::get_draw(int random_seed) const {
     return draws;
 }
 
-std::vector<double> Cluster::calc_marginal_logps() const {
+std::vector<double> Cluster::calc_marginal_logps() const
+{
     std::vector<double> logps;
-    std::vector<ComponentModel*>::const_iterator it;
+    std::vector<ComponentModel *>::const_iterator it;
     for (it = p_model_v.begin(); it != p_model_v.end(); ++it) {
         double logp = (**it).calc_marginal_logp();
         logps.push_back(logp);
@@ -92,13 +104,15 @@ std::vector<double> Cluster::calc_marginal_logps() const {
     return logps;
 }
 
-double Cluster::calc_sum_marginal_logps() const {
+double Cluster::calc_sum_marginal_logps() const
+{
     std::vector<double> logp_map = calc_marginal_logps();
     double sum_logps = std::accumulate(logp_map.begin(), logp_map.end(), 0.);
     return sum_logps;
 }
 
-double Cluster::calc_row_predictive_logp(const vector<double>& values) const {
+double Cluster::calc_row_predictive_logp(const vector<double> &values) const
+{
     double sum_logps = 0;
     for (unsigned int col_idx = 0; col_idx < values.size(); col_idx++) {
         double el = values[col_idx];
@@ -108,18 +122,20 @@ double Cluster::calc_row_predictive_logp(const vector<double>& values) const {
 }
 
 vector<double> Cluster::calc_hyper_conditionals(int which_col,
-        const string& which_hyper,
-        const vector<double>& hyper_grid) const {
+    const string &which_hyper,
+    const vector<double> &hyper_grid) const
+{
     ComponentModel *cm = p_model_v[which_col];
     vector<double> hyper_conditionals = cm->calc_hyper_conditionals(which_hyper,
-                                        hyper_grid);
+            hyper_grid);
     return hyper_conditionals;
 }
 
-double Cluster::calc_column_predictive_logp(const vector<double>& column_data,
-        const string& col_datatype,
-        const vector<int>& data_global_row_indices,
-        const CM_Hypers& hypers) {
+double Cluster::calc_column_predictive_logp(const vector<double> &column_data,
+    const string &col_datatype,
+    const vector<int> &data_global_row_indices,
+    const CM_Hypers &hypers)
+{
     // FIXME: global_to_data must be used if not all rows are present
     // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
     ComponentModel *p_cm = NULL;
@@ -131,7 +147,7 @@ double Cluster::calc_column_predictive_logp(const vector<double>& column_data,
         p_cm = new MultinomialComponentModel(hypers);
     } else {
         cout << "Cluster::calc_column_predictive_logp: col_datatype=" << col_datatype
-             << endl;
+            << endl;
         assert(1 == 0);
         exit(EXIT_FAILURE);
     }
@@ -149,11 +165,12 @@ double Cluster::calc_column_predictive_logp(const vector<double>& column_data,
     return score_delta;
 }
 
-double Cluster::insert_row(const vector<double>& values, int row_idx) {
+double Cluster::insert_row(const vector<double> &values, int row_idx)
+{
     double sum_score_deltas = 0;
     // track row indices
     pair<set<int>::iterator, bool> set_pair = \
-            row_indices.insert(row_idx);
+        row_indices.insert(row_idx);
     if (!set_pair.second) {
         cout << "Cluster::insert_row: !set_pair.second" << endl;
         assert(set_pair.second);
@@ -167,7 +184,8 @@ double Cluster::insert_row(const vector<double>& values, int row_idx) {
     return sum_score_deltas;
 }
 
-double Cluster::remove_row(const vector<double>& values, int row_idx) {
+double Cluster::remove_row(const vector<double> &values, int row_idx)
+{
     double sum_score_deltas = 0;
     // track row indices
     unsigned int num_removed = row_indices.erase(row_idx);
@@ -186,7 +204,8 @@ double Cluster::remove_row(const vector<double>& values, int row_idx) {
     return sum_score_deltas;
 }
 
-double Cluster::remove_col(int col_idx) {
+double Cluster::remove_col(int col_idx)
+{
     double score_delta = p_model_v[col_idx]->calc_marginal_logp();
     // FIXME: make sure destruction proper
     ComponentModel *p_cm = p_model_v[col_idx];
@@ -196,10 +215,11 @@ double Cluster::remove_col(int col_idx) {
     return score_delta;
 }
 
-double Cluster::insert_col(const vector<double>& data,
-                           const string& col_datatype,
-                           const vector<int>& data_global_row_indices,
-                           const CM_Hypers& hypers) {
+double Cluster::insert_col(const vector<double> &data,
+    const string &col_datatype,
+    const vector<int> &data_global_row_indices,
+    const CM_Hypers &hypers)
+{
     // FIXME: global_to_data must be used if not all rows are present
     // map<int, int> global_to_data = construct_lookup_map(data_global_row_indices);
     ComponentModel *p_cm = NULL;
@@ -229,18 +249,21 @@ double Cluster::insert_col(const vector<double>& data,
     return score_delta;
 }
 
-double Cluster::incorporate_hyper_update(int which_col) {
+double Cluster::incorporate_hyper_update(int which_col)
+{
     double score_delta = p_model_v[which_col]->incorporate_hyper_update();
     score += score_delta;
     return score_delta;
 }
 
-std::ostream& operator<<(std::ostream& os, const Cluster& c) {
+std::ostream &operator<<(std::ostream &os, const Cluster &c)
+{
     os << c.to_string() << endl;
     return os;
 }
 
-string Cluster::to_string(const string& join_str, bool top_level) const {
+string Cluster::to_string(const string &join_str, bool top_level) const
+{
     stringstream ss;
     if (!top_level) {
         ss << "========" << std::endl;
@@ -255,11 +278,12 @@ string Cluster::to_string(const string& join_str, bool top_level) const {
     return ss.str();
 }
 
-void Cluster::init_columns(const vector<CM_Hypers*>& hypers_v) {
+void Cluster::init_columns(const vector<CM_Hypers *> &hypers_v)
+{
     score = 0;
-    vector<CM_Hypers*>::const_iterator it;
+    vector<CM_Hypers *>::const_iterator it;
     for (it = hypers_v.begin(); it != hypers_v.end(); ++it) {
-        CM_Hypers& hypers = **it;
+        CM_Hypers &hypers = **it;
         ComponentModel *p_cm;
         if (hypers.count(continuous_key)) {
             // FIXME: should be passed col_datatypes here

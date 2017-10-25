@@ -27,31 +27,35 @@
 #include <cstring>
 #include "DateTime.h"
 
-Timer::Timer(bool reset) {
+Timer::Timer(bool reset)
+{
     _start_t = mktime(NULL);
     if (reset) {
         Reset();
     }
 }
 
-void Timer::Reset() {
+void Timer::Reset()
+{
     _start_t = get_time();
 }
 
-double Timer::GetElapsed() {
+double Timer::GetElapsed()
+{
     return difftime(get_time(), _start_t);
 }
 
-time_t Timer::get_time() {
-  return time(NULL);
+time_t Timer::get_time()
+{
+    return time(NULL);
 }
 
 
-bool Timer::Period(Timer& T, double* t, double period) {
+bool Timer::Period(Timer &T, double *t, double period)
+{
     if (T.GetElapsed() - *t > 0) {
         *t += period;
         return true;
     }
-
     return false;
 }
