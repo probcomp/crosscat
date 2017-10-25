@@ -858,10 +858,13 @@ double State::transition_column_hyperparameters(vector<int> which_cols)
         // Get the dependent columns.
         vector<int> dependent_cols = get_column_dependencies(target_col);
 
-        // XXX FIXME Run transitions for column and all its dependent columns.
-        // There will be duplication here if which_cols contains all columns.
-        // The current usage pattern in panelcat is only specifying one column
-        // in the block to transition, so this will suffice as a hack for now.
+        // XXX FIXME Do not transition hypers for all dependent columns.
+        // There will be duplication here if which_cols contains all columns
+        // and there are user-specified dependencies.
+        // The current usage pattern in panelcat, the main user of block
+        // transition, is only specifying one column in each block when cycling
+        // through all kernels. The code below ensures that hyperparameters for
+        // all dependent columns are also being transitioned.
         vector<int>::const_iterator itt;
         for (itt = dependent_cols.begin(); itt != dependent_cols.end(); ++itt){
             int col_idx = *itt;
