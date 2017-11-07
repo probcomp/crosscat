@@ -18,8 +18,8 @@ requirements:
   run:
     - matplotlib >=1.4,<2.1
     - numpy 1.8.*
-    - scipy >=0.13.3
-    - six
+    - scipy >=0.13,<=0.19.*
+    - six 1.10.*
 
 test:
   requires:
