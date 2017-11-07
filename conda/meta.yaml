@@ -10,21 +10,21 @@ build:
 
 requirements:
   build:
-    - git
-    - python 2.7.*
     - cython >=0.20.1
-    - matplotlib
+    - git
+    - matplotlib >=1.4,<2.1
     - numpy 1.8.*
+    - python 2.7.*
   run:
-    - matplotlib
+    - matplotlib >=1.4,<2.1
     - numpy 1.8.*
     - scipy >=0.13.3
     - six
 
 test:
   requires:
-    - python 2.7.*
     - pytest 2.5.1.*
+    - python 2.7.*
   commands:
     - python -m pytest --pyargs crosscat
 
