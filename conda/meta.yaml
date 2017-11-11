@@ -12,11 +12,11 @@ requirements:
   build:
     - cython >=0.20.1
     - git
-    - matplotlib >=1.4,<2.1
+    - matplotlib 1.4.*
     - numpy 1.8.*
     - python 2.7.*
   run:
-    - matplotlib >=1.4,<2.1
+    - matplotlib 1.4.*
     - numpy 1.8.*
     - scipy >=0.13,<=0.19.*
     - six 1.10.*
