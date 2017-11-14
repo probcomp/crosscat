@@ -10,20 +10,20 @@ build:
 
 requirements:
   build:
-    - cython >=0.20.1
+    - cython 0.23.*
     - git
-    - matplotlib 1.4.*
-    - numpy 1.8.*
+    - matplotlib 1.5.*
+    - numpy 1.11.*
     - python 2.7.*
   run:
-    - matplotlib 1.4.*
-    - numpy 1.8.*
-    - scipy >=0.13,<=0.19.*
+    - matplotlib 1.5.*
+    - numpy 1.11.*
+    - scipy 0.17.*
     - six 1.10.*
 
 test:
   requires:
-    - pytest 2.5.1.*
+    - pytest 2.8.*
     - python 2.7.*
   commands:
     - python -m pytest --pyargs crosscat
