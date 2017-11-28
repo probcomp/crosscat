@@ -1,5 +1,9 @@
 language: python
 dist: trusty
+env:
+  global:
+    # get all the branches referencing this commit
+    - REAL_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
 
 python:
   - 2.7
