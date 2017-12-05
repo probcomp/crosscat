@@ -18,6 +18,9 @@ elif [ ${TRAVIS_BRANCH} = "master" ]; then
   else
     conda install anaconda-client
     anaconda -t ${CONDA_UPLOAD_TOKEN} upload -u ${CONDA_USER} -l edge ~/miniconda/conda-bld/linux-64/crosscat-*.tar.bz2 --force
+    # trigger a downstream bayeslite build using the edge package
+    curl -LO https://raw.github.com/stephanmg/travis-dependent-builds/master/trigger.sh
+    bash trigger.sh probcomp bayeslite master $TRAVIS_ACCESS_TOKEN | grep -v TOKEN
   fi
 else
   exit 0
