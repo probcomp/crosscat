@@ -13,15 +13,14 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda install conda-build
+  - conda install -q conda=4.6.14 conda-build
 before_script:
   - gem install travis
 script:
   - export CONDA_PACKAGE_VERSION="${TRAVIS_TAG:-$(date +%Y.%m.%d)}"
   # remove leading v from tags if they exist
   - CONDA_PACKAGE_VERSION="$(sed s/^v// <<<$CONDA_PACKAGE_VERSION)"
-  - conda build . -c probcomp
+  - conda build . -c probcomp -c anaconda
   - conda install crosscat --use-local
 after_success:
   - bash conda/upload.sh
