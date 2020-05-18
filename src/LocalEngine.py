@@ -583,11 +583,11 @@ class LocalEngine(EngineTemplate.EngineTemplate):
         col_ensure_md = dict()
         col_ensure_md[True] = {
             str(key) : list(val) for
-            key, val in gu.get_scc_from_tuples(dependencies).iteritems()
+            key, val in gu.get_scc_from_tuples(dependencies).items()
         }
         col_ensure_md[False] = {
             str(key) : list(val) for
-            key, val in gu.get_scc_from_tuples(independencies).iteritems()
+            key, val in gu.get_scc_from_tuples(independencies).items()
         }
 
         def assert_dep_constraints(X_L, X_D, dep_constraints):
@@ -899,4 +899,4 @@ default_diagnostic_func_dict = {
 
 def make_get_next_seed(seed):
     generator = gu.int_generator(seed)
-    return lambda: generator.next()
+    return lambda: next(generator)

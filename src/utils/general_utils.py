@@ -94,7 +94,7 @@ def int_generator(prngstate=None):
                             'with a randint method.  (E.g., random.Random '
                             'or numpy.random.RandomState instance.)')
     lock = threading.Lock()
-    for _ in xrange(2**62):
+    for _ in range(2**62):
         with lock:
             yield prngstate.randint(0, 2147483646)
 
@@ -215,4 +215,4 @@ def get_scc_from_tuples(constraints):
     }
     """
     classes = unionfind.classes(constraints)
-    return dict((x, tuple(c)) for x, c in classes.iteritems())
+    return dict((x, tuple(c)) for x, c in classes.items())

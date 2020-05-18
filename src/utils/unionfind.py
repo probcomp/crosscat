@@ -73,7 +73,7 @@ def classes(equivalences):
     for x, y in equivalences:
         union(N(x), N(y))
     eqclass = OrderedDict()
-    for x, n in node.iteritems():
+    for x, n in node.items():
         x_ = find(n).element
         if x_ not in eqclass:
             eqclass[x_] = []

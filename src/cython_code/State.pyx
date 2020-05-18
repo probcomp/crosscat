@@ -201,7 +201,7 @@ transition_name_to_method_name_and_args = dict(
      )
 
 def get_all_transitions_permuted(seed):
-     which_transitions = transition_name_to_method_name_and_args.keys()
+     which_transitions = list(transition_name_to_method_name_and_args.keys())
      random_state = numpy.random.RandomState(seed)
      which_transitions = random_state.permutation(which_transitions)
      return which_transitions
@@ -566,7 +566,7 @@ def floatify_dict_dict(in_dict):
 
 def extract_row_partition_alpha(view_state):
     hypers = view_state['row_partition_model']['hypers']
-    alpha = hypers.get('alpha')
+    alpha = hypers.get(b'alpha')
     if alpha is None:
         log_alpha = hypers['log_alpha']
         alpha = numpy.exp(log_alpha)
@@ -583,7 +583,7 @@ def transform_latent_state_to_constructor_args(X_L, X_D):
     hypers_m = floatify_dict_dict(hypers_m)
     column_indicator_list = X_L['column_partition']['assignments']
     column_partition = indicator_list_to_list_of_list(column_indicator_list)
-    column_crp_alpha = X_L['column_partition']['hypers']['alpha']
+    column_crp_alpha = X_L['column_partition']['hypers'][b'alpha']
     row_partition_v = map(indicator_list_to_list_of_list, X_D)
     row_crp_alpha_v = map(extract_row_partition_alpha, X_L['view_state'])
 

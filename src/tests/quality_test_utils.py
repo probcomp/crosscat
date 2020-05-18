@@ -5,7 +5,7 @@ import math
 
 import pdb
 
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 is_discrete = {
     'multinomial' : True,

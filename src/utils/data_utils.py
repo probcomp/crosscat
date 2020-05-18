@@ -98,7 +98,7 @@ def gen_data(gen_seed, num_clusters,
     #
     random_state = numpy.random.RandomState(gen_seed)
     #
-    data_size = (num_clusters,num_cols)
+    data_size = (int(num_clusters), int(num_cols))
     which_mus = random_state.randint(len(mu_grid), size=data_size)
     which_sigmas = random_state.randint(len(sigma_grid), size=data_size)
     mus = mu_grid[which_mus]
@@ -108,7 +108,7 @@ def gen_data(gen_seed, num_clusters,
         cluster_columns = []
         for mu, sigma in zip(row_mus, row_sigmas):
             cluster_column = random_state.normal(mu, sigma,
-                                                 num_rows_per_cluster)
+                                                 int(num_rows_per_cluster))
             cluster_columns.append(cluster_column)
         cluster = numpy.vstack(cluster_columns).T
         clusters.append(cluster)
